@@ -1,0 +1,5 @@
+{
+  "dependencies": {
+    "serverless-prune-plugin": "^1.6.1"
+  }
+}
