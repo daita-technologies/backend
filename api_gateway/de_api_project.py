@@ -1,6 +1,6 @@
 import boto3
 
-from backend.api_gateway.api_gateway_service import ApiGatewayToService
+from api_gateway.api_gateway_service import ApiGatewayToService
 
 def deploy_api_project(ls_lambda_info, general_info):
     REST_API_NAME = 'staging-daita-project'

@@ -6,9 +6,9 @@ sys.path.append(os.path.join(dir_path, '..'))
 
 print(sys.path)
 
-from backend.aws_lambda.project.de_lambda_project import deploy_lambda_project
-from backend.api_gateway.de_api_project import deploy_api_project
-from backend.dynamoDB.de_dynamodb import deploy_dynamoDB
+from aws_lambda.project.de_lambda_project import deploy_lambda_project
+from api_gateway.de_api_project import deploy_api_project
+from dynamoDB.de_dynamodb import deploy_dynamoDB
 
 MODE_DB = ''    #'stage_'
 

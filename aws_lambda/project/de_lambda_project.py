@@ -1,6 +1,6 @@
 import boto3
 import botocore
-from backend.aws_lambda.lambda_service import AWSLambdaService
+from aws_lambda.lambda_service import AWSLambdaService
 
 def add_lambda_info_to_list(ls_lambda_val, lambda_uri, lambda_version, api_resource, api_name):
     # when lambda_uri return will have the version of lambda function, so, when pass to api, we remove it to run the latest version

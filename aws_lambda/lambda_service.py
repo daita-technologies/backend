@@ -1,6 +1,6 @@
 import boto3
 import botocore
-from backend.aws_lambda.utils.utils import create_zip_object
+from aws_lambda.utils.utils import create_zip_object
 
 class AWSLambdaService:
     def __init__(self):

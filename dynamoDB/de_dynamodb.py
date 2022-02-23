@@ -1,4 +1,4 @@
-from backend.dynamoDB.dynamodb_service import DynamoDBService
+from dynamoDB.dynamodb_service import DynamoDBService
 
 def deploy_dynamoDB(general_info):
     dbservice = DynamoDBService()
