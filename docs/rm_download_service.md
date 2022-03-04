@@ -15,7 +15,8 @@
     python3 -m venv <name>
 
 - activate env
-    source <path/to/env>/bin/activate
+    source <path/to/env>/bin/activate   (for Linux)
+    <path/to/env>/Scripts/activate      (for Windows)
 
 - install requirements
     pip install -r requirements.txt
