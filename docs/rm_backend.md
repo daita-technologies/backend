@@ -9,7 +9,7 @@
 - [URL endpoint](#url-endpoint)
 
 # General Architect
-![](./figures/DAITA_MVP-System_arch_v2_mvp.drawio.svg)
+![](./img/DAITA_MVP-System_arch_v2_mvp.drawio.svg)
 
 
 # Main components in system
@@ -40,7 +40,7 @@ We list out the AWS services that using in this system:
 [Document](./rm_download_service.md)
 
 # Preprocess/Augment flow
-![](./figures/DAITA_MVP-Generationflowdrawio.svg)
+![](./img/DAITA_MVP-Generationflowdrawio.svg)
 
 # URL endpoint
 - [List url endpoint](./rm_url_endpoint_aws_service.md)
