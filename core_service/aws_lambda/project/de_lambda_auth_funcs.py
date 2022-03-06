@@ -63,6 +63,32 @@ def deploy_lambda_auth(general_info, lambda_service):
                                         'staging: template_mail')
     add_lambda_info_to_list(ls_lambda_val, lambda_uri, lambda_version, 'auth', 'template-invite-mail')
     
+    # resend code 
+    lambda_uri, lambda_version = lambda_service.deploy_lambda_function(f'resend_confirmcode',
+                                          [ CODE_DIR.joinpath("resend_confirmcode.py"),
+                                            PROJECT_DIR.joinpath("common"),
+                                         ],
+                                        {
+                                            'USER_POOL_ID' : general_info['USER_POOL_ID'],
+                                            'IDENTITY_POOL_ID': general_info['IDENTITY_POOL_ID']
+                                        },
+                                        'resend_confirmcode.lambda_handler',
+                                        'staging: template_mail')
+    add_lambda_info_to_list(ls_lambda_val, lambda_uri, lambda_version, 'auth', 'resend_confirmcode')
+
+    # confirm code after register
+    lambda_uri, lambda_version = lambda_service.deploy_lambda_function(f'auth_confirm',
+                                          [ CODE_DIR.joinpath("auth_confirm.py"),
+                                            PROJECT_DIR.joinpath("common"),
+                                         ],
+                                        {
+                                            'USER_POOL_ID' : general_info['USER_POOL_ID'],
+                                            'IDENTITY_POOL_ID': general_info['IDENTITY_POOL_ID']
+                                        },
+                                        'auth_confirm.lambda_handler',
+                                        'staging: auth_confirm')
+    add_lambda_info_to_list(ls_lambda_val, lambda_uri, lambda_version, 'auth', 'auth_confirm')
+    
     # backend/lambda/login/module/auth/forgot_password.go
     lambda_uri, lambda_version = lambda_service.deploy_lambda_function(f'staging-forgot-password',
                                         [
