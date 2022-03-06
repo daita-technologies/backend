@@ -6,12 +6,12 @@ from http import HTTPStatus
 import os
 import boto3
 from dataclasses import dataclass
-import howard
 import re 
 
 from error import *
 from response import *
 from config import *
+from custom_mail import *
 from datetime import datetime
 def convert_current_date_to_iso8601():
     my_date = datetime.now()
@@ -22,6 +22,9 @@ RESPONSE_HEADER = {
     "Access-Control-Allow-Creentials": "true",
 	"Access-Control-Allow-Methods": "GET, HEAD, OPTIONS, POST, PUT",
 }
+
+    
+
 PASSWORD_REGEX = r"^(?=.*[a-z])(?=.*[A-Z])(?=.*[0-9])(?=.*[\^$*.\[\]{}\(\)?\-\"!@#%&\/,><\':;|_~`])\S{8,99}$"
 class User(object):
     def __init__(self):
@@ -53,10 +56,11 @@ def lambda_handler(event, context):
     try:
         body = json.loads(event['body'])
         username = body['username']
-        mail = body['mail']
+        mail = body['email']
         password = body['password']
     except Exception as e:
         print(e)
+        raise Exception(e)
     
     if not re.match(PASSWORD_REGEX, password):
         raise Exception(MessageInvalidPassword)
@@ -69,12 +73,14 @@ def lambda_handler(event, context):
         respUserSignUp = cog_provider_client.sign_up(
             ClientId=CLIENTPOOLID,
             Username= username,
-        Password= password
+            Password= password,
+            UserAttributes=[{"Name": "email", "Value": mail}],
         )
     except Exception as e:
         print(e)
         raise Exception(MessageSignUpFailed)
     model = User()
+    print(respUserSignUp)
     try :
         model.create_item({
             'ID': respUserSignUp['UserSub'],
@@ -83,8 +89,21 @@ def lambda_handler(event, context):
     except Exception as e :
         print(e)
         raise Exception(MessageSignUpFailed)
+    """
+     modelTrigger = TriggerCustomMailcode(REGION=info['region'],ACCESSKEYID=info['accesskey_id'],SECRETACCESS=info['secret_access'] )
+    modelTrigger.create_item({'user':info['user'],'code':confirmCode})
+    invoke_sendmail_cognito_service(info['subject'],info['mail'],"<p>Your confirmation code is {}</p>".format(confirmCode))
+    """
+    AddTriggerCustomMail({
+        'region':REGION,
+        'accesskey_id':ACCESSKEYID,
+        'secret_access':SECRETACCESS,
+        'user':username,
+        'mail':mail,
+        'subject':'Your email confirmation code'
+    })
     return generate_response(
             message="Sign up for user {} was successful".format(username),
-            data=response,
+            data={},
             headers=RESPONSE_HEADER
         )
