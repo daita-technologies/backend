@@ -42,7 +42,7 @@ def error_response(lambda_handler):
         except Exception as exc:
             return(
                 generate_response(
-                    message=repr(exc),
+                    message=str(repr(exc)),
                     error=True
                 )
             )

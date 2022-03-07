@@ -152,11 +152,11 @@ def lambda_handler(event, context):
         })
     path = None
     if 'state' in param:
-        path = base64.decode(['state'])
+        path = base64.b64decode(param['state']).decode('utf-8')
     else: 
         path = 'http://localhost:3000/login'
 
-    location= "{}?token={}&resfresh_token={}&access_key={}&session_key={}&id_token={}&credential_token_expires_in={}&token_expires_in={}&secret_key={}&identity_id={}" \
+    location= "{}?token={}&resfresh_token={}&access_key={}&session_key={}&id_token={}&credential_token_expires_in={}&token_expires_in={}&secret_key={}&identity_id={}&username={}" \
         .format(path,
         resqData['access_token'],
         resqData['refresh_token'],
@@ -166,7 +166,7 @@ def lambda_handler(event, context):
                 credentialsForIdentity['credential_token_expires_in']
                 ,datetime.now().timestamp() + ACCESS_TOKEN_EXPIRATION,
                 credentialsForIdentity['session_key'],
-                credentialsForIdentity['identity_id'])
+                credentialsForIdentity['identity_id'],username)
     print(location) 
     headers = {"Location":location,	"Access-Control-Allow-Methods": "GET,HEAD,OPTIONS,POST,PUT"}
     return {
