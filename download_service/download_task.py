@@ -17,8 +17,13 @@ import time
 
 
 relative_path = '/mnt/efs/images'
-bucket_name = 'client-data-test' 
+os.makedirs(relative_path, exist_ok=True)
+bucket_name = 'daita-client-data' 
 s3 = boto3.client('s3')   
+
+IDENTITY_POOL_ID =   'us-east-2:fa0b76bc-01fa-4bb8-b7cf-a5000954aafb' #'us-east-2:639788f0-a9b0-460d-9f50-23bbe5bc7140'
+USER_POOL_ID = 'us-east-2_ZbwpnYN4g'   #'us-east-2_6Sc8AZij7'
+
 # max_workers = 5
 # self.abs_path = os.path.abspath(relative_path)
 MAX_WORKERS = 8
@@ -83,8 +88,7 @@ def get_all_file_paths(directory):
     return file_paths
 
 def aws_get_identity_id(id_token):
-    IDENTITY_POOL_ID = 'us-east-2:639788f0-a9b0-460d-9f50-23bbe5bc7140'
-    USER_POOL_ID = 'us-east-2_6Sc8AZij7'
+   
     identity_client = boto3.client('cognito-identity')
     PROVIDER = f'cognito-idp.{identity_client.meta.region_name}.amazonaws.com/{USER_POOL_ID}'
 
