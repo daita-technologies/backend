@@ -1,42 +1,42 @@
-- [Project function APIs](#project-function-apis)
-  - [Project create](#project-create)
-  - [Project create sample](#project-create-sample)
+- [Project Function APIs](#project-function-apis)
+  - [Project Create](#project-create)
+  - [Project Create Sample](#project-create-sample)
   - [Project Delete Images](#project-delete-images)
   - [Project Delete](#project-delete)
-  - [Project list](#project-list)
-  - [Project list info](#project-list-info)
+  - [Project List](#project-list)
+  - [Project List Info](#project-list-info)
   - [Project Info](#project-info)
   - [Project Update Information](#project-update-information)
-  - [Project list data in project](#project-list-data-in-project)
+  - [Project List Data in Project](#project-list-data-in-project)
   - [Project Download Images](#project-download-images)
-    - [Create Download task](#create-download-task)
-    - [Update progress of download task](#update-progress-of-download-task)
+    - [Create Download Task](#create-download-task)
+    - [Update Progress of Download Task](#update-progress-of-download-task)
   - [Project Upload Images](#project-upload-images)
-    - [Check exist of filename in S3](#check-exist-of-filename-in-s3)
-    - [Update data to server after uploaded to S3 from client](#update-data-to-server-after-uploaded-to-s3-from-client)
-- [Generate Images API](#generate-images-api)
-  - [List all methods](#list-all-methods)
-  - [Generate images](#generate-images)
-  - [Get current progress of task](#get-current-progress-of-task)
-- [Balancer API](#balancer-api)
-  - [register ec2_id for a new user](#register-ec2_id-for-a-new-user)
-  - [start ec2 of user](#start-ec2-of-user)
+    - [Check Existence of File Name in S3](#check-existence-of-file-name-in-s3)
+    - [Update Data on the Server After It Has Been Uploaded From the Client to S3](#update-data-on-the-server-after-it-has-been-uploaded-from-the-client-to-s3)
+- [Generate Images](#generate-images)
+  - [List All Methods](#list-all-methods)
+  - [Generate Images](#generate-images-1)
+  - [Get Current Progress of Task](#get-current-progress-of-task)
+- [Load Balancer API](#load-balancer-api)
+  - [Register ec2_id for a New User](#register-ec2_id-for-a-new-user)
+  - [Start EC2 of User](#start-ec2-of-user)
 - [Authentication APIs](#authentication-apis)
-  - [API Sign up](#api-sign-up)
+  - [API Sign Up](#api-sign-up)
   - [API Login](#api-login)
-  - [API Test](#api-test)
-  - [API Log Out](#api-log-out)
-  - [API confirm email](#api-confirm-email)
-  - [API resend confirm code](#api-resend-confirm-code)
-  - [API resend confirm code forgot password](#api-resend-confirm-code-forgot-password)
-  - [API forgot password](#api-forgot-password)
-  - [API refresh token](#api-refresh-token)
-  - [API send mail](#api-send-mail)
-  - [API template invite mail](#api-template-invite-mail)
-  - [API Login google](#api-login-google)
+  - [API Confirmation Email](#api-confirmation-email)
+  - [API Resend Confirmation Code](#api-resend-confirmation-code)
+  - [API Resend Confirmation Code - Forgot Password](#api-resend-confirmation-code---forgot-password)
+  - [API Forgot Password](#api-forgot-password)
+  - [API Refresh Token](#api-refresh-token)
+  - [API Send Email](#api-send-email)
+  - [API Template Invitation Email](#api-template-invitation-email)
+  - [API Login Google](#api-login-google)
 
-# Project function APIs
-## Project create
+## Project Function APIs
+
+### Project Create
+
 URL: https://4cujdvfmd4.execute-api.us-east-2.amazonaws.com/staging/projects/create
 
 Create new project for user with id_token from project name
@@ -63,7 +63,8 @@ EXCEPTION EXPLAINATION:
         User already created project with project_name before
 
 
-## Project create sample
+### Project Create Sample
+
 URL: https://4cujdvfmd4.execute-api.us-east-2.amazonaws.com/staging/projects/create_sample
 
 FUNCTION:
@@ -110,7 +111,7 @@ EXAMPLE
     }
 
 
-## Project Delete Images
+### Project Delete Images
 
 URL: https://4cujdvfmd4.execute-api.us-east-2.amazonaws.com/staging/projects/delete_images
 
@@ -157,7 +158,7 @@ EXAMPLE
         "message": null
     }
 
-## Project Delete
+### Project Delete
 
 URL: https://4cujdvfmd4.execute-api.us-east-2.amazonaws.com/staging/projects/delete
 
@@ -199,7 +200,8 @@ EXAMPLE
         "message": null
     }
 
-## Project list
+### Project List
+
 URL:  https://4cujdvfmd4.execute-api.us-east-2.amazonaws.com/staging/projects/create
 
 FUNCTION:
@@ -231,7 +233,8 @@ RESPONSE BODY:
 EXCEPTION EXPLAINATION:
 
 
-## Project list info
+### Project List Info
+
 URL:  https://4cujdvfmd4.execute-api.us-east-2.amazonaws.com/staging/projects/list_info
 
 FUNCTION:
@@ -314,7 +317,8 @@ EXAMPLE
         "message": null
     }
 
-## Project Info
+### Project Info
+
 URL: https://4cujdvfmd4.execute-api.us-east-2.amazonaws.com/staging/projects/info
 
 FUNCTION
@@ -411,7 +415,8 @@ EXAMPLE
         "message": null
     }
 
-## Project Update Information 
+### Project Update Information 
+
 URL: https://4cujdvfmd4.execute-api.us-east-2.amazonaws.com/staging/projects/update_info
 
 FUNCTION
@@ -469,7 +474,7 @@ EXAMPLE
     }    
     
 
-## Project list data in project
+### Project List Data in Project
 
 URL: https://4cujdvfmd4.execute-api.us-east-2.amazonaws.com/staging/projects/list_data
 
@@ -591,9 +596,10 @@ EXAMPLE
         "message": null
     }
 
-## Project Download Images
+### Project Download Images
 
-### Create Download task
+#### Create Download Task
+
 URL: https://4cujdvfmd4.execute-api.us-east-2.amazonaws.com/staging/projects/download_create
 
 FUNCTION
@@ -634,7 +640,8 @@ EXAMPLE
         "success": true,
         "message": null
     }
-### Update progress of download task
+#### Update Progress of Download Task
+
 URL: https://4cujdvfmd4.execute-api.us-east-2.amazonaws.com/staging/projects/download_update
 
 FUNCTION
@@ -687,9 +694,10 @@ EXAMPLE
         "success": true,
         "message": null
     }
-## Project Upload Images
 
-### Check exist of filename in S3
+### Project Upload Images
+
+#### Check Existence of File Name in S3
 
 URL: https://4cujdvfmd4.execute-api.us-east-2.amazonaws.com/staging/projects/upload_check
 
@@ -742,7 +750,7 @@ EXAMPLE
         "message": null
     }
 
-### Update data to server after uploaded to S3 from client
+#### Update Data on the Server After It Has Been Uploaded From the Client to S3
 
 URL: https://4cujdvfmd4.execute-api.us-east-2.amazonaws.com/staging/projects/upload_update
 
@@ -800,9 +808,9 @@ EXAMPLE
     }
 
 
-# Generate Images API
+## Generate Images
 
-## List all methods 
+### List All Methods 
 
 URL: https://4cujdvfmd4.execute-api.us-east-2.amazonaws.com/staging/generate/list_method
 
@@ -860,7 +868,7 @@ EXAMPLE
     }
 
 
-## Generate images
+### Generate Images
 
 URL: https://4cujdvfmd4.execute-api.us-east-2.amazonaws.com/staging/generate/images
 
@@ -912,7 +920,7 @@ EXAMPLE
         "message": null
     }
 
-## Get current progress of task
+### Get Current Progress of Task
 
 URL: https://4cujdvfmd4.execute-api.us-east-2.amazonaws.com/staging/generate/task_progress
 
@@ -951,9 +959,9 @@ EXAMPLE
         "message": null
     }
 
-# Balancer API
+## Load Balancer API
 
-## register ec2_id for a new user
+### Register ec2_id for a New User
 
 URL: https://4cujdvfmd4.execute-api.us-east-2.amazonaws.com/staging/balancer/register_ec2
 
@@ -987,7 +995,7 @@ EXAMPLE
         "message": null
     }
 
-## start ec2 of user
+### Start EC2 of User
 
 URL: https://4cujdvfmd4.execute-api.us-east-2.amazonaws.com/staging/balancer/receiver
 
@@ -1023,275 +1031,246 @@ EXAMPLE
         "message": null
     }
 
-# Authentication APIs
-## API Sign up
-  - POST : 
-  
-            staging :  https://4145bk5g67.execute-api.us-east-2.amazonaws.com/staging/user_signup
-            dev : https://a7la2z0b6i.execute-api.us-east-2.amazonaws.com/dev/user_signup
-  - Request
-    - Content-type	: application/json
-    - Body 
-      ```
+## Authentication APIs
+
+### API Sign Up
+- POST
+  ```
+  staging: https://rtv81e9ysk.execute-api.us-east-2.amazonaws.com/staging/user_signup
+  dev: https://nzvw2zvu3d.execute-api.us-east-2.amazonaws.com/staging/auth/user_signup
+  ```
+- Request
+  - Content-type: application/json
+  - Body
+    ```json
+    {
+        "email": string,
+        "username": string,
+        "password": string
+    }
+    ```
+  - Response
+    - Http code: 200
+
+### API Login
+- POST
+  ```
+  staging: https://rtv81e9ysk.execute-api.us-east-2.amazonaws.com/staging/user_login
+  dev: https://nzvw2zvu3d.execute-api.us-east-2.amazonaws.com/staging/auth/user_login
+  ```
+- Request
+  - Content-type: application/json
+  - Body
+    ```json
+    {
+        "username": string,
+        "password": string
+    }
+    ```
+  - Response 
+      - Http code: 200
+        ```json
+        {
+            "message": string,
+            "data": {},
+            "error": boolean
+        }
+        ```
+     - Header: x-amzn-remapped-authorization: "Bearer "The Token""
+
+### API Confirmation Email 
+- POST
+  ```
+  staging: https://rtv81e9ysk.execute-api.us-east-2.amazonaws.com/staging/auth_confirm
+  dev: https://nzvw2zvu3d.execute-api.us-east-2.amazonaws.com/staging/auth/auth_confirm
+  ```
+- Request 
+  - Content-type: application/json
+  - Body
+    ```json
+    {
+        "username": string,
+        "confirm_code": string
+    }
+    ```
+- Response
+    - Http code: 200
+      ```json
       {
-        "email": String,
-        "username": String,
-        "password": String
+          "message": string,
+          "data": {},
+          "error": boolean
       }
       ```
-   - Response
-     - Http code : 200
 
-## API Login
-- POST :   
-
-            staging :https://4145bk5g67.execute-api.us-east-2.amazonaws.com/staging/user_login
-            dev : https://a7la2z0b6i.execute-api.us-east-2.amazonaws.com/dev/user_login
-- Request
-  - Content-type	: application/json
-  - Body 
+### API Resend Confirmation Code
+- POST
   ```
+  staging: https://rtv81e9ysk.execute-api.us-east-2.amazonaws.com/staging/resend_confirmcode
+  dev: https://nzvw2zvu3d.execute-api.us-east-2.amazonaws.com/staging/auth/resend_confirmcode
+  ```
+- Request 
+  - Content-type: application/json
+  - Body
+    ```json
+    {
+        "username": string
+    }
+    ```
+- Response
+    - Http code: 200
+    ```json
+    {
+        "message": string,
+        "data": {},
+        "error": boolean
+    }
+    ```
+
+### API Resend Confirmation Code - Forgot Password
+- POST
+  ``` 
+  staging: https://4145bk5g67.execute-api.us-east-2.amazonaws.com/staging/confirm_code_forgot_password
+  dev: https://nzvw2zvu3d.execute-api.us-east-2.amazonaws.com/staging/auth/confirm_code_forgot_password
+  ```
+- Request 
+  - Content-type: application/json
+  - Body
+    ```json
+    {
+        "username": string,
+        "password": string,
+        "confirm_code": string
+    }
+    ```
+- Response
+    - Http code: 200
+    ```json
+    {
+        "message": string,
+        "data": {},
+        "error": boolean
+    }
+    ```
+
+### API Forgot Password
+- POST
+  ```
+  staging: https://4145bk5g67.execute-api.us-east-2.amazonaws.com/staging/forgot_password
+  dev: https://nzvw2zvu3d.execute-api.us-east-2.amazonaws.com/staging/auth/forgot_password
+  ```
+- Request 
+  - Content-type: application/json
+  - Body
+    ```json
+    {
+        "username": string
+    }
+    ```
+- Response
+    - Http code: 200
+    ```json
+    {
+        "message": string,
+        "data": {},
+        "error": boolean
+    }
+    ```
+
+### API Refresh Token
+- POST
+  ```
+  staging: https://4145bk5g67.execute-api.us-east-2.amazonaws.com/staging/refresh_token
+  dev: https://nzvw2zvu3d.execute-api.us-east-2.amazonaws.com/staging/auth/refresh_token
+  ```
+- Request
+  - Content-type: application/json
+  - Body
+  ```json
   {
-    "username": String,
-    "password": String
+      "username": string,
+      "refresh_token": string
   }
   ```
 - Response 
-    - Http code : 200
-    ```
+    - Http code: 200
+    ```json
     {
-      "message": String,
-      "data": {
-        "access_key":String
-        "expires_in":String
-        "id_token":String
-        "identity_id":String
-        "secret_key":String
-        "session_key":String
-        "token":String
-        "resfresh_token":String
-      },
-      "error": Boolean
+        "message": string,
+        "data": {
+            "access_key": string,
+            "expires_in": string,
+            "id_token": string,
+            "identity_id": string,
+            "secret_key": string,
+            "session_key": string,
+            "token": string
+        },
+        "error": boolean
     }
     ```
-   -  Header : x-amzn-remapped-authorization	: "Bearer "The Token""
 
-## API Test
-- POST :  
-
-            staging :https://4145bk5g67.execute-api.us-east-2.amazonaws.com/staging/test
-            dev : https://a7la2z0b6i.execute-api.us-east-2.amazonaws.com/dev/test
-- Request :
-    - Header : Authorization	: "Bearer "The Token""
-- Response :
-  - Http code : 200
+### API Send Email
+- POST
   ```
-    {
-      "message": String,
-      "data": {},
-      "error": Boolean
-    }
+  staging: https://54upf5w03c.execute-api.us-east-2.amazonaws.com/staging/send-mail/reference-email
+  dev: https://a7la2z0b6i.execute-api.us-east-2.amazonaws.com/dev/send-mail/reference-email
   ```
-## API Log Out
-- POST :  
-
-        
-          staging:https://4145bk5g67.execute-api.us-east-2.amazonaws.com/staging/user_logout
-          dev : https://a7la2z0b6i.execute-api.us-east-2.amazonaws.com/dev
-- Request :
-  - Header : Authorization	: "Bearer "The Token""
-- Response :
-```
-  {
-    "message": String,
-    "data": {},
-    "error": Boolean
-  }
-```
-## API confirm email 
-- POST :
-
-
-        staging : https://4145bk5g67.execute-api.us-east-2.amazonaws.com/staging/auth_confirm
-        dev : https://a7la2z0b6i.execute-api.us-east-2.amazonaws.com/dev/auth_confirm
-- Request 
-  - Content-type	: application/json
-  - Body 
-    ```
-    {
-      "username": String,
-      "confirm_code": String
-    }
-    ```
-- Response
-    - Http code : 200
-    ```
-    {
-      "message":String ,
-      "data": {},
-      "error": Boolean
-    }
-    ```
- 
-## API resend confirm code
-- POST 
-
-         staging: https://4145bk5g67.execute-api.us-east-2.amazonaws.com/staging/resend_confirmcode
-         dev : https://a7la2z0b6i.execute-api.us-east-2.amazonaws.com/dev/resend_confirmcode
-- Request 
-  - Content-type	: application/json
-  - Body 
-    ```
-    {
-      "username": String
-    }
-    ```
-- Response
-    - Http code : 200
-    ```
-    {
-      "message":String ,
-      "data": {},
-      "error": Boolean
-    }
-    ```
-## API resend confirm code forgot password
-- POST : 
-
- 
-           staging: https://4145bk5g67.execute-api.us-east-2.amazonaws.com/staging/confirm_code_forgot_password
-           dev : https://a7la2z0b6i.execute-api.us-east-2.amazonaws.com/dev/confirm_code_forgot_password
-- Request 
-  - Content-type	: application/json
-  - Body 
-    ```
-    {
-      "username": String
-      "password": String
-      "confirm_code": String
-    }
-    ```
-- Response
-    - Http code : 200
-    ```
-    {
-      "message":String ,
-      "data": {},
-      "error": Boolean
-    }
-    ```
-## API forgot password
-- POST :
-
-
-          staging https://4145bk5g67.execute-api.us-east-2.amazonaws.com/staging/forgot_password
-          dev : https://a7la2z0b6i.execute-api.us-east-2.amazonaws.com/dev/forgot_password
-- Request 
-  - Content-type	: application/json
-  - Body 
-    ```
-    {
-      "username": String
-    }
-    ```
-- Response
-    - Http code : 200
-    ```
-    {
-      "message":String ,
-      "data": {},
-      "error": Boolean
-    }
-    ```
-## API refresh token
-- POST :    
-
-            staging : https://4145bk5g67.execute-api.us-east-2.amazonaws.com/staging/refresh_token
-            dev : https://a7la2z0b6i.execute-api.us-east-2.amazonaws.com/dev/refresh_token
 - Request
-  - Content-type	: application/json
+  - Content-type: application/json
   - Body 
-  ```
+  ```json
   {
-    "username": String,
-    "refresh_token": String
+      "username": string,
+      "destination_email": string
   }
   ```
 - Response 
-    - Http code : 200
-    ```
+    - Http code: 200
+    ```json
     {
-      "message": String,
-      "data": {
-        "access_key":String
-        "expires_in":String
-        "id_token":String
-        "identity_id":String
-        "secret_key":String
-        "session_key":String
-        "token":String
-      },
-      "error": Boolean
+        "message": string,
+        "data": {},
+        "error": boolean
     }
     ```
-## API send mail
-- POST :  
 
-
-         staging: https://54upf5w03c.execute-api.us-east-2.amazonaws.com/staging/send-mail/reference-email
-         dev : https://a7la2z0b6i.execute-api.us-east-2.amazonaws.com/dev/send-mail/reference-email
+### API Template Invitation Email
+- GET
+  ```
+  staging :https://4145bk5g67.execute-api.us-east-2.amazonaws.com/staging/template-invite-mail
+  dev :https://nzvw2zvu3d.execute-api.us-east-2.amazonaws.com/staging/auth/template-invite-mail
+  ```
 - Request
-  - Content-type	: application/json
-  - Body 
-  ```
-    {
-      "username":String,
-      "destination_email":String
-    }
-  ```
-- Response 
-    - Http code : 200
-    ```
-    {
-      "message": String,
-      "data": {},
-      "error": Boolean
-    }
-    ```
-## API template invite mail
-- GET :   
-
-           staging :https://4145bk5g67.execute-api.us-east-2.amazonaws.com/staging/template-invite-mail
-           dev : https://a7la2z0b6i.execute-api.us-east-2.amazonaws.com/dev/template-invite-mail
-- Request :
-    - Header : Authorization	: "Bearer "The Token""
-- Response :
-  - Http code : 200
-  ```
-    {
-      "message": String,
+    - Header: Authorization: "Bearer "The Token""
+- Response
+  - Http code: 200
+  ```json
+  {
+      "message": string,
       "data": {
-          "template_mail": String
-          },
-      "error": Boolean
-    }
-  ```
-## API Login google 
-- Response 
-    - Http code : 200
-    ```
-    {
-      "message": String,
-      "data": {
-        "access_key":String
-        "expires_in":String
-        "id_token":String
-        "identity_id":String
-        "secret_key":String
-        "session_key":String
-        "token":String
-        "resfresh_token":String
+          "template_mail": string
       },
-      "error": Boolean
+      "error": boolean
+  }
+  ```
+
+### API Login Google 
+- Response 
+    - Http code: 200
+    ```json
+    {
+        "message": string,
+        "data": {
+            "access_key": string,
+            "expires_in": string,
+            "id_token": string,
+            "identity_id": string,
+            "secret_key": string,
+            "session_key": string,
+            "token": string,
+            "resfresh_token": string
+        },
+        "error": boolean
     }
     ```
