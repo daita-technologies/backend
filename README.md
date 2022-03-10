@@ -1,5 +1,9 @@
 # Backend System for the DAITA Platform
 
+Detailed documentation can be found in the [`docs`](./docs) folder.
+
+---
+
 ## A Note on Releases
 
 The repository should be setup in the future in such a way that changes to the branch `release-staging` and `release-production` will trigger a rebuild of the Staging and the Production application, respectively.
