@@ -156,3 +156,4 @@ dmypy.json
 cython_debug/
 
 core_service_sam/
+ai_caller_service_v2/test

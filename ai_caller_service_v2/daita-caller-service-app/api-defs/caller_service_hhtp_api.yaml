@@ -1,0 +1,55 @@
+openapi: "3.0.1"
+info:
+  title: "Caller service Tasks Http API"
+  version: "2021-04-07"
+tags:
+- name: "httpapi:createdBy"
+  x-amazon-apigateway-tag-value: "SAM"
+paths:
+  # /jobs/{jobId}:
+  #   get:
+  #     responses:
+  #       default:
+  #         description: "Default response for GET /jobs/{jobId}"
+  #     x-amazon-apigateway-integration:
+  #       credentials:
+  #         Fn::GetAtt: [CallerServiceHttpApiRole, Arn]
+  #       uri: 
+  #         Fn::Sub: "arn:${AWS::Partition}:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${HelloWorldFunction.Arn}/invocations"
+  #       payloadFormatVersion: "2.0"
+  #       type: "aws_proxy"
+  #       httpMethod: "POST"
+  #       connectionType: "INTERNET"
+  /generate/images:
+    post:
+      responses:
+        default:
+          description: "Default response for POST /jobs"
+      x-amazon-apigateway-integration:
+        integrationSubtype: "EventBridge-PutEvents"
+        credentials:
+           Fn::GetAtt: [CallerServiceHttpApiRole, Arn]
+        requestParameters:
+          EventBusName: 
+            Ref: CallerServiceEventBus
+          Detail: "$request.body"
+          DetailType: "api.event"
+          Source: "source.events"
+        payloadFormatVersion: "1.0"
+        type: "aws_proxy"
+        connectionType: "INTERNET"
+x-amazon-apigateway-cors:
+  allowMethods:
+  - "GET"
+  - "OPTIONS"
+  - "POST"
+  allowHeaders:
+  - "authorization"
+  - "content-type"
+  - "x-amz-date"
+  - "x-amzm-header"
+  - "x-api-key"
+  - "x-apigateway-header"
+  maxAge: 60
+  allowCredentials: false
+x-amazon-apigateway-importexport-version: "1.0"

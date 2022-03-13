@@ -1,0 +1,312 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: >
+  daita-caller-service-app
+
+  Sample SAM Template for daita-caller-service-app
+
+# More info about Globals: https://github.com/awslabs/serverless-application-model/blob/master/docs/globals.rst
+Globals:
+  Function:
+    Timeout: 800
+
+Resources:
+
+  #================ ROLES =====================================================
+
+  # add role to start state machine from eventbus
+  CallerServiceEventBusRole:
+    Type: "AWS::IAM::Role"
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: "Allow"
+            Principal:
+              Service: "events.amazonaws.com"
+            Action: 
+              - "sts:AssumeRole"
+      Policies:
+        - PolicyName: DirectlyInvokeStepFunctions
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              Action:
+              - "states:StartExecution"
+              Effect: Allow
+              Resource:
+                - !Ref CallerServiceStateMachine
+
+  # add role call service for api gateway 
+  CallerServiceHttpApiRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+        - Effect: "Allow"
+          Principal: 
+            Service: "apigateway.amazonaws.com"
+          Action:
+          - "sts:AssumeRole"
+      Policies:
+      - PolicyName: HttpApiDirectWriteToEventBridge
+        PolicyDocument:
+          Version: "2012-10-17"
+          Statement:
+            Action:
+            - "events:PutEvents"
+            Effect: Allow
+            Resource:
+              - !GetAtt CallerServiceEventBus.Arn
+
+  #================ LAMBDA FUNCTIONS ==========================================
+      
+  PreprocessGenerateTask:
+    Type: AWS::Serverless::Function 
+    Properties:
+      CodeUri: functions/handlers/preprocess_generate_batch
+      Handler: app.lambda_handler
+      Runtime: python3.8
+      Architectures:
+        - x86_64    
+  
+  #================ EVENT BUS =================================================
+
+  CallerServiceEventBus:
+    Type: AWS::Events::EventBus
+    Properties: 
+      Name: CallerServiceEventBus
+
+  CallerServiceEventBusDefaultRule:
+    Type: AWS::Events::Rule
+    Properties:
+      Description: "Default Rule for Any event"
+      State: ENABLED
+      EventBusName: !Ref CallerServiceEventBus
+      EventPattern:
+        source:
+          - "source.events"
+        detail-type:
+          - "api.event"
+      Targets:
+        - 
+          Arn: !GetAtt CallerServiceStateMachine.Arn 
+          Id: "CallerServiceStateMachineTarget"
+          RoleArn: !GetAtt CallerServiceEventBusRole.Arn
+
+  #================ LOGS FOR STEP FUNCTIONS ===================================
+
+  CallerServiceStateMachineLogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties: 
+      LogGroupName: !Sub "CallerServiceStateMachineLogGroup-${AWS::StackName}"
+      RetentionInDays: 7
+
+  #================ PROCESSOR STATE MACHINE ===================================
+
+  CallerServiceStateMachine:
+    Type: AWS::Serverless::StateMachine
+    Properties:
+      # Type: EXPRESS
+      Type: STANDARD
+      Policies:
+        - Statement:
+          - Sid: AWSStepFunctionsFullAccess
+            Effect: Allow
+            Action: 
+            - "states:*"
+            Resource: 
+            - !Ref PrepareStateMachine
+            - !Ref DownloadStateMachine
+            - !Ref GenerateStateMachine
+            - !Ref UploadStateMachine
+          - Sid: CloudWatchLogsPolicy
+            Effect: Allow
+            Action:
+            - "logs:CreateLogDelivery"
+            - "logs:GetLogDelivery"
+            - "logs:UpdateLogDelivery"
+            - "logs:DeleteLogDelivery"
+            - "logs:ListLogDeliveries"
+            - "logs:PutResourcePolicy"
+            - "logs:DescribeResourcePolicies"
+            - "logs:DescribeLogGroup"
+            - "logs:DescribeLogGroups"
+            Resource: "*"
+          - Sid: CloudWatchEventsFullAccess
+            Effect: Allow
+            Action:
+            - "events:*"
+            Resource: "*"
+          - Sid: IAMPassRoleForCloudWatchEvents
+            Effect: Allow
+            Action:
+            - "iam:PassRole"
+            Resource: "arn:aws:iam::*:role/AWS_Events_Invoke_Targets"
+      Tracing:
+        Enabled: true
+      DefinitionUri: statemachine/caller_service_state_machine.asl.yaml
+      Logging:
+        Level: ALL
+        IncludeExecutionData: true
+        Destinations:
+        - CloudWatchLogsLogGroup:
+            LogGroupArn: !GetAtt CallerServiceStateMachineLogGroup.Arn
+      DefinitionSubstitutions:
+        PrepareStateMachine: !GetAtt PrepareStateMachine.Arn
+        DownloadStateMachine: !GetAtt DownloadStateMachine.Arn
+        GenerateStateMachine: !GetAtt GenerateStateMachine.Arn
+        UploadStateMachine: !GetAtt UploadStateMachine.Arn
+
+  PrepareStateMachine:
+    Type: AWS::Serverless::StateMachine
+    Properties:
+      Type: STANDARD
+      Policies:
+        - LambdaInvokePolicy:
+            FunctionName: !Ref PreprocessGenerateTask   
+        - Statement:
+          - Sid: CloudWatchLogsPolicy
+            Effect: Allow
+            Action:
+            - "logs:CreateLogDelivery"
+            - "logs:GetLogDelivery"
+            - "logs:UpdateLogDelivery"
+            - "logs:DeleteLogDelivery"
+            - "logs:ListLogDeliveries"
+            - "logs:PutResourcePolicy"
+            - "logs:DescribeResourcePolicies"
+            - "logs:DescribeLogGroup"
+            - "logs:DescribeLogGroups"
+            Resource: "*"
+      Tracing:
+        Enabled: true
+      DefinitionUri: statemachine/prepare_state_machine.asl.yaml
+      Logging:
+        Level: ALL
+        IncludeExecutionData: true
+        Destinations:
+        - CloudWatchLogsLogGroup:
+            LogGroupArn: !GetAtt CallerServiceStateMachineLogGroup.Arn
+      DefinitionSubstitutions:
+        PreprocessGenerateTask: !GetAtt PreprocessGenerateTask.Arn
+
+  DownloadStateMachine:
+    Type: AWS::Serverless::StateMachine
+    Properties:
+      Type: STANDARD
+      Policies:
+        - LambdaInvokePolicy:
+            FunctionName: !Ref PreprocessGenerateTask           
+        - Statement:
+          - Sid: CloudWatchLogsPolicy
+            Effect: Allow
+            Action:
+            - "logs:CreateLogDelivery"
+            - "logs:GetLogDelivery"
+            - "logs:UpdateLogDelivery"
+            - "logs:DeleteLogDelivery"
+            - "logs:ListLogDeliveries"
+            - "logs:PutResourcePolicy"
+            - "logs:DescribeResourcePolicies"
+            - "logs:DescribeLogGroup"
+            - "logs:DescribeLogGroups"
+            Resource: "*"
+      Tracing:
+        Enabled: true
+      DefinitionUri: statemachine/download_state_machine.asl.yaml
+      Logging:
+        Level: ALL
+        IncludeExecutionData: true
+        Destinations:
+        - CloudWatchLogsLogGroup:
+            LogGroupArn: !GetAtt CallerServiceStateMachineLogGroup.Arn
+      DefinitionSubstitutions:
+        PreprocessGenerateTask: !GetAtt PreprocessGenerateTask.Arn
+
+  GenerateStateMachine:
+    Type: AWS::Serverless::StateMachine
+    Properties:
+      Type: STANDARD
+      Policies:
+        - LambdaInvokePolicy:
+            FunctionName: !Ref PreprocessGenerateTask   
+        - Statement:
+          - Sid: CloudWatchLogsPolicy
+            Effect: Allow
+            Action:
+            - "logs:CreateLogDelivery"
+            - "logs:GetLogDelivery"
+            - "logs:UpdateLogDelivery"
+            - "logs:DeleteLogDelivery"
+            - "logs:ListLogDeliveries"
+            - "logs:PutResourcePolicy"
+            - "logs:DescribeResourcePolicies"
+            - "logs:DescribeLogGroup"
+            - "logs:DescribeLogGroups"
+            Resource: "*"
+      Tracing:
+        Enabled: true
+      DefinitionUri: statemachine/generate_state_machine.asl.yaml
+      Logging:
+        Level: ALL
+        IncludeExecutionData: true
+        Destinations:
+        - CloudWatchLogsLogGroup:
+            LogGroupArn: !GetAtt CallerServiceStateMachineLogGroup.Arn
+      DefinitionSubstitutions:
+        PreprocessGenerateTask: !GetAtt PreprocessGenerateTask.Arn
+
+  UploadStateMachine:
+    Type: AWS::Serverless::StateMachine
+    Properties:
+      Type: STANDARD
+      Policies:
+        - LambdaInvokePolicy:
+            FunctionName: !Ref PreprocessGenerateTask  
+        - Statement:
+          - Sid: CloudWatchLogsPolicy
+            Effect: Allow
+            Action:
+            - "logs:CreateLogDelivery"
+            - "logs:GetLogDelivery"
+            - "logs:UpdateLogDelivery"
+            - "logs:DeleteLogDelivery"
+            - "logs:ListLogDeliveries"
+            - "logs:PutResourcePolicy"
+            - "logs:DescribeResourcePolicies"
+            - "logs:DescribeLogGroup"
+            - "logs:DescribeLogGroups"
+            Resource: "*"
+      Tracing:
+        Enabled: true
+      DefinitionUri: statemachine/upload_state_machine.asl.yaml
+      Logging:
+        Level: ALL
+        IncludeExecutionData: true
+        Destinations:
+        - CloudWatchLogsLogGroup:
+            LogGroupArn: !GetAtt CallerServiceStateMachineLogGroup.Arn
+      DefinitionSubstitutions:
+        PreprocessGenerateTask: !GetAtt PreprocessGenerateTask.Arn
+
+  #================ CALLER SERVICE HTTP API ===================================
+
+  CallerServiceHttpApi:
+    Type: AWS::Serverless::HttpApi
+    Properties:
+      DefinitionBody:
+        Fn::Transform:
+          Name: AWS::Include
+          Parameters:
+            Location: './api-defs/caller_service_hhtp_api.yaml'
+
+Outputs:
+  # ServerlessRestApi is an implicit API created out of Events key under Serverless::Function
+  # Find out more about other implicit resources you can reference within SAM
+  # https://github.com/awslabs/serverless-application-model/blob/master/docs/internals/generated_resources.rst#api
+  CallerServiceHttpApiUrl:
+    Description: "Url of the Caller service API"
+    Value: !Sub "https://${CallerServiceHttpApi}.execute-api.${AWS::Region}.amazonaws.com"
+
