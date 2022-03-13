@@ -30,7 +30,7 @@ def generate_response(
     return {
         "statusCode": status_code,
         "headers": headers,
-        "body": html.escape(json.dumps(body)),
+        "body": json.dumps(body),
         "isBase64Encoded": False
     }
 

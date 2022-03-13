@@ -26,4 +26,6 @@ MessageTokenInvalid = "Token is invalid"
 MessageGetTemapleMailSuccessFully = "Template for friend invitation received successfully"
 MessageErrorDeleteUserSignUp = "Error deleting user"
 MessageCaptchaFailed = "Captcha token verification failed"
+MessageSendFeedbackFailed = "Send feeback failed"
+MessageSendFeedbackSuccessfully = "send feedback successfully"
 

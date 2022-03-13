@@ -1,6 +1,3 @@
-
-  
-from ast import Param
 from email import header
 import os
 import json
@@ -10,7 +7,6 @@ from http import HTTPStatus
 import os
 import boto3
 import cognitojwt
-from dataclasses import dataclass
 from utils  import aws_get_identity_id
 
 from error import *
@@ -128,11 +124,8 @@ def lambda_handler(event, context):
         print(resq.text)
         raise Exception("Login Social Failed")
     resqData = resq.json()
-    print(resqData)
     token = resqData['access_token']
     sub, username = claimsToken(resqData['access_token'],'sub') , claimsToken(resqData['access_token'],'username')
-    print(token)
-    print(sub)
     try:
         credentialsForIdentity = getCredentialsForIdentity(resqData['id_token'])
     except Exception as e:
@@ -141,7 +134,6 @@ def lambda_handler(event, context):
                 message=MessageAuthenFailed,
                 data={},
                 headers=RESPONSE_HEADER)
-    print(credentialsForIdentity)
     if not model.checkFirstLogin(ID=sub,username=username):
         kms = createKMSKey(credentialsForIdentity['identity_id'])
         model.updateActivateUser(info={
@@ -166,12 +158,11 @@ def lambda_handler(event, context):
                 credentialsForIdentity['credential_token_expires_in']
                 ,datetime.now().timestamp() + ACCESS_TOKEN_EXPIRATION,
                 credentialsForIdentity['session_key'],
-                credentialsForIdentity['identity_id'])
-    print(location) 
+                credentialsForIdentity['identity_id'],username)
     headers = {"Location":location,	"Access-Control-Allow-Methods": "GET,HEAD,OPTIONS,POST,PUT"}
     return {
         "statusCode": 302,
         "headers": headers,
         "body":"",
         "isBase64Encoded": False
-    }   
+    }

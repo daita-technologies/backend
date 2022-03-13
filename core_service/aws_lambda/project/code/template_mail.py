@@ -47,22 +47,13 @@ def claimsToken(jwt_token,field):
 
 @error_response
 def lambda_handler(event, context):
-
-    print(event['headers'],type(event['headers']))
     headers = event['headers']['Authorization']
-    print(headers,type(headers))
-    # print(event)
-    print("*"*100)
     authorization_header = headers
     # authorization_header = {k.lower(): v for k, v in headers.items() if k.lower() == 'authorization'}
-    print(authorization_header)
     if not len(authorization_header):
         raise Exception(MessageMissingAuthorizationHeader)
-    print(authorization_header)
     username = claimsToken(authorization_header,'username')
-    print(username)
     mail = getMail(username)
-    print(mail)
     template = "<p>Hi,</p><p>{} has invited you to explore DAITA's recently launched " \
 		"<a href=\"https://demo.daita.tech\"style=\"text-decoration:none;color:inherit;border-bottom: solid 2px\">data augmentation platform</a>.</p> " \
 		"<p>Building a platform that machine learning engineers and data scientists " \
