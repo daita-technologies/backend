@@ -300,7 +300,7 @@ Resources:
         Fn::Transform:
           Name: AWS::Include
           Parameters:
-            Location: './api-defs/caller_service_hhtp_api.yaml'
+            Location: './api-defs/caller_service_http_api.yaml'
 
 Outputs:
   # ServerlessRestApi is an implicit API created out of Events key under Serverless::Function
