@@ -5,8 +5,8 @@ PROJECT_DIR = Path(__file__).parent
 CODE_DIR = PROJECT_DIR.joinpath("code")
 
 def deploy_lambda_auth(general_info, lambda_service):
-    ls_lambda_val = []   
-    
+    ls_lambda_val = []
+
     #login
     lambda_uri, lambda_version = lambda_service.deploy_lambda_function(f'login',
                                           [ CODE_DIR.joinpath("login.py"),
@@ -33,7 +33,7 @@ def deploy_lambda_auth(general_info, lambda_service):
                                         'register.lambda_handler',
                                         'staging: register')
     add_lambda_info_to_list(ls_lambda_val, lambda_uri, lambda_version, 'auth', 'user_signup')
-    
+
     # login-social
     lambda_uri, lambda_version = lambda_service.deploy_lambda_function(f'login_social',
                                           [ CODE_DIR.joinpath("login_social.py"),
@@ -47,8 +47,8 @@ def deploy_lambda_auth(general_info, lambda_service):
                                         },
                                         'login_social.lambda_handler',
                                         'staging: login_social')
-    add_lambda_info_to_list(ls_lambda_val, lambda_uri, lambda_version, 'auth', 'login_social')    
-    
+    add_lambda_info_to_list(ls_lambda_val, lambda_uri, lambda_version, 'auth', 'login_social')
+
     # template email
     lambda_uri, lambda_version = lambda_service.deploy_lambda_function(f'template_mail',
                                           [ CODE_DIR.joinpath("template_mail.py"),
@@ -62,8 +62,8 @@ def deploy_lambda_auth(general_info, lambda_service):
                                         'template_mail.lambda_handler',
                                         'staging: template_mail')
     add_lambda_info_to_list(ls_lambda_val, lambda_uri, lambda_version, 'auth', 'template-invite-mail')
-    
-    # resend code 
+
+    # resend code
     lambda_uri, lambda_version = lambda_service.deploy_lambda_function(f'resend_confirmcode',
                                           [ CODE_DIR.joinpath("resend_confirmcode.py"),
                                             PROJECT_DIR.joinpath("common"),
@@ -88,7 +88,7 @@ def deploy_lambda_auth(general_info, lambda_service):
                                         'auth_confirm.lambda_handler',
                                         'staging: auth_confirm')
     add_lambda_info_to_list(ls_lambda_val, lambda_uri, lambda_version, 'auth', 'auth_confirm')
-    
+
     # backend/lambda/login/module/auth/forgot_password.go
     lambda_uri, lambda_version = lambda_service.deploy_lambda_function(f'staging-forgot-password',
                                         [
@@ -102,7 +102,7 @@ def deploy_lambda_auth(general_info, lambda_service):
                                         'forgot_password.lambda_handler',
                                         'staging: forgot password')
     add_lambda_info_to_list(ls_lambda_val, lambda_uri, lambda_version, 'auth', 'forgot-password')
-    
+
     # backend/lambda/login/module/auth/confirm_code_forgot_password.go
     lambda_uri, lambda_version = lambda_service.deploy_lambda_function(f'staging-confirm-code-forgot-password',
                                         [
@@ -131,5 +131,29 @@ def deploy_lambda_auth(general_info, lambda_service):
                                         'login_refresh_token.lambda_handler',
                                         'staging: Get refresh Token')
     add_lambda_info_to_list(ls_lambda_val, lambda_uri, lambda_version, 'auth', 'refresh-token')
+
+    # Wrapper for Github token api to comply with Cognito OpenID
+    lambda_uri, lambda_version = lambda_service.deploy_lambda_function(f'staging-github-openid-token-wrapper',
+                                        ls_files = [
+                                            CODE_DIR.joinpath("github_openid_token_wrapper.py"),
+                                            PROJECT_DIR.joinpath("common"),
+                                            PROJECT_DIR.joinpath("packages"),
+                                        ],
+                                        env_vari={},
+                                        handler='github_openid_token_wrapper.lambda_handler',
+                                        description='staging: Wrapper for Github token api to comply with Cognito OpenID')
+    add_lambda_info_to_list(ls_lambda_val, lambda_uri, lambda_version, 'auth', 'github-openid-token-wrapper')
+
+    # Wrapper for Github userinfo api to comply with Cognito OpenID
+    lambda_uri, lambda_version = lambda_service.deploy_lambda_function(f'staging-github-openid-userinfo-wrapper',
+                                        ls_files = [
+                                            CODE_DIR.joinpath("github_openid_userinfo_wrapper.py"),
+                                            PROJECT_DIR.joinpath("common"),
+                                            PROJECT_DIR.joinpath("packages"),
+                                        ],
+                                        env_vari={},
+                                        handler='github_openid_userinfo_wrapper.lambda_handler',
+                                        description='staging: Wrapper for Github userinfo api to comply with Cognito OpenID')
+    add_lambda_info_to_list(ls_lambda_val, lambda_uri, lambda_version, 'auth', 'github-openid-userinfo-wrapper')
 
     return ls_lambda_val
