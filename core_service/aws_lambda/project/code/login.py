@@ -50,7 +50,7 @@ def checkEmailVerified(access_token):
 
 class User(object):
     def __init__(self):
-        self.db_client = boto3.resource('dynamodb',region_name=REGION,aws_access_key_id=ACCESSKEYID,aws_secret_access_key=SECRETACCESS)
+        self.db_client = boto3.resource('dynamodb',region_name=REGION)
     
     def checkFirstLogin(self,ID,username):
         response = self.db_client.Table("User").get_item(
