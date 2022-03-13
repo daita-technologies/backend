@@ -8,3 +8,7 @@ ENDPOINTCAPTCHAVERIFY = "https://www.google.com/recaptcha/api/siteverify"
 ACCESSKEYID = "AKIAVKWNZXMINQ6JTYXY"
 SECRETACCESS="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"
 
+# Github OpenID wrapper
+# Change these if used with GitHub Enterprise (see below)
+GITHUB_API_URL = "https://api.github.com"
+GITHUB_LOGIN_URL = "https://github.com"
