@@ -28,7 +28,7 @@ RESPONSE_HEADER = {
 PASSWORD_REGEX = r"^(?=.*[a-z])(?=.*[A-Z])(?=.*[0-9])(?=.*[\^$*.\[\]{}\(\)?\-\"!@#%&\/,><\':;|_~`])\S{8,99}$"
 class User(object):
     def __init__(self):
-        self.db_client = boto3.resource('dynamodb',region_name=REGION,aws_access_key_id=ACCESSKEYID,aws_secret_access_key=SECRETACCESS)
+        self.db_client = boto3.resource('dynamodb',region_name=REGION)
     def create_item(self,info):
         self.db_client.Table("User").put_item(Item={
             'ID': info['ID'],
@@ -96,8 +96,6 @@ def lambda_handler(event, context):
     """
     AddTriggerCustomMail({
         'region':REGION,
-        'accesskey_id':ACCESSKEYID,
-        'secret_access':SECRETACCESS,
         'user':username,
         'mail':mail,
         'subject':'Your email confirmation code'

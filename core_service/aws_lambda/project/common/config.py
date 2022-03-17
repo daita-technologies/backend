@@ -5,10 +5,9 @@ IDENTITYPOOLID = "us-east-2:fa0b76bc-01fa-4bb8-b7cf-a5000954aafb"
 SITEKEYGOOGLE = "6LcqEGMeAAAAAAEDnBue7fwR4pmvNO7JKWkHtAjl"
 SECRETKEYGOOGLE = "6LcqEGMeAAAAAOiJAMcg1NNfj6eA62gQPLJAtQMt"
 ENDPOINTCAPTCHAVERIFY = "https://www.google.com/recaptcha/api/siteverify"
-ACCESSKEYID = "AKIAVKWNZXMINQ6JTYXY"
-SECRETACCESS="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"
-
 # Github OpenID wrapper
 # Change these if used with GitHub Enterprise (see below)
 GITHUB_API_URL = "https://api.github.com"
 GITHUB_LOGIN_URL = "https://github.com"
+WEBHOOK="https://hooks.slack.com/services/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"
+CHANNELWEBHOOK="#user-feedback"

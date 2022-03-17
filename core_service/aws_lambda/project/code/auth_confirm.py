@@ -32,8 +32,6 @@ def lambda_handler(event, context):
     try :
         DeleteConfirmCode({
         'region':REGION,
-        'accesskey_id':ACCESSKEYID,
-        'secret_access':SECRETACCESS,
         'user':username,
         'code':confirmCode
         })
