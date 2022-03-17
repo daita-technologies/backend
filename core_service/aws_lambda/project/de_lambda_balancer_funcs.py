@@ -1,9 +1,12 @@
 from aws_lambda.utils.utils import add_lambda_info_to_list
+from pathlib import Path
 
+PROJECT_DIR = Path(__file__).parent
+ROOT = str(PROJECT_DIR.joinpath("code"))+'/'
+PACKAGES = PROJECT_DIR.joinpath("packages")
 
 def deploy_lambda_balancer(general_info, lambda_service):
     ls_lambda_val = [] 
-    ROOT = 'aws_lambda/project/code/'
         
     # async start ec2
     lambda_uri, lambda_version = lambda_service.deploy_lambda_function(f'staging-balancer-asy-start-test',

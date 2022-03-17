@@ -1,12 +1,14 @@
 from aws_lambda.utils.utils import add_lambda_info_to_list
+from pathlib import Path
 
-
+PROJECT_DIR = Path(__file__).parent
+ROOT = str(PROJECT_DIR.joinpath("code"))+'/'
+PACKAGES = PROJECT_DIR.joinpath("packages")
 
 
 def deploy_lambda_project(general_info, lambda_service):
     ls_lambda_val = []
 
-    ROOT = 'aws_lambda/project/code/'
 
     # create project
     lambda_uri, lambda_version = lambda_service.deploy_lambda_function(f'staging-project-create', 
@@ -194,7 +196,7 @@ def deploy_lambda_project(general_info, lambda_service):
     # create a download task 
     lambda_uri, lambda_version = lambda_service.deploy_lambda_function(f'staging-project-download-create',
                                         [ROOT + 'project_download_create.py', ROOT + 'utils.py',
-                                         'aws_lambda/project/packages',
+                                         PACKAGES,
                                         ROOT + 'const.py'],
                                         {
                                             'USER_POOL_ID' : general_info['USER_POOL_ID'],

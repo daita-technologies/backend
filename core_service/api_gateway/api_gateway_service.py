@@ -44,10 +44,9 @@ class ApiGatewayToService:
                 raise
 
         try:
-            result = self.apig_client.get_resources(restApiId=self.api_id)
+            result = self.apig_client.get_resources(restApiId=self.api_id, limit=200)
             self.resources = result
-            self.root_id = next(
-                item for item in result['items'] if item['path'] == '/')['id']
+            self.root_id = next(item for item in result['items'] if item['path'] == '/')['id']
         except ClientError:
             logger.exception("Couldn't get resources for API %s.", self.api_id)
             raise
