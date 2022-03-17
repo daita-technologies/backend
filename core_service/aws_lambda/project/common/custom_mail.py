@@ -42,7 +42,6 @@ class TriggerCustomMailcode:
         return True if 'Item' in response else False
 
 
-#user,subject,REGION,ACCESSKEYID,SECRETACCESS
 def AddTriggerCustomMail(info):
     confirmCode = str(random.randint(100000,999999))
     modelTrigger = TriggerCustomMailcode(REGION=info['region'])
