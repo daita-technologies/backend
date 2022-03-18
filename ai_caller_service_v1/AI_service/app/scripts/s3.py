@@ -8,8 +8,6 @@ from .logging_api import logDebug
 from itertools import chain, islice
 
 # from .utils import batcher
-os.environ["ACCESSKEYID"]   ="AKIA2XO6HOQ7IMN62R43"
-os.environ["SECRET_KEY"]    = "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"
 
 '''
 S3 : download image

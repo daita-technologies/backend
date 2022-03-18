@@ -18,8 +18,8 @@ def invoke_sendmail_cognito_service(subject,destination_email,message_email):
 
 
 class TriggerCustomMailcode:
-    def __init__(self,REGION,ACCESSKEYID,SECRETACCESS):
-           self.db_client = boto3.resource('dynamodb',region_name=REGION,aws_access_key_id=ACCESSKEYID,aws_secret_access_key=SECRETACCESS)
+    def __init__(self,REGION):
+           self.db_client = boto3.resource('dynamodb',region_name=REGION)
            self.TBL = "Trigger_send_code"
     def create_item(self,info):
         self.db_client.Table(self.TBL).put_item(Item={
@@ -42,17 +42,28 @@ class TriggerCustomMailcode:
         return True if 'Item' in response else False
 
 
-#user,subject,REGION,ACCESSKEYID,SECRETACCESS
 def AddTriggerCustomMail(info):
     confirmCode = str(random.randint(100000,999999))
-    modelTrigger = TriggerCustomMailcode(REGION=info['region'],ACCESSKEYID=info['accesskey_id'],SECRETACCESS=info['secret_access'] )
+    modelTrigger = TriggerCustomMailcode(REGION=info['region'])
     modelTrigger.create_item({'user':info['user'],'code':confirmCode})
     invoke_sendmail_cognito_service(info['subject'],info['mail'],"<p>Your confirmation code is {}</p>".format(confirmCode))
 
 def DeleteConfirmCode(info):
-    modelTrigger = TriggerCustomMailcode(REGION=info['region'],ACCESSKEYID=info['accesskey_id'],SECRETACCESS=info['secret_access'] )
+    modelTrigger = TriggerCustomMailcode(REGION=info['region'])
     if not modelTrigger.find_item({'user':info['user'],'code':info['code']}):
         raise Exception("A wrong confirmation code has been entered. If you have requested a new confirmation code, use only the latest code.")
     modelTrigger.delete_item({
         'user':info['user']
             })
+
+def ResendCodeConfirm(info):
+    modelTrigger = TriggerCustomMailcode(REGION=info['region'])
+    try:
+        modelTrigger.delete_item({
+        'user':info['user']
+            })
+    except Exception as e:
+        raise Exception(e)
+    confirmCode = str(random.randint(100000,999999))
+    modelTrigger.create_item({'user':info['user'],'code':confirmCode})
+    invoke_sendmail_cognito_service(info['subject'],info['mail'],"<p>Your confirmation code is {}</p>".format(confirmCode))

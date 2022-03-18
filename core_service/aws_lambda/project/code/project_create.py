@@ -65,19 +65,19 @@ def lambda_handler(event, context):
                 "data": None})
     
 
-    co_client = boto3.client('cognito-idp')
-    try:
-        response = co_client.get_user(
-            AccessToken=access_token
-        )
-        print(f'response access token: \n {response}')
-    except Exception as e:
-        print('Error: ', repr(e))
-        return convert_response({"error": True, 
-                "success": False, 
-                "message": repr(e), 
-                "data": None})
-    sub = [a['Value'] for a in response['UserAttributes'] if a['Name'] == 'sub'][0]
+    # co_client = boto3.client('cognito-idp')
+    # try:
+    #     response = co_client.get_user(
+    #         AccessToken=access_token
+    #     )
+    #     print(f'response access token: \n {response}')
+    # except Exception as e:
+    #     print('Error: ', repr(e))
+    #     return convert_response({"error": True, 
+    #             "success": False, 
+    #             "message": repr(e), 
+    #             "data": None})
+    # sub = [a['Value'] for a in response['UserAttributes'] if a['Name'] == 'sub'][0]
 
     _uuid = uuid.uuid4().hex
     project_id = f'{project_name}_{_uuid}'
@@ -95,7 +95,7 @@ def lambda_handler(event, context):
                     'project_name': project_name,
                     's3_prefix': s3_prefix,
                     'project_info': project_info,
-                    'sub': sub,
+                    # 'sub': sub,
                     'created_date': convert_current_date_to_iso8601(),
                     'is_sample': is_sample,
                     'gen_status': gen_status

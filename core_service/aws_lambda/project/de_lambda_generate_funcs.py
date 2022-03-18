@@ -1,9 +1,12 @@
 from aws_lambda.utils.utils import add_lambda_info_to_list
+from pathlib import Path
 
+PROJECT_DIR = Path(__file__).parent
+ROOT = str(PROJECT_DIR.joinpath("code"))+'/'
+PACKAGES = PROJECT_DIR.joinpath("packages")
 
 def deploy_lambda_generate(general_info, lambda_service):
     ls_lambda_val = []    
-    ROOT = 'aws_lambda/project/code/'
 
     # get all methods for preprocessing and augmentation
     lambda_uri, lambda_version = lambda_service.deploy_lambda_function(f'staging-generate-list-method',
@@ -21,7 +24,7 @@ def deploy_lambda_generate(general_info, lambda_service):
     # generate images with augmentation or preprocessing
     lambda_uri, lambda_version = lambda_service.deploy_lambda_function(f'staging-generate-images',
                                          [ROOT + 'generate_images.py', ROOT + 'utils.py',
-                                          'aws_lambda/project/packages',
+                                          PACKAGES,
                                          ROOT + 'const.py'],
                                         {
                                             'USER_POOL_ID' : general_info['USER_POOL_ID'],
