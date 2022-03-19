@@ -1,9 +1,12 @@
 import time
 import json
 
+from s3_utils import test
+
 def lambda_handler(event, context):
     print(event)
     
+    test()
     # create sub task for next progress
 
     return {

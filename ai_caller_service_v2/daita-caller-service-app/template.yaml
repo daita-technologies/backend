@@ -5,10 +5,21 @@ Description: >
 
   Sample SAM Template for daita-caller-service-app
 
+
 # More info about Globals: https://github.com/awslabs/serverless-application-model/blob/master/docs/globals.rst
 Globals:
   Function:
     Timeout: 800
+    Handler: app.lambda_handler
+    Runtime: python3.8
+    Architectures:
+      - x86_64
+    Environment:
+      Variables:
+        STAGE: Production
+        TABLE_NAME: global-table
+    Layers:
+        - !Ref CommonCodeLayer        
 
 Resources:
 
@@ -60,16 +71,22 @@ Resources:
             Resource:
               - !GetAtt CallerServiceEventBus.Arn
 
+  #================ LAMBDA LAYERS  ============================================
+  CommonCodeLayer:
+    Type: AWS::Serverless::LayerVersion
+    Properties:
+      LayerName: CommonCodeLayer
+      ContentUri: functions/commons/
+      CompatibleRuntimes:
+        - python3.8
+
   #================ LAMBDA FUNCTIONS ==========================================
       
   PreprocessGenerateTask:
     Type: AWS::Serverless::Function 
     Properties:
-      CodeUri: functions/handlers/preprocess_generate_batch
-      Handler: app.lambda_handler
-      Runtime: python3.8
-      Architectures:
-        - x86_64    
+      CodeUri: functions/handlers/preprocess_generate_batch      
+                
   
   #================ EVENT BUS =================================================
 
