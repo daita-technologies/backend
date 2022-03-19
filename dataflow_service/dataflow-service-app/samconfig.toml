@@ -1,0 +1,12 @@
+version = 0.1
+[default]
+[default.deploy]
+[default.deploy.parameters]
+stack_name = "dataflow-service-app"
+s3_bucket = "aws-sam-cli-managed-default-samclisourcebucket-pemlzh8np33c"
+s3_prefix = "dataflow-service-app"
+region = "us-east-2"
+confirm_changeset = true
+capabilities = "CAPABILITY_IAM"
+disable_rollback = true
+image_repositories = []
