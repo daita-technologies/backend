@@ -5,22 +5,22 @@ info:
 tags:
 - name: "httpapi:createdBy"
   x-amazon-apigateway-tag-value: "SAM"
-paths:
-  # /jobs/{jobId}:
-  #   get:
-  #     responses:
-  #       default:
-  #         description: "Default response for GET /jobs/{jobId}"
-  #     x-amazon-apigateway-integration:
-  #       credentials:
-  #         Fn::GetAtt: [CallerServiceHttpApiRole, Arn]
-  #       uri: 
-  #         Fn::Sub: "arn:${AWS::Partition}:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${HelloWorldFunction.Arn}/invocations"
-  #       payloadFormatVersion: "2.0"
-  #       type: "aws_proxy"
-  #       httpMethod: "POST"
-  #       connectionType: "INTERNET"
-  /generate/images:
+paths:  
+  /generate/generate_images:
+    post:
+      responses:
+        default:
+          description: "Default response for POST /jobs"
+      x-amazon-apigateway-integration:
+        credentials:
+          Fn::GetAtt: [ApiGatewayCallLambdaRole, Arn]
+        uri: 
+          Fn::Sub: arn:${AWS::Partition}:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${GenerateCheckConditionFunction.Arn}/invocations
+        httpMethod: "POST"
+        type: "aws_proxy"
+        payloadFormatVersion: "2.0"
+
+  /generate/test:
     post:
       responses:
         default:
