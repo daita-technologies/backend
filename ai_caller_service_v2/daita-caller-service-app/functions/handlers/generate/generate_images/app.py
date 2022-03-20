@@ -8,7 +8,7 @@ from identity_check import *
 
 from system_parameter_store import SystemParameterStore
 from models.generate_task_model import GenerateTaskModel
-from models.project_model import ProjectModel
+from models.project_model import ProjectModel, ProjectItem
 
 
 def check_input_value(data_number, ls_methods_id):
@@ -42,6 +42,24 @@ def get_type_method(ls_methods_id):
     
     return type_method
 
+def check_generate_times_limitation(identity_id, project_name, type_method):
+    project_model = ProjectModel()
+    project_rec = project_model.get_project_info(identity_id, project_name)
+    times_generated = int(project_rec.get_value_w_default(ProjectItem.FIELD_TIMES_AUGMENT, 0))
+    times_preprocess = int(project_rec.get_value_w_default(ProjectItem.FIELD_TIMES_PREPRO, 0))
+    const = SystemParameterStore()
+
+    if type_method == VALUE_TYPE_METHOD_AUGMENT: 
+        if times_generated >= int(const.limit_augment_times):
+            raise Exception(MESS_REACH_LIMIT_AUGMENT.format(const.limit_augment_times))    
+    elif type_method == VALUE_TYPE_METHOD_PREPROCESS:
+        if times_preprocess >= int(const.limit_prepro_times):
+            raise Exception(MESS_REACH_LIMIT_PREPROCESS.format(const.limit_prepro_times))
+
+    return times_generated, times_preprocess
+
+def put_event_bus():
+    return 'aaa'
 
 @error_response
 def lambda_handler(event, context):
@@ -61,10 +79,7 @@ def lambda_handler(event, context):
         raise Exception(MESS_INVALID_JSON_INPUT) from e
 
     ### check identity
-    try:
-        identity_id = aws_get_identity_id(id_token)
-    except Exception as e:
-        raise Exception(MESS_AUTHEN_FAILED) from e
+    identity_id = aws_get_identity_id(id_token)
     
     ### check input value
     check_input_value(data_number, ls_methods_id)
@@ -77,34 +92,19 @@ def lambda_handler(event, context):
     ### get type of process
     type_method = get_type_method(ls_methods_id)
 
-    ### check generate times limitation
-    # project_model = ProjectModel()
-    # project_info = project_model.get_project_info(identity_id, project_name)
-    # times_generated = int(infor.get("times_generated", 0))
-    # times_preprocess = int(infor.get("times_propr", 0))
+    ### check generate times limitation and get times of preprocess and augment
+    times_generated, times_preprocess = check_generate_times_limitation(identity_id, project_name, type_method)   
 
-    # if type_method == VALUE_TYPE_METHOD_AUGMENT: 
-    #     if times_generated>=MAX_TIMES_AUGMENT_IMAGES:
-    #         raise Exception(const.MES_REACH_LIMIT_AUGMENT.format(MAX_TIMES_AUGMENT_IMAGES))
-    #         this_times_generate = times_generated + 1
+    ### push event to eventbridge
+    event_id = put_event_bus() 
             
-    #         print('this_times_augment: ', this_times_generate)
-            
-    #         # update data_type and data_number to project
-    #         dydb_update_project_data_type_number(db_resource, identity_id, project_name, data_type, data_number, this_times_generate)
-    #     else:
-    #         this_times_generate = times_generated
-    #         if times_preprocess>=MAX_TIMES_PREPROCESS_IMAGES:
-    #             raise Exception(const.MES_REACH_LIMIT_PREPROCESS.format(MAX_TIMES_PREPROCESS_IMAGES))
-            
-    ### get const
-    const = SystemParameterStore()
-    print(const.limit_augment_times)
-
     return generate_response(
         message="OK",
         status_code=HTTPStatus.OK,
-        data={"ok": const.limit_augment_times},
+        data={
+            "task_id": event_id,
+            "times_generated": (times_generated+1)
+        },
     )
 
     

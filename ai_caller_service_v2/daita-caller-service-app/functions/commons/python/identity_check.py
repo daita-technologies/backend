@@ -12,7 +12,7 @@ def aws_get_identity_id(id_token):
                               IdentityPoolId=IDENTITY_POOL_ID,
                               Logins = {PROVIDER: id_token})
     except Exception as e:
-        raise 
+        raise Exception(MESS_AUTHEN_FAILED) from e
 
     identity_id = identity_response['IdentityId']
 
