@@ -19,9 +19,30 @@ Globals:
         STAGE: Production
         TABLE_NAME: global-table
     Layers:
-        - !Ref CommonCodeLayer        
+        - !Ref CommonCodeLayer  
+     
+
+## The general rule seems to be to use !Sub for in line substitutions and !ref for stand alone text
+Parameters:
+  param1:
+    Type: String
+    Default: Param1
 
 Resources:
+
+  #=============== SYSTEM PARAMETER CONFIGURATON ==============================
+  LimitPreprocessTimes:
+    Type: AWS::SSM::Parameter
+    Properties:
+      Name: LimitPreprocessTimes
+      Type: String
+      Value: "1"
+  LimitAugmentTimes:
+    Type: AWS::SSM::Parameter
+    Properties:
+      Name: LimitAugmentTimes
+      Type: String
+      Value: "5"
 
   #================ ROLES =====================================================
 
@@ -47,7 +68,62 @@ Resources:
             Effect: Allow
             Resource:
               # insert lambda functions arn here
-              - !GetAtt GenerateCheckConditionFunction.Arn   
+              - !GetAtt GenerateCheckConditionFunction.Arn
+        
+  
+  # lambda role 
+  LambdaExecutionRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+        - Effect: "Allow"
+          Principal: 
+            Service: "lambda.amazonaws.com"
+          Action:
+          - "sts:AssumeRole"
+      Policies:
+        - PolicyName: 'SecretsManagerParameterAccess'
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - ssm:GetParam*
+                  - ssm:DescribeParam*                  
+                Resource:
+                  - arn:aws:ssm:*:*:parameter/*
+        - PolicyName: 'CloudwatchPermission'
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              -
+                Effect: Allow
+                Action:
+                  - 'logs:CreateLogGroup'
+                  - 'logs:CreateLogStream'
+                  - 'logs:PutLogEvents'
+                Resource: '*'
+        - PolicyName: 'CognitoPermission'
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              -
+                Effect: Allow
+                Action:
+                  - cognito-identity:*    
+                  - cognito-idp:*       
+                Resource: '*'
+        - PolicyName: 'DynamoDBPermission'
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:             
+              - 
+                Effect: Allow
+                Action:
+                  - dynamodb:*
+                Resource: "*"
 
   # add role to start state machine from eventbus
   CallerServiceEventBusRole:
@@ -115,6 +191,7 @@ Resources:
     Type: AWS::Serverless::Function
     Properties:
       CodeUri: functions/handlers/generate/generate_images
+      Role: !GetAtt LambdaExecutionRole.Arn
   
   #================ EVENT BUS =================================================
 
@@ -139,6 +216,27 @@ Resources:
           Arn: !GetAtt CallerServiceStateMachine.Arn 
           Id: "CallerServiceStateMachineTarget"
           RoleArn: !GetAtt CallerServiceEventBusRole.Arn
+
+  #================ DYNAMODB ==================================================
+  GenerateTaskDB:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      AttributeDefinitions:
+        - 
+          AttributeName: identity_id
+          AttributeType: S
+        - 
+          AttributeName: task_id
+          AttributeType: S
+      KeySchema:
+        - 
+          AttributeName: identity_id
+          KeyType: HASH
+        -
+          AttributeName: task_id
+          KeyType: RANGE
+      TableName: generate_task
+      BillingMode: PAY_PER_REQUEST
 
   #================ LOGS FOR STEP FUNCTIONS ===================================
 
@@ -354,4 +452,8 @@ Outputs:
   CallerServiceHttpApiUrl:
     Description: "Url of the Caller service API"
     Value: !Sub "https://${CallerServiceHttpApi}.execute-api.${AWS::Region}.amazonaws.com"
+  # LayerARN:
+  #   Description: "ARN of common code layer"
+  #   Value: !GetAtt CommonCodeLayer.Arn
+
 
