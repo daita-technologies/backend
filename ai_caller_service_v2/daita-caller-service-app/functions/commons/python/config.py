@@ -21,4 +21,16 @@ VALUE_TYPE_METHOD_PREPROCESS        = "PREPROCESS"
 VALUE_TYPE_METHOD_NAME_AUGMENT      = "AUG"
 VALUE_TYPE_METHOD_NAME_PREPROCESS   = "PRE"
 
+### request body key
+KEY_NAME_ID_TOKEN           = "id_token" 
+KEY_NAME_PROJECT_ID         = "project_id"
+KEY_NAME_PROJECT_NAME       = "project_name"
+KEY_NAME_LS_METHOD_ID       = "ls_method_id"
+KEY_NAME_DATA_TYPE          = "data_type"
+KEY_NAME_NUM_AUG_P_IMG      = "num_aug_p_img"
+KEY_NAME_DATA_NUMBER        = "data_number"
+KEY_NAME_S3_PREFIX          = "s3_prefix"
+KEY_NAME_TIMES_AUGMENT      = "times_augment"
+KEY_NAME_TIMES_PREPROCESS   = "times_preprocess"
+KEY_NAME_TASK_ID            = "task_id"
 

@@ -83,7 +83,7 @@ Resources:
             Service: "lambda.amazonaws.com"
           Action:
           - "sts:AssumeRole"
-      Policies:
+      Policies:             
         - PolicyName: 'SecretsManagerParameterAccess'
           PolicyDocument:
             Version: '2012-10-17'
@@ -124,6 +124,16 @@ Resources:
                 Action:
                   - dynamodb:*
                 Resource: "*"
+        - PolicyName: "OtherServicePermission"
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:             
+              - 
+                Effect: Allow
+                Action:
+                  - events:PutEvents
+                Resource: 
+                  - !GetAtt CallerServiceEventBus.Arn
 
   # add role to start state machine from eventbus
   CallerServiceEventBusRole:
@@ -192,6 +202,9 @@ Resources:
     Properties:
       CodeUri: functions/handlers/generate/generate_images
       Role: !GetAtt LambdaExecutionRole.Arn
+      Environment:
+        Variables:
+          EVENT_BUS_NAME: !Ref CallerServiceEventBus
   
   #================ EVENT BUS =================================================
 
@@ -210,7 +223,7 @@ Resources:
         source:
           - "source.events"
         detail-type:
-          - "api.event"
+          - "lambda.event"
       Targets:
         - 
           Arn: !GetAtt CallerServiceStateMachine.Arn 
