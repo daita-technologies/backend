@@ -1,42 +1,43 @@
+from cmath import inf
+from getpass import getuser
 import os
 import json
-import logging
+import re
 from datetime import datetime
-from http import HTTPStatus
 import os
 import boto3
-from dataclasses import dataclass
 from utils import aws_get_identity_id
 
 from error import *
 from response import *
 from config import *
-ACCESS_TOKEN_EXPIRATION = 24 * 60 * 60
 
+ACCESS_TOKEN_EXPIRATION = 24 * 60 * 60
+mailRegexString =re.compile('([A-Za-z0-9]+[.-_])*[A-Za-z0-9]+@[A-Za-z0-9-]+(\.[A-Z|a-z]{2,})+')
 cog_provider_client = boto3.client('cognito-idp')
 cog_identity_client = boto3.client('cognito-identity')
 RESPONSE_HEADER = {
     "Access-Control-Allow-Creentials": "true",
 	"Access-Control-Allow-Methods": "GET, HEAD, OPTIONS, POST, PUT",
 }
-"""
 
-UserName string `json:"username"`
-	Password string `json:"password"`
-	Captcha  string `json:"captcha"`
-"""
-class UserLoginModel:
-    username : str
-    password: str
-    # captcha: str
-
+######################################################################################
+def getUsernameByEmail(email):
+    client = cog_provider_client.list_users(
+    UserPoolId=USERPOOLID)
+    for _ , data in enumerate(client['Users']):
+        for info in data['Attributes']:
+            if info['Name'] == 'email' and info['Value'] == email and data['UserStatus'] == "CONFIRMED":
+                return data['Username']
+    return None
+#######################################################################################
 def getSub(access_token):
     resp = cog_provider_client.get_user(
         AccessToken=  access_token
     )
     sub = [a['Value'] for a in resp['UserAttributes'] if a['Name'] == 'sub'][0]
     return sub 
-
+#######################################################################################
 def checkEmailVerified(access_token):
     resp = cog_provider_client.get_user(
         AccessToken=  access_token
@@ -46,7 +47,7 @@ def checkEmailVerified(access_token):
         if it['Name'] == 'email_verified' and it['Value'] == 'false':
             return False
     return True
-
+####################################################################################
 
 class User(object):
     def __init__(self):
@@ -81,7 +82,7 @@ class User(object):
                         '#u':'update_at'
                     }
                 )
-
+#############################################################################################################
 def createKMSKey(identity):
     alias_name = identity.split(":")[1]
     kms = boto3.client("kms", region_name="us-west-2")
@@ -93,7 +94,7 @@ def createKMSKey(identity):
         TargetKeyId = key_id
     )
     return key_id
-
+#############################################################################################################
 def getCredentialsForIdentity(token_id):
     PROVIDER = f'cognito-idp.{REGION}.amazonaws.com/{USERPOOLID}'
     responseIdentity = aws_get_identity_id(token_id)
@@ -109,7 +110,7 @@ def getCredentialsForIdentity(token_id):
         'access_key': credentialsResponse['Credentials']['AccessKeyId'],
         'identity_id':responseIdentity
     }
-
+#############################################################################################################
 
 @error_response
 def lambda_handler(event, context):
@@ -117,6 +118,7 @@ def lambda_handler(event, context):
         body = json.loads(event['body'])
         username = body['username']
         password = body['password']
+        captcha = body['captcha']
     except Exception as e:
         print("error ",e)
         return generate_response(
@@ -124,6 +126,17 @@ def lambda_handler(event, context):
             data={},
             headers=RESPONSE_HEADER
         )
+    
+    try:
+        verify_captcha(captcha)
+    except Exception as exc:
+        print(MessageCaptchaFailed)
+        raise Exception(MessageCaptchaFailed) from exc
+    
+    if re.fullmatch(mailRegexString,username):
+        username = getUsernameByEmail(email=username)
+        print("[DEBUG] username {}".format(username))
+
     try:
         model = User() 
     except Exception as e:
@@ -133,6 +146,7 @@ def lambda_handler(event, context):
             data={},
             headers=RESPONSE_HEADER
         )
+    
     try :
         authResponse = cog_provider_client.initiate_auth(
             ClientId=CLIENTPOOLID,
@@ -156,6 +170,7 @@ def lambda_handler(event, context):
         'id_token': authResponse['AuthenticationResult']['IdToken'],
         'token_expires_in': datetime.now().timestamp() + ACCESS_TOKEN_EXPIRATION
     }
+    
     if not checkEmailVerified(response['token']):
         raise Exception(MessageUserVerifyConfirmCode)
         
@@ -170,7 +185,6 @@ def lambda_handler(event, context):
         
     sub = getSub(response['token'])
 
-
     if not model.checkFirstLogin(ID=sub,username=username):
         kms = createKMSKey(credentialsForIdentity['identity_id'])
         model.updateActivateUser(info={
@@ -180,10 +194,11 @@ def lambda_handler(event, context):
             'kms': kms,
         })
     
+    
     for k , v in credentialsForIdentity.items():
         response[k] = v 
     response['username'] = username
-    print(response)
+
     return generate_response(
             message=MessageSignInSuccessfully,
             data=response,
