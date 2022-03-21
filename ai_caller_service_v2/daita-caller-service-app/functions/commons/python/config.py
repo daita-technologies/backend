@@ -12,7 +12,7 @@ VALUE_GENERATE_TASK_STATUS_FINISH   = "FINISH"
 VALUE_GENERATE_TASK_STATUS_ERROR    = "ERROR"
 
 ### config for table name
-DB_GENERATE_TASK_TABLE_NAME     = "generate_task"
+DB_GENERATE_TASK_TABLE_NAME     = "generate_tasks"
 DB_PROJECT_TABLE_NAME           = "projects"
 
 ### config value type method

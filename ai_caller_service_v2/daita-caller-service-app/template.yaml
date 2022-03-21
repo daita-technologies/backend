@@ -24,9 +24,9 @@ Globals:
 
 ## The general rule seems to be to use !Sub for in line substitutions and !ref for stand alone text
 Parameters:
-  param1:
+  minimumLogLevel:
     Type: String
-    Default: Param1
+    Default: DEBUG
 
 Resources:
 
@@ -204,7 +204,8 @@ Resources:
       Role: !GetAtt LambdaExecutionRole.Arn
       Environment:
         Variables:
-          EVENT_BUS_NAME: !Ref CallerServiceEventBus
+          EVENT_BUS_NAME: !Ref CallerServiceEventBus          
+          LOGGING: !Ref minimumLogLevel
   
   #================ EVENT BUS =================================================
 
@@ -248,7 +249,7 @@ Resources:
         -
           AttributeName: task_id
           KeyType: RANGE
-      TableName: generate_task
+      TableName: generate_tasks
       BillingMode: PAY_PER_REQUEST
 
   #================ LOGS FOR STEP FUNCTIONS ===================================

@@ -10,4 +10,4 @@ confirm_changeset = true
 capabilities = "CAPABILITY_IAM"
 disable_rollback = true
 image_repositories = []
-parameter_overrides = "param1=\"Param1\""
+parameter_overrides = "minimumLogLevel=\"DEBUG\""
