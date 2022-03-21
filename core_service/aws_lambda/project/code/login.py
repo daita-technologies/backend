@@ -16,6 +16,7 @@ ACCESS_TOKEN_EXPIRATION = 24 * 60 * 60
 mailRegexString =re.compile('([A-Za-z0-9]+[.-_])*[A-Za-z0-9]+@[A-Za-z0-9-]+(\.[A-Z|a-z]{2,})+')
 cog_provider_client = boto3.client('cognito-idp')
 cog_identity_client = boto3.client('cognito-identity')
+
 RESPONSE_HEADER = {
     "Access-Control-Allow-Creentials": "true",
 	"Access-Control-Allow-Methods": "GET, HEAD, OPTIONS, POST, PUT",
@@ -30,6 +31,7 @@ def getUsernameByEmail(email):
             if info['Name'] == 'email' and info['Value'] == email and data['UserStatus'] == "CONFIRMED":
                 return data['Username']
     return None
+
 #######################################################################################
 def getSub(access_token):
     resp = cog_provider_client.get_user(
@@ -37,6 +39,7 @@ def getSub(access_token):
     )
     sub = [a['Value'] for a in resp['UserAttributes'] if a['Name'] == 'sub'][0]
     return sub 
+
 #######################################################################################
 def checkEmailVerified(access_token):
     resp = cog_provider_client.get_user(
@@ -47,8 +50,8 @@ def checkEmailVerified(access_token):
         if it['Name'] == 'email_verified' and it['Value'] == 'false':
             return False
     return True
-####################################################################################
 
+####################################################################################
 class User(object):
     def __init__(self):
         self.db_client = boto3.resource('dynamodb',region_name=REGION)
@@ -136,6 +139,8 @@ def lambda_handler(event, context):
     if re.fullmatch(mailRegexString,username):
         username = getUsernameByEmail(email=username)
         print("[DEBUG] username {}".format(username))
+        if username is None:
+            raise Exception(MessageLoginMailNotExist)
 
     try:
         model = User() 
