@@ -1214,7 +1214,7 @@ EXAMPLE
 - POST
   ```
   staging: https://54upf5w03c.execute-api.us-east-2.amazonaws.com/staging/send-mail/reference-email
-  dev: https://a7la2z0b6i.execute-api.us-east-2.amazonaws.com/dev/send-mail/reference-email
+  dev: https://nzvw2zvu3d.execute-api.us-east-2.amazonaws.com/staging/send-mail/reference-email
   ```
 - Request
   - Content-type: application/json
