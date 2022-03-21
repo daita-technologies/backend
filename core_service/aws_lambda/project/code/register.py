@@ -45,7 +45,7 @@ def checkInvalidUserRegister(user,mail):
     info_user =  list(filter(lambda x : x['Username'] == user,response['Users']))
     if len(info_user):
         return False , True
-    for index , data in enumerate(response['Users']):
+    for _ , data in enumerate(response['Users']):
         for  info in data['Attributes']:
             if info['Name'] == 'email' and info['Value'] == mail:
                 return True, False
@@ -53,22 +53,32 @@ def checkInvalidUserRegister(user,mail):
 
 @error_response
 def lambda_handler(event, context):
+    
     try:
         body = json.loads(event['body'])
         username = body['username']
         mail = body['email']
         password = body['password']
+        captcha = event["captcha"]
     except Exception as e:
         print(e)
         raise Exception(e)
     
+    try:
+        verify_captcha(captcha)
+    except Exception as exc:
+        raise Exception(MessageCaptchaFailed) from exc
+
+
     if not re.match(PASSWORD_REGEX, password):
         raise Exception(MessageInvalidPassword)
     checkUsername, checkemail = checkInvalidUserRegister(username,mail)
+    
     if not checkUsername:
         raise Exception(MessageSignUpUsernameInvalid)
     elif not checkemail:
         raise Exception(MessageSignUPEmailInvalid)
+    
     try:
         respUserSignUp = cog_provider_client.sign_up(
             ClientId=CLIENTPOOLID,
@@ -79,8 +89,9 @@ def lambda_handler(event, context):
     except Exception as e:
         print(e)
         raise Exception(MessageSignUpFailed)
+    
+    
     model = User()
-    print(respUserSignUp)
     try :
         model.create_item({
             'ID': respUserSignUp['UserSub'],
@@ -89,11 +100,8 @@ def lambda_handler(event, context):
     except Exception as e :
         print(e)
         raise Exception(MessageSignUpFailed)
-    """
-     modelTrigger = TriggerCustomMailcode(REGION=info['region'],ACCESSKEYID=info['accesskey_id'],SECRETACCESS=info['secret_access'] )
-    modelTrigger.create_item({'user':info['user'],'code':confirmCode})
-    invoke_sendmail_cognito_service(info['subject'],info['mail'],"<p>Your confirmation code is {}</p>".format(confirmCode))
-    """
+
+
     AddTriggerCustomMail({
         'region':REGION,
         'user':username,

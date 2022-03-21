@@ -28,4 +28,4 @@ MessageErrorDeleteUserSignUp = "Error deleting user"
 MessageCaptchaFailed = "Captcha token verification failed"
 MessageSendFeedbackFailed = "Send feeback failed"
 MessageSendFeedbackSuccessfully = "send feedback successfully"
-
+MessageLoginMailNotExist = "Email does not exist"
