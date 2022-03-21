@@ -1,7 +1,7 @@
-import html
 import json
 from http import HTTPStatus
 from typing import *
+import traceback
 
 
 RESPONSE_HEADER = {
@@ -38,6 +38,8 @@ def error_response(lambda_handler):
         try:
             return lambda_handler(*args, **kwargs)
         except Exception as exc:
+            print(repr(exc))
+            print(traceback.format_exc())
             messageRaw = str(repr(exc))
             return(
                 generate_response(

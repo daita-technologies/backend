@@ -21,7 +21,7 @@ VALUE_TYPE_METHOD_PREPROCESS        = "PREPROCESS"
 VALUE_TYPE_METHOD_NAME_AUGMENT      = "AUG"
 VALUE_TYPE_METHOD_NAME_PREPROCESS   = "PRE"
 
-### request body key
+### request and response body key
 KEY_NAME_ID_TOKEN           = "id_token" 
 KEY_NAME_PROJECT_ID         = "project_id"
 KEY_NAME_PROJECT_NAME       = "project_name"

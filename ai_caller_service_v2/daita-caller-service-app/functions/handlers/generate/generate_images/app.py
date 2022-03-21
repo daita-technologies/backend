@@ -15,7 +15,7 @@ import logging
 
 
 
-class HandlerClass():
+class GenerateImageClass():
 
     def __init__(self) -> None:
         self.logger = logging.getLogger(self.__class__.__name__)
@@ -61,7 +61,7 @@ class HandlerClass():
         """
         Check any running tasks of this project
         """   
-        ls_running_task = generate_task_model.get_running_tasks(identity_id, project_id)  
+        ls_running_task = generate_task_model.query_running_tasks(identity_id, project_id)  
         if len(ls_running_task) > 0:
             raise Exception(MESS_ERROR_OVER_LIMIT_RUNNING_TASK)
 
@@ -157,6 +157,6 @@ class HandlerClass():
 @error_response
 def lambda_handler(event, context):
 
-    return HandlerClass().process_event(event, context)
+    return GenerateImageClass().process_event(event, context)
 
     

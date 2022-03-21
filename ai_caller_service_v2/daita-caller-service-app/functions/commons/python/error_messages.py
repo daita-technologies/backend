@@ -8,3 +8,4 @@ MESS_ERROR_OVER_LIMIT_RUNNING_TASK  = "You have been running a task in this proj
 MESS_ERR_INVALID_LIST_METHOD        = "List method is not valid!"
 MESS_REACH_LIMIT_AUGMENT            = "You have reached the threshold of {} augmentation runs per project."
 MESS_REACH_LIMIT_PREPROCESS         = "You have reached the threshold of {} preprocessing runs per project."
+MESS_TASK_NOT_EXIST                 = "Task ID {} does not exist"
