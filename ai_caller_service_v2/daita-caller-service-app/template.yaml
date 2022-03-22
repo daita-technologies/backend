@@ -70,6 +70,7 @@ Resources:
               # insert lambda functions arn here
               - !GetAtt GenerateCheckConditionFunction.Arn
               - !GetAtt TaskProgressFunction.Arn
+              - !GetAtt ListMethodsFunction.Arn
         
   
   # lambda role 
@@ -215,6 +216,15 @@ Resources:
       Role: !GetAtt LambdaExecutionRole.Arn
       Environment:
         Variables:        
+          LOGGING: !Ref minimumLogLevel
+
+  ListMethodsFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: functions/handlers/generate/list_methods
+      Role: !GetAtt LambdaExecutionRole.Arn
+      Environment:
+        Variables:
           LOGGING: !Ref minimumLogLevel
   
   #================ EVENT BUS =================================================

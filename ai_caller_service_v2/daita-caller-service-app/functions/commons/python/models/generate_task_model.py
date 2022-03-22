@@ -17,7 +17,15 @@ class GenerateTaskItem():
     FIELD_CREATE_TIME = "created_time"
 
     def __init__(self) -> None:
-        pass
+        self.identity_id        = ""
+        self.task_id            = ""
+        self.updated_time       = ""
+        self.status             = ""
+        self.process_type       = ""
+        self.number_finished    = 0
+        self.number_gen_images  = 0
+        self.project_id         = ""
+
 
     def to_dict(self):
         print(self.__dict__)
@@ -33,7 +41,9 @@ class GenerateTaskItem():
         return dict_info
 
     def from_db_item(self, item_info):
-        if item_info:
+        if item_info is None:
+            return None
+        else:
             self.identity_id        = item_info.get(self.FIELD_IDENTITY_ID)
             self.task_id            = item_info.get(self.FIELD_TASK_ID)
             self.updated_time       = item_info.get(self.FIELD_UPDATE_TIME)
@@ -42,10 +52,8 @@ class GenerateTaskItem():
             self.number_finished    = int(item_info.get(self.FIELD_NUMBER_FINISHED))
             self.number_gen_images  = int(item_info.get(self.FIELD_NUM_GEN_IMAGES))
             self.project_id         = item_info.get(self.FIELD_PROJECT_ID)
-            return self
 
-        else:
-            return None
+            return self        
 
 class GenerateTaskModel():    
 

@@ -14,6 +14,7 @@ VALUE_GENERATE_TASK_STATUS_ERROR    = "ERROR"
 ### config for table name
 DB_GENERATE_TASK_TABLE_NAME     = "generate_tasks"
 DB_PROJECT_TABLE_NAME           = "projects"
+DB_METHOD_TABLE_NAME            = "methods"
 
 ### config value type method
 VALUE_TYPE_METHOD_AUGMENT           = "AUGMENT"
@@ -34,4 +35,8 @@ KEY_NAME_TIMES_AUGMENT      = "times_augment"
 KEY_NAME_TIMES_PREPROCESS   = "times_preprocess"
 KEY_NAME_TASK_ID            = "task_id"
 KEY_NAME_IDENTITY_ID        = "identity_id"
+
+KEY_NAME_RES_AUMENTATION    = "augmentation"
+KEY_NAME_RES_PREPROCESSING  = "preprocessing"
+
 
