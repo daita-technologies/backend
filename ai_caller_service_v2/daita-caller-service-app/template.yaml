@@ -18,6 +18,7 @@ Globals:
       Variables:
         STAGE: Production
         TABLE_NAME: global-table
+        LOGGING: !Ref minimumLogLevel
     Layers:
         - !Ref CommonCodeLayer  
      
@@ -71,6 +72,7 @@ Resources:
               - !GetAtt GenerateCheckConditionFunction.Arn
               - !GetAtt TaskProgressFunction.Arn
               - !GetAtt ListMethodsFunction.Arn
+              - !GetAtt SplitDataFunction.Arn
         
   
   # lambda role 
@@ -207,25 +209,25 @@ Resources:
       Environment:
         Variables:
           EVENT_BUS_NAME: !Ref CallerServiceEventBus          
-          LOGGING: !Ref minimumLogLevel
 
   TaskProgressFunction:
     Type: AWS::Serverless::Function
     Properties:
       CodeUri: functions/handlers/generate/task_progress
-      Role: !GetAtt LambdaExecutionRole.Arn
-      Environment:
-        Variables:        
-          LOGGING: !Ref minimumLogLevel
+      Role: !GetAtt LambdaExecutionRole.Arn     
 
   ListMethodsFunction:
     Type: AWS::Serverless::Function
     Properties:
       CodeUri: functions/handlers/generate/list_methods
-      Role: !GetAtt LambdaExecutionRole.Arn
-      Environment:
-        Variables:
-          LOGGING: !Ref minimumLogLevel
+      Role: !GetAtt LambdaExecutionRole.Arn      
+
+  SplitDataFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: functions/handlers/generate/split_data
+      Role: !GetAtt LambdaExecutionRole.Arn      
+          
   
   #================ EVENT BUS =================================================
 

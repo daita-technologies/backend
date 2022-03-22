@@ -22,6 +22,12 @@ VALUE_TYPE_METHOD_PREPROCESS        = "PREPROCESS"
 VALUE_TYPE_METHOD_NAME_AUGMENT      = "AUG"
 VALUE_TYPE_METHOD_NAME_PREPROCESS   = "PRE"
 
+### config value data type (type of data will be use)
+VALUE_TYPE_DATA_ORIGINAL            = "ORIGINAL"
+VALUE_TYPE_DATA_PREPROCESSED        = "PREPROCESS"
+VALUE_TYPE_DATA_AUGMENT             = "AUGMENT"
+LS_ACCEPTABLE_VALUE_GENERATE      = [VALUE_TYPE_DATA_ORIGINAL, VALUE_TYPE_DATA_PREPROCESSED]
+
 ### request + response body + state machine key
 KEY_NAME_ID_TOKEN           = "id_token" 
 KEY_NAME_PROJECT_ID         = "project_id"

@@ -40,10 +40,11 @@ def error_response(lambda_handler):
         except Exception as exc:
             print(repr(exc))
             print(traceback.format_exc())
-            messageRaw = str(repr(exc))
+            messageRaw = str(repr(exc))            
+
             return(
                 generate_response(
-                    message= messageRaw.replace("Exception('", "").replace("')", ""),
+                    message= messageRaw.replace("Exception('", "").replace("')", "").replace("Exception(\"", "").replace("\")", ""),
                     error=True
                 )
             )
