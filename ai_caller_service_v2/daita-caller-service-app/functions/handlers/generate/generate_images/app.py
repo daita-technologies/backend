@@ -10,39 +10,27 @@ from identity_check import *
 from system_parameter_store import SystemParameterStore
 from models.generate_task_model import GenerateTaskModel
 from models.project_model import ProjectModel, ProjectItem
-
-import logging
-
+from lambda_base_class import LambdaBaseClass
 
 
-class GenerateImageClass():
+class GenerateImageClass(LambdaBaseClass):
 
-    def __init__(self) -> None:
-        self.logger = logging.getLogger(self.__class__.__name__)
-        self.logger.setLevel(os.environ["LOGGING"]) 
+    def __init__(self) -> None:   
+        super().__init__()     
         self.client_events = boto3.client('events')    
         self.const = SystemParameterStore()   
 
-    def _parse_body(self, event):
-        ### parse parameter from body input   
-        try:    
-            body = json.loads(event['body'])
-            self.logger.info("Body: \n", body)
+    @LambdaBaseClass.parse_body
+    def parser(self, body):
+        self.logger.debug(f"body in main_parser: {body}")
 
-            self.id_token = body[KEY_NAME_ID_TOKEN]
-            self.project_id = body[KEY_NAME_PROJECT_ID]
-            self.project_name = body[KEY_NAME_PROJECT_NAME]
-            self.ls_methods_id = body[KEY_NAME_LS_METHOD_ID]
-            self.data_type = body.get(KEY_NAME_DATA_TYPE, 'ORIGINAL')  # type is one of ORIGINAL or PREPROCESS, default is original        
-            self.num_aug_per_imgs = min(MAX_NUMBER_GEN_PER_IMAGES, body.get(KEY_NAME_NUM_AUG_P_IMG, 1)) # default is 1
-            self.data_number = body[KEY_NAME_DATA_NUMBER]  # array of number data in train/val/test  [100, 19, 1]
-        except Exception as e:
-            raise Exception(MESS_INVALID_JSON_INPUT) from e
-        
-        return
-
-    def _get_identity(self, id_token):
-        return aws_get_identity_id(id_token)
+        self.id_token = body[KEY_NAME_ID_TOKEN]
+        self.project_id = body[KEY_NAME_PROJECT_ID]
+        self.project_name = body[KEY_NAME_PROJECT_NAME]
+        self.ls_methods_id = body[KEY_NAME_LS_METHOD_ID]
+        self.data_type = body.get(KEY_NAME_DATA_TYPE, 'ORIGINAL')  # type is one of ORIGINAL or PREPROCESS, default is original        
+        self.num_aug_per_imgs = min(MAX_NUMBER_GEN_PER_IMAGES, body.get(KEY_NAME_NUM_AUG_P_IMG, 1)) # default is 1
+        self.data_number = body[KEY_NAME_DATA_NUMBER]  # array of number data in train/val/test  [100, 19, 1]
 
     def _check_input_value(self):
         if len(self.data_number)>0:
@@ -107,19 +95,15 @@ class GenerateImageClass():
                     )
         entries = response["Entries"]
 
-        return entries[0]["EventId"]
+        return entries[0]["EventId"]     
 
-     
-    def process_event(self, event, context):
-        
+    def handle(self, event, context):
+    
         ### parse body
-        self._parse_body(event)
+        self.parser(event)
 
         ### check identity
-        identity_id = self._get_identity(self.id_token)
-        
-        ### check input value
-        self._check_input_value()
+        identity_id = self.get_identity(self.id_token) 
 
         ### check running task
         generate_task_model = GenerateTaskModel()
@@ -133,6 +117,7 @@ class GenerateImageClass():
 
         ### push event to eventbridge
         detail_pass_para = {
+            KEY_NAME_IDENTITY_ID: identity_id,
             KEY_NAME_PROJECT_ID: self.project_id,
             KEY_NAME_PROJECT_NAME: self.project_name,
             KEY_NAME_LS_METHOD_ID: self.ls_methods_id,
@@ -154,9 +139,11 @@ class GenerateImageClass():
             },
         )
 
+        
+
 @error_response
 def lambda_handler(event, context):
 
-    return GenerateImageClass().process_event(event, context)
+    return GenerateImageClass().handle(event, context)
 
     
