@@ -19,6 +19,8 @@ class GenerateImageClass(LambdaBaseClass):
         super().__init__()     
         self.client_events = boto3.client('events')    
         self.const = SystemParameterStore()   
+        self.project_model = ProjectModel()
+        self.generate_task_model = GenerateTaskModel()
 
     @LambdaBaseClass.parse_body
     def parser(self, body):
@@ -66,9 +68,8 @@ class GenerateImageClass(LambdaBaseClass):
         
         return type_method
 
-    def _check_generate_times_limitation(self, identity_id, project_name, type_method):
-        project_model = ProjectModel()
-        project_rec = project_model.get_project_info(identity_id, project_name)
+    def _check_generate_times_limitation(self, identity_id, project_name, type_method):        
+        project_rec = self.project_model.get_project_info(identity_id, project_name)
         times_generated = int(project_rec.get_value_w_default(ProjectItem.FIELD_TIMES_AUGMENT, 0))
         times_preprocess = int(project_rec.get_value_w_default(ProjectItem.FIELD_TIMES_PREPRO, 0))
         s3_prefix = project_rec.__dict__[ProjectItem.FIELD_S3_PREFIX]        
@@ -81,6 +82,21 @@ class GenerateImageClass(LambdaBaseClass):
                 raise Exception(MESS_REACH_LIMIT_PREPROCESS.format(self.const.limit_prepro_times))
 
         return times_generated, times_preprocess, s3_prefix
+
+    def _update_generate_times(self, identity_id, project_name, type_method, times_augment, times_preprocess):
+        if type_method == VALUE_TYPE_METHOD_PREPROCESS:
+            times_preprocess += 1
+        elif type_method == VALUE_TYPE_METHOD_AUGMENT:
+            times_augment += 1
+
+        self.project_model.update_project_generate_times(identity_id, project_name, times_augment, times_preprocess)
+
+        return times_preprocess, times_augment
+
+    def _create_task(self, identity_id, project_id, type_method):
+        # create task id
+        task_id = self.generate_task_model.create_new_generate_task(identity_id, project_id, type_method)
+        return task_id   
 
     def _put_event_bus(self, detail_pass_para):        
         response = self.client_events.put_events(
@@ -105,15 +121,20 @@ class GenerateImageClass(LambdaBaseClass):
         ### check identity
         identity_id = self.get_identity(self.id_token) 
 
-        ### check running task
-        generate_task_model = GenerateTaskModel()
-        self._check_running_task(generate_task_model, identity_id, self.project_id)
+        ### check running task        
+        self._check_running_task(self.generate_task_model, identity_id, self.project_id)
         
         ### get type of process
         type_method = self._get_type_method(self.ls_methods_id)
 
         ### check generate times limitation and get times of preprocess and augment
         times_augment, times_preprocess, s3_prefix = self._check_generate_times_limitation(identity_id, self.project_name, type_method)   
+
+        ### update the times_augment and times_preprocess to DB
+        times_preprocess, times_augment = self._update_generate_times(identity_id, self.project_name, type_method, times_augment, times_preprocess)
+
+        ### create taskID and update to DB
+        task_id = self._create_task(identity_id, self.project_id, type_method)
 
         ### push event to eventbridge
         detail_pass_para = {
@@ -124,8 +145,9 @@ class GenerateImageClass(LambdaBaseClass):
             KEY_NAME_DATA_TYPE: self.data_type,
             KEY_NAME_DATA_NUMBER: self.data_number,
             KEY_NAME_S3_PREFIX: s3_prefix,
-            KEY_NAME_TIMES_AUGMENT: times_augment+1,
-            KEY_NAME_TIMES_PREPROCESS: times_preprocess+1
+            KEY_NAME_TIMES_AUGMENT: times_augment,
+            KEY_NAME_TIMES_PREPROCESS: times_preprocess,
+            KEY_NAME_TASK_ID: task_id
         }
         event_id = self._put_event_bus(detail_pass_para) 
                 
@@ -133,9 +155,9 @@ class GenerateImageClass(LambdaBaseClass):
             message="OK",
             status_code=HTTPStatus.OK,
             data={
-                KEY_NAME_TASK_ID: event_id,
-                KEY_NAME_TIMES_AUGMENT: (times_augment+1),
-                KEY_NAME_TIMES_PREPROCESS: (times_preprocess+1)
+                KEY_NAME_TASK_ID: task_id,
+                KEY_NAME_TIMES_AUGMENT: times_augment,
+                KEY_NAME_TIMES_PREPROCESS: times_preprocess
             },
         )
 

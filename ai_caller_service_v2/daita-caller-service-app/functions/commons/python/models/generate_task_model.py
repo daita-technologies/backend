@@ -1,6 +1,7 @@
 import boto3
 from boto3.dynamodb.conditions import Key, Attr
 from config import *
+from utils import *
 
 
 class GenerateTaskItem():
@@ -9,35 +10,52 @@ class GenerateTaskItem():
     FIELD_STATUS = "status"
     FIELD_NUM_VALUE = "num_value"
     FIELD_TASK_ID = "task_id"
-    FIELD_PROCESS_TYPE = "process_type"
+    FIELD_TYPE_METHOD = "type_method"
     FIELD_UPDATE_TIME = "updated_time"
     FIELD_NUMBER_FINISHED = "number_finished"
     FIELD_PROJECT_ID = "project_id"
     FIELD_NUM_GEN_IMAGES = "number_gen_images"
     FIELD_CREATE_TIME = "created_time"
 
+    REQUEST_TYPE_ALL            = "all"
+    REQUEST_TYPE_TASK_PROGRESS  = "task_progress"
+
     def __init__(self) -> None:
         self.identity_id        = ""
         self.task_id            = ""
-        self.updated_time       = ""
         self.status             = ""
-        self.process_type       = ""
+        self.type_method        = ""
         self.number_finished    = 0
         self.number_gen_images  = 0
         self.project_id         = ""
+        self.create_time        = convert_current_date_to_iso8601()
+        self.updated_time       = convert_current_date_to_iso8601()
 
 
-    def to_dict(self):
+    def to_dict(self, request = REQUEST_TYPE_ALL):
         print(self.__dict__)
-        dict_info = {
-            self.FIELD_IDENTITY_ID: self.identity_id,
-            self.FIELD_TASK_ID: self.task_id,
-            self.FIELD_STATUS: self.status,
-            self.FIELD_PROCESS_TYPE: self.process_type,
-            self.FIELD_NUMBER_FINISHED: self.number_finished,
-            self.FIELD_NUM_GEN_IMAGES: self.number_gen_images,
-            self.FIELD_PROJECT_ID: self.project_id
-        }
+        if request == self.REQUEST_TYPE_TASK_PROGRESS:
+            dict_info = {
+                self.FIELD_IDENTITY_ID: self.identity_id,
+                self.FIELD_TASK_ID: self.task_id,
+                self.FIELD_STATUS: self.status,
+                self.FIELD_PROCESS_TYPE: self.process_type,
+                self.FIELD_NUMBER_FINISHED: self.number_finished,
+                self.FIELD_NUM_GEN_IMAGES: self.number_gen_images,
+                self.FIELD_PROJECT_ID: self.project_id
+            }
+        else:
+            dict_info = {
+                self.FIELD_IDENTITY_ID: self.identity_id,
+                self.FIELD_TASK_ID: self.task_id,
+                self.FIELD_STATUS: self.status,
+                self.FIELD_TYPE_METHOD: self.type_method,
+                self.FIELD_NUMBER_FINISHED: self.number_finished,
+                self.FIELD_NUM_GEN_IMAGES: self.number_gen_images,
+                self.FIELD_PROJECT_ID: self.project_id,
+                self.FIELD_CREATE_TIME: self.create_time,
+                self.FIELD_UPDATE_TIME: self.updated_time
+            }
         return dict_info
 
     def from_db_item(self, item_info):
@@ -48,12 +66,25 @@ class GenerateTaskItem():
             self.task_id            = item_info.get(self.FIELD_TASK_ID)
             self.updated_time       = item_info.get(self.FIELD_UPDATE_TIME)
             self.status             = item_info.get(self.FIELD_STATUS)
-            self.process_type       = item_info.get(self.FIELD_PROCESS_TYPE)
+            self.process_type       = item_info.get(self.FIELD_TYPE_METHOD)
             self.number_finished    = int(item_info.get(self.FIELD_NUMBER_FINISHED))
             self.number_gen_images  = int(item_info.get(self.FIELD_NUM_GEN_IMAGES))
             self.project_id         = item_info.get(self.FIELD_PROJECT_ID)
 
-            return self        
+            return self   
+
+    @classmethod
+    def create_new_generate_task(cls, identity_id, project_id, type_method):
+        object = cls()
+        object.task_id = create_unique_id()
+        object.type_method = type_method
+        object.status = VALUE_GENERATE_TASK_STATUS_PENDING
+        object.identity_id = identity_id
+        object.project_id = project_id
+        
+        return object
+
+
 
 class GenerateTaskModel():    
 
@@ -77,5 +108,20 @@ class GenerateTaskModel():
             }
         )    
         item = GenerateTaskItem().from_db_item(response.get('Item', None))
-        return item      
+        return item  
+
+    def insert_new_generate_task(self, item) -> None:
+        response = self.table.put_item(
+                Item = item.to_dict()                               
+            ) 
+        
+        return
+
+    def create_new_generate_task(self, identity_id, project_id, type_method):
+        generate_task_item = GenerateTaskItem.create_new_generate_task(identity_id, project_id, type_method)
+        self.insert_new_generate_task(generate_task_item)
+
+        return generate_task_item.task_id
+
+
             

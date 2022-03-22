@@ -72,3 +72,24 @@ class ProjectModel():
         )
 
         return
+
+    def update_project_generate_times(self, identity_id, project_name, times_augment, times_preprocess):
+        response = self.table.update_item(
+            Key={
+                ProjectItem.FIELD_IDENTITY_ID: identity_id,
+                ProjectItem.FIELD_PROJECT_NAME: project_name,
+            },
+            ExpressionAttributeNames= {
+                '#P_T': ProjectItem.FIELD_TIMES_PREPRO,
+                '#A_T': ProjectItem.FIELD_TIMES_AUGMENT,
+                '#UP_DATE': ProjectItem.FIELD_UPDATE_DATE
+            },
+            ExpressionAttributeValues = {
+                ':vp_t': times_preprocess,
+                ':va_t': times_augment,
+                ':da': convert_current_date_to_iso8601(),                
+            },
+            UpdateExpression = 'SET #P_T = :vp_t , #A_T = :va_t, #UP_DATE = :da'
+        )
+
+        return
