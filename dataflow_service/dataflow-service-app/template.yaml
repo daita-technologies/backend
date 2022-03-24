@@ -9,6 +9,10 @@ Description: >
 Globals:
   Function:
     Timeout: 3
+    Environment:
+      Variables:
+        # DECOMPRESS_FILE_QUEUE_NAME: decompress-file.fifo
+        EFS_COMPRESSFILE_MOUNT_POINT: /mnt/efs
 
 Resources:
   HelloWorldFunction:
@@ -25,6 +29,69 @@ Resources:
           Properties:
             Path: /hello
             Method: get
+
+  UploadCompressedFileFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: upload_compressed_file/
+      Handler: app.lambda_handler
+      Runtime: python3.8
+      Architectures:
+        - x86_64
+      Environment:
+        Variables:
+          DECOMPRESS_FILE_QUEUE_URL: !Ref DecompresFileSqsQueue
+
+  DecompresFileSqsQueue:
+    Type: AWS::SQS::Queue
+    Properties:
+      FifoQueue: True
+      # QueueName: decompress-file.fifo
+
+  # ECS resources
+  DecompressFileCluster:
+    Type: AWS::ECS::Cluster
+    Properties:
+    CapacityProviders:
+      - FARGATE
+
+  DecompressFileTask:
+    Type: AWS::ECS::TaskDefinition
+    Properties:
+      ContainerDefinitions:
+        -
+          Name: "decompress-file-task"
+          Environment:
+            - AWS_REGION: string
+            - AWS_ACCESS_KEY_ID: string
+            - AWS_SECRET_ACCESS_KEY: string
+            - DECOMPRESS_FILE_QUEUE_URL: !Ref DecompresFileSqsQueue
+            - EFS_COMPRESSFILE_MOUNT_POINT: !Ref EFS_COMPRESSFILE_MOUNT_POINT
+          # this will be manually push to ecr, need to create first
+          Image: "366577564432.dkr.ecr.us-east-2.amazonaws.com/decompress-file"
+          Cpu: 256
+          Memory: 512
+          Essential: true
+          MountPoints:
+            -
+              SourceVolume: "my-vol"
+              ContainerPath: !Ref EFS_COMPRESSFILE_MOUNT_POINT
+      Volumes:
+        -
+          EFSVolumeConfiguration:
+            AuthorizationConfig:
+              AccessPointId: String
+              IAM: String
+            FilesystemId: fs-0199771f2dfe97ace
+            TransitEncryption: ENABLED # enable this so maybe we don't need to config a access point https://docs.aws.amazon.com/pt_br/AWSCloudFormation/latest/UserGuide/aws-properties-ecs-taskdefinition-authorizationconfig.html
+          Name: "my-vol"
+
+  DecompressFileService:
+    Type: AWS::ECS::Service
+    Cluster: !Ref DecompressFileCluster
+    TaskDefinition: !Ref DecompressFileTask
+    DesiredCount: 1 # we will try to scale by sqs later
+
 
 Outputs:
   # ServerlessRestApi is an implicit API created out of Events key under Serverless::Function
