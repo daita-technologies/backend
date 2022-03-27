@@ -173,7 +173,7 @@ def lambda_handler(event, context):
         'token': authResponse['AuthenticationResult']['AccessToken'],
         'resfresh_token': authResponse['AuthenticationResult']['RefreshToken'],
         'id_token': authResponse['AuthenticationResult']['IdToken'],
-        'token_expires_in': datetime.now().timestamp() + ACCESS_TOKEN_EXPIRATION
+        'token_expires_in': (datetime.now().timestamp() + ACCESS_TOKEN_EXPIRATION)*1000
     }
     
     if not checkEmailVerified(response['token']):
