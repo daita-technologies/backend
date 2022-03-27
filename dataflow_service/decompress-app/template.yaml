@@ -1,0 +1,222 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Transform: AWS::Serverless-2016-10-31
+Description: >
+  sam-app
+
+  Sample SAM Template for sam-app
+
+Globals:
+  Function:
+    Timeout: 3
+    Environment:
+      Variables:
+        EFS_COMPRESSFILE_MOUNT_POINT: /mnt/efs
+
+
+Resources:
+  #================ ROLES =====================================================
+  # AWSServiceRoleForECS :
+  #   Type: AWS::IAM::ServiceLinkedRole
+  #   Properties:
+  #     AWSServiceName: ecs.amazonaws.com
+  #     Description: "Using for ECS Fargate"
+
+  # DefaultSubnet: # Fargate required a awsvpc config so
+  #   Type: AWS::EC2::Subnet
+  #   Properties:
+  #     VpcId: vpc-53239e38
+  #     CidrBlock: 172.31.0.0/16
+
+  #================ LOGS FOR STEP FUNCTIONS ===================================
+
+  DecompressFileStateMachineLogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: !Sub "DecompressFileStateMachineLogGroup-${AWS::StackName}"
+      RetentionInDays: 7
+
+  DecompressFileStateMachine:
+    Type: AWS::Serverless::StateMachine # More info about State Machine Resource: https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/sam-resource-statemachine.html
+    Properties:
+      Type: STANDARD
+      DefinitionUri: statemachine/decompress_file.asl.yml
+      DefinitionSubstitutions:
+        # CreateDecompressTask: !GetAtt CreateDecompressTaskFunction.Arn
+        DecompressTaskCluster: !GetAtt DecompressTaskCluster.Arn
+        DecompressTask: !Ref DecompressTask
+        SubnetId: subnet-31ff5b5a
+        DivideDecompressChunksFunction: !GetAtt DivideDecompressChunksFunction.Arn
+        # StockSellerFunctionArn: !GetAtt StockSellerFunction.Arn
+        # StockBuyerFunctionArn: !GetAtt StockBuyerFunction.Arn
+        # DDBPutItem: !Sub arn:${AWS::Partition}:states:::dynamodb:putItem
+        # DDBTable: !Ref TransactionTable
+      Logging:
+        Level: ALL
+        IncludeExecutionData: true
+        Destinations:
+        - CloudWatchLogsLogGroup:
+            LogGroupArn: !GetAtt DecompressFileStateMachineLogGroup.Arn
+      Tracing:
+        Enabled: true
+      Policies: # Find out more about SAM policy templates: https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/serverless-policy-templates.html
+        - LambdaInvokePolicy:
+            FunctionName: !Ref DivideDecompressChunksFunction
+        - CloudWatchPutMetricPolicy: {}
+        - Statement:
+          - # Allow step to start ecs task
+            Effect: Allow
+            Action:
+              - ecs:RunTask
+              - ecs:StopTask
+              - ecs:DescribeTasks
+            Resource:
+              - "*"
+          -
+            Effect: Allow
+            Action:
+              - events:PutTargets
+              - events:PutRule
+              - events:DescribeRule
+            Resource:
+              - !Sub arn:${AWS::Partition}:events:${AWS::Region}:${AWS::AccountId}:rule/StepFunctionsGetEventsForECSTaskRule
+          -
+            Effect: Allow
+            Action:
+              - iam:PassRole
+            Resource:
+              - "*"
+          - # Allow access log groups
+            Sid: CloudWatchLogsPolicy
+            Effect: Allow
+            Action:
+              - "logs:CreateLogDelivery"
+              - "logs:GetLogDelivery"
+              - "logs:UpdateLogDelivery"
+              - "logs:DeleteLogDelivery"
+              - "logs:ListLogDeliveries"
+              - "logs:PutResourcePolicy"
+              - "logs:DescribeResourcePolicies"
+              - "logs:DescribeLogGroup"
+              - "logs:DescribeLogGroups"
+            Resource: "*"
+        # - DynamoDBWritePolicy:
+        #     TableName: !Ref TransactionTable
+
+  CreateDecompressTaskFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: functions/create_decompress_task/
+      Handler: app.lambda_handler
+      Runtime: python3.8
+      Architectures:
+        - x86_64
+      Policies:
+        - StepFunctionsExecutionPolicy:
+            StateMachineName: !GetAtt DecompressFileStateMachine.Name
+      Environment:
+        Variables:
+          DecompressFileStateMachineArn: !GetAtt DecompressFileStateMachine.Arn
+      Events:
+        UploadCompressedFile:
+          Type: Api # More info about API Event Source: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#api
+          Properties:
+            Path: /decompress-file
+            Method: post
+
+  EFSAccessPoint:
+    Type: AWS::EFS::AccessPoint
+    Properties:
+      FileSystemId: fs-0199771f2dfe97ace
+
+  DivideDecompressChunksFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: functions/divide_decompressed_chunks/
+      Handler: app.lambda_handler
+      Runtime: python3.8
+      Architectures:
+        - x86_64
+      VpcConfig:
+        SecurityGroupIds:
+          - sg-af50cbde
+        SubnetIds:
+          - subnet-31ff5b5a
+      FileSystemConfigs:
+        - Arn: !GetAtt EFSAccessPoint.Arn
+          LocalMountPath: /mnt/efs
+
+  UploadDecompressedFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: functions/upload_decompressed/
+      Handler: app.lambda_handler
+      Runtime: python3.8
+      Architectures:
+        - x86_64
+      VpcConfig:
+        SecurityGroupIds:
+          - sg-af50cbde
+        SubnetIds:
+          - subnet-31ff5b5a
+      FileSystemConfigs:
+        - Arn: !GetAtt EFSAccessPoint.Arn
+          LocalMountPath: /mnt/efs
+
+  # ECS resources
+  DecompressTaskCluster:
+    Type: AWS::ECS::Cluster
+    Properties:
+      CapacityProviders:
+        - FARGATE
+
+  DecompressTask:
+    Type: AWS::ECS::TaskDefinition
+    Properties:
+      RequiresCompatibilities:
+        - "FARGATE"
+      ExecutionRoleArn: arn:aws:iam::366577564432:role/ecsTaskExecutionRole
+      TaskRoleArn: arn:aws:iam::366577564432:role/S3FullAccess
+      Cpu: 256
+      Memory: 512
+      NetworkMode: awsvpc
+      ContainerDefinitions:
+        -
+          Name: "decompress-file"
+          Image: "366577564432.dkr.ecr.us-east-2.amazonaws.com/decompress"
+          Cpu: 256
+          Memory: 512
+          # Essential: true
+          MountPoints:
+            -
+              SourceVolume: "my-vol"
+              ContainerPath: /mnt/efs
+      Volumes:
+        -
+          EFSVolumeConfiguration:
+            # AuthorizationConfig:
+            #   AccessPointId: String
+            #   IAM: String
+            FilesystemId: fs-0199771f2dfe97ace
+            TransitEncryption: ENABLED # enable this so maybe we don't need to config a access point https://docs.aws.amazon.com/pt_br/AWSCloudFormation/latest/UserGuide/aws-properties-ecs-taskdefinition-authorizationconfig.html
+          Name: "my-vol"
+
+  # TransactionTable:
+  #   Type: AWS::Serverless::SimpleTable # More info about SimpleTable Resource: https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/sam-resource-simpletable.html
+  #   Properties:
+  #     PrimaryKey:
+  #       Name: Id
+  #       Type: String
+  #     ProvisionedThroughput:
+  #       ReadCapacityUnits: 1
+  #       WriteCapacityUnits: 1
+
+# Outputs:
+  # StockTradingStateMachineHourlyTradingSchedule is an implicit Schedule event rule created out of Events key under Serverless::StateMachine
+  # Find out more about other implicit resources you can reference within SAM
+  # https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/sam-specification-generated-resources.html
+  # StockTradingStateMachineArn:
+  #   Description: "Stock Trading State machine ARN"
+  #   Value: !Ref StockTradingStateMachine
+  # StockTradingStateMachineRoleArn:
+  #   Description: "IAM Role created for Stock Trading State machine based on the specified SAM Policy Templates"
+  #   Value: !GetAtt StockTradingStateMachineRole.Arn

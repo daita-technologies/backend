@@ -1,0 +1,55 @@
+StartAt: StartDecompressTask
+States:
+  # CreateDecompressTask:
+  #   Type: Task
+  #   Resource: arn:aws:states:::lambda:invoke
+  #   InputPath: "$"
+  #   OutputPath: "$"
+  #   Parameters:
+  #     FunctionName: "${CreateDecompressTask}"
+  #     Payload.$: "$"
+  #   Next: StartDecompressTask
+  StartDecompressTask:
+    Type: Task
+    Resource: arn:aws:states:::ecs:runTask.sync
+    ResultPath: null # Forward previous step input as this step output
+    Parameters:
+      Cluster: ${DecompressTaskCluster}
+      LaunchType: FARGATE
+      NetworkConfiguration:
+        AwsvpcConfiguration:
+          AssignPublicIp: ENABLED # Needed when pulling public Docker image
+          Subnets:
+            - ${SubnetId}
+      Overrides:
+        ContainerOverrides:
+          -
+            Name: decompress-file
+            # command to override aws s3 cp s3://daita-client-data/tmp/test.zip . && unzip /test.zip -d test
+            Command.$: "$.command"
+      TaskDefinition: ${DecompressTask}
+    Next: DivideDecompressChunksFunction
+
+  DivideDecompressChunksFunction:
+    Type: Task
+    Resource: arn:aws:states:::lambda:invoke
+    InputPath: "$"
+    Parameters:
+      FunctionName: "${DivideDecompressChunksFunction}"
+      Payload.$: "$"
+    Next: UploadDecompressedFunction
+
+  UploadDecompressedFunction:
+    Type: Task
+    Resource: arn:aws:states:::lambda:invoke
+    InputPath: "$"
+    Parameters:
+      FunctionName: "${UploadDecompressedFunction}"
+      Payload.$: "$"
+    Next: Complete
+
+  Complete:
+    Type: Pass
+    # Comment: Used for result aggregation
+    End: true
+TimeoutSeconds: 1800
