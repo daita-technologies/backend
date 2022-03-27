@@ -1,0 +1,193 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: >
+  daita-caller-service-app
+
+  Sample SAM Template for daita-caller-service-app
+
+
+# More info about Globals: https://github.com/awslabs/serverless-application-model/blob/master/docs/globals.rst
+Globals:
+  Function:
+    Timeout: 800
+    Handler: app.lambda_handler
+    Runtime: python3.8
+    Architectures:
+      - x86_64
+    Environment:
+      Variables:
+        STAGE: !Ref StagePara
+        TABLE_NAME: global-table
+        LOGGING: !Ref minimumLogLevel
+        TABLE_GENERATE_TASK: !Ref TableGenerateTaskName
+        TABLE_PROJECTS_NAME: !Ref TableProjectsName
+        TABLE_METHODS_NAME: !Ref TableMethodsName
+    Layers:
+        - !Ref CommonCodeLayerName  
+     
+## The general rule seems to be to use !Sub for in line substitutions and !ref for stand alone text
+Parameters:
+  minimumLogLevel:
+    Type: String
+    Default: DEBUG
+  StagePara:
+    Type: String
+  CallerServiceEventBusArn:
+    Type: String
+  CallerServiceEventBusName:
+    Type: String
+  TableGenerateTaskName:
+    Type: String
+  TableProjectsName:
+    Type: String
+  TableMethodsName:
+    Type: String
+  CommonCodeLayerName:
+    Type: String
+  LimitPreprocessTimesName:
+    Type: String
+  LimitAugmentTimesName:
+    Type: String
+
+Resources:  
+  #================ ROLES =====================================================
+
+  # use this role for apigateway access lambda
+  ApiGatewayCallLambdaRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+        - Effect: "Allow"
+          Principal: 
+            Service: "apigateway.amazonaws.com"
+          Action:
+          - "sts:AssumeRole"
+      Policies:
+      - PolicyName: RestApiDirectInvokeLambda
+        PolicyDocument:
+          Version: "2012-10-17"
+          Statement:
+            Action:
+            - "lambda:InvokeFunction"
+            Effect: Allow
+            Resource:
+              # insert lambda functions arn here
+              - !GetAtt GenerateCheckConditionFunction.Arn
+              - !GetAtt TaskProgressFunction.Arn
+              - !GetAtt ListMethodsFunction.Arn
+              - !GetAtt SplitDataFunction.Arn        
+  
+  # lambda role 
+  LambdaExecutionRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+        - Effect: "Allow"
+          Principal: 
+            Service: "lambda.amazonaws.com"
+          Action:
+          - "sts:AssumeRole"
+      Policies:             
+        - PolicyName: 'SecretsManagerParameterAccess'
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - ssm:GetParam*
+                  - ssm:DescribeParam*                  
+                Resource:
+                  - arn:aws:ssm:*:*:parameter/*
+        - PolicyName: 'CloudwatchPermission'
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              -
+                Effect: Allow
+                Action:
+                  - 'logs:CreateLogGroup'
+                  - 'logs:CreateLogStream'
+                  - 'logs:PutLogEvents'
+                Resource: '*'
+        - PolicyName: 'CognitoPermission'
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              -
+                Effect: Allow
+                Action:
+                  - cognito-identity:*    
+                  - cognito-idp:*       
+                Resource: '*'
+        - PolicyName: 'DynamoDBPermission'
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:             
+              - 
+                Effect: Allow
+                Action:
+                  - dynamodb:*
+                Resource: "*"
+        - PolicyName: "OtherServicePermission"
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:             
+              - 
+                Effect: Allow
+                Action:
+                  - events:PutEvents
+                Resource: 
+                  - !Ref CallerServiceEventBusArn
+
+  #================ CALLER SERVICE HTTP API ===================================
+
+  DaitaHttpApi:
+    Type: AWS::Serverless::HttpApi
+    Properties:
+      StageName: !Ref StagePara
+      DefinitionBody:
+        Fn::Transform:
+          Name: AWS::Include
+          Parameters:
+            Location: './api-defs/daita_http_api.yaml'
+      
+
+  #================ LAMBDA FUNCTIONS ==========================================    
+                
+  GenerateCheckConditionFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: functions/handlers/generate/generate_images
+      Role: !GetAtt LambdaExecutionRole.Arn
+      Environment:
+        Variables:
+          EVENT_BUS_NAME: !Ref CallerServiceEventBusName
+          LIMIT_PROCESSING_TIMES: !Ref LimitPreprocessTimesName
+          LIMIT_AUGMENT_TIMES: !Ref LimitAugmentTimesName
+
+  TaskProgressFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: functions/handlers/generate/task_progress
+      Role: !GetAtt LambdaExecutionRole.Arn     
+
+  ListMethodsFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: functions/handlers/generate/list_methods
+      Role: !GetAtt LambdaExecutionRole.Arn      
+
+  SplitDataFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: functions/handlers/generate/split_data
+      Role: !GetAtt LambdaExecutionRole.Arn
+
+Outputs:
+  CallerServiceHttpApiUrl:
+    Description: "Url of the Caller service API"
+    Value: !Sub "https://${DaitaHttpApi}.execute-api.${AWS::Region}.amazonaws.com"

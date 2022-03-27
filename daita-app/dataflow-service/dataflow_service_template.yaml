@@ -1,0 +1,41 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: 'dataflow-service-app
+
+  Sample SAM Template for dataflow-service-app
+
+  '
+Globals:
+  Function:
+    Timeout: 3
+
+Parameters:
+  StagePara:
+    Type: String
+    
+Resources:
+  TestFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: TestFunction
+      Handler: app.lambda_handler
+      Runtime: python3.8
+      Architectures:
+      - x86_64
+      # Policies:
+      #   - AWSLambdaExecute
+      #   - Version: '2012-10-17' 
+      #     Statement:
+      #       - Effect: Allow
+      #         Action:
+      #           - s3:GetObject
+      #           - s3:GetObjectACL
+      #         Resource: '*'
+      # Events:
+      #   HelloWorld:
+      #     Type: Api
+      #     Properties:
+      #       Path: /hello
+      #       Method: get
+    Metadata:
+      SamResourceId: TestFunction

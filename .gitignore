@@ -159,3 +159,4 @@ core_service_sam/
 ai_caller_service_v2/test
 .vscode/
 dataflow_service/dataflow-service-app/.aws-sam/
+daita-app/.aws-sam/
