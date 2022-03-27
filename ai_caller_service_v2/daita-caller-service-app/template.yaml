@@ -195,7 +195,10 @@ Resources:
         - python3.8
 
   #================ LAMBDA FUNCTIONS ==========================================
-      
+  PrepareStep:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: functions/handlers/prepare_step
   PreprocessGenerateTask:
     Type: AWS::Serverless::Function 
     Properties:
