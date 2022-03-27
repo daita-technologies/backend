@@ -20,6 +20,12 @@ def lambda_handler(event, context):
         if project_name == new_prj_name:
             raise Exception(const.MES_PROJECT_SAME.format(new_prj_name))
         
+        #check length of projectname and project info
+        if len(new_prj_name) > const.MAX_LENGTH_PROJECT_NAME_INFO:
+            raise Exception(const.MES_LENGTH_OF_PROJECT_NAME)        
+        if len(new_description) > const.MAX_LENGTH_PROJECT_NAME_INFO:
+            raise Exception(const.MES_LENGTH_OF_PROJECT_INFO)
+        
     except Exception as e:
         return convert_response({"error": True, 
                 "success": False, 
