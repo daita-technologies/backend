@@ -156,3 +156,4 @@ dmypy.json
 cython_debug/
 
 core_service_sam/
+.vscode/settings.json
