@@ -107,7 +107,7 @@ Resources:
     Properties:
       # Type: EXPRESS
       Type: STANDARD
-      Name: !Sub "${StagePara}-${ApplicationPara}--CallerServiceSM"
+      Name: !Sub "${StagePara}-${ApplicationPara}-CallerServiceSM"
       Policies:
         - Statement:
           - Sid: AWSStepFunctionsFullAccess
