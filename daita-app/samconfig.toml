@@ -20,7 +20,7 @@ confirm_changeset = true
 capabilities = "CAPABILITY_IAM CAPABILITY_AUTO_EXPAND"
 disable_rollback = true
 image_repositories = []
-parameter_overrides = "Stage=\"dev\""
+parameter_overrides = "Stage=\"dev\" Application=\"daita\""
 
 [prod.deploy.parameters]
 stack_name = "prod-daita-app"

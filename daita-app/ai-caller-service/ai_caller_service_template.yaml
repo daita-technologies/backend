@@ -31,6 +31,8 @@ Parameters:
     Type: String
   CommonCodeLayerName:
     Type: String
+  ApplicationPara:
+    Type: String
 
 Resources:  
 
@@ -71,7 +73,7 @@ Resources:
   CallerServiceEventBus:
     Type: AWS::Events::EventBus
     Properties: 
-      Name: !Sub "${StagePara}-CallerServiceEventBus"
+      Name: !Sub "${StagePara}-${ApplicationPara}-CallerServiceEventBus"
 
   CallerServiceEventBusDefaultRule:
     Type: AWS::Events::Rule
@@ -95,7 +97,7 @@ Resources:
   CallerServiceStateMachineLogGroup:
     Type: AWS::Logs::LogGroup
     Properties: 
-      LogGroupName: !Sub "CallerServiceStateMachineLogGroup-${AWS::StackName}"
+      LogGroupName: !Sub "${StagePara}-${ApplicationPara}-CallerServiceStateMachineLogGroup"
       RetentionInDays: 7
 
   #================ PROCESSOR STATE MACHINE ===================================
@@ -105,7 +107,7 @@ Resources:
     Properties:
       # Type: EXPRESS
       Type: STANDARD
-      Name: !Sub "${StagePara}-${AWS::StackName}-CallerServiceStateMachine"
+      Name: !Sub "${StagePara}-${ApplicationPara}--CallerServiceSM"
       Policies:
         - Statement:
           - Sid: AWSStepFunctionsFullAccess
@@ -159,7 +161,7 @@ Resources:
     Type: AWS::Serverless::StateMachine
     Properties:
       Type: STANDARD
-      Name: !Sub "${StagePara}-${AWS::StackName}-PrepareStateMachine"
+      Name: !Sub "${StagePara}-${ApplicationPara}-PrepareSM"
       Policies:
         - LambdaInvokePolicy:
             FunctionName: !Ref PreprocessGenerateTask   
@@ -193,7 +195,7 @@ Resources:
     Type: AWS::Serverless::StateMachine
     Properties:
       Type: STANDARD
-      Name: !Sub "${StagePara}-${AWS::StackName}-DownloadStateMachine"
+      Name: !Sub "${StagePara}-${ApplicationPara}-DownloadSM"
       Policies:
         - LambdaInvokePolicy:
             FunctionName: !Ref PreprocessGenerateTask           
@@ -227,7 +229,7 @@ Resources:
     Type: AWS::Serverless::StateMachine
     Properties:
       Type: STANDARD
-      Name: !Sub "${StagePara}-${AWS::StackName}-GenerateStateMachine"
+      Name: !Sub "${StagePara}-${ApplicationPara}-GenerateSM"
       Policies:
         - LambdaInvokePolicy:
             FunctionName: !Ref PreprocessGenerateTask   
@@ -261,7 +263,7 @@ Resources:
     Type: AWS::Serverless::StateMachine
     Properties:
       Type: STANDARD
-      Name: !Sub "${StagePara}-${AWS::StackName}-UploadStateMachine"
+      Name: !Sub "${StagePara}-${ApplicationPara}-UploadSM"
       Policies:
         - LambdaInvokePolicy:
             FunctionName: !Ref PreprocessGenerateTask  

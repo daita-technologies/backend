@@ -8,6 +8,9 @@ Parameters:
   Stage:
     Type: String
     Default: dev
+  Application:
+    Type: String
+    Default: daita
 
 Resources:
   #=============== SYSTEM PARAMETER CONFIGURATON ==============================
@@ -41,6 +44,7 @@ Resources:
       Parameters:
         StagePara: !Ref Stage
         CommonCodeLayerName: !Ref CommonCodeLayer
+        ApplicationPara: !Ref Application
 
   DataFlowService:
     Type: AWS::Serverless::Application
