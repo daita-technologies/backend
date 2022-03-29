@@ -1,0 +1,72 @@
+StartAt: PrepareTask
+States:
+  PrepareTask:
+    Type: Task
+    Resource: arn:aws:states:::states:startExecution.sync:2
+    InputPath: "$.detail"
+    OutputPath: "$"
+    Parameters:
+      StateMachineArn: "${PrepareStateMachine}"
+      Input: 
+        abc: "abc"
+        abcd.$: "$$.Execution.Id"
+        ori.$:  "$" 
+        ori2.$: "$$"
+    Next: DownloadTask
+    Comment: Check the level of parallelism, split requests into chunks and invoke lamndas
+    Retry:
+    - ErrorEquals:
+      - RetriableCallerServiceError
+      IntervalSeconds: 1
+      MaxAttempts: 2
+      BackoffRate: 1 
+  DownloadTask:
+    Type: Task
+    Resource: arn:aws:states:::states:startExecution.sync:2
+    InputPath: "$"
+    OutputPath: "$.Output.Payload"
+    Parameters:
+      StateMachineArn: "${DownloadStateMachine}"   
+    Next: GenerateTask
+    Comment: Check the level of parallelism, split requests into chunks and invoke lamndas
+    Retry:
+    - ErrorEquals:
+      - RetriableCallerServiceError
+      IntervalSeconds: 1
+      MaxAttempts: 2
+      BackoffRate: 1
+  GenerateTask:
+    Type: Task
+    Resource: arn:aws:states:::states:startExecution.sync:2
+    InputPath: "$"
+    OutputPath: "$.Payload"
+    Parameters:
+      StateMachineArn: "${GenerateStateMachine}"   
+    Next: UploadTask
+    Comment: Check the level of parallelism, split requests into chunks and invoke lamndas
+    Retry:
+    - ErrorEquals:
+      - RetriableCallerServiceError
+      IntervalSeconds: 1
+      MaxAttempts: 2
+      BackoffRate: 1
+  UploadTask:
+    Type: Task
+    Resource: arn:aws:states:::states:startExecution.sync:2
+    InputPath: "$"
+    OutputPath: "$.Payload"
+    Parameters:
+      StateMachineArn: "${UploadStateMachine}"   
+    Next: Complete
+    Comment: Check the level of parallelism, split requests into chunks and invoke lamndas
+    Retry:
+    - ErrorEquals:
+      - RetriableCallerServiceError
+      IntervalSeconds: 1
+      MaxAttempts: 2
+      BackoffRate: 1
+  Complete:
+    Type: Pass
+    Comment: Used for result aggregation
+    End: true
+TimeoutSeconds: 150
