@@ -8,7 +8,7 @@ from config import *
 def verify_captcha(token: str):
     response = requests.post(ENDPOINTCAPTCHAVERIFY)
     payload = {
-        "secret": SECRETKEYGOOGLE,
+        # "secret": SECRETKEYGOOGLE,
         "sitekey": SITEKEYGOOGLE,
         "response": token
     }
