@@ -6,7 +6,20 @@ CODE_DIR = PROJECT_DIR.joinpath("code")
 
 def deploy_lambda_auth(general_info, lambda_service):
     ls_lambda_val = []
-
+    #log out
+    lambda_uri, lambda_version = lambda_service.deploy_lambda_function(f'logout',
+                                          [ CODE_DIR.joinpath("logout.py"),
+                                            CODE_DIR.joinpath("utils.py"),
+                                            PROJECT_DIR.joinpath("packages"),
+                                             PROJECT_DIR.joinpath("common"),
+                                         ],
+                                        {
+                                            'USER_POOL_ID' : general_info['USER_POOL_ID'],
+                                            'IDENTITY_POOL_ID': general_info['IDENTITY_POOL_ID']
+                                        },
+                                        'logout.lambda_handler',
+                                        'staging: logout')
+    add_lambda_info_to_list(ls_lambda_val, lambda_uri, lambda_version, 'auth', 'user_logout')
     #login
     lambda_uri, lambda_version = lambda_service.deploy_lambda_function(f'login',
                                           [ CODE_DIR.joinpath("login.py"),
