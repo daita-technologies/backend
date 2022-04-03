@@ -1,0 +1,34 @@
+version = 0.1
+[default]
+[default.deploy]
+[default.deploy.parameters]
+stack_name = "daita-app"
+s3_bucket = "aws-sam-cli-managed-default-samclisourcebucket-pemlzh8np33c"
+s3_prefix = "daita-app"
+region = "us-east-2"
+confirm_changeset = true
+capabilities = "CAPABILITY_IAM CAPABILITY_AUTO_EXPAND"
+disable_rollback = true
+image_repositories = []
+
+[dev.deploy.parameters]
+stack_name = "dev-daita-app"
+s3_bucket = "aws-sam-cli-managed-default-samclisourcebucket-pemlzh8np33c"
+s3_prefix = "dev-daita-app"
+region = "us-east-2"
+confirm_changeset = true
+capabilities = "CAPABILITY_IAM CAPABILITY_AUTO_EXPAND"
+disable_rollback = true
+image_repositories = []
+parameter_overrides = "Stage=\"dev\" Application=\"daita\""
+
+[prod.deploy.parameters]
+stack_name = "prod-daita-app"
+s3_bucket = "aws-sam-cli-managed-default-samclisourcebucket-pemlzh8np33c"
+s3_prefix = "prod-daita-app"
+region = "us-east-2"
+confirm_changeset = true
+capabilities = "CAPABILITY_IAM CAPABILITY_AUTO_EXPAND"
+disable_rollback = true
+image_repositories = []
+parameter_overrides = "Stage=\"prod\""

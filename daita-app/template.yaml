@@ -1,0 +1,80 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: >
+  SAM Template for Nested application resources
+
+## The general rule seems to be to use !Sub for in line substitutions and !ref for stand alone text
+Parameters:
+  Stage:
+    Type: String
+    Default: dev
+  Application:
+    Type: String
+    Default: daita
+
+Resources:
+  #=============== SYSTEM PARAMETER CONFIGURATON ==============================
+  LimitPreprocessTimes:
+    Type: AWS::SSM::Parameter
+    Properties:
+      Name: !Sub "${Stage}-LimitPreprocessTimes"
+      Type: String
+      Value: "1"
+  LimitAugmentTimes:
+    Type: AWS::SSM::Parameter
+    Properties:
+      Name: !Sub "${Stage}-LimitAugmentTimes"
+      Type: String
+      Value: "5"
+
+  #================ LAMBDA LAYERS  ============================================
+  CommonCodeLayer:
+    Type: AWS::Serverless::LayerVersion
+    Properties:
+      LayerName: !Sub "${Stage}-CommonCodeLayer"
+      ContentUri: shared-layer/commons/
+      CompatibleRuntimes:
+        - python3.8
+
+  #================ APPLICATIONS  =============================================
+  AICallerService:
+    Type: AWS::Serverless::Application
+    Properties:
+      Location: ai-caller-service/ai_caller_service_template.yaml
+      Parameters:
+        StagePara: !Ref Stage
+        CommonCodeLayerName: !Ref CommonCodeLayer
+        ApplicationPara: !Ref Application
+
+  DataFlowService:
+    Type: AWS::Serverless::Application
+    Properties:
+      Location: dataflow-service/dataflow_service_template.yaml
+      Parameters:
+        StagePara: !Ref Stage
+
+  DatabaseService:
+    Type: AWS::Serverless::Application
+    Properties:
+      Location: db-service/db_template.yaml
+      Parameters:
+        StagePara: !Ref Stage
+
+  CoreService:
+    Type: AWS::Serverless::Application
+    Properties:
+      Location: core-service/core_service_template.yaml
+      Parameters:
+        StagePara: !Ref Stage
+        CallerServiceEventBusArn: !GetAtt AICallerService.Outputs.CallerServiceEventBusArn         
+        CallerServiceEventBusName: !GetAtt AICallerService.Outputs.CallerServiceEventBusName
+        TableGenerateTaskName: !GetAtt DatabaseService.Outputs.TableGenerateTaskName
+        TableProjectsName: !GetAtt DatabaseService.Outputs.TableProjectsName
+        TableMethodsName: !GetAtt DatabaseService.Outputs.TableMethodsName
+        LimitPreprocessTimesName: !Ref LimitPreprocessTimes
+        LimitAugmentTimesName: !Ref LimitAugmentTimes
+        CommonCodeLayerName: !Ref CommonCodeLayer
+
+
+    
+  
