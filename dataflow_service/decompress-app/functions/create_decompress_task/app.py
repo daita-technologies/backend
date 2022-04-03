@@ -1,12 +1,21 @@
 import os
 import json
 import uuid
+from datetime import datetime
 
 import boto3
 
 
+DECOMPRESS_TASK_TABLE = os.getenv("DecompressTaskTable")
+
 stepfunctions = boto3.client('stepfunctions')
-EFS_MOUNT_POINT = "/mnt/efs"
+db = boto3.resource('dynamodb')
+table = db.Table(DECOMPRESS_TASK_TABLE)
+
+
+def convert_current_date_to_iso8601():
+    now = datetime.now()
+    return now.isoformat()
 
 
 def lambda_handler(event, context):
@@ -19,50 +28,37 @@ def lambda_handler(event, context):
     project_id = body['project_id']
     project_name = body['project_name']
     type_method = body.get('type_method', 'ORIGINAL')
-    # command = body["command"]
 
-    # building decompress command
-    working_dir = os.path.join(EFS_MOUNT_POINT, "app", "decompress", str(uuid.uuid4()))
-    filename = os.path.basename(file_url)
-    file_stemp = os.path.splitext(filename)[0]
-    destination_dir = os.path.join(working_dir, file_stemp)
-    container_commands = [
-        f"mkdir -p {working_dir}",
-        f"cd {working_dir}",
-        f"/usr/local/bin/aws s3 cp {file_url} {filename}",
-        f"unzip {filename} -d {destination_dir}",
-        f"rm {filename}"
-    ]
-    container_command = " && ".join(container_commands)
-    command = [
-        "/bin/bash",
-        "-c",
-        container_command
-    ]
+    # task_id = str(uuid.uuid4())
+    task_id = "d34986e9-ceb3-45c0-ac3b-cc84d9e44259"
+    response = table.put_item(
+        Item={
+            "id": task_id,
+            "status": "CREATED",
+            "created_at": convert_current_date_to_iso8601(),
+            "updated_at": convert_current_date_to_iso8601(),
+        }
+    )
 
     task_input = {
         "file_url": file_url,
+        "task_id": task_id,
         "id_token": id_token,
         "project_id": project_id,
         "project_name": project_name,
         "type_method": type_method,
-        "filename": filename,
-        "destination_dir": destination_dir,
-        "command": command
     }
     response = stepfunctions.start_execution(
         stateMachineArn=os.getenv("DecompressFileStateMachineArn"),
         input=json.dumps(task_input)
     )
 
-    # create task record in db
-    # return task id for frontend
-
     print("succeed")
     return {
         "statusCode": 200,
         "body": json.dumps({
             "message": "succeed",
+            "task_id": task_id,
             "file_url": file_url
         }),
     }

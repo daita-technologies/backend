@@ -7,10 +7,11 @@ Description: >
 
 Globals:
   Function:
-    Timeout: 3
+    Timeout: 10
     Environment:
       Variables:
         EFS_COMPRESSFILE_MOUNT_POINT: /mnt/efs
+        MAIN_S3_BUCKER: daita-client-data
 
 
 Resources:
@@ -41,15 +42,13 @@ Resources:
       Type: STANDARD
       DefinitionUri: statemachine/decompress_file.asl.yml
       DefinitionSubstitutions:
-        # CreateDecompressTask: !GetAtt CreateDecompressTaskFunction.Arn
         DecompressTaskCluster: !GetAtt DecompressTaskCluster.Arn
         DecompressTask: !Ref DecompressTask
         SubnetId: subnet-31ff5b5a
         DivideDecompressChunksFunction: !GetAtt DivideDecompressChunksFunction.Arn
-        # StockSellerFunctionArn: !GetAtt StockSellerFunction.Arn
-        # StockBuyerFunctionArn: !GetAtt StockBuyerFunction.Arn
-        # DDBPutItem: !Sub arn:${AWS::Partition}:states:::dynamodb:putItem
-        # DDBTable: !Ref TransactionTable
+        UploadDecompressedFunction: !GetAtt UploadDecompressedFunction.Arn
+        FinishDecompressTaskFunction: !GetAtt FinishDecompressTaskFunction.Arn
+        DecompressTaskTable: !Ref DecompressTaskTable
       Logging:
         Level: ALL
         IncludeExecutionData: true
@@ -61,6 +60,10 @@ Resources:
       Policies: # Find out more about SAM policy templates: https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/serverless-policy-templates.html
         - LambdaInvokePolicy:
             FunctionName: !Ref DivideDecompressChunksFunction
+        - LambdaInvokePolicy:
+            FunctionName: !Ref UploadDecompressedFunction
+        - LambdaInvokePolicy:
+            FunctionName: !Ref FinishDecompressTaskFunction
         - CloudWatchPutMetricPolicy: {}
         - Statement:
           - # Allow step to start ecs task
@@ -113,15 +116,30 @@ Resources:
       Policies:
         - StepFunctionsExecutionPolicy:
             StateMachineName: !GetAtt DecompressFileStateMachine.Name
+        - AmazonDynamoDBFullAccess
       Environment:
         Variables:
           DecompressFileStateMachineArn: !GetAtt DecompressFileStateMachine.Arn
+          DecompressTaskTable: !Ref DecompressTaskTable
       Events:
         UploadCompressedFile:
           Type: Api # More info about API Event Source: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#api
           Properties:
             Path: /decompress-file
             Method: post
+
+  # For lambda function run in VPC to be able to communicate with S3
+  VPCEndpointForS3:
+    Type: AWS::EC2::VPCEndpoint
+    Properties:
+      ServiceName: com.amazonaws.us-east-2.s3
+      VpcId: vpc-53239e38
+
+  VPCEndpointForDynamoDB:
+    Type: AWS::EC2::VPCEndpoint
+    Properties:
+      ServiceName: com.amazonaws.us-east-2.dynamodb
+      VpcId: vpc-53239e38
 
   EFSAccessPoint:
     Type: AWS::EFS::AccessPoint
@@ -144,6 +162,26 @@ Resources:
       FileSystemConfigs:
         - Arn: !GetAtt EFSAccessPoint.Arn
           LocalMountPath: /mnt/efs
+      Policies:
+        - AmazonDynamoDBFullAccess
+        - Statement:
+          - Sid: ALLOWCRUDDynamoDB
+            Effect: Allow
+            Action:
+            - "dynamodb:GetItem"
+            - "dynamodb:DeleteItem"
+            - "dynamodb:PutItem"
+            - "dynamodb:Scan"
+            - "dynamodb:Query"
+            - "dynamodb:UpdateItem"
+            - "dynamodb:BatchWriteItem"
+            - "dynamodb:BatchGetItem"
+            - "dynamodb:DescribeTable"
+            - "dynamodb:ConditionCheckItem"
+            Resource: "*"
+      Environment:
+        Variables:
+          DecompressTaskTable: !Ref DecompressTaskTable
 
   UploadDecompressedFunction:
     Type: AWS::Serverless::Function
@@ -151,6 +189,7 @@ Resources:
       CodeUri: functions/upload_decompressed/
       Handler: app.lambda_handler
       Runtime: python3.8
+      Timeout: 900
       Architectures:
         - x86_64
       VpcConfig:
@@ -161,6 +200,29 @@ Resources:
       FileSystemConfigs:
         - Arn: !GetAtt EFSAccessPoint.Arn
           LocalMountPath: /mnt/efs
+      Policies:
+        - Version: '2012-10-17'
+          Statement:
+            - Effect: Allow
+              Action:
+                - s3:GetObject
+                - s3:PutObject
+                - s3:PutObjectAcl
+              Resource: 'arn:aws:s3:::daita-client-data/*'
+
+  FinishDecompressTaskFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: functions/finish_decompress_task/
+      Handler: app.lambda_handler
+      Runtime: python3.8
+      Architectures:
+        - x86_64
+      Policies:
+        - AmazonDynamoDBFullAccess
+      Environment:
+        Variables:
+          DecompressTaskTable: !Ref DecompressTaskTable
 
   # ECS resources
   DecompressTaskCluster:
@@ -175,7 +237,7 @@ Resources:
       RequiresCompatibilities:
         - "FARGATE"
       ExecutionRoleArn: arn:aws:iam::366577564432:role/ecsTaskExecutionRole
-      TaskRoleArn: arn:aws:iam::366577564432:role/S3FullAccess
+      TaskRoleArn: arn:aws:iam::366577564432:role/DecompressTaskRole # TODO:create this in template
       Cpu: 256
       Memory: 512
       NetworkMode: awsvpc
@@ -200,15 +262,27 @@ Resources:
             TransitEncryption: ENABLED # enable this so maybe we don't need to config a access point https://docs.aws.amazon.com/pt_br/AWSCloudFormation/latest/UserGuide/aws-properties-ecs-taskdefinition-authorizationconfig.html
           Name: "my-vol"
 
-  # TransactionTable:
-  #   Type: AWS::Serverless::SimpleTable # More info about SimpleTable Resource: https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/sam-resource-simpletable.html
-  #   Properties:
-  #     PrimaryKey:
-  #       Name: Id
-  #       Type: String
-  #     ProvisionedThroughput:
-  #       ReadCapacityUnits: 1
-  #       WriteCapacityUnits: 1
+  DecompressTaskTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: task_decompress
+      AttributeDefinitions:
+        - AttributeName: id
+          AttributeType: S
+        # - AttributeName: status
+        #   AttributeType: S
+        # - AttributeName: destination_dir
+        #   AttributeType: S
+        # - AttributeName: created_at
+        #   AttributeType: S
+        # - AttributeName: updated_at
+        #   AttributeType: S
+      KeySchema:
+        - AttributeName: id
+          KeyType: HASH
+      BillingMode: PAY_PER_REQUEST
+
+
 
 # Outputs:
   # StockTradingStateMachineHourlyTradingSchedule is an implicit Schedule event rule created out of Events key under Serverless::StateMachine

@@ -1,50 +1,68 @@
-StartAt: StartDecompressTask
+StartAt: DivideDecompressChunksFunction
 States:
-  # CreateDecompressTask:
+  # StartDecompressTask:
   #   Type: Task
-  #   Resource: arn:aws:states:::lambda:invoke
-  #   InputPath: "$"
-  #   OutputPath: "$"
+  #   Resource: arn:aws:states:::ecs:runTask.sync
   #   Parameters:
-  #     FunctionName: "${CreateDecompressTask}"
-  #     Payload.$: "$"
-  #   Next: StartDecompressTask
-  StartDecompressTask:
-    Type: Task
-    Resource: arn:aws:states:::ecs:runTask.sync
-    ResultPath: null # Forward previous step input as this step output
-    Parameters:
-      Cluster: ${DecompressTaskCluster}
-      LaunchType: FARGATE
-      NetworkConfiguration:
-        AwsvpcConfiguration:
-          AssignPublicIp: ENABLED # Needed when pulling public Docker image
-          Subnets:
-            - ${SubnetId}
-      Overrides:
-        ContainerOverrides:
-          -
-            Name: decompress-file
-            # command to override aws s3 cp s3://daita-client-data/tmp/test.zip . && unzip /test.zip -d test
-            Command.$: "$.command"
-      TaskDefinition: ${DecompressTask}
-    Next: DivideDecompressChunksFunction
+  #     Cluster: ${DecompressTaskCluster}
+  #     LaunchType: FARGATE
+  #     NetworkConfiguration:
+  #       AwsvpcConfiguration:
+  #         AssignPublicIp: ENABLED # Needed when pulling public Docker image
+  #         Subnets:
+  #           - ${SubnetId}
+  #     Overrides:
+  #       ContainerOverrides:
+  #         -
+  #           Name: decompress-file
+  #           Environment:
+  #             - Name: DecompressTaskTable
+  #               Value: ${DecompressTaskTable}
+  #             - Name: FILE_URL
+  #               Value: $.file_url
+  #             - Name: TASK_ID
+  #               Value: $.task_id
+  #     TaskDefinition: ${DecompressTask}
+  #   ResultPath: null # Forward previous step input as this step output
+  #   Next: DivideDecompressChunksFunction
 
   DivideDecompressChunksFunction:
     Type: Task
     Resource: arn:aws:states:::lambda:invoke
-    InputPath: "$"
     Parameters:
       FunctionName: "${DivideDecompressChunksFunction}"
       Payload.$: "$"
-    Next: UploadDecompressedFunction
+    Next: UploadDecompressedMapping
 
-  UploadDecompressedFunction:
+  UploadDecompressedMapping:
+    Type: Map
+    InputPath: $.Payload
+    ItemsPath: $.file_chunks
+    Parameters:
+      file_chunk.$: $$.Map.Item.Value
+      project_id.$: $.project_id
+      id_token.$: $.id_token
+      project_name.$: $.project_name
+      type_method.$: $.type_method
+    Iterator:
+      StartAt: UploadDecompressedFunction
+      States:
+        UploadDecompressedFunction:
+          Type: Task
+          Resource: arn:aws:states:::lambda:invoke
+          Parameters:
+            FunctionName: "${UploadDecompressedFunction}"
+            Payload.$: "$"
+          End: True
+    ResultPath: null
+    Next: FinishDecompressTaskFunction
+
+  FinishDecompressTaskFunction:
     Type: Task
     Resource: arn:aws:states:::lambda:invoke
-    InputPath: "$"
+    InputPath: $.Payload
     Parameters:
-      FunctionName: "${UploadDecompressedFunction}"
+      FunctionName: "${FinishDecompressTaskFunction}"
       Payload.$: "$"
     Next: Complete
 

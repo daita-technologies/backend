@@ -19,4 +19,22 @@ manifest_hash = ""
 packagetype = "Zip"
 functions = ["DivideDecompressChunksFunction"]
 
+[function_build_definitions.771904c5-ae2a-4271-94cb-ff7c6c26f1e1]
+codeuri = "/home/cuong/tmp_le/backend/dataflow_service/decompress-app/functions/upload_decompressed"
+runtime = "python3.8"
+architecture = "x86_64"
+handler = "app.lambda_handler"
+manifest_hash = ""
+packagetype = "Zip"
+functions = ["UploadDecompressedFunction"]
+
+[function_build_definitions.2da32560-6588-49ae-a460-95e90e318d5a]
+codeuri = "/home/cuong/tmp_le/backend/dataflow_service/decompress-app/functions/finish_decompress_task"
+runtime = "python3.8"
+architecture = "x86_64"
+handler = "app.lambda_handler"
+manifest_hash = ""
+packagetype = "Zip"
+functions = ["FinishDecompressTaskFunction"]
+
 [layer_build_definitions]
