@@ -33,9 +33,18 @@ Parameters:
     Type: String
   ApplicationPara:
     Type: String
+  EFSpathPara:
+    Type: String
+  AccessPointARNPara:
+    Type: String
+  SubnetIDsPara:
+    Type: CommaDelimitedList
+  SecurityGroupIdsPara:
+    Type: CommaDelimitedList
+  S3BucketNamePara:
+    Type: String
 
 Resources:  
-
   #================ ROLES =====================================================  
 
   # add role to start state machine from eventbus
@@ -65,8 +74,66 @@ Resources:
   PreprocessGenerateTask:
     Type: AWS::Serverless::Function 
     Properties:
-      CodeUri: functions/handlers/preprocess_generate_batch    
-  
+      CodeUri: functions/handlers/preprocess_generate_batch
+      Policies:
+      - Statement:
+        - Sid: ALLOWCRUDDynamoDB
+          Effect: Allow
+          Action:
+          - "dynamodb:GetItem"
+          - "dynamodb:DeleteItem"
+          - "dynamodb:PutItem"
+          - "dynamodb:Scan"
+          - "dynamodb:Query"
+          - "dynamodb:UpdateItem"
+          - "dynamodb:BatchWriteItem"
+          - "dynamodb:BatchGetItem"
+          - "dynamodb:DescribeTable"
+          - "dynamodb:ConditionCheckItem"
+          Resource: "*"
+
+  HandleDownloadTask:
+    Type: AWS::Serverless::Function
+    Properties:
+      VpcConfig:
+        SecurityGroupIds: !Split [',', !Join [',', !Ref SecurityGroupIdsPara]] 
+        SubnetIds: !Split [',', !Join [',', !Ref SubnetIDsPara]] 
+      FileSystemConfigs:
+      - Arn: !Ref AccessPointARNPara
+        LocalMountPath: !Ref EFSpathPara
+      CodeUri: functions/handlers/download_task
+      Policies:
+      - S3FullAccessPolicy:
+          BucketName: !Ref S3BucketNamePara
+      - Statement:
+        - Sid: ALLOWCRUDDynamoDB
+          Effect: Allow
+          Action:
+          - "dynamodb:GetItem"
+          - "dynamodb:DeleteItem"
+          - "dynamodb:PutItem"
+          - "dynamodb:Scan"
+          - "dynamodb:Query"
+          - "dynamodb:UpdateItem"
+          - "dynamodb:BatchWriteItem"
+          - "dynamodb:BatchGetItem"
+          - "dynamodb:DescribeTable"
+          - "dynamodb:ConditionCheckItem"
+          Resource: "*"
+        - Sid: AmazonElasticFileSystemClientFullAccess
+          Effect: Allow
+          Action:
+          - elasticfilesystem:ClientMount
+          - elasticfilesystem:ClientRootAccess
+          - elasticfilesystem:ClientWrite
+          - elasticfilesystem:DescribeMountTargets
+          Resource: "*"
+
+  HandleGenerateStep:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: functions/handlers/generate_step
+
   #================ EVENT BUS =================================================
 
   CallerServiceEventBus:
@@ -203,7 +270,7 @@ Resources:
             LogGroupArn: !GetAtt CallerServiceStateMachineLogGroup.Arn
       DefinitionSubstitutions:
         PreprocessGenerateTask: !GetAtt PreprocessGenerateTask.Arn
-
+############################################################################################################
   DownloadStateMachine:
     Type: AWS::Serverless::StateMachine
     Properties:
@@ -211,7 +278,7 @@ Resources:
       Name: !Sub "${StagePara}-${ApplicationPara}-DownloadSM"
       Policies:
         - LambdaInvokePolicy:
-            FunctionName: !Ref PreprocessGenerateTask           
+            FunctionName: !Ref HandleDownloadTask           
         - Statement:
           - Sid: CloudWatchLogsPolicy
             Effect: Allow
@@ -236,8 +303,8 @@ Resources:
         - CloudWatchLogsLogGroup:
             LogGroupArn: !GetAtt CallerServiceStateMachineLogGroup.Arn
       DefinitionSubstitutions:
-        PreprocessGenerateTask: !GetAtt PreprocessGenerateTask.Arn
-
+        HandleDownloadTask: !GetAtt HandleDownloadTask.Arn
+############################################################################################################
   GenerateStateMachine:
     Type: AWS::Serverless::StateMachine
     Properties:
@@ -245,7 +312,7 @@ Resources:
       Name: !Sub "${StagePara}-${ApplicationPara}-GenerateSM"
       Policies:
         - LambdaInvokePolicy:
-            FunctionName: !Ref PreprocessGenerateTask   
+            FunctionName: !Ref HandleGenerateStep
         - Statement:
           - Sid: CloudWatchLogsPolicy
             Effect: Allow
@@ -270,7 +337,7 @@ Resources:
         - CloudWatchLogsLogGroup:
             LogGroupArn: !GetAtt CallerServiceStateMachineLogGroup.Arn
       DefinitionSubstitutions:
-        PreprocessGenerateTask: !GetAtt PreprocessGenerateTask.Arn
+        HandleGenerateStep: !GetAtt HandleGenerateStep.Arn
 
   UploadStateMachine:
     Type: AWS::Serverless::StateMachine

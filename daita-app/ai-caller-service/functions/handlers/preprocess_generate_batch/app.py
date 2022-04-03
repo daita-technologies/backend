@@ -7,6 +7,7 @@ from config import *
 from response import *
 from utils import *
 from identity_check import *
+from boto3.dynamodb.conditions import Key, Attr
 
 TBL_data_original = 'data_original'
 TBL_data_proprocess= 'data_preprocess'
@@ -139,7 +140,7 @@ class ImageLoader(object):
                     classtype = 'TEST'
                     
                 dydb_update_class_data(table, project_id, data["filename"], classtype)
-        return {"images": ls_process, "project_prefix":s3_prefix},None    
+        return {"images": ls_process, "project_prefix":s3_prefix}    
         
 
 @error_response
@@ -150,6 +151,12 @@ def lambda_handler(event, context):
     imageLoad = ImageLoader()
     data = imageLoad(body)
 
+    data['task_id'] = body['task_id']
+    data['identity_id'] = body['identity_id']
+    data['project_id'] = body['project_id']
+    data['project_name'] = body['project_name']
+    data['ls_method_id'] = body['ls_method_id']
+    
     return generate_response(
             message="OK",
             status_code=HTTPStatus.OK,
