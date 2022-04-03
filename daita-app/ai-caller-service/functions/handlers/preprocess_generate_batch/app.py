@@ -1,5 +1,6 @@
 import time
 import json
+
 import boto3
 import random
 from datetime import datetime
@@ -162,3 +163,4 @@ def lambda_handler(event, context):
             status_code=HTTPStatus.OK,
             data=data
         )
+

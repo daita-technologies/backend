@@ -70,6 +70,9 @@ class GenerateImageClass(LambdaBaseClass):
 
     def _check_generate_times_limitation(self, identity_id, project_name, type_method):        
         project_rec = self.project_model.get_project_info(identity_id, project_name)
+        if project_rec is None:
+            raise Exception(MESS_PROJECT_NOT_FOUND.format(project_name))
+            
         times_generated = int(project_rec.get_value_w_default(ProjectItem.FIELD_TIMES_AUGMENT, 0))
         times_preprocess = int(project_rec.get_value_w_default(ProjectItem.FIELD_TIMES_PREPRO, 0))
         s3_prefix = project_rec.__dict__[ProjectItem.FIELD_S3_PREFIX]        
@@ -96,9 +99,10 @@ class GenerateImageClass(LambdaBaseClass):
     def _create_task(self, identity_id, project_id, type_method):
         # create task id
         task_id = self.generate_task_model.create_new_generate_task(identity_id, project_id, type_method)
-        return task_id   
+        return task_id 
+      
+    def _put_event_bus(self, detail_pass_para):        
 
-    def _put_event_bus(self, detail_pass_para):    
         response = self.client_events.put_events(
                         Entries=[
                             {

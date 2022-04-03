@@ -27,6 +27,7 @@ Parameters:
   S3BucketName:
     Type: String
     Default: daita-client-data
+
 Resources:
   #=============== SYSTEM PARAMETER CONFIGURATON ==============================
   LimitPreprocessTimes:
@@ -65,7 +66,6 @@ Resources:
         SubnetIDsPara: !Ref SubnetIDs
         SecurityGroupIdsPara: !Ref SecurityGroupIds
         S3BucketNamePara: !Ref S3BucketName
-
 
   DataFlowService:
     Type: AWS::Serverless::Application

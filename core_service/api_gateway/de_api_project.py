@@ -10,8 +10,8 @@ def deploy_api_project(ls_lambda_info, general_info):
     RESOURCE_AUTH = 'auth'
     RESOURCE_WEBHOOK = 'webhook'
     RESOURCE_SENMAIL = 'send-mail'
-
     STAGES = general_info['MODE']
+    
     API_GW_ROLE = 'arn:aws:iam::366577564432:role/role_apigw'
     gateway = ApiGatewayToService(boto3.client('apigateway'))
     gateway.create_rest_api(REST_API_NAME)
@@ -21,7 +21,7 @@ def deploy_api_project(ls_lambda_info, general_info):
     auth_id = gateway.add_rest_resource(gateway.root_id, RESOURCE_AUTH)
     webhook_id =  gateway.add_rest_resource(gateway.root_id, RESOURCE_WEBHOOK)
     sendmail_id = gateway.add_rest_resource(gateway.root_id,RESOURCE_SENMAIL)
-
+    
     for lambda_uri, lambda_version, api_resource, api_name in ls_lambda_info:  
         if api_resource == 'project':
             resource_id_choose = project_id

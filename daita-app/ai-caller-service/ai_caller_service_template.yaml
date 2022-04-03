@@ -270,6 +270,7 @@ Resources:
             LogGroupArn: !GetAtt CallerServiceStateMachineLogGroup.Arn
       DefinitionSubstitutions:
         PreprocessGenerateTask: !GetAtt PreprocessGenerateTask.Arn
+
 ############################################################################################################
   DownloadStateMachine:
     Type: AWS::Serverless::StateMachine
@@ -278,7 +279,8 @@ Resources:
       Name: !Sub "${StagePara}-${ApplicationPara}-DownloadSM"
       Policies:
         - LambdaInvokePolicy:
-            FunctionName: !Ref HandleDownloadTask           
+            FunctionName: !Ref HandleDownloadTask    
+            FunctionName: !Ref PreprocessGenerateTask 
         - Statement:
           - Sid: CloudWatchLogsPolicy
             Effect: Allow
