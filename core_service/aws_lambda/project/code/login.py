@@ -11,7 +11,7 @@ from utils import aws_get_identity_id
 from error import *
 from response import *
 from config import *
-
+from verify_captcha import *
 ACCESS_TOKEN_EXPIRATION = 24 * 60 * 60
 mailRegexString =re.compile('([A-Za-z0-9]+[.-_])*[A-Za-z0-9]+@[A-Za-z0-9-]+(\.[A-Z|a-z]{2,})+')
 cog_provider_client = boto3.client('cognito-idp')
@@ -133,7 +133,7 @@ def lambda_handler(event, context):
     try:
         verify_captcha(captcha)
     except Exception as exc:
-        print(MessageCaptchaFailed)
+        print(exc)
         raise Exception(MessageCaptchaFailed) from exc
     
     if re.fullmatch(mailRegexString,username):

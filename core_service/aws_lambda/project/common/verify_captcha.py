@@ -16,5 +16,6 @@ def verify_captcha(token: str):
         ENDPOINTCAPTCHAVERIFY,
         params=payload
     )
+    print(response.json())
     if not response.json()["success"]:
         raise Exception("Verify captcha failed")

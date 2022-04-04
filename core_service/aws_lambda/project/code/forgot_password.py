@@ -6,7 +6,7 @@ import boto3
 
 from config import *
 from error import *
-from utils import verify_captcha
+from verify_captcha import *
 from response import generate_response, error_response
 
 
