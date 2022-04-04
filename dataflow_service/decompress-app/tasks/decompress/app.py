@@ -1,4 +1,5 @@
 import os
+import glob
 import subprocess
 from datetime import datetime
 
@@ -34,8 +35,8 @@ def update_task_status(status):
 
 
 def main():
-    # working_dir = os.path.join(APP_PREFIX, TASK_ID)
-    work_dir = os.path.join(APP_PREFIX, "tmp")
+    work_dir = os.path.join(APP_PREFIX, TASK_ID)
+    # work_dir = os.path.join(APP_PREFIX, "tmp") #mock
     filename = os.path.basename(FILE_URL)
     file_stemp = os.path.splitext(filename)[0]
     destination_dir = os.path.join(work_dir, file_stemp)
@@ -68,6 +69,8 @@ def main():
     except Exception:
         update_task_status("ERROR")
 
+    nrof_files = glob.glob(os.path.join(efs_destination_dir, "*"))
+    print(f"Extracted {nrof_files} files from {filename}")
 
 if __name__ == "__main__":
     main()

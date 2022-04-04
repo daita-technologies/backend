@@ -1,3 +1,4 @@
+# StartAt: StartDecompressTask
 StartAt: DivideDecompressChunksFunction
 States:
   # StartDecompressTask:
@@ -19,9 +20,9 @@ States:
   #             - Name: DecompressTaskTable
   #               Value: ${DecompressTaskTable}
   #             - Name: FILE_URL
-  #               Value: $.file_url
+  #               Value.$: $.file_url
   #             - Name: TASK_ID
-  #               Value: $.task_id
+  #               Value.$: $.task_id
   #     TaskDefinition: ${DecompressTask}
   #   ResultPath: null # Forward previous step input as this step output
   #   Next: DivideDecompressChunksFunction
@@ -44,6 +45,7 @@ States:
       id_token.$: $.id_token
       project_name.$: $.project_name
       type_method.$: $.type_method
+      s3_prefix.$: $.s3_prefix
     Iterator:
       StartAt: UploadDecompressedFunction
       States:

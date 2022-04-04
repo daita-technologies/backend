@@ -36,6 +36,113 @@ Resources:
       LogGroupName: !Sub "DecompressFileStateMachineLogGroup-${AWS::StackName}"
       RetentionInDays: 7
 
+
+  #======================= NETWORKING ==========================================
+
+  # InternetRouteTable:
+  #   Type: AWS::EC2::RouteTable
+  #   Properties:
+  #     VpcId: vpc-53239e38
+
+  # # Needed to attached in a VPC
+  # InternetGateway:
+  #   Type: AWS::EC2::InternetGateway
+
+  # InternetRoute:
+  #   Type: AWS::EC2::Route
+  #   Properties:
+  #     RouteTableId: !GetAtt InternetRouteTable.RouteTableId
+  #     GatewayId: !GetAtt InternetGateway.InternetGatewayId
+  #     DestinationCidrBlock: 0.0.0.0/0
+
+  VPCEndpointForS3:
+    Type: AWS::EC2::VPCEndpoint
+    Properties:
+      ServiceName: com.amazonaws.us-east-2.s3
+      VpcId: vpc-53239e38
+      # RouteTableIds:
+      #   - !GetAtt InternetRouteTable.RouteTableId
+
+  VPCEndpointForDynamoDB:
+    Type: AWS::EC2::VPCEndpoint
+    Properties:
+      ServiceName: com.amazonaws.us-east-2.dynamodb
+      VpcId: vpc-53239e38
+      # RouteTableIds:
+      #   - !GetAtt InternetRouteTable.RouteTableId
+
+  EFSAccessPoint:
+    Type: AWS::EFS::AccessPoint
+    Properties:
+      FileSystemId: fs-0199771f2dfe97ace
+
+
+  # ==================================== POST, GET task endpoint ==================
+
+  CreateDecompressTaskFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: functions/create_decompress_task/
+      Handler: app.lambda_handler
+      Runtime: python3.8
+      Architectures:
+        - x86_64
+      Policies:
+        - StepFunctionsExecutionPolicy:
+            StateMachineName: !GetAtt DecompressFileStateMachine.Name
+        - AmazonDynamoDBFullAccess
+      Environment:
+        Variables:
+          DecompressFileStateMachineArn: !GetAtt DecompressFileStateMachine.Arn
+          DecompressTaskTable: !Ref DecompressTaskTable
+          ProjectsTable: projects
+          USER_POOL_ID: us-east-2_ZbwpnYN4g
+          IDENTITY_POOL_ID: us-east-2:fa0b76bc-01fa-4bb8-b7cf-a5000954aafb
+      Events:
+        UploadCompressedFile:
+          Type: Api # More info about API Event Source: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#api
+          Properties:
+            Path: /decompress-file
+            Method: post
+
+  GetDecompressTaskFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: functions/get_decompress_task/
+      Handler: app.lambda_handler
+      Runtime: python3.8
+      Architectures:
+        - x86_64
+      Policies:
+        - AmazonDynamoDBFullAccess
+      Environment:
+        Variables:
+          DecompressTaskTable: !Ref DecompressTaskTable
+      Events:
+        UploadCompressedFile:
+          Type: Api # More info about API Event Source: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#api
+          Properties:
+            Path: /decompress-file
+            Method: get
+
+
+  # ================================ database ====================================================
+
+  DecompressTaskTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: task_decompress
+      AttributeDefinitions:
+        - AttributeName: id
+          AttributeType: S
+      KeySchema:
+        - AttributeName: id
+          KeyType: HASH
+      BillingMode: PAY_PER_REQUEST
+
+
+  # ==================== State machine & steps resource ==========================================
+
   DecompressFileStateMachine:
     Type: AWS::Serverless::StateMachine # More info about State Machine Resource: https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/sam-resource-statemachine.html
     Properties:
@@ -102,49 +209,6 @@ Resources:
               - "logs:DescribeLogGroup"
               - "logs:DescribeLogGroups"
             Resource: "*"
-        # - DynamoDBWritePolicy:
-        #     TableName: !Ref TransactionTable
-
-  CreateDecompressTaskFunction:
-    Type: AWS::Serverless::Function
-    Properties:
-      CodeUri: functions/create_decompress_task/
-      Handler: app.lambda_handler
-      Runtime: python3.8
-      Architectures:
-        - x86_64
-      Policies:
-        - StepFunctionsExecutionPolicy:
-            StateMachineName: !GetAtt DecompressFileStateMachine.Name
-        - AmazonDynamoDBFullAccess
-      Environment:
-        Variables:
-          DecompressFileStateMachineArn: !GetAtt DecompressFileStateMachine.Arn
-          DecompressTaskTable: !Ref DecompressTaskTable
-      Events:
-        UploadCompressedFile:
-          Type: Api # More info about API Event Source: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#api
-          Properties:
-            Path: /decompress-file
-            Method: post
-
-  # For lambda function run in VPC to be able to communicate with S3
-  VPCEndpointForS3:
-    Type: AWS::EC2::VPCEndpoint
-    Properties:
-      ServiceName: com.amazonaws.us-east-2.s3
-      VpcId: vpc-53239e38
-
-  VPCEndpointForDynamoDB:
-    Type: AWS::EC2::VPCEndpoint
-    Properties:
-      ServiceName: com.amazonaws.us-east-2.dynamodb
-      VpcId: vpc-53239e38
-
-  EFSAccessPoint:
-    Type: AWS::EFS::AccessPoint
-    Properties:
-      FileSystemId: fs-0199771f2dfe97ace
 
   DivideDecompressChunksFunction:
     Type: AWS::Serverless::Function
@@ -209,6 +273,11 @@ Resources:
                 - s3:PutObject
                 - s3:PutObjectAcl
               Resource: 'arn:aws:s3:::daita-client-data/*'
+        - LambdaInvokePolicy:
+            FunctionName: staging-project-upload-update
+      Environment:
+        Variables:
+          PROJECT_UPLOAD_UPDATE_FUNCTION: staging-project-upload-update
 
   FinishDecompressTaskFunction:
     Type: AWS::Serverless::Function
@@ -245,9 +314,14 @@ Resources:
         -
           Name: "decompress-file"
           Image: "366577564432.dkr.ecr.us-east-2.amazonaws.com/decompress"
+          LogConfiguration:
+            LogDriver: awslogs
+            Options:
+              awslogs-region: us-east-2
+              awslogs-group: !Ref DecompressFileStateMachineLogGroup
+              awslogs-stream-prefix: decompress
           Cpu: 256
           Memory: 512
-          # Essential: true
           MountPoints:
             -
               SourceVolume: "my-vol"
@@ -255,34 +329,9 @@ Resources:
       Volumes:
         -
           EFSVolumeConfiguration:
-            # AuthorizationConfig:
-            #   AccessPointId: String
-            #   IAM: String
             FilesystemId: fs-0199771f2dfe97ace
             TransitEncryption: ENABLED # enable this so maybe we don't need to config a access point https://docs.aws.amazon.com/pt_br/AWSCloudFormation/latest/UserGuide/aws-properties-ecs-taskdefinition-authorizationconfig.html
           Name: "my-vol"
-
-  DecompressTaskTable:
-    Type: AWS::DynamoDB::Table
-    Properties:
-      TableName: task_decompress
-      AttributeDefinitions:
-        - AttributeName: id
-          AttributeType: S
-        # - AttributeName: status
-        #   AttributeType: S
-        # - AttributeName: destination_dir
-        #   AttributeType: S
-        # - AttributeName: created_at
-        #   AttributeType: S
-        # - AttributeName: updated_at
-        #   AttributeType: S
-      KeySchema:
-        - AttributeName: id
-          KeyType: HASH
-      BillingMode: PAY_PER_REQUEST
-
-
 
 # Outputs:
   # StockTradingStateMachineHourlyTradingSchedule is an implicit Schedule event rule created out of Events key under Serverless::StateMachine

@@ -24,7 +24,7 @@ def lambda_handler(event, context):
         Key={"id": task_id},
         ExpressionAttributeNames={'#ST': "status"},
         ExpressionAttributeValues={
-            ":st": "FINISH",
+            ":st": "FINISHED",
             ":ua": convert_current_date_to_iso8601()
         },
         UpdateExpression="SET #ST = :st, updated_at = :ua"
