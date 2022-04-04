@@ -12,6 +12,8 @@ from error import *
 from response import *
 from config import *
 from custom_mail import *
+from verify_captcha import *
+
 from datetime import datetime
 def convert_current_date_to_iso8601():
     my_date = datetime.now()

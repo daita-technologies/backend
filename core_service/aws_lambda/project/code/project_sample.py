@@ -10,6 +10,7 @@ from utils import convert_response, convert_current_date_to_iso8601, aws_get_ide
 import const
 
 
+
 def lambda_handler(event, context):
     try:
         print(event['body'])
@@ -18,7 +19,7 @@ def lambda_handler(event, context):
         access_token = body["access_token"]
 
         project_name = const.SAMPLE_PROJECT_NAME
-        project_info = body.get('project_info', '')
+        project_info = body.get('project_info', const.SAMPLE_PROJECT_DESCRIPTION)
     except Exception as e:
         return convert_response({"error": True, 
                 "success": False, 

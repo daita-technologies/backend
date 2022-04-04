@@ -11,6 +11,7 @@ def deploy_lambda_send_mail(general_info, lambda_service):
     lambda_uri, lambda_version = lambda_service.deploy_lambda_function(f'reference-email',
                                           [ CODE_DIR.joinpath("invite_friend.py"),
                                             CODE_DIR.joinpath("utils.py"),
+                                            PROJECT_DIR.joinpath("common")
                                          ],
                                         {
                                             'USER_POOL_ID' : general_info['USER_POOL_ID'],

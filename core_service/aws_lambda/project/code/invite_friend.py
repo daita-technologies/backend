@@ -6,13 +6,15 @@ import base64
 import os
 import uuid
 from botocore.exceptions import ClientError
+
 from utils import convert_response
+from config import *
 
 def get_email(user):
-    client = boto3.client('cognito-idp',aws_access_key_id="AKIA2XO6HOQ7IMN62R43",aws_secret_access_key="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")
+    client = boto3.client('cognito-idp')
     try :
         resp = client.list_users(
-        UserPoolId='us-east-2_6Sc8AZij7',
+        UserPoolId=USERPOOLID,
         
         )
     except Exception as e :

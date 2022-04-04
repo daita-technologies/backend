@@ -12,6 +12,7 @@ from error import *
 from response import *
 from config import *
 from eventID import CreateEventUserLogin, CheckEventUserLogin
+from verify_captcha import *
 
 ACCESS_TOKEN_EXPIRATION = 24 * 60 * 60
 mailRegexString =re.compile('([A-Za-z0-9]+[.-_])*[A-Za-z0-9]+@[A-Za-z0-9-]+(\.[A-Z|a-z]{2,})+')
@@ -109,7 +110,7 @@ def getCredentialsForIdentity(token_id):
     })
     return {
         'secret_key': credentialsResponse['Credentials']['SecretKey'],
-        'session_key': credentialsResponse['Credentials']['SecretKey'],
+        'session_key': credentialsResponse['Credentials']['SessionToken'],
         'credential_token_expires_in':credentialsResponse['Credentials']['Expiration'].timestamp() * 1000,
         'access_key': credentialsResponse['Credentials']['AccessKeyId'],
         'identity_id':responseIdentity
@@ -134,7 +135,7 @@ def lambda_handler(event, context):
     try:
         verify_captcha(captcha)
     except Exception as exc:
-        print(MessageCaptchaFailed)
+        print(exc)
         raise Exception(MessageCaptchaFailed) from exc
     
     if re.fullmatch(mailRegexString,username):
@@ -174,7 +175,7 @@ def lambda_handler(event, context):
         'token': authResponse['AuthenticationResult']['AccessToken'],
         'resfresh_token': authResponse['AuthenticationResult']['RefreshToken'],
         'id_token': authResponse['AuthenticationResult']['IdToken'],
-        'token_expires_in': datetime.now().timestamp() + ACCESS_TOKEN_EXPIRATION
+        'token_expires_in': float(int((datetime.now().timestamp() + ACCESS_TOKEN_EXPIRATION)*1000))
     }
     
     if not checkEmailVerified(response['token']):

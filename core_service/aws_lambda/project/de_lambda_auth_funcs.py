@@ -24,6 +24,7 @@ def deploy_lambda_auth(general_info, lambda_service):
     lambda_uri, lambda_version = lambda_service.deploy_lambda_function(f'login',
                                           [ CODE_DIR.joinpath("login.py"),
                                             CODE_DIR.joinpath("utils.py"),
+                                            PROJECT_DIR.joinpath("packages"),
                                              PROJECT_DIR.joinpath("common"),
                                          ],
                                         {
@@ -37,7 +38,8 @@ def deploy_lambda_auth(general_info, lambda_service):
     # sign up
     lambda_uri, lambda_version = lambda_service.deploy_lambda_function(f'user_signup',
                                           [ CODE_DIR.joinpath("register.py"),
-                                             PROJECT_DIR.joinpath("common"),
+                                            PROJECT_DIR.joinpath("packages"),
+                                            PROJECT_DIR.joinpath("common"),
                                          ],
                                         {
                                             'USER_POOL_ID' : general_info['USER_POOL_ID'],
@@ -120,6 +122,7 @@ def deploy_lambda_auth(general_info, lambda_service):
     lambda_uri, lambda_version = lambda_service.deploy_lambda_function(f'staging-confirm-code-forgot-password',
                                         [
                                             CODE_DIR.joinpath("confirm_code_forgot_password.py"),
+                                            PROJECT_DIR.joinpath("packages"),
                                             PROJECT_DIR.joinpath("common")
                                         ],
                                         {

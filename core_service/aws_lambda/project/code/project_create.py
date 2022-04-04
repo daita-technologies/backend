@@ -39,6 +39,12 @@ def lambda_handler(event, context):
     
     #check number of created project of user
     try:
+        #check length of projectname and project info
+        if len(project_name) > const.MAX_LENGTH_PROJECT_NAME_INFO:
+            raise Exception(const.MES_LENGTH_OF_PROJECT_NAME)        
+        if len(project_info) > const.MAX_LENGTH_PROJECT_NAME_INFO:
+            raise Exception(const.MES_LENGTH_OF_PROJECT_INFO)
+        
         num_prj = get_num_prj(identity_id)
         if num_prj >= const.MAX_NUM_PRJ_PER_USER:
             raise Exception(const.MES_REACH_LIMIT_NUM_PRJ)
