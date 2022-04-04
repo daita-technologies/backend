@@ -6,19 +6,15 @@ from config import *
 
 
 def verify_captcha(token: str):
-    response = requests.post(ENDPOINTCAPTCHAVERIFY)
     payload = {
-        # "secret": SECRETKEYGOOGLE,
+        "secret": SECRETKEYGOOGLE,
         "sitekey": SITEKEYGOOGLE,
         "response": token
     }
 
-    response = requests.get(
+    response = requests.post(
         ENDPOINTCAPTCHAVERIFY,
         params=payload
     )
-
     if not response.json()["success"]:
         raise Exception("Verify captcha failed")
-
-    return True
