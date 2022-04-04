@@ -72,7 +72,7 @@ def lambda_handler(event, context):
         "identity_id": identity["IdentityId"],
         "credential_token_expires_in": identity["Credentials"]["Expiration"].timestamp(), # expire time in seconds
         "id_token": id_token,
-        "token_expires_in": datetime.now().timestamp() + ACCESS_TOKEN_EXPIRATION,
+        "token_expires_in":float(int((datetime.now().timestamp() + ACCESS_TOKEN_EXPIRATION)*1000)),
         "username": username
     }
 
