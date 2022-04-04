@@ -11,7 +11,9 @@ from utils import aws_get_identity_id
 from error import *
 from response import *
 from config import *
+from eventID import CreateEventUserLogin, CheckEventUserLogin
 from verify_captcha import *
+
 ACCESS_TOKEN_EXPIRATION = 24 * 60 * 60
 mailRegexString =re.compile('([A-Za-z0-9]+[.-_])*[A-Za-z0-9]+@[A-Za-z0-9-]+(\.[A-Z|a-z]{2,})+')
 cog_provider_client = boto3.client('cognito-idp')
@@ -189,6 +191,12 @@ def lambda_handler(event, context):
             headers=RESPONSE_HEADER)
         
     sub = getSub(response['token'])
+    
+    # check the user is login another device
+    if CheckEventUserLogin(sub):
+        raise Exception(MessageAnotherUserIsLoginBefore)
+    else:
+        CreateEventUserLogin(sub)
 
     if not model.checkFirstLogin(ID=sub,username=username):
         kms = createKMSKey(credentialsForIdentity['identity_id'])

@@ -8,6 +8,7 @@ import os
 import boto3
 import cognitojwt
 from utils import create_secret_hash, aws_get_identity_id
+from eventID import CreateEventUserLogin, CheckEventUserLogin
 
 from error import *
 from response import *
@@ -136,7 +137,10 @@ def lambda_handler(event, context):
     resqData = resq.json()
     token = resqData['access_token']
     sub, username = claimsToken(resqData['access_token'],'sub') , claimsToken(resqData['access_token'],'username')
-
+    if CheckEventUserLogin(sub):
+        raise Exception(MessageAnotherUserIsLoginBefore)
+    else:
+        CreateEventUserLogin(sub)
     authenticated = GetTokenCognito(username,resqData['refresh_token'])
     try:
         credentialsForIdentity = getCredentialsForIdentity(authenticated['AuthenticationResult']['IdToken'])
