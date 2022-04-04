@@ -167,8 +167,8 @@ def lambda_handler(event, context):
         credentialsForIdentity['access_key'],
         credentialsForIdentity['session_key'],
         authenticated['AuthenticationResult']['IdToken'],
-                credentialsForIdentity['credential_token_expires_in']
-                ,(datetime.now().timestamp() + ACCESS_TOKEN_EXPIRATION)*1000,
+                credentialsForIdentity['credential_token_expires_in'],
+                float(int((datetime.now().timestamp() + ACCESS_TOKEN_EXPIRATION)*1000)),
                 credentialsForIdentity['session_key'],
                 credentialsForIdentity['identity_id'],username)
     headers = {"Location":location,	"Access-Control-Allow-Methods": "GET,HEAD,OPTIONS,POST,PUT"}
