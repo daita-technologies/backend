@@ -61,7 +61,7 @@ def lambda_handler(event, context):
         username = body['username']
         mail = body['email']
         password = body['password']
-        captcha = event["captcha"]
+        captcha = body["captcha"]
     except Exception as e:
         print(e)
         raise Exception(e)

@@ -15,6 +15,6 @@ def deploy_dynamoDB(general_info):
     dbservice.create_bd(general_info['T_INSTANCES'], [('ec2_id', 'HASH', 'S'), ('assi_id', 'RANGE', 'S')],)
     dbservice.create_bd(general_info['T_EC2_TASK'], [('ec2_id', 'HASH', 'S'), ('task_id', 'RANGE', 'S')],)
     dbservice.create_bd(general_info['T_TASK_DOWNLOAD'], [('identity_id', 'HASH', 'S'), ('task_id', 'RANGE', 'S')],)
-    dbservice.create_bd(general_info['T_TRIGGER_SEND_CODE'], [('user', 'HASH', 'S')],)
+    dbservice.create_bd(general_info['T_TRIGGER_SEND_CODE'], [('user', 'HASH', 'S'),('code', 'RANGE', 'S')],)
     dbservice.create_bd(general_info['T_EVENT_USER'], [('event_ID', 'HASH', 'S'), ('type', 'RANGE', 'S')],)
     dbservice.create_bd(general_info['T_USER'], [('ID', 'HASH', 'S'), ('username', 'RANGE', 'S')],)
