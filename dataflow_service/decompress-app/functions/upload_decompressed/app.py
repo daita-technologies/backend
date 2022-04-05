@@ -2,38 +2,55 @@ import os
 import json
 import glob
 from pathlib import Path
+from hashlib import md5
 
 import boto3
 
-
-PROJECT_UPLOAD_UPDATE_FUNCTION = os.getenv("PROJECT_UPLOAD_UPDATE_FUNCTION")
 
 EFS_MOUNT_POINT = "/mnt/efs"
 BUCKET = "daita-client-data"
 
 efs_mount_point = Path(EFS_MOUNT_POINT)
 s3_client = boto3.client('s3')
-lambda_client = boto3.client('lambda')
+
+
+def get_file_md5_hash(file):
+    with open(file, "rb") as rstr:
+        return md5(rstr.read()).hexdigest()
 
 
 def lambda_handler(event, context):
     print(event)
 
-    files = event["file_chunk"]
+    file_chunk = event["file_chunk"]
     id_token = event["id_token"]
     project_id = event["project_id"]
     project_name = event["project_name"]
     type_method = event["type_method"]
     s3_prefix = event["s3_prefix"]
 
-    print(files)
-    object_names = []
-    for file_ in files:
+    print(file_chunk)
+    ls_object_info = []
+    for file_ in file_chunk:
         file_path = efs_mount_point.joinpath(file_)
-        object_name = os.path.join(s3_prefix, file_path.name)
-        response = s3_client.upload_file(str(file_path), BUCKET, object_name)
+        filename = file_path.name
+        file_path = str(file_path)
+        # s3_prefix is include bucket name so we have to extract the relative path
+        object_name = str(Path(s3_prefix, filename).relative_to(BUCKET))
+        response = s3_client.upload_file(file_path, BUCKET, object_name)
         print(file_path, object_name, response)
-        object_names.append(object_name)
+
+        # generate ls_object_info
+        file_size = os.stat(file_path).st_size
+        ls_object_info.append({
+            "filename": filename,
+            "gen_id": "",
+            "hash": get_file_md5_hash(file_path),
+            "is_ori": True,
+            "s3_key": os.path.join(BUCKET, object_name),
+            "size": file_size,
+            "size_old": file_size
+        })
 
     payload = {
         "id_token": id_token,
@@ -43,11 +60,8 @@ def lambda_handler(event, context):
         "type_method": type_method,
     }
 
-    response = lambda_client.invoke(
-        FunctionName=PROJECT_UPLOAD_UPDATE_FUNCTION,
-        Payload=json.dumps(payload)
-    )
-    print (response)
-
     print("succeed")
-    return object_names
+    return {
+        "body": json.dumps(payload),
+        "file_chunk": file_chunk
+    }

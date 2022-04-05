@@ -48,5 +48,6 @@ def lambda_handler(event, context):
         "type_method": type_method,
         "file_chunks": file_chunks,
         "task_id": task_id,
-        "s3_prefix": s3_prefix
+        "s3_prefix": s3_prefix,
+        "destination_dir": destination_dir
     }

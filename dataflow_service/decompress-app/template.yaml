@@ -71,6 +71,14 @@ Resources:
       # RouteTableIds:
       #   - !GetAtt InternetRouteTable.RouteTableId
 
+  # VPCEndpointForEFS:
+  #   Type: AWS::EC2::VPCEndpoint
+  #   Properties:
+  #     ServiceName: com.amazonaws.us-east-2.efs
+  #     VpcId: vpc-53239e38
+      # RouteTableIds:
+      #   - !GetAtt InternetRouteTable.RouteTableId
+
   EFSAccessPoint:
     Type: AWS::EFS::AccessPoint
     Properties:
@@ -156,6 +164,8 @@ Resources:
         UploadDecompressedFunction: !GetAtt UploadDecompressedFunction.Arn
         FinishDecompressTaskFunction: !GetAtt FinishDecompressTaskFunction.Arn
         DecompressTaskTable: !Ref DecompressTaskTable
+        ProjectUploadUpdateFunction: staging-project-upload-update
+        PostUploadFunction: !Ref PostUploadFunction
       Logging:
         Level: ALL
         IncludeExecutionData: true
@@ -171,6 +181,10 @@ Resources:
             FunctionName: !Ref UploadDecompressedFunction
         - LambdaInvokePolicy:
             FunctionName: !Ref FinishDecompressTaskFunction
+        - LambdaInvokePolicy:
+            FunctionName: staging-project-upload-update
+        - LambdaInvokePolicy:
+            FunctionName: !Ref PostUploadFunction
         - CloudWatchPutMetricPolicy: {}
         - Statement:
           - # Allow step to start ecs task
@@ -253,7 +267,7 @@ Resources:
       CodeUri: functions/upload_decompressed/
       Handler: app.lambda_handler
       Runtime: python3.8
-      Timeout: 900
+      Timeout: 30
       Architectures:
         - x86_64
       VpcConfig:
@@ -273,11 +287,16 @@ Resources:
                 - s3:PutObject
                 - s3:PutObjectAcl
               Resource: 'arn:aws:s3:::daita-client-data/*'
-        - LambdaInvokePolicy:
-            FunctionName: staging-project-upload-update
-      Environment:
-        Variables:
-          PROJECT_UPLOAD_UPDATE_FUNCTION: staging-project-upload-update
+
+  PostUploadFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: functions/post_upload/
+      Handler: app.lambda_handler
+      Runtime: python3.8
+      Timeout: 30
+      Architectures:
+        - x86_64
 
   FinishDecompressTaskFunction:
     Type: AWS::Serverless::Function
@@ -289,9 +308,21 @@ Resources:
         - x86_64
       Policies:
         - AmazonDynamoDBFullAccess
+        # - EFSWriteAccessPolicy:
+        #     FileSystem: fs-0199771f2dfe97ace
+        #     AccessPoint: !GetAtt EFSAccessPoint.Arn
+        - Statement:
+          - Effect: Allow
+            Action:
+              -  elasticfilesystem:DeleteTags
+            Resource: "*"
+            # Condition:
+            #   - "*"
+
       Environment:
         Variables:
           DecompressTaskTable: !Ref DecompressTaskTable
+          FileSystemId: fs-0199771f2dfe97ace
 
   # ECS resources
   DecompressTaskCluster:
