@@ -8,7 +8,7 @@ States:
     Parameters:
       FunctionName: '${HandleGenerateStep}'
       Payload.$: $
-    Next: GenerateComplete
+    Next: HandleBatchRequestAI
     Comment: >-
       Check the level of parallelism, split requests into chunks and invoke
       lamndas
@@ -18,9 +18,29 @@ States:
         IntervalSeconds: 1
         MaxAttempts: 2
         BackoffRate: 1
+  HandleBatchRequestAI:
+    Type: Map
+    InputPath: $
+    OutputPath: $
+    Iterator:
+      StartAt: RequestAI
+      States:
+        RequestAI:
+          Type: Task
+          Resource: 'arn:aws:states:::lambda:invoke'
+          Parameters:
+            FunctionName: '${}'
+          Retry:
+            - ErrorEquals:
+                - RetriableCallerServiceError
+              IntervalSeconds: 1
+              MaxAttempts: 2
+              BackoffRate: 1
+          End: true
+    ResultPath: $
+    Next: GenerateComplete
   GenerateComplete:
     Type: Pass
     Comment: Used for result aggregation
     End: true
 TimeoutSeconds: 1800
-

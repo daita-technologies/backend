@@ -29,6 +29,9 @@ Parameters:
     Default: daita-client-data
 
 Resources:
+  SqsEc2Work1:
+    Type: AWS:SQS:Queue
+
   #=============== SYSTEM PARAMETER CONFIGURATON ==============================
   LimitPreprocessTimes:
     Type: AWS::SSM::Parameter
@@ -95,7 +98,3 @@ Resources:
         LimitPreprocessTimesName: !Ref LimitPreprocessTimes
         LimitAugmentTimesName: !Ref LimitAugmentTimes
         CommonCodeLayerName: !Ref CommonCodeLayer
-
-
-    
-  
