@@ -7,7 +7,7 @@ import boto3
 
 
 EFS_MOUNT_POINT = "/mnt/efs"
-APP_PREFIX = "app/decompress"
+APP_PREFIX = "decompress-app"
 DECOMPRESS_TASK_TABLE = os.getenv("DecompressTaskTable")
 
 TASK_ID = os.getenv("TASK_ID")
@@ -36,7 +36,6 @@ def update_task_status(status):
 
 def main():
     work_dir = os.path.join(APP_PREFIX, TASK_ID)
-    # work_dir = os.path.join(APP_PREFIX, "tmp") #mock
     filename = os.path.basename(FILE_URL)
     file_stemp = os.path.splitext(filename)[0]
     destination_dir = os.path.join(work_dir, file_stemp)
@@ -65,7 +64,7 @@ def main():
     command = " && ".join(commands)
 
     try:
-        subprocess.run(command, capture_output=True, shell=True)
+        subprocess.run(command, shell=True)
     except Exception:
         update_task_status("ERROR")
 

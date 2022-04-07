@@ -71,18 +71,19 @@ Resources:
       # RouteTableIds:
       #   - !GetAtt InternetRouteTable.RouteTableId
 
-  # VPCEndpointForEFS:
-  #   Type: AWS::EC2::VPCEndpoint
-  #   Properties:
-  #     ServiceName: com.amazonaws.us-east-2.efs
-  #     VpcId: vpc-53239e38
-      # RouteTableIds:
-      #   - !GetAtt InternetRouteTable.RouteTableId
-
   EFSAccessPoint:
     Type: AWS::EFS::AccessPoint
     Properties:
       FileSystemId: fs-0199771f2dfe97ace
+      PosixUser:
+        Gid: "1000"
+        Uid: "1000"
+      RootDirectory:
+        CreationInfo:
+          OwnerGid: "1000"
+          OwnerUid: "1000"
+          Permissions: "777"
+        Path: "/efs"
 
 
   # ==================================== POST, GET task endpoint ==================
@@ -314,10 +315,18 @@ Resources:
         - Statement:
           - Effect: Allow
             Action:
-              -  elasticfilesystem:DeleteTags
+              - elasticfilesystem:ClientRootAccess
+              - elasticfilesystem:ClientWrite
+              - elasticfilesystem:ClientMount
             Resource: "*"
-            # Condition:
-            #   - "*"
+      VpcConfig:
+        SecurityGroupIds:
+          - sg-af50cbde
+        SubnetIds:
+          - subnet-31ff5b5a
+      FileSystemConfigs:
+        - Arn: !GetAtt EFSAccessPoint.Arn
+          LocalMountPath: /mnt/efs
 
       Environment:
         Variables:
@@ -360,6 +369,8 @@ Resources:
       Volumes:
         -
           EFSVolumeConfiguration:
+            AuthorizationConfig:
+              AccessPointId: !Ref EFSAccessPoint
             FilesystemId: fs-0199771f2dfe97ace
             TransitEncryption: ENABLED # enable this so maybe we don't need to config a access point https://docs.aws.amazon.com/pt_br/AWSCloudFormation/latest/UserGuide/aws-properties-ecs-taskdefinition-authorizationconfig.html
           Name: "my-vol"

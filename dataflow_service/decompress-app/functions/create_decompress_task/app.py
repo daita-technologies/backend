@@ -48,7 +48,6 @@ def lambda_handler(event, context):
     type_method = body.get('type_method', 'ORIGINAL')
 
     task_id = str(uuid.uuid4())
-    # task_id = "d31f5fe2-7bcb-47f7-9e97-eb6d08d32afd" #mock
     response = task_table.put_item(
         Item={
             "id": task_id,
@@ -56,7 +55,6 @@ def lambda_handler(event, context):
             "status": "CREATED",
             "created_at": convert_current_date_to_iso8601(),
             "updated_at": convert_current_date_to_iso8601(),
-            # "destination_dir": f"app/decompress/{task_id}/test" #mock
         }
     )
 
