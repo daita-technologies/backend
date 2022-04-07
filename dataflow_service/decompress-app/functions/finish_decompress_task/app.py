@@ -6,7 +6,7 @@ import boto3
 
 
 DECOMPRESS_TASK_TABLE = os.getenv("DecompressTaskTable")
-EFS_MOUNT_POINT = "/mnt/efs"
+EFS_MOUNT_POINT = os.getenv("EFSMountPath")
 
 db = boto3.resource('dynamodb')
 table = db.Table(DECOMPRESS_TASK_TABLE)

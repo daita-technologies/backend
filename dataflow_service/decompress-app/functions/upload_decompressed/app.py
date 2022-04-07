@@ -7,8 +7,8 @@ from hashlib import md5
 import boto3
 
 
-EFS_MOUNT_POINT = "/mnt/efs"
-BUCKET = "daita-client-data"
+EFS_MOUNT_POINT = os.getenv("EFSMountPath")
+BUCKET = os.getenv("S3BucketName")
 
 efs_mount_point = Path(EFS_MOUNT_POINT)
 s3_client = boto3.client('s3')

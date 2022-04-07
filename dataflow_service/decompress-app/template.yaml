@@ -1,17 +1,43 @@
 AWSTemplateFormatVersion: "2010-09-09"
 Transform: AWS::Serverless-2016-10-31
 Description: >
-  sam-app
+  decompress-app
 
-  Sample SAM Template for sam-app
+Parameters:
+  SecurityGroupIds:
+    Type: String
+    Default: 'sg-af50cbde'
+  VpcId:
+    Type: String
+    Default: vpc-53239e38
+  SubnetId:
+    Type: String
+    Default: subnet-31ff5b5a
+  EFSFileSystemId:
+    Type:  String
+    Default: fs-0199771f2dfe97ace
+  EFSMountPath:
+    Type: String
+    Default: /mnt/efs
+  EFSAccessPointRootPath:
+    Type: String
+    Default: /decompress-app
+  CognitoUserPoolId:
+    Type:  String
+    Default: us-east-2_ZbwpnYN4g
+  CognitoIdentityPoolId:
+    Type:  String
+    Default: us-east-2:fa0b76bc-01fa-4bb8-b7cf-a5000954aafb
+  S3BucketName:
+    Type: String
+    Default: daita-client-data
+  ProjectsTable:
+    Type: String
+    Default: projects
 
 Globals:
   Function:
     Timeout: 10
-    Environment:
-      Variables:
-        EFS_COMPRESSFILE_MOUNT_POINT: /mnt/efs
-        MAIN_S3_BUCKER: daita-client-data
 
 
 Resources:
@@ -25,7 +51,7 @@ Resources:
   # DefaultSubnet: # Fargate required a awsvpc config so
   #   Type: AWS::EC2::Subnet
   #   Properties:
-  #     VpcId: vpc-53239e38
+  #     VpcId: !Ref VpcId
   #     CidrBlock: 172.31.0.0/16
 
   #================ LOGS FOR STEP FUNCTIONS ===================================
@@ -42,7 +68,7 @@ Resources:
   # InternetRouteTable:
   #   Type: AWS::EC2::RouteTable
   #   Properties:
-  #     VpcId: vpc-53239e38
+  #     VpcId: !Ref VpcId
 
   # # Needed to attached in a VPC
   # InternetGateway:
@@ -58,23 +84,23 @@ Resources:
   VPCEndpointForS3:
     Type: AWS::EC2::VPCEndpoint
     Properties:
-      ServiceName: com.amazonaws.us-east-2.s3
-      VpcId: vpc-53239e38
+      ServiceName: !Sub "com.amazonaws.${AWS::Region}.s3"
+      VpcId: !Ref VpcId
       # RouteTableIds:
       #   - !GetAtt InternetRouteTable.RouteTableId
 
   VPCEndpointForDynamoDB:
     Type: AWS::EC2::VPCEndpoint
     Properties:
-      ServiceName: com.amazonaws.us-east-2.dynamodb
-      VpcId: vpc-53239e38
+      ServiceName: !Sub "com.amazonaws.${AWS::Region}.dynamodb"
+      VpcId: !Ref VpcId
       # RouteTableIds:
       #   - !GetAtt InternetRouteTable.RouteTableId
 
   EFSAccessPoint:
     Type: AWS::EFS::AccessPoint
     Properties:
-      FileSystemId: fs-0199771f2dfe97ace
+      FileSystemId: !Ref EFSFileSystemId
       PosixUser:
         Gid: "1000"
         Uid: "1000"
@@ -83,7 +109,7 @@ Resources:
           OwnerGid: "1000"
           OwnerUid: "1000"
           Permissions: "777"
-        Path: "/efs"
+        Path: !Ref EFSAccessPointRootPath
 
 
   # ==================================== POST, GET task endpoint ==================
@@ -104,9 +130,9 @@ Resources:
         Variables:
           DecompressFileStateMachineArn: !GetAtt DecompressFileStateMachine.Arn
           DecompressTaskTable: !Ref DecompressTaskTable
-          ProjectsTable: projects
-          USER_POOL_ID: us-east-2_ZbwpnYN4g
-          IDENTITY_POOL_ID: us-east-2:fa0b76bc-01fa-4bb8-b7cf-a5000954aafb
+          ProjectsTable: !Ref ProjectsTable
+          USER_POOL_ID: !Ref CognitoUserPoolId
+          IDENTITY_POOL_ID: !Ref CognitoIdentityPoolId
       Events:
         UploadCompressedFile:
           Type: Api # More info about API Event Source: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#api
@@ -160,7 +186,7 @@ Resources:
       DefinitionSubstitutions:
         DecompressTaskCluster: !GetAtt DecompressTaskCluster.Arn
         DecompressTask: !Ref DecompressTask
-        SubnetId: subnet-31ff5b5a
+        SubnetId: !Ref SubnetId
         DivideDecompressChunksFunction: !GetAtt DivideDecompressChunksFunction.Arn
         UploadDecompressedFunction: !GetAtt UploadDecompressedFunction.Arn
         FinishDecompressTaskFunction: !GetAtt FinishDecompressTaskFunction.Arn
@@ -235,12 +261,12 @@ Resources:
         - x86_64
       VpcConfig:
         SecurityGroupIds:
-          - sg-af50cbde
+          - !Ref SecurityGroupIds
         SubnetIds:
-          - subnet-31ff5b5a
+          - !Ref SubnetId
       FileSystemConfigs:
         - Arn: !GetAtt EFSAccessPoint.Arn
-          LocalMountPath: /mnt/efs
+          LocalMountPath: !Ref EFSMountPath
       Policies:
         - AmazonDynamoDBFullAccess
         - Statement:
@@ -261,6 +287,7 @@ Resources:
       Environment:
         Variables:
           DecompressTaskTable: !Ref DecompressTaskTable
+          EFSMountPath: !Ref EFSMountPath
 
   UploadDecompressedFunction:
     Type: AWS::Serverless::Function
@@ -273,12 +300,12 @@ Resources:
         - x86_64
       VpcConfig:
         SecurityGroupIds:
-          - sg-af50cbde
+          - !Ref SecurityGroupIds
         SubnetIds:
-          - subnet-31ff5b5a
+          - !Ref SubnetId
       FileSystemConfigs:
         - Arn: !GetAtt EFSAccessPoint.Arn
-          LocalMountPath: /mnt/efs
+          LocalMountPath: !Ref EFSMountPath
       Policies:
         - Version: '2012-10-17'
           Statement:
@@ -287,7 +314,11 @@ Resources:
                 - s3:GetObject
                 - s3:PutObject
                 - s3:PutObjectAcl
-              Resource: 'arn:aws:s3:::daita-client-data/*'
+              Resource: !Sub 'arn:aws:s3:::${S3BucketName}/*'
+      Environment:
+        Variables:
+          EFSMountPath: !Ref EFSMountPath
+          S3BucketName: !Ref S3BucketName
 
   PostUploadFunction:
     Type: AWS::Serverless::Function
@@ -309,9 +340,6 @@ Resources:
         - x86_64
       Policies:
         - AmazonDynamoDBFullAccess
-        # - EFSWriteAccessPolicy:
-        #     FileSystem: fs-0199771f2dfe97ace
-        #     AccessPoint: !GetAtt EFSAccessPoint.Arn
         - Statement:
           - Effect: Allow
             Action:
@@ -321,17 +349,17 @@ Resources:
             Resource: "*"
       VpcConfig:
         SecurityGroupIds:
-          - sg-af50cbde
+          - !Ref SecurityGroupIds
         SubnetIds:
-          - subnet-31ff5b5a
+          - !Ref SubnetId
       FileSystemConfigs:
         - Arn: !GetAtt EFSAccessPoint.Arn
-          LocalMountPath: /mnt/efs
-
+          LocalMountPath: !Ref EFSMountPath
       Environment:
         Variables:
           DecompressTaskTable: !Ref DecompressTaskTable
-          FileSystemId: fs-0199771f2dfe97ace
+          FileSystemId: !Ref EFSFileSystemId
+          EFSMountPath: !Ref EFSMountPath
 
   # ECS resources
   DecompressTaskCluster:
@@ -345,33 +373,38 @@ Resources:
     Properties:
       RequiresCompatibilities:
         - "FARGATE"
-      ExecutionRoleArn: arn:aws:iam::366577564432:role/ecsTaskExecutionRole
-      TaskRoleArn: arn:aws:iam::366577564432:role/DecompressTaskRole # TODO:create this in template
+      ExecutionRoleArn: arn:aws:iam::366577564432:role/ecsTaskExecutionRole #TODO:create this in template
+      TaskRoleArn: arn:aws:iam::366577564432:role/DecompressTaskRole #TODO:create this in template
       Cpu: 256
       Memory: 512
       NetworkMode: awsvpc
       ContainerDefinitions:
         -
           Name: "decompress-file"
-          Image: "366577564432.dkr.ecr.us-east-2.amazonaws.com/decompress"
+          Image: !Sub "366577564432.dkr.ecr.${AWS::Region}.amazonaws.com/decompress"
+          Cpu: 256
+          Memory: 512
+          Environment:
+            - Name: DecompressTaskTable
+              Value: !Ref DecompressTaskTable
+            - Name: EFSMountPath
+              Value: !Ref EFSMountPath
           LogConfiguration:
             LogDriver: awslogs
             Options:
-              awslogs-region: us-east-2
+              awslogs-region: !Sub "${AWS::Region}"
               awslogs-group: !Ref DecompressFileStateMachineLogGroup
               awslogs-stream-prefix: decompress
-          Cpu: 256
-          Memory: 512
           MountPoints:
             -
               SourceVolume: "my-vol"
-              ContainerPath: /mnt/efs
+              ContainerPath: !Ref EFSMountPath
       Volumes:
         -
           EFSVolumeConfiguration:
             AuthorizationConfig:
               AccessPointId: !Ref EFSAccessPoint
-            FilesystemId: fs-0199771f2dfe97ace
+            FilesystemId: !Ref EFSFileSystemId
             TransitEncryption: ENABLED # enable this so maybe we don't need to config a access point https://docs.aws.amazon.com/pt_br/AWSCloudFormation/latest/UserGuide/aws-properties-ecs-taskdefinition-authorizationconfig.html
           Name: "my-vol"
 
