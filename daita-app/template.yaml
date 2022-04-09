@@ -7,7 +7,7 @@ Description: >
 Parameters:
   Stage:
     Type: String
-    Default: dte
+    Default: dev
   Application:
     Type: String
     Default: daita
