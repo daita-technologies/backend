@@ -91,7 +91,7 @@ EXCEPTION EXPLAINATION:
     - ConditionalCheckFailedException('An error occurred (ConditionalCheckFailedException) when calling the PutItem operation: The conditional request failed')
         User already created project with project_name before
 
-EXAMPLE 
+EXAMPLE
 
     Request:
     {
@@ -99,7 +99,7 @@ EXAMPLE
         "access_token": {{access_token}}
     }
 
-    Response 
+    Response
     {
         "data": {
             "project_id": "prj_sample_06a11b38405b4b5eaa4d8f1678ca4b1e",
@@ -122,11 +122,11 @@ FUNCTION
 REQUEST BODY
 
     - id_token          |string     | require   | id token return from server after login
-    - project_id        |string     | require   | project_id unique for each project 
-    - ls_object_info    | list                        
-                        - filename      |string     |require    | file name of data. This file name will be unique for each project.                        
+    - project_id        |string     | require   | project_id unique for each project
+    - ls_object_info    | list
+                        - filename      |string     |require    | file name of data. This file name will be unique for each project.
                         - size          |number     |require    | size of data, must be in the 'byte' unit
-                        - type_method   |string     |require    | type mrthod of data, value is in ORIGINAL | PREPROCESS | AUGMENT                        
+                        - type_method   |string     |require    | type mrthod of data, value is in ORIGINAL | PREPROCESS | AUGMENT
 
 RESPONSE BODY
 
@@ -169,8 +169,8 @@ FUNCTION
 REQUEST BODY
 
     - id_token          |string     | require   | id token return from server after login
-    - project_id        |string     | require   | project_id unique for each project 
-    - project_name      |string     | require   | project name                      
+    - project_id        |string     | require   | project_id unique for each project
+    - project_name      |string     | require   | project name
 
 RESPONSE BODY
 
@@ -214,7 +214,7 @@ TYPE
 
 REQUEST BODY:
 
-    - id_token          | string    | id_token return from login function    
+    - id_token          | string    | id_token return from login function
 
 RESPONSE BODY:
 
@@ -224,7 +224,7 @@ RESPONSE BODY:
                                 - S             | string    | name of project
                             - project_id
                                 - S             | string    | project id
-                            - s3_prefix       
+                            - s3_prefix
                                 - S             | string    | link to s3_prefix of project
     - error                 | boolean   | true if has error, else false
     - success               | boolean   | true if has error, else false
@@ -250,11 +250,11 @@ TYPE
 
 REQUEST BODY:
 
-    - id_token          | string    | id_token return from login function    
+    - id_token          | string    | id_token return from login function
 
 RESPONSE BODY:
 
-    - data                  | list        
+    - data                  | list
                             - project_name      | string    | name of project
                             - project_id        | string    | id of project
                             - s3_prefix         | string    | s3 prefix on s3 of project
@@ -270,21 +270,21 @@ RESPONSE BODY:
                                                             - size      | number    | total size in preprocess of project
                                                 - AUGMENT       | exist if there are any data in the augment
                                                             - count     | number    | total images in augment of project
-                                                            - size      | number    | total size in augment of project   
+                                                            - size      | number    | total size in augment of project
     - error                 | boolean   | true if has error, else false
     - success               | boolean   | true if has error, else false
     - message               | string    | None if error is False, else it is the error message
 
 EXCEPTION EXPLAINATION:
 
-EXAMPLE 
+EXAMPLE
 
     Request:
     {
         "id_token": {{id_token}}
     }
 
-    Response 
+    Response
     {
         "data": [
             {
@@ -334,11 +334,11 @@ REQUEST BODY
 
     - id_token          |string     | id token return from server after login
     - project_name      |string     | project name
-                        
+
 
 RESPONSE BODY
 
-    - data                  |                            
+    - data                  |
                             - identity_id       | string        | identity id of user
                             - project_name      | string        | project name
                             - project_id        | string        | project id
@@ -355,17 +355,17 @@ RESPONSE BODY
                                                     - data_number   | List<number>  | data number split for train/val/test, it will return null if data not split ever
                                         - AUGMENT       | exist if there are any data in the augment
                                                     - count     | number    | total images in augment of project
-                                                    - size      | number    | total size in augment of project  
-                                                    - data_number   | List<number>  | data number split for train/val/test, it will return null if data not split ever                
+                                                    - size      | number    | total size in augment of project
+                                                    - data_number   | List<number>  | data number split for train/val/test, it will return null if data not split ever
     - error                 | boolean   | true if has error, else false
     - success               | boolean   | true if has error, else false
     - message               | string    | None if error is False, else it is the error message
 
-EXAMPLE 
+EXAMPLE
 
     Request:
     {
-        "id_token": {{id_token}}, 
+        "id_token": {{id_token}},
         "project_name": {{project_name}}
     }
 
@@ -382,7 +382,7 @@ EXAMPLE
         "success": true,
         "message": null
     }
-    
+
     Response with data
     {
         "data": {
@@ -415,7 +415,7 @@ EXAMPLE
         "message": null
     }
 
-### Project Update Information 
+### Project Update Information
 
 URL: https://4cujdvfmd4.execute-api.us-east-2.amazonaws.com/staging/projects/update_info
 
@@ -432,8 +432,8 @@ REQUEST BODY
     - id_token              |string     | require   | id token return from server after login
     - cur_project_name      |string     | require   | current project name
     - new_project_name      |string     | optional  | new project name, if just update the description please input "" or not input this key
-    - new_description       |string     | optional  | new description, if just update the project name please input "" or not input this key    
-                        
+    - new_description       |string     | optional  | new description, if just update the project name please input "" or not input this key
+
 
 RESPONSE BODY
 
@@ -448,7 +448,7 @@ RESPONSE BODY
     - success               | boolean   | true if has error, else false
     - message               | string    | None if error is False, else it is the error message
 
-EXAMPLE 
+EXAMPLE
 
     Request:
     {
@@ -471,14 +471,14 @@ EXAMPLE
         "error": false,
         "success": true,
         "message": null
-    }    
-    
+    }
+
 
 ### Project List Data in Project
 
 URL: https://4cujdvfmd4.execute-api.us-east-2.amazonaws.com/staging/projects/list_data
 
-FUNCTION: 
+FUNCTION:
 
     List all s3_key of data in project name. The result will be return as paginator
 
@@ -493,14 +493,14 @@ REQUEST BODY
     - type_method       | string    | type of method of data that extracting from DB. The value is one of ORIGINAL | PREPROCESS | AUGMENT
     - num_limit         | number    | number of limitation returned images, maximum is 500
     - next_token        |  in the first time, pass '', in next time, use the next_token value from response
-                        - filename      | string      
-                        - project_id    | string    
+                        - filename      | string
+                        - project_id    | string
 
 RESPONSE BODY
 
     - data
         - items             | list
-                            - filename          | string    | name of file                           
+                            - filename          | string    | name of file
                             - s3_key            | string    | link to s3_prefix of project
                             - gen_id            | string    | id of generatign method
                             - classtype         | string    | class type of image when generate image (TRAIN/VAL/TEST)
@@ -609,14 +609,14 @@ FUNCTION
 REQUEST BODY
 
     - id_token          |string         | require   | id token return from server after login
-    - down_type         |string         | require   | one of ALL or PREPROCESS or AUGMENT or ORIGINAL  
+    - down_type         |string         | require   | one of ALL or PREPROCESS or AUGMENT or ORIGINAL
     - project_name      |string         | require   | name of project
     - project_id        |string         | require   | id of project
 
 RESPONSE BODY
 
-    - data                  | 
-                            task_id     | string    | id of task, use this task_id to send request track the progress of task                            
+    - data                  |
+                            task_id     | string    | id of task, use this task_id to send request track the progress of task
     - error                 | boolean   | true if has error, else false
     - success               | boolean   | true if has error, else false
     - message               | string    | None if error is False, else it is the error message
@@ -651,11 +651,11 @@ FUNCTION
 REQUEST BODY
 
     - id_token          |string         | require   | id token return from server after login
-    - task_id           |string         | require   | id of download task         
+    - task_id           |string         | require   | id of download task
 
 RESPONSE BODY
 
-    - data                  | 
+    - data                  |
                             status      | string    | RUNNING or FINISH
                             s3_key      | string    | s3_key of zip file on S3, return null if task is running
                             presign_url | string    | an http convertable link of object, this link expire after 1 hours, return null if task is running
@@ -682,7 +682,7 @@ EXAMPLE
         "success": true,
         "message": null
     }
-    
+
     Response with finished task
     {
         "data": {
@@ -710,13 +710,13 @@ REQUEST BODY
     - id_token          |string     | id token return from server after login
     - project_id        |string     | project_id unique for each project
     - ls_filename       | list
-                        <filename>  |string     | filename of data 
-                        
+                        <filename>  |string     | filename of data
+
 
 RESPONSE BODY
 
     - data                  | list
-                            - filename  
+                            - filename
                                 - S     | string    | filename that already exist in DB
                             - size
                                 - N     | string    | current size of doublicate file
@@ -724,12 +724,12 @@ RESPONSE BODY
     - success               | boolean   | true if has error, else false
     - message               | string    | None if error is False, else it is the error message
 
-EXAMPLE 
+EXAMPLE
 
     Request:
     {
-        "id_token": {{id_token}}, 
-        "project_id": {{project_id}}, 
+        "id_token": {{id_token}},
+        "project_id": {{project_id}},
         "ls_filename": ["a.png", "h.png"]
     }
 
@@ -763,7 +763,7 @@ REQUEST BODY
     - id_token          |string     | require   | id token return from server after login
     - project_id        |string     | require   | project_id unique for each project
     - project_name      |string     | require   | project name
-    - type_method       | string    | optional  | type of method that using if it is not original image (is_ori=True), the value should be PREPROCESS or AUGMENT 
+    - type_method       | string    | optional  | type of method that using if it is not original image (is_ori=True), the value should be PREPROCESS or AUGMENT
     - ls_object_info    | list
                         - s3_key:       |string     |require    | key of data object store in S3, the format must be <bucket>/<identity_id>/<project_id>/<data_name>
                         - filename      |string     |require    | file name of data. This file name will be unique for each project.
@@ -784,9 +784,9 @@ EXAMPLE
 
     Request
     {
-        "id_token": {{id_token}}, 
+        "id_token": {{id_token}},
         "project_id": {{project_id}},
-        "project_name": {{project_name}},  
+        "project_name": {{project_name}},
         "ls_object_info": [
             {
                 "s3_key": "client-data-test/us-east-2:b7a49377-572d-45bd-bc80-6038a5933579/project_A_6df7f68836dd4eada6df610ca3a175ea/a.png",
@@ -795,7 +795,7 @@ EXAMPLE
                 "size": 3000,
                 "size_old": 2000,
                 "is_ori": true
-            }        
+            }
         ]
     }
 
@@ -810,7 +810,7 @@ EXAMPLE
 
 ## Generate Images
 
-### List All Methods 
+### List All Methods
 
 URL: https://4cujdvfmd4.execute-api.us-east-2.amazonaws.com/staging/generate/list_method
 
@@ -824,7 +824,7 @@ REQUEST BODY
 
 RESPONSE BODY
 
-    - data                  | 
+    - data                  |
                             augmentation    | list
                                             method_id   | string    | id of method, start with "AUG-xxx"
                                             method_name | string    | name of method
@@ -853,7 +853,7 @@ EXAMPLE
                 {
                     "method_id": "AUG-013",
                     "method_name": "random_saturation"
-                },                
+                },
             ],
             "preprocessing": [
                 {
@@ -884,12 +884,12 @@ REQUEST BODY
     - ls_method_id      | list          | require   | list id of method that will be used to generate images
                         <method_id>     | string
     - data_type         | string        | optional  | type of data that will be used to generate images, the value is one of ORIGINAL | PREPROCESS , default is ORIGINAL
-    - num_aug_p_img     | number        | optional  | number of generated images for an input image, max is 5, 
-    - data_number       | list<number>  | require   | number of images in train/val/test       
+    - num_aug_p_img     | number        | optional  | number of generated images for an input image, max is 5,
+    - data_number       | list<number>  | require   | number of images in train/val/test
 
 RESPONSE BODY
 
-    - data                  | 
+    - data                  |
                             task_id         | string    | id of processing task
                             times_generated | number    | times generated images
     - error                 | boolean   | true if has error, else false
@@ -931,11 +931,11 @@ FUNCTION
 REQUEST BODY
 
     - id_token          |string         | require   | id token return from server after login
-    - task_id           |string         | require   | id of task         
+    - task_id           |string         | require   | id of task
 
 RESPONSE BODY
 
-    - data                  | 
+    - data                  |
                             task_id     | string    | id of processing task
     - error                 | boolean   | true if has error, else false
     - success               | boolean   | true if has error, else false
@@ -952,7 +952,7 @@ EXAMPLE
     Response
     {
         "data": {
-            
+
         },
         "error": false,
         "success": true,
@@ -971,11 +971,11 @@ FUNCTION
 
 REQUEST BODY
 
-    - id_token          |string         | require   | id token return from server after login                  
+    - id_token          |string         | require   | id token return from server after login
 
 RESPONSE BODY
 
-    - data                  | None                            
+    - data                  | None
     - error                 | boolean   | true if has error, else false
     - success               | boolean   | true if has error, else false
     - message               | string    | None if error is False, else it is the error message
@@ -1006,11 +1006,11 @@ FUNCTION
 REQUEST BODY
 
     - id_token          |string         | require   | id token return from server after login
-    - action            |string         | optional  | action with the ec2, value pattern: START | STOP default value is START                
+    - action            |string         | optional  | action with the ec2, value pattern: START | STOP default value is START
 
 RESPONSE BODY
 
-    - data                  | None                            
+    - data                  | None
     - error                 | boolean   | true if has error, else false
     - success               | boolean   | true if has error, else false
     - message               | string    | None if error is False, else it is the error message
@@ -1067,7 +1067,7 @@ EXAMPLE
         "password": string
     }
     ```
-  - Response 
+  - Response
       - Http code: 200
         ```json
         {
@@ -1078,13 +1078,13 @@ EXAMPLE
         ```
      - Header: x-amzn-remapped-authorization: "Bearer "The Token""
 
-### API Confirmation Email 
+### API Confirmation Email
 - POST
   ```
   staging: https://rtv81e9ysk.execute-api.us-east-2.amazonaws.com/staging/auth_confirm
   dev: https://nzvw2zvu3d.execute-api.us-east-2.amazonaws.com/staging/auth/auth_confirm
   ```
-- Request 
+- Request
   - Content-type: application/json
   - Body
     ```json
@@ -1109,7 +1109,7 @@ EXAMPLE
   staging: https://rtv81e9ysk.execute-api.us-east-2.amazonaws.com/staging/resend_confirmcode
   dev: https://nzvw2zvu3d.execute-api.us-east-2.amazonaws.com/staging/auth/resend_confirmcode
   ```
-- Request 
+- Request
   - Content-type: application/json
   - Body
     ```json
@@ -1129,11 +1129,11 @@ EXAMPLE
 
 ### API Resend Confirmation Code - Forgot Password
 - POST
-  ``` 
+  ```
   staging: https://4145bk5g67.execute-api.us-east-2.amazonaws.com/staging/confirm_code_forgot_password
   dev: https://nzvw2zvu3d.execute-api.us-east-2.amazonaws.com/staging/auth/confirm_code_forgot_password
   ```
-- Request 
+- Request
   - Content-type: application/json
   - Body
     ```json
@@ -1159,7 +1159,7 @@ EXAMPLE
   staging: https://4145bk5g67.execute-api.us-east-2.amazonaws.com/staging/forgot_password
   dev: https://nzvw2zvu3d.execute-api.us-east-2.amazonaws.com/staging/auth/forgot_password
   ```
-- Request 
+- Request
   - Content-type: application/json
   - Body
     ```json
@@ -1192,7 +1192,7 @@ EXAMPLE
       "refresh_token": string
   }
   ```
-- Response 
+- Response
     - Http code: 200
     ```json
     {
@@ -1218,14 +1218,14 @@ EXAMPLE
   ```
 - Request
   - Content-type: application/json
-  - Body 
+  - Body
   ```json
   {
       "username": string,
       "destination_email": string
   }
   ```
-- Response 
+- Response
     - Http code: 200
     ```json
     {
@@ -1255,8 +1255,8 @@ EXAMPLE
   }
   ```
 
-### API Login Google 
-- Response 
+### API Login Google
+- Response
     - Http code: 200
     ```json
     {

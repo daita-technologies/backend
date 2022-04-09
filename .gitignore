@@ -1,4 +1,5 @@
 ### VS Code ###
+.vscode/
 .vscode/*
 !.vscode/settings.json
 !.vscode/tasks.json
@@ -156,9 +157,10 @@ dmypy.json
 cython_debug/
 
 core_service_sam/
+dataflow_service/dataflow-service-app/.aws-sam/
 ai_caller_service_v2/test
 .vscode/
 dataflow_service/dataflow-service-app/.aws-sam/
 **.aws-sam**
-
 public_opencv2_layer/
+
