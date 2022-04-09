@@ -15,7 +15,11 @@ class LambdaBaseClass(object):
     @classmethod
     def parse_body(cls, func):
         def parser(object, event):
-            body = json.loads(event['body'])
+            if type(event['body']) is str:
+                body = json.loads(event['body'])
+            else:
+                body = event['body']
+                
             object.logger.info("Body: {}".format(body))
             try:
                 print("Before call func")

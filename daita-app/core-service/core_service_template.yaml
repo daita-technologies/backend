@@ -22,6 +22,9 @@ Globals:
         TABLE_GENERATE_TASK: !Ref TableGenerateTaskName
         TABLE_PROJECTS_NAME: !Ref TableProjectsName
         TABLE_METHODS_NAME: !Ref TableMethodsName
+        TABLE_HEALTHCHECK_TASK: !Ref TableHealthCheckTasksName
+        TABLE_HEALTHCHECK_INFO: !Ref TableHealthCheckInfoName
+        
     Layers:
         - !Ref CommonCodeLayerName  
      
@@ -48,6 +51,16 @@ Parameters:
     Type: String
   LimitAugmentTimesName:
     Type: String
+  HealthCheckEventBusArn:
+    Type: String
+  HealthCheckEventBusName:
+    Type: String
+  TableHealthCheckTasksName:
+    Type: String
+  TableHealthCheckTasksName:
+    Type: String
+  TableHealthCheckInfoName:
+    Type: String
 
 Resources:  
   #================ ROLES =====================================================
@@ -72,12 +85,13 @@ Resources:
             Action:
             - "lambda:InvokeFunction"
             Effect: Allow
-            Resource:
+            Resource: "*"
               # insert lambda functions arn here
-              - !GetAtt GenerateCheckConditionFunction.Arn
-              - !GetAtt TaskProgressFunction.Arn
-              - !GetAtt ListMethodsFunction.Arn
-              - !GetAtt SplitDataFunction.Arn        
+              # - !GetAtt GenerateCheckConditionFunction.Arn
+              # - !GetAtt TaskProgressFunction.Arn
+              # - !GetAtt ListMethodsFunction.Arn
+              # - !GetAtt SplitDataFunction.Arn
+                      
   
   # lambda role 
   LambdaExecutionRole:
@@ -140,8 +154,7 @@ Resources:
                 Effect: Allow
                 Action:
                   - events:PutEvents
-                Resource: 
-                  - !Ref CallerServiceEventBusArn
+                Resource: "*"
 
   #================ CALLER SERVICE HTTP API ===================================
 
@@ -187,7 +200,40 @@ Resources:
       CodeUri: functions/handlers/generate/split_data
       Role: !GetAtt LambdaExecutionRole.Arn
 
+  ### for health check functions
+  HealthCheckFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: functions/handlers/health_check/calculate
+      Role: !GetAtt LambdaExecutionRole.Arn
+      Environment:
+        Variables:
+          EVENT_BUS_NAME: !Ref HealthCheckEventBusName
+          TABLE_HEALTHCHECK_TASK: !Ref TableHealthCheckTasksName
+
+  HCStatusFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: functions/handlers/health_check/get_status
+      Role: !GetAtt LambdaExecutionRole.Arn
+      Environment:
+        Variables:
+          TABLE_HEALTHCHECK_TASK: !Ref TableHealthCheckTasksName
+
+  HCInfoFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: functions/handlers/health_check/get_info
+      Role: !GetAtt LambdaExecutionRole.Arn
+      Environment:
+        Variables:
+          TABLE_HEALTHCHECK_INFO: !Ref TableHealthCheckInfoName
+
+  
+
 Outputs:
   CallerServiceHttpApiUrl:
     Description: "Url of the Caller service API"
     Value: !Sub "https://${DaitaHttpApi}.execute-api.${AWS::Region}.amazonaws.com"
+  LambdaRoleArn:
+    Value: !GetAtt LambdaExecutionRole.Arn

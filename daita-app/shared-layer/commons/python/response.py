@@ -15,7 +15,8 @@ def generate_response(
     headers: dict = {},
     data: dict = {},
     cookie: str = "",
-    error: bool = False
+    error: bool = False,
+    is_in_stepfunction: bool = False
     ):
 
     headers.update(RESPONSE_HEADER)
@@ -25,13 +26,19 @@ def generate_response(
         "data": data,
         "error": error
     }
-
-    return {
-        "statusCode": status_code,
-        "headers": headers,
-        "body": json.dumps(body),
-        "isBase64Encoded": False
-    }
+    
+    if is_in_stepfunction:
+        return {
+            "statusCode": status_code,            
+            "body": body,
+        }
+    else:
+        return {
+            "statusCode": status_code,
+            "headers": headers,
+            "body": json.dumps(body),
+            "isBase64Encoded": False
+        }
 
 def error_response(lambda_handler):
     def exception_handler(*args, **kwargs):

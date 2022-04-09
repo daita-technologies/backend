@@ -7,7 +7,7 @@ Description: >
 Parameters:
   Stage:
     Type: String
-    Default: dev
+    Default: dte
   Application:
     Type: String
     Default: daita
@@ -17,7 +17,7 @@ Parameters:
   AccessPointARN:
     Type: String
     Description: Access point ARN
-    Default: arn:aws:elasticfilesystem:us-east-2:366577564432:access-point/fsap-0f36be4686c600461
+    Default: arn:aws:elasticfilesystem:us-east-2:366577564432:access-point/fsap-0bdf8f0ae44bd5561
   SecurityGroupIds:
     Type: String
     Default: 'sg-0315a5ecee0dc69fe,sg-0b3b2fcc4dc7686ad,sg-af50cbde,sg-07c27f59bc172f180,sg-0796222bd5149736f'
@@ -43,6 +43,71 @@ Resources:
       Type: String
       Value: "5"
 
+  #================ ROLES =====================================================
+  # lambda role 
+  GeneralLambdaExecutionRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+        - Effect: "Allow"
+          Principal: 
+            Service: "lambda.amazonaws.com"
+          Action:
+          - "sts:AssumeRole"
+      Policies:             
+        - PolicyName: 'SecretsManagerParameterAccess'
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - ssm:GetParam*
+                  - ssm:DescribeParam*                  
+                Resource:
+                  - arn:aws:ssm:*:*:parameter/*
+        - PolicyName: 'CloudwatchPermission'
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              -
+                Effect: Allow
+                Action:
+                  - 'logs:CreateLogGroup'
+                  - 'logs:CreateLogStream'
+                  - 'logs:PutLogEvents'
+                Resource: '*'
+        - PolicyName: 'CognitoPermission'
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              -
+                Effect: Allow
+                Action:
+                  - cognito-identity:*    
+                  - cognito-idp:*       
+                Resource: '*'
+        - PolicyName: 'DynamoDBPermission'
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:             
+              - 
+                Effect: Allow
+                Action:
+                  - dynamodb:*
+                Resource: "*"
+        - PolicyName: "OtherServicePermission"
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:             
+              - 
+                Effect: Allow
+                Action:
+                  - events:PutEvents
+                  - s3:Get*
+                Resource: "*"
+
   #================ LAMBDA LAYERS  ============================================
   CommonCodeLayer:
     Type: AWS::Serverless::LayerVersion
@@ -50,7 +115,7 @@ Resources:
       LayerName: !Sub "${Stage}-CommonCodeLayer"
       ContentUri: shared-layer/commons/
       CompatibleRuntimes:
-        - python3.8
+        - python3.8 
 
   #================ APPLICATIONS  =============================================
   AICallerService:
@@ -92,9 +157,30 @@ Resources:
         TableGenerateTaskName: !GetAtt DatabaseService.Outputs.TableGenerateTaskName
         TableProjectsName: !GetAtt DatabaseService.Outputs.TableProjectsName
         TableMethodsName: !GetAtt DatabaseService.Outputs.TableMethodsName
+        TableHealthCheckTasksName: !GetAtt DatabaseService.Outputs.TableHealthCheckTasksName
         LimitPreprocessTimesName: !Ref LimitPreprocessTimes
         LimitAugmentTimesName: !Ref LimitAugmentTimes
         CommonCodeLayerName: !Ref CommonCodeLayer
+        HealthCheckEventBusArn: !GetAtt HealthCheckService.Outputs.HealthCheckEventBusArn
+        HealthCheckEventBusName: !GetAtt HealthCheckService.Outputs.HealthCheckEventBusName
+        TableHealthCheckTasksName: !GetAtt DatabaseService.Outputs.TableHealthCheckTasksName
+        TableHealthCheckInfoName: !GetAtt DatabaseService.Outputs.TableHealthCheckInfoName
+
+  HealthCheckService:
+    Type: AWS::Serverless::Application
+    Properties:
+      Location: health-check-service/health_check_service.yaml
+      Parameters:
+        StagePara: !Ref Stage
+        LambdaRole: !GetAtt GeneralLambdaExecutionRole.Arn
+        TableHealthCheckTasksName: !GetAtt DatabaseService.Outputs.TableHealthCheckTasksName
+        TableHealthCheckInfoName: !GetAtt DatabaseService.Outputs.TableHealthCheckInfoName
+        TableDataAugmentName: !GetAtt DatabaseService.Outputs.TableDataAugmentName
+        TableDataOriginalName: !GetAtt DatabaseService.Outputs.TableDataOriginalName
+        TableDataPreprocessName: !GetAtt DatabaseService.Outputs.TableDataPreprocessName
+        CommonCodeLayerName: !Ref CommonCodeLayer
+        ApplicationPara: !Ref Application
+
 
 
     
