@@ -16,11 +16,6 @@ def deploy_lambda(general_info):
     ls_lambda_val += deploy_lambda_balancer(general_info, lambda_service)
     ls_lambda_val += deploy_lambda_auth(general_info, lambda_service)
     ls_lambda_val += deploy_lambda_webhook(general_info, lambda_service)
-    ls_lambda_val += deploy_lambda_send_mail(general_info, lambda_service)    
+    ls_lambda_val += deploy_lambda_send_mail(general_info, lambda_service)
 
     return ls_lambda_val
-
-
-
-
-    

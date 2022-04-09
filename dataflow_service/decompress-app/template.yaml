@@ -1,0 +1,420 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Transform: AWS::Serverless-2016-10-31
+Description: >
+  decompress-app
+
+Parameters:
+  SecurityGroupIds:
+    Type: String
+    Default: 'sg-af50cbde'
+  VpcId:
+    Type: String
+    Default: vpc-53239e38
+  SubnetId:
+    Type: String
+    Default: subnet-31ff5b5a
+  EFSFileSystemId:
+    Type:  String
+    Default: fs-0199771f2dfe97ace
+  EFSMountPath:
+    Type: String
+    Default: /mnt/efs
+  EFSAccessPointRootPath:
+    Type: String
+    Default: /decompress-app
+  CognitoUserPoolId:
+    Type:  String
+    Default: us-east-2_ZbwpnYN4g
+  CognitoIdentityPoolId:
+    Type:  String
+    Default: us-east-2:fa0b76bc-01fa-4bb8-b7cf-a5000954aafb
+  S3BucketName:
+    Type: String
+    Default: daita-client-data
+  ProjectsTable:
+    Type: String
+    Default: projects
+
+Globals:
+  Function:
+    Timeout: 10
+
+
+Resources:
+  #================ ROLES =====================================================
+  # AWSServiceRoleForECS :
+  #   Type: AWS::IAM::ServiceLinkedRole
+  #   Properties:
+  #     AWSServiceName: ecs.amazonaws.com
+  #     Description: "Using for ECS Fargate"
+
+  # DefaultSubnet: # Fargate required a awsvpc config so
+  #   Type: AWS::EC2::Subnet
+  #   Properties:
+  #     VpcId: !Ref VpcId
+  #     CidrBlock: 172.31.0.0/16
+
+  #================ LOGS FOR STEP FUNCTIONS ===================================
+
+  DecompressFileStateMachineLogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: !Sub "DecompressFileStateMachineLogGroup-${AWS::StackName}"
+      RetentionInDays: 7
+
+
+  #======================= NETWORKING ==========================================
+
+  # InternetRouteTable:
+  #   Type: AWS::EC2::RouteTable
+  #   Properties:
+  #     VpcId: !Ref VpcId
+
+  # # Needed to attached in a VPC
+  # InternetGateway:
+  #   Type: AWS::EC2::InternetGateway
+
+  # InternetRoute:
+  #   Type: AWS::EC2::Route
+  #   Properties:
+  #     RouteTableId: !GetAtt InternetRouteTable.RouteTableId
+  #     GatewayId: !GetAtt InternetGateway.InternetGatewayId
+  #     DestinationCidrBlock: 0.0.0.0/0
+
+  VPCEndpointForS3:
+    Type: AWS::EC2::VPCEndpoint
+    Properties:
+      ServiceName: !Sub "com.amazonaws.${AWS::Region}.s3"
+      VpcId: !Ref VpcId
+      # RouteTableIds:
+      #   - !GetAtt InternetRouteTable.RouteTableId
+
+  VPCEndpointForDynamoDB:
+    Type: AWS::EC2::VPCEndpoint
+    Properties:
+      ServiceName: !Sub "com.amazonaws.${AWS::Region}.dynamodb"
+      VpcId: !Ref VpcId
+      # RouteTableIds:
+      #   - !GetAtt InternetRouteTable.RouteTableId
+
+  EFSAccessPoint:
+    Type: AWS::EFS::AccessPoint
+    Properties:
+      FileSystemId: !Ref EFSFileSystemId
+      PosixUser:
+        Gid: "1000"
+        Uid: "1000"
+      RootDirectory:
+        CreationInfo:
+          OwnerGid: "1000"
+          OwnerUid: "1000"
+          Permissions: "777"
+        Path: !Ref EFSAccessPointRootPath
+
+
+  # ==================================== POST, GET task endpoint ==================
+
+  CreateDecompressTaskFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: functions/create_decompress_task/
+      Handler: app.lambda_handler
+      Runtime: python3.8
+      Architectures:
+        - x86_64
+      Policies:
+        - StepFunctionsExecutionPolicy:
+            StateMachineName: !GetAtt DecompressFileStateMachine.Name
+        - AmazonDynamoDBFullAccess
+      Environment:
+        Variables:
+          DecompressFileStateMachineArn: !GetAtt DecompressFileStateMachine.Arn
+          DecompressTaskTable: !Ref DecompressTaskTable
+          ProjectsTable: !Ref ProjectsTable
+          USER_POOL_ID: !Ref CognitoUserPoolId
+          IDENTITY_POOL_ID: !Ref CognitoIdentityPoolId
+      Events:
+        UploadCompressedFile:
+          Type: Api # More info about API Event Source: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#api
+          Properties:
+            Path: /decompress-file
+            Method: post
+
+  GetDecompressTaskFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: functions/get_decompress_task/
+      Handler: app.lambda_handler
+      Runtime: python3.8
+      Architectures:
+        - x86_64
+      Policies:
+        - AmazonDynamoDBFullAccess
+      Environment:
+        Variables:
+          DecompressTaskTable: !Ref DecompressTaskTable
+      Events:
+        UploadCompressedFile:
+          Type: Api # More info about API Event Source: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#api
+          Properties:
+            Path: /decompress-file
+            Method: get
+
+
+  # ================================ database ====================================================
+
+  DecompressTaskTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: task_decompress
+      AttributeDefinitions:
+        - AttributeName: id
+          AttributeType: S
+      KeySchema:
+        - AttributeName: id
+          KeyType: HASH
+      BillingMode: PAY_PER_REQUEST
+
+
+  # ==================== State machine & steps resource ==========================================
+
+  DecompressFileStateMachine:
+    Type: AWS::Serverless::StateMachine # More info about State Machine Resource: https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/sam-resource-statemachine.html
+    Properties:
+      Type: STANDARD
+      DefinitionUri: statemachine/decompress_file.asl.yml
+      DefinitionSubstitutions:
+        DecompressTaskCluster: !GetAtt DecompressTaskCluster.Arn
+        DecompressTask: !Ref DecompressTask
+        SubnetId: !Ref SubnetId
+        DivideDecompressChunksFunction: !GetAtt DivideDecompressChunksFunction.Arn
+        UploadDecompressedFunction: !GetAtt UploadDecompressedFunction.Arn
+        FinishDecompressTaskFunction: !GetAtt FinishDecompressTaskFunction.Arn
+        DecompressTaskTable: !Ref DecompressTaskTable
+        ProjectUploadUpdateFunction: staging-project-upload-update
+        PostUploadFunction: !Ref PostUploadFunction
+      Logging:
+        Level: ALL
+        IncludeExecutionData: true
+        Destinations:
+        - CloudWatchLogsLogGroup:
+            LogGroupArn: !GetAtt DecompressFileStateMachineLogGroup.Arn
+      Tracing:
+        Enabled: true
+      Policies: # Find out more about SAM policy templates: https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/serverless-policy-templates.html
+        - LambdaInvokePolicy:
+            FunctionName: !Ref DivideDecompressChunksFunction
+        - LambdaInvokePolicy:
+            FunctionName: !Ref UploadDecompressedFunction
+        - LambdaInvokePolicy:
+            FunctionName: !Ref FinishDecompressTaskFunction
+        - LambdaInvokePolicy:
+            FunctionName: staging-project-upload-update
+        - LambdaInvokePolicy:
+            FunctionName: !Ref PostUploadFunction
+        - CloudWatchPutMetricPolicy: {}
+        - Statement:
+          - # Allow step to start ecs task
+            Effect: Allow
+            Action:
+              - ecs:RunTask
+              - ecs:StopTask
+              - ecs:DescribeTasks
+            Resource:
+              - "*"
+          -
+            Effect: Allow
+            Action:
+              - events:PutTargets
+              - events:PutRule
+              - events:DescribeRule
+            Resource:
+              - !Sub arn:${AWS::Partition}:events:${AWS::Region}:${AWS::AccountId}:rule/StepFunctionsGetEventsForECSTaskRule
+          -
+            Effect: Allow
+            Action:
+              - iam:PassRole
+            Resource:
+              - "*"
+          - # Allow access log groups
+            Sid: CloudWatchLogsPolicy
+            Effect: Allow
+            Action:
+              - "logs:CreateLogDelivery"
+              - "logs:GetLogDelivery"
+              - "logs:UpdateLogDelivery"
+              - "logs:DeleteLogDelivery"
+              - "logs:ListLogDeliveries"
+              - "logs:PutResourcePolicy"
+              - "logs:DescribeResourcePolicies"
+              - "logs:DescribeLogGroup"
+              - "logs:DescribeLogGroups"
+            Resource: "*"
+
+  DivideDecompressChunksFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: functions/divide_decompressed_chunks/
+      Handler: app.lambda_handler
+      Runtime: python3.8
+      Architectures:
+        - x86_64
+      VpcConfig:
+        SecurityGroupIds:
+          - !Ref SecurityGroupIds
+        SubnetIds:
+          - !Ref SubnetId
+      FileSystemConfigs:
+        - Arn: !GetAtt EFSAccessPoint.Arn
+          LocalMountPath: !Ref EFSMountPath
+      Policies:
+        - AmazonDynamoDBFullAccess
+        - Statement:
+          - Sid: ALLOWCRUDDynamoDB
+            Effect: Allow
+            Action:
+            - "dynamodb:GetItem"
+            - "dynamodb:DeleteItem"
+            - "dynamodb:PutItem"
+            - "dynamodb:Scan"
+            - "dynamodb:Query"
+            - "dynamodb:UpdateItem"
+            - "dynamodb:BatchWriteItem"
+            - "dynamodb:BatchGetItem"
+            - "dynamodb:DescribeTable"
+            - "dynamodb:ConditionCheckItem"
+            Resource: "*"
+      Environment:
+        Variables:
+          DecompressTaskTable: !Ref DecompressTaskTable
+          EFSMountPath: !Ref EFSMountPath
+
+  UploadDecompressedFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: functions/upload_decompressed/
+      Handler: app.lambda_handler
+      Runtime: python3.8
+      Timeout: 30
+      Architectures:
+        - x86_64
+      VpcConfig:
+        SecurityGroupIds:
+          - !Ref SecurityGroupIds
+        SubnetIds:
+          - !Ref SubnetId
+      FileSystemConfigs:
+        - Arn: !GetAtt EFSAccessPoint.Arn
+          LocalMountPath: !Ref EFSMountPath
+      Policies:
+        - Version: '2012-10-17'
+          Statement:
+            - Effect: Allow
+              Action:
+                - s3:GetObject
+                - s3:PutObject
+                - s3:PutObjectAcl
+              Resource: !Sub 'arn:aws:s3:::${S3BucketName}/*'
+      Environment:
+        Variables:
+          EFSMountPath: !Ref EFSMountPath
+          S3BucketName: !Ref S3BucketName
+
+  PostUploadFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: functions/post_upload/
+      Handler: app.lambda_handler
+      Runtime: python3.8
+      Timeout: 30
+      Architectures:
+        - x86_64
+
+  FinishDecompressTaskFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: functions/finish_decompress_task/
+      Handler: app.lambda_handler
+      Runtime: python3.8
+      Architectures:
+        - x86_64
+      Policies:
+        - AmazonDynamoDBFullAccess
+        - Statement:
+          - Effect: Allow
+            Action:
+              - elasticfilesystem:ClientRootAccess
+              - elasticfilesystem:ClientWrite
+              - elasticfilesystem:ClientMount
+            Resource: "*"
+      VpcConfig:
+        SecurityGroupIds:
+          - !Ref SecurityGroupIds
+        SubnetIds:
+          - !Ref SubnetId
+      FileSystemConfigs:
+        - Arn: !GetAtt EFSAccessPoint.Arn
+          LocalMountPath: !Ref EFSMountPath
+      Environment:
+        Variables:
+          DecompressTaskTable: !Ref DecompressTaskTable
+          FileSystemId: !Ref EFSFileSystemId
+          EFSMountPath: !Ref EFSMountPath
+
+  # ECS resources
+  DecompressTaskCluster:
+    Type: AWS::ECS::Cluster
+    Properties:
+      CapacityProviders:
+        - FARGATE
+
+  DecompressTask:
+    Type: AWS::ECS::TaskDefinition
+    Properties:
+      RequiresCompatibilities:
+        - "FARGATE"
+      ExecutionRoleArn: arn:aws:iam::366577564432:role/ecsTaskExecutionRole #TODO:create this in template
+      TaskRoleArn: arn:aws:iam::366577564432:role/DecompressTaskRole #TODO:create this in template
+      Cpu: 256
+      Memory: 512
+      NetworkMode: awsvpc
+      ContainerDefinitions:
+        -
+          Name: "decompress-file"
+          Image: !Sub "366577564432.dkr.ecr.${AWS::Region}.amazonaws.com/decompress"
+          Cpu: 256
+          Memory: 512
+          Environment:
+            - Name: DecompressTaskTable
+              Value: !Ref DecompressTaskTable
+            - Name: EFSMountPath
+              Value: !Ref EFSMountPath
+          LogConfiguration:
+            LogDriver: awslogs
+            Options:
+              awslogs-region: !Sub "${AWS::Region}"
+              awslogs-group: !Ref DecompressFileStateMachineLogGroup
+              awslogs-stream-prefix: decompress
+          MountPoints:
+            -
+              SourceVolume: "my-vol"
+              ContainerPath: !Ref EFSMountPath
+      Volumes:
+        -
+          EFSVolumeConfiguration:
+            AuthorizationConfig:
+              AccessPointId: !Ref EFSAccessPoint
+            FilesystemId: !Ref EFSFileSystemId
+            TransitEncryption: ENABLED # enable this so maybe we don't need to config a access point https://docs.aws.amazon.com/pt_br/AWSCloudFormation/latest/UserGuide/aws-properties-ecs-taskdefinition-authorizationconfig.html
+          Name: "my-vol"
+
+# Outputs:
+  # StockTradingStateMachineHourlyTradingSchedule is an implicit Schedule event rule created out of Events key under Serverless::StateMachine
+  # Find out more about other implicit resources you can reference within SAM
+  # https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/sam-specification-generated-resources.html
+  # StockTradingStateMachineArn:
+  #   Description: "Stock Trading State machine ARN"
+  #   Value: !Ref StockTradingStateMachine
+  # StockTradingStateMachineRoleArn:
+  #   Description: "IAM Role created for Stock Trading State machine based on the specified SAM Policy Templates"
+  #   Value: !GetAtt StockTradingStateMachineRole.Arn
