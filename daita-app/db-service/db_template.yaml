@@ -28,6 +28,47 @@ Resources:
           KeyType: RANGE
       TableName: !Sub "${StagePara}-generate-tasks"
       BillingMode: PAY_PER_REQUEST
+
+  HealthCheckTaskDB:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      AttributeDefinitions:
+        - 
+          AttributeName: identity_id
+          AttributeType: S
+        - 
+          AttributeName: task_id
+          AttributeType: S
+      KeySchema:
+        - 
+          AttributeName: identity_id
+          KeyType: HASH
+        -
+          AttributeName: task_id
+          KeyType: RANGE
+      TableName: !Sub "${StagePara}-healthcheck-tasks"
+      BillingMode: PAY_PER_REQUEST
+
+  HealthCheckInfoDB:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      AttributeDefinitions:
+        - 
+          AttributeName: health_check_id
+          AttributeType: S
+        - 
+          AttributeName: project_id
+          AttributeType: S
+      KeySchema:
+        - 
+          AttributeName: health_check_id
+          KeyType: HASH
+        -
+          AttributeName: project_id
+          KeyType: RANGE
+      TableName: !Sub "${StagePara}-healthcheck-info"
+      BillingMode: PAY_PER_REQUEST
+
 Outputs:
   TableGenerateTaskName:
     Description: "Name of table generate task"
@@ -38,3 +79,18 @@ Outputs:
   TableMethodsName:
     Description: "Name of table methods"
     Value: methods
+  TableHealthCheckTasksName:
+    Description: "Name of table health check tasks"
+    Value: !Ref HealthCheckTaskDB
+  TableHealthCheckInfoName:
+    Description: "Name of table health check info"
+    Value: !Ref HealthCheckInfoDB
+  TableDataAugmentName:
+    Description: "Name of table data augment"
+    Value: data_augment
+  TableDataOriginalName:
+    Description: "Name of table data original"
+    Value: data_original
+  TableDataPreprocessName:
+    Description: "Name of table data preprocess"
+    Value: data_preprocess

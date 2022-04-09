@@ -62,6 +62,20 @@ paths:
         httpMethod: "POST"
         type: "aws_proxy"
         payloadFormatVersion: "2.0"
+
+  /health_check/dataset:
+    post:
+      responses:
+        default:
+          description: "health check for dataset"
+      x-amazon-apigateway-integration:
+        credentials:
+          Fn::GetAtt: [ApiGatewayCallLambdaRole, Arn]
+        uri: 
+          Fn::Sub: arn:${AWS::Partition}:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${HealthCheckFunction.Arn}/invocations
+        httpMethod: "POST"
+        type: "aws_proxy"
+        payloadFormatVersion: "2.0"
   
 x-amazon-apigateway-cors:
   allowMethods:

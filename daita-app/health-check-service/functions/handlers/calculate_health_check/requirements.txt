@@ -1,0 +1,7 @@
+requests
+numpy
+opencv-python==4.5.4.58
+Pillow==9.0.1
+scikit-image==0.18.3
+scipy==1.7.2
+imageio==2.10.4

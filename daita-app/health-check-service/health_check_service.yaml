@@ -1,0 +1,207 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: >
+  daita-caller-service-app
+
+  Sample SAM Template for daita-caller-service-app
+
+
+Parameters:
+  minimumLogLevel:
+    Type: String
+    Default: DEBUG
+  LambdaRole:
+    Type: String
+  StagePara:
+    Type: String
+  TableHealthCheckTasksName:
+    Type: String
+  TableHealthCheckInfoName:
+    Type: String
+  TableDataAugmentName:
+    Type: String
+  TableDataOriginalName:
+    Type: String
+  TableDataPreprocessName:
+    Type: String
+  CommonCodeLayerName:
+    Type: String
+  ApplicationPara:
+    Type: String
+
+Globals:
+  Function:
+    Timeout: 800    
+    Environment:
+      Variables:
+        STAGE: !Ref StagePara        
+        LOGGING: !Ref minimumLogLevel
+        TABLE_HEALTHCHECK_TASK: !Ref TableHealthCheckTasksName
+        TABLE_HEALTHCHECK_INFO: !Ref TableHealthCheckInfoName
+        TABLE_DATA_AUGMENT: !Ref TableDataAugmentName
+        TABLE_DATA_ORIGINAL: !Ref TableDataOriginalName
+        TABLE_DATA_PREPROCESS: !Ref TableDataPreprocessName    
+
+Resources:
+  #================ ROLES =====================================================  
+
+  # add role to start state machine from eventbus
+  HealthCheckServiceEventBusRole:
+    Type: "AWS::IAM::Role"
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: "Allow"
+            Principal:
+              Service: "events.amazonaws.com"
+            Action: 
+              - "sts:AssumeRole"
+      Policies:
+        - PolicyName: DirectlyInvokeStepFunctions
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              Action:
+              - "states:StartExecution"
+              Effect: Allow
+              Resource:
+                - !Ref HealthCheckStateMachine
+
+  #================ EVENT BUS =================================================
+  HealthCheckEventBus:
+    Type: AWS::Events::EventBus
+    Properties: 
+      Name: !Sub "${StagePara}-${ApplicationPara}-HealthCheckEventBus"
+
+  HealthCheckEventBusDefaultRule:
+    Type: AWS::Events::Rule
+    Properties:
+      Description: "Default Rule for Any event"
+      State: ENABLED
+      EventBusName: !Ref HealthCheckEventBus
+      EventPattern:
+        source:
+          - "source.events"
+        detail-type:
+          - "lambda.event"
+      Targets:
+        - 
+          Arn: !GetAtt HealthCheckStateMachine.Arn 
+          Id: "HealthCheckSMTarget"
+          RoleArn: !GetAtt HealthCheckServiceEventBusRole.Arn  
+
+  #================ LAMBDA FUNCTIONS ==========================================
+
+  GetDataFunction:
+    Type: AWS::Serverless::Function 
+    Properties:
+      Runtime: python3.8
+      Handler: app.lambda_handler
+      Architectures:
+        - x86_64
+      CodeUri: functions/handlers/get_data
+      Role: !Ref LambdaRole
+      Layers:
+        - !Ref CommonCodeLayerName
+
+  UpdateDBFunction:
+    Type: AWS::Serverless::Function 
+    Properties:
+      Runtime: python3.8
+      Handler: app.lambda_handler
+      Architectures:
+        - x86_64
+      CodeUri: functions/handlers/update_db
+      Role: !Ref LambdaRole
+      Layers:
+        - !Ref CommonCodeLayerName
+
+  CalculateHealthCheckFunction:
+    Type: AWS::Serverless::Function 
+    Properties:
+      PackageType: Image            
+      Role: !Ref LambdaRole
+      MemorySize: 1024
+      Architectures:
+        - x86_64
+    Metadata:
+      Dockerfile: Dockerfile
+      DockerContext: ./functions/handlers/calculate_health_check
+      DockerTag: python3.8-v1
+  
+  #================ LOGS FOR STEP FUNCTIONS ===================================
+
+  HealthCheckStateMachineLogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties: 
+      LogGroupName: !Sub "${StagePara}-${ApplicationPara}-HealthCheckSMLogGroup"
+      RetentionInDays: 7
+
+
+  #================ PROCESSOR STATE MACHINE ===================================
+
+  HealthCheckStateMachine:
+    Type: AWS::Serverless::StateMachine
+    Properties:
+      # Type: EXPRESS
+      Type: STANDARD
+      Name: !Sub "${StagePara}-${ApplicationPara}-HealthCheckSM"
+      Policies:
+        - LambdaInvokePolicy:
+            FunctionName: !Ref GetDataFunction
+        - LambdaInvokePolicy:
+            FunctionName: !Ref CalculateHealthCheckFunction
+        - LambdaInvokePolicy:
+            FunctionName: !Ref UpdateDBFunction
+        - DynamoDBCrudPolicy:
+            TableName: !Ref TableHealthCheckTasksName
+        - Statement: 
+          - Sid: CloudWatchLogsPolicy
+            Effect: Allow
+            Action:
+            - "logs:CreateLogDelivery"
+            - "logs:GetLogDelivery"
+            - "logs:UpdateLogDelivery"
+            - "logs:DeleteLogDelivery"
+            - "logs:ListLogDeliveries"
+            - "logs:PutResourcePolicy"
+            - "logs:DescribeResourcePolicies"
+            - "logs:DescribeLogGroup"
+            - "logs:DescribeLogGroups"
+            Resource: "*"
+          - Sid: CloudWatchEventsFullAccess
+            Effect: Allow
+            Action:
+            - "events:*"
+            Resource: "*"
+          - Sid: IAMPassRoleForCloudWatchEvents
+            Effect: Allow
+            Action:
+            - "iam:PassRole"
+            Resource: "arn:aws:iam::*:role/AWS_Events_Invoke_Targets"
+      Tracing:
+        Enabled: true
+      DefinitionUri: ./statemachine/health_check_state_machine.asl.yaml
+      Logging:
+        Level: ALL
+        IncludeExecutionData: true
+        Destinations:
+        - CloudWatchLogsLogGroup:
+            LogGroupArn: !GetAtt HealthCheckStateMachineLogGroup.Arn
+      DefinitionSubstitutions:
+        GetDataFunction: !GetAtt GetDataFunction.Arn
+        CalculateHealthCheckFunction: !GetAtt CalculateHealthCheckFunction.Arn
+        UpdateDBFunction: !GetAtt UpdateDBFunction.Arn
+        TableHealthCheckTasksName: !Ref TableHealthCheckTasksName
+
+Outputs:
+  # ServerlessRestApi is an implicit API created out of Events key under Serverless::Function
+  # Find out more about other implicit resources you can reference within SAM
+  # https://github.com/awslabs/serverless-application-model/blob/master/docs/internals/generated_resources.rst#api 
+  HealthCheckEventBusArn:
+    Description: "ARN of EventBus"
+    Value: !GetAtt HealthCheckEventBus.Arn
+  HealthCheckEventBusName:
+    Description: "Name of EventBus"
+    Value: !Ref HealthCheckEventBus
