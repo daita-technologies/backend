@@ -8,11 +8,11 @@ States:
       body.$: $.Payload.body.data
       task_id.$: $$.Execution.Input.detail.task_id
       identity_id.$: $$.Execution.Input.detail.identity_id
+      data_type.$: $$.Execution.Input.detail.data_type
     ResultPath: $
     OutputPath: $
     Parameters:
-      FunctionName: >-
-        arn:aws:lambda:us-east-2:366577564432:function:dte-daita-app-HealthCheckService-4-GetDataFunction-xB1qzmrvMahH
+      FunctionName: "${GetDataFunction}"
       Payload:
         body.$: $
     Next: CalculateHealthCheckMap
@@ -27,13 +27,14 @@ States:
         BackoffRate: 1
   CalculateHealthCheckMap:
     Type: Map
-    InputPath: $.body
-    ItemsPath: $.ls_file_s3
+    InputPath: $
+    ItemsPath: $.body.ls_file_s3
     ResultPath: null
     Parameters:
       file_s3.$: $$.Map.Item.Value
-      project_id.$: $.project_id
-      data_table_name.$: $.data_table_name
+      project_id.$: $.body.project_id
+      data_table_name.$: $.body.data_table_name
+      data_type.$: $.data_type
     MaxConcurrency: 10
     Iterator:
       StartAt: CalculateHCTask
@@ -41,20 +42,25 @@ States:
         CalculateHCTask:
           Type: Task
           Resource: 'arn:aws:states:::lambda:invoke'
+          ResultSelector:
+            project_id.$: $.Payload.project_id
+            data_table_name.$: $.Payload.data_table_name
+            healthcheck.$: $.Payload.healthcheck
+            data_type.$: $$.Execution.Input.detail.data_type
+          ResultPath: $
+          OutputPath: $
           Parameters:
-            FunctionName: >-
-              arn:aws:lambda:us-east-2:366577564432:function:dte-daita-app-HealthCheck-CalculateHealthCheckFunc-MFkKqzw0nJbx
+            FunctionName: "${CalculateHealthCheckFunction}"
             Payload:
               body.$: $
           Next: UpdateDBTask
         UpdateDBTask:
           Type: Task
           Resource: 'arn:aws:states:::lambda:invoke'
-          InputPath: $.Payload
+          InputPath: $
           OutputPath: $.Payload.body
           Parameters:
-            FunctionName: >-
-              arn:aws:lambda:us-east-2:366577564432:function:dte-daita-app-HealthCheckService--UpdateDBFunction-lAX6E0DIIK1E
+            FunctionName: "${UpdateDBFunction}"
             Payload:
               body.$: $
           End: true
@@ -63,7 +69,7 @@ States:
     Type: Task
     Resource: 'arn:aws:states:::dynamodb:updateItem'
     Parameters:
-      TableName: dte-healthcheck-tasks
+      TableName: "${TableHealthCheckTasksName}"
       Key:
         identity_id:
           S.$: $.identity_id

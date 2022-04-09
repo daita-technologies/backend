@@ -29,6 +29,7 @@ class UpdateDBClass(LambdaBaseClass):
         self.logger.debug(f"body in main_parser: {body}")
         self.project_id = body[KEY_NAME_PROJECT_ID]
         self.healthcheck = body["healthcheck"]
+        self.data_type = body[KEY_NAME_DATA_TYPE]
         self.data_table_name = body[self.KEY_DATA_TABLE_NAME]        
 
     def _check_input_value(self):
@@ -43,9 +44,9 @@ class UpdateDBClass(LambdaBaseClass):
         self.data_model = DataModel(self.data_table_name)
             
         ### get all data that healthcheck_id does not exist
-        healthcheck_id = self.healcheck_model.create_new_healthcheck_info(self.healthcheck, self.project_id)
+        healthcheck_id = self.healcheck_model.create_new_healthcheck_info(self.healthcheck, self.project_id, self.data_type)
         
-        ### update healthcheck_id to data DB
+        ### update healthcheck_id to data DB and
         self.data_model.update_healthcheck_id(self.project_id, self.healthcheck["file_name"], healthcheck_id)
                 
         return generate_response(

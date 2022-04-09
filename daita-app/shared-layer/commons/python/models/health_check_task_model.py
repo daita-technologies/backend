@@ -1,6 +1,7 @@
 import boto3
 from boto3.dynamodb.conditions import Key, Attr
 from config import *
+from error_messages import *
 from typing import List
 from utils import create_unique_id, convert_current_date_to_iso8601
 
@@ -75,9 +76,25 @@ class HealthCheckTaskModel():
             ) 
         
         return
+    
+    def _get_item(self, identity_id, task_id):
+        response = self.table.get_item(
+                Key={
+                    HealthCheckTaskItem.FIELD_IDENTITY_ID: identity_id,
+                    HealthCheckTaskItem.FIELD_TASK_ID: task_id
+                },            
+            )
+        return response.get('Item', None)
 
     def create_new_healthcheck_task(self, identity_id, project_id, data_type):
         healthcheck_task_item = HealthCheckTaskItem.create_new_healthcheck_task(identity_id, project_id, data_type)
         self.insert_new_item(healthcheck_task_item)
 
         return healthcheck_task_item.task_id
+    
+    def get_status_of_task(self, identity_id, task_id):
+        item = self._get_item(identity_id, task_id)
+        if item is None:
+            raise Exception(MESS_TASK_NOT_EXIST.format(task_id))
+        else:
+            return item[HealthCheckTaskItem.FIELD_STATUS]

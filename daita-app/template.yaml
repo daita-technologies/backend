@@ -163,6 +163,8 @@ Resources:
         CommonCodeLayerName: !Ref CommonCodeLayer
         HealthCheckEventBusArn: !GetAtt HealthCheckService.Outputs.HealthCheckEventBusArn
         HealthCheckEventBusName: !GetAtt HealthCheckService.Outputs.HealthCheckEventBusName
+        TableHealthCheckTasksName: !GetAtt DatabaseService.Outputs.TableHealthCheckTasksName
+        TableHealthCheckInfoName: !GetAtt DatabaseService.Outputs.TableHealthCheckInfoName
 
   HealthCheckService:
     Type: AWS::Serverless::Application

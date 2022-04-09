@@ -8,8 +8,9 @@ from utils import create_unique_id, convert_current_date_to_iso8601
 
 class HealthCheckInfoModel():
     
-    FIELD_HC_INFO_ID        = "health_check_id"
-    FIELD_PROJECT_ID        = "project_id"    
+    FIELD_HC_INFO_ID        = "healthcheck_id"
+    FIELD_PROJECT_ID        = "project_id"
+    FIELD_DATA_TYPE         = "data_type"  
     
     def __init__(self, table_name) -> None:
         self.table = boto3.resource('dynamodb').Table(table_name) 
@@ -18,13 +19,20 @@ class HealthCheckInfoModel():
         response = self.table.put_item(
                 Item = item                               
             ) 
-        
         return
+    
+    def _query_info_w_data_type(self, project_id, data_type):
+        response = self.table.query (
+                KeyConditionExpression=Key(self.FIELD_PROJECT_ID).eq(project_id),
+                FilterExpression=Attr(self.FIELD_DATA_TYPE).eq(data_type)
+            )
+        return response.get("Items", [])        
 
-    def create_new_healthcheck_info(self, info, project_id):
+    def create_new_healthcheck_info(self, info, project_id, data_type):
         info_item = {
             self.FIELD_HC_INFO_ID: create_unique_id(),
             self.FIELD_PROJECT_ID: project_id, 
+            self.FIELD_DATA_TYPE: data_type
         }
         
         for key, value in info.items():
@@ -35,3 +43,15 @@ class HealthCheckInfoModel():
         self.insert_new_item(info_item)
 
         return info_item[self.FIELD_HC_INFO_ID]
+    
+    def get_info_project_w_data_type(self, project_id, data_type):
+        items = self._query_info_w_data_type(project_id, data_type)
+        for item in items:
+            for key, value in item.items():
+                if type(value) is Decimal:
+                    if key in ["width", "height"]:
+                        item[key] = int(value)
+                    else:
+                        item[key] = float(value)
+                    
+        return items        

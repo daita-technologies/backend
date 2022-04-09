@@ -39,6 +39,7 @@ KEY_NAME_TIMES_AUGMENT      = "times_augment"
 KEY_NAME_TIMES_PREPROCESS   = "times_preprocess"
 KEY_NAME_TASK_ID            = "task_id"
 KEY_NAME_IDENTITY_ID        = "identity_id"
+KEY_NAME_TASK_STATUS        = "status"
 
 KEY_NAME_RES_AUMENTATION    = "augmentation"
 KEY_NAME_RES_PREPROCESSING  = "preprocessing"

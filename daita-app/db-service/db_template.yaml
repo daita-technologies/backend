@@ -54,17 +54,17 @@ Resources:
     Properties:
       AttributeDefinitions:
         - 
-          AttributeName: health_check_id
+          AttributeName: project_id
           AttributeType: S
         - 
-          AttributeName: project_id
+          AttributeName: healthcheck_id
           AttributeType: S
       KeySchema:
         - 
-          AttributeName: health_check_id
+          AttributeName: project_id
           KeyType: HASH
         -
-          AttributeName: project_id
+          AttributeName: healthcheck_id
           KeyType: RANGE
       TableName: !Sub "${StagePara}-healthcheck-info"
       BillingMode: PAY_PER_REQUEST
@@ -83,7 +83,7 @@ Outputs:
     Description: "Name of table health check tasks"
     Value: !Ref HealthCheckTaskDB
   TableHealthCheckInfoName:
-    Description: "Name of table health check info"
+    Description: "Name of table health check info !Ref HealthCheckInfoDB"
     Value: !Ref HealthCheckInfoDB
   TableDataAugmentName:
     Description: "Name of table data augment"

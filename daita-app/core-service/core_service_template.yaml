@@ -22,6 +22,8 @@ Globals:
         TABLE_GENERATE_TASK: !Ref TableGenerateTaskName
         TABLE_PROJECTS_NAME: !Ref TableProjectsName
         TABLE_METHODS_NAME: !Ref TableMethodsName
+        TABLE_HEALTHCHECK_TASK: !Ref TableHealthCheckTasksName
+        TABLE_HEALTHCHECK_INFO: !Ref TableHealthCheckInfoName
         
     Layers:
         - !Ref CommonCodeLayerName  
@@ -54,6 +56,10 @@ Parameters:
   HealthCheckEventBusName:
     Type: String
   TableHealthCheckTasksName:
+    Type: String
+  TableHealthCheckTasksName:
+    Type: String
+  TableHealthCheckInfoName:
     Type: String
 
 Resources:  
@@ -198,12 +204,32 @@ Resources:
   HealthCheckFunction:
     Type: AWS::Serverless::Function
     Properties:
-      CodeUri: functions/handlers/health_check/health_check_dataset
+      CodeUri: functions/handlers/health_check/calculate
       Role: !GetAtt LambdaExecutionRole.Arn
       Environment:
         Variables:
           EVENT_BUS_NAME: !Ref HealthCheckEventBusName
           TABLE_HEALTHCHECK_TASK: !Ref TableHealthCheckTasksName
+
+  HCStatusFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: functions/handlers/health_check/get_status
+      Role: !GetAtt LambdaExecutionRole.Arn
+      Environment:
+        Variables:
+          TABLE_HEALTHCHECK_TASK: !Ref TableHealthCheckTasksName
+
+  HCInfoFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: functions/handlers/health_check/get_info
+      Role: !GetAtt LambdaExecutionRole.Arn
+      Environment:
+        Variables:
+          TABLE_HEALTHCHECK_INFO: !Ref TableHealthCheckInfoName
+
+  
 
 Outputs:
   CallerServiceHttpApiUrl:
