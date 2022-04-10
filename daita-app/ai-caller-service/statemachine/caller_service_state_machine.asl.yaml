@@ -46,9 +46,12 @@ States:
     Type: Task
     Resource: 'arn:aws:states:::states:startExecution.sync:2'
     InputPath: $
-    OutputPath: $.Payload
+    OutputPath: $
     Parameters:
       StateMachineArn: '${GenerateStateMachine}'
+      Input:
+        test: helloword
+        body.$: $
     Next: UploadTask
     Comment: >-
       Check the level of parallelism, split requests into chunks and invoke
@@ -63,7 +66,7 @@ States:
     Type: Task
     Resource: 'arn:aws:states:::states:startExecution.sync:2'
     InputPath: $
-    OutputPath: $.Payload
+    OutputPath: $
     Parameters:
       StateMachineArn: '${UploadStateMachine}'
     Next: Complete
@@ -81,4 +84,3 @@ States:
     Comment: Used for result aggregation
     End: true
 TimeoutSeconds: 150
-

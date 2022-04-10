@@ -141,7 +141,7 @@ class ImageLoader(object):
                     classtype = 'TEST'
                     
                 dydb_update_class_data(table, project_id, data["filename"], classtype)
-        return {"images": ls_process, "project_prefix":s3_prefix}    
+        return {"images": ls_process, "project_prefix":s3_prefix, 'type_method':type_method}    
         
 
 @error_response
@@ -151,13 +151,12 @@ def lambda_handler(event, context):
     body = event['ori2']['Execution']['Input']['detail']
     imageLoad = ImageLoader()
     data = imageLoad(body)
-
     data['task_id'] = body['task_id']
     data['identity_id'] = body['identity_id']
     data['project_id'] = body['project_id']
     data['project_name'] = body['project_name']
     data['ls_method_id'] = body['ls_method_id']
-    
+    data['num_aug_per_imgs'] = body['num_aug_per_imgs'] if 'num_aug_per_imgs' in body else 1 
     return generate_response(
             message="OK",
             status_code=HTTPStatus.OK,

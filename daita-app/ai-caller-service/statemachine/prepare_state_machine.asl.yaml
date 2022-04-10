@@ -1,7 +1,7 @@
 StartAt: PreprocessTask
 States:
   PreprocessTask:
-    Type: Map
+    Type: Task
     Resource: 'arn:aws:states:::lambda:invoke'
     InputPath: $
     OutputPath: $

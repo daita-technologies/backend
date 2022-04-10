@@ -7,7 +7,8 @@ States:
     OutputPath: $
     Parameters:
       FunctionName: '${HandleDownloadTask}'
-      Payload.$: $
+      Payload:
+        body.$: $.body
     Next: DownloadComplete
     Comment: 'Check the level of parallelism, split requests into chunks and invoke'
     Retry:
@@ -21,4 +22,3 @@ States:
     Comment: Used for result aggregation
     End: true
 TimeoutSeconds: 1800
-
