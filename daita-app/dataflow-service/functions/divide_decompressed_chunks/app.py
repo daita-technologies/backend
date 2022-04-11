@@ -23,9 +23,11 @@ def lambda_handler(event, context):
     type_method = event["type_method"]
     task_id = event["task_id"]
     s3_prefix = event["s3_prefix"]
+    identity_id = event["identity_id"]
 
     response = table.get_item(
-        Key={"id": task_id},
+        Key={"task_id": task_id,
+             "identity_id": identity_id},
         ProjectionExpression="destination_dir"
     )
     print(response)

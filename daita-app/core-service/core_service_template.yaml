@@ -23,8 +23,7 @@ Globals:
         TABLE_PROJECTS_NAME: !Ref TableProjectsName
         TABLE_METHODS_NAME: !Ref TableMethodsName
         TABLE_HEALTHCHECK_TASK: !Ref TableHealthCheckTasksName
-        TABLE_HEALTHCHECK_INFO: !Ref TableHealthCheckInfoName
-        
+        TABLE_HEALTHCHECK_INFO: !Ref TableHealthCheckInfoName        
     Layers:
         - !Ref CommonCodeLayerName  
      
@@ -61,6 +60,16 @@ Parameters:
     Type: String
   TableHealthCheckInfoName:
     Type: String
+  ParaTableDataFlowTaskName:
+    Type: String
+  ParaDecompressFileStateMachineArn:
+    Type: String
+  CognitoUserPoolId:
+    Type:  String
+    Default: us-east-2_ZbwpnYN4g
+  CognitoIdentityPoolId:
+    Type:  String
+    Default: us-east-2:fa0b76bc-01fa-4bb8-b7cf-a5000954aafb
 
 Resources:  
   #================ ROLES =====================================================
@@ -93,7 +102,7 @@ Resources:
               # - !GetAtt SplitDataFunction.Arn
                       
   
-  # lambda role 
+  ### lambda role 
   LambdaExecutionRole:
     Type: AWS::IAM::Role
     Properties:
@@ -154,6 +163,10 @@ Resources:
                 Effect: Allow
                 Action:
                   - events:PutEvents
+                Resource: "*"
+              - Effect: Allow
+                Action: 
+                  - states:StartExecution
                 Resource: "*"
 
   #================ CALLER SERVICE HTTP API ===================================
@@ -229,7 +242,30 @@ Resources:
         Variables:
           TABLE_HEALTHCHECK_INFO: !Ref TableHealthCheckInfoName
 
-  
+  ### For data flow functions
+  CreateDecompressTaskFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: functions/handlers/dataflow/create_decompress_task
+      Role: !GetAtt LambdaExecutionRole.Arn
+      Environment:
+        Variables:
+          DecompressFileStateMachineArn: !Ref ParaDecompressFileStateMachineArn
+          DecompressTaskTable: !Ref ParaTableDataFlowTaskName
+          ProjectsTable: !Ref TableProjectsName
+          USER_POOL_ID: !Ref CognitoUserPoolId
+          IDENTITY_POOL_ID: !Ref CognitoIdentityPoolId 
+
+  GetDecompressTaskFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: functions/handlers/dataflow/get_decompress_task
+      Role: !GetAtt LambdaExecutionRole.Arn
+      Environment:
+        Variables:
+          DecompressTaskTable: !Ref ParaTableDataFlowTaskName
+          USER_POOL_ID: !Ref CognitoUserPoolId
+          IDENTITY_POOL_ID: !Ref CognitoIdentityPoolId
 
 Outputs:
   CallerServiceHttpApiUrl:

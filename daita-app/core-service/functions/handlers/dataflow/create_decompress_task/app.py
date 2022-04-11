@@ -30,7 +30,6 @@ def aws_get_identity_id(id_token):
     identity_id = identity_response['IdentityId']
     return identity_id
 
-
 def convert_current_date_to_iso8601():
     now = datetime.now()
     return now.isoformat()
@@ -46,19 +45,21 @@ def lambda_handler(event, context):
     project_id = body['project_id']
     project_name = body['project_name']
     type_method = body.get('type_method', 'ORIGINAL')
+    
+    identity_id = aws_get_identity_id(id_token)
 
     task_id = str(uuid.uuid4())
     response = task_table.put_item(
         Item={
-            "id": task_id,
+            "identity_id": identity_id,
+            "task_id": task_id,
             "file_url": file_url,
             "status": "CREATED",
             "created_at": convert_current_date_to_iso8601(),
             "updated_at": convert_current_date_to_iso8601(),
         }
     )
-
-    identity_id = aws_get_identity_id(id_token)
+        
     response = projects_table.get_item(
         Key={
             "identity_id": identity_id,
@@ -77,6 +78,7 @@ def lambda_handler(event, context):
         "project_name": project_name,
         "type_method": type_method,
         "s3_prefix": s3_prefix,
+        "identity_id": identity_id
     }
     response = stepfunctions.start_execution(
         stateMachineArn=os.getenv("DecompressFileStateMachineArn"),

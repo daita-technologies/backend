@@ -23,6 +23,8 @@ States:
                 Value.$: $.file_url
               - Name: TASK_ID
                 Value.$: $.task_id
+              - Name: INDENTITY_ID
+                Value.$: $.identity_id
       TaskDefinition: ${DecompressTask}
     ResultPath: null # Forward previous step input as this step output
     Next: DivideDecompressChunksFunction
@@ -30,6 +32,9 @@ States:
   DivideDecompressChunksFunction:
     Type: Task
     Resource: arn:aws:states:::lambda:invoke
+    ResultSelector: 
+        identity_id.$: "$$.Execution.Input.identity_id"
+        result.$: "$.Payload"      
     Parameters:
       FunctionName: "${DivideDecompressChunksFunction}"
       Payload.$: $
@@ -37,15 +42,16 @@ States:
 
   UploadDecompressedMapping:
     Type: Map
-    InputPath: $.Payload
-    ItemsPath: $.file_chunks
+    InputPath: $
+    ItemsPath: $.result.file_chunks
     Parameters:
       file_chunk.$: $$.Map.Item.Value
-      project_id.$: $.project_id
-      id_token.$: $.id_token
-      project_name.$: $.project_name
-      type_method.$: $.type_method
-      s3_prefix.$: $.s3_prefix
+      project_id.$: $.result.project_id
+      id_token.$: $.result.id_token
+      project_name.$: $.result.project_name
+      type_method.$: $.result.type_method
+      s3_prefix.$: $.result.s3_prefix
+      identity_id.$: $.identity_id
     Iterator:
       StartAt: UploadDecompressedFunction
       States:
@@ -79,7 +85,7 @@ States:
   FinishDecompressTaskFunction:
     Type: Task
     Resource: arn:aws:states:::lambda:invoke
-    InputPath: $.Payload
+    InputPath: $
     Parameters:
       FunctionName: "${FinishDecompressTaskFunction}"
       Payload.$: $
