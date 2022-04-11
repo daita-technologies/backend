@@ -43,6 +43,13 @@ Resources:
       Type: String
       Value: "5"
 
+  #=============== ECR ========================================================
+  DecompressEcrRepository:
+    Type: AWS::ECR::Repository
+    Properties:
+      RepositoryName: !Sub "${Stage}-${Application}-dataflow-decompress"
+      
+
   #================ ROLES =====================================================
   # lambda role 
   GeneralLambdaExecutionRole:
@@ -138,6 +145,10 @@ Resources:
       Location: dataflow-service/dataflow_service_template.yaml
       Parameters:
         StagePara: !Ref Stage
+        ApplicationPara: !Ref Application
+        S3BucketName: !Ref S3BucketName
+        TableDataFlowTaskName: !GetAtt DatabaseService.Outputs.TableDataFlowTaskName
+        DecompressEcrRepositoryName: !Ref DecompressEcrRepository
 
   DatabaseService:
     Type: AWS::Serverless::Application
@@ -158,13 +169,14 @@ Resources:
         TableProjectsName: !GetAtt DatabaseService.Outputs.TableProjectsName
         TableMethodsName: !GetAtt DatabaseService.Outputs.TableMethodsName
         TableHealthCheckTasksName: !GetAtt DatabaseService.Outputs.TableHealthCheckTasksName
+        TableHealthCheckInfoName: !GetAtt DatabaseService.Outputs.TableHealthCheckInfoName
         LimitPreprocessTimesName: !Ref LimitPreprocessTimes
         LimitAugmentTimesName: !Ref LimitAugmentTimes
         CommonCodeLayerName: !Ref CommonCodeLayer
         HealthCheckEventBusArn: !GetAtt HealthCheckService.Outputs.HealthCheckEventBusArn
         HealthCheckEventBusName: !GetAtt HealthCheckService.Outputs.HealthCheckEventBusName
-        TableHealthCheckTasksName: !GetAtt DatabaseService.Outputs.TableHealthCheckTasksName
-        TableHealthCheckInfoName: !GetAtt DatabaseService.Outputs.TableHealthCheckInfoName
+        ParaTableDataFlowTaskName: !GetAtt DatabaseService.Outputs.TableDataFlowTaskName
+        ParaDecompressFileStateMachineArn: !GetAtt DataFlowService.Outputs.DecompressFileStateMachineArn   
 
   HealthCheckService:
     Type: AWS::Serverless::Application
@@ -180,8 +192,12 @@ Resources:
         TableDataPreprocessName: !GetAtt DatabaseService.Outputs.TableDataPreprocessName
         CommonCodeLayerName: !Ref CommonCodeLayer
         ApplicationPara: !Ref Application
-
-
-
-    
+Outputs:
+  ZZBC:
+    Value: Stage
+  DecompressEcrRepositoryName:
+    Value: !Ref DecompressEcrRepository
+  ABC:
+    Value: !Ref Stage
+  
   

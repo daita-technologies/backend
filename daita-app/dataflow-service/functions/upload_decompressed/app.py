@@ -49,7 +49,8 @@ def lambda_handler(event, context):
             "is_ori": True,
             "s3_key": os.path.join(BUCKET, object_name),
             "size": file_size,
-            "size_old": file_size
+            ### TODO set size_old > 0 if filename of images exist before
+            "size_old": 0
         })
 
     payload = {
