@@ -164,3 +164,4 @@ dataflow_service/dataflow-service-app/.aws-sam/
 **.aws-sam**
 public_opencv2_layer/
 
+daita-app/output.txt
