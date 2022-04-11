@@ -11,11 +11,11 @@ def deploy_lambda(general_info):
     lambda_service = AWSLambdaService()
     ls_lambda_val = []
 
-    # ls_lambda_val += deploy_lambda_project(general_info, lambda_service)
-    # ls_lambda_val += deploy_lambda_generate(general_info, lambda_service)
-    # ls_lambda_val += deploy_lambda_balancer(general_info, lambda_service)
+    ls_lambda_val += deploy_lambda_project(general_info, lambda_service)
+    ls_lambda_val += deploy_lambda_generate(general_info, lambda_service)
+    ls_lambda_val += deploy_lambda_balancer(general_info, lambda_service)
     ls_lambda_val += deploy_lambda_auth(general_info, lambda_service)
-    # ls_lambda_val += deploy_lambda_webhook(general_info, lambda_service)
-    # ls_lambda_val += deploy_lambda_send_mail(general_info, lambda_service)    
+    ls_lambda_val += deploy_lambda_webhook(general_info, lambda_service)
+    ls_lambda_val += deploy_lambda_send_mail(general_info, lambda_service)    
 
     return ls_lambda_val
