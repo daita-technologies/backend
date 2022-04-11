@@ -3,7 +3,7 @@ from datetime import datetime
 from http import HTTPStatus
 
 import boto3
-
+import json
 from config import *
 from error import *
 from verify_captcha import *
@@ -19,10 +19,12 @@ RESPONSE_HEADER = {
 
 
 @error_response
-def lamdba_handler(event, context):
+def lambda_handler(event, context):
+
     try:
-        username = event["username"]
-        captcha = event["captcha"]
+        body = json.loads(event['body'])
+        username = body["username"]
+        captcha = body["captcha"]
     except Exception as exc:
         raise Exception(MessageUnmarshalInputJson) from exc
 
@@ -34,12 +36,17 @@ def lamdba_handler(event, context):
     try:
         response = cog_provider_client.admin_get_user(
             UserPoolId=USERPOOLID,
-            username=username
+            Username=username
         )
-    except cog_provider_client.meta.exceptions.UserNotFoundException as exc:
+    except Exception as exc:
+        print(exc)
         raise Exception(MessageForgotPasswordUsernotExist) from exc
 
-    is_email_verified =  bool(response["UserAttributes"]["email_verified"])
+    is_email_verified = True
+    for it in response['UserAttributes']:
+        if it['Name'] == 'email_verified' and it['Value'] == 'false':
+            is_email_verified = False
+            break
     if is_email_verified:
         response = cog_provider_client.forgot_password(
             ClientId=CLIENTPOOLID,
