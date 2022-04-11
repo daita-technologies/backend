@@ -11,13 +11,6 @@ Parameters:
   Application:
     Type: String
     Default: daita
-  EFSpath:
-    Type: String
-    Default: /mnt/efs
-  AccessPointARN:
-    Type: String
-    Description: Access point ARN
-    Default: arn:aws:elasticfilesystem:us-east-2:366577564432:access-point/fsap-0bdf8f0ae44bd5561
   SecurityGroupIds:
     Type: String
     Default: 'sg-0315a5ecee0dc69fe,sg-0b3b2fcc4dc7686ad,sg-af50cbde,sg-07c27f59bc172f180,sg-0796222bd5149736f'
@@ -130,8 +123,6 @@ Resources:
     Properties:
       Location: ai-caller-service/ai_caller_service_template.yaml
       Parameters:
-        EFSpathPara: !Ref EFSpath
-        AccessPointARNPara: !Ref AccessPointARN 
         StagePara: !Ref Stage
         CommonCodeLayerName: !Ref CommonCodeLayer
         ApplicationPara: !Ref Application
@@ -192,6 +183,7 @@ Resources:
         TableDataPreprocessName: !GetAtt DatabaseService.Outputs.TableDataPreprocessName
         CommonCodeLayerName: !Ref CommonCodeLayer
         ApplicationPara: !Ref Application
+        
 Outputs:
   ZZBC:
     Value: Stage
@@ -199,5 +191,4 @@ Outputs:
     Value: !Ref DecompressEcrRepository
   ABC:
     Value: !Ref Stage
-  
-  
+

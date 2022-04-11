@@ -24,23 +24,17 @@ class TasksModel(object):
             'number_finished':0
             } )
     
-    def update_finish(self,task_id,identity_id,num_gens,IP,EC2_ID):
+    def update_final(self,task_id,identity_id,status):
         self.db_client.Table("tasks").update_item(
                     Key={'task_id': task_id,'identity_id':identity_id},
-                    UpdateExpression="SET #s=:s, #num_finished=:num_finished, #updated_time=:updated_time, #IP=:IP, #EC2_ID=:EC2_ID",
+                    UpdateExpression="SET #s=:s, #updated_time=:updated_time",
                     ExpressionAttributeValues={
-                        ':s': 'FINISH',
-                        ':num_finished':num_gens,
-                        ':IP':IP,
-                        ':EC2_ID':EC2_ID,
+                        ':s': status,
                         ':updated_time': convert_current_date_to_iso8601()
                     },
                     ExpressionAttributeNames={
                         '#s' : 'status',
-                        '#IP': 'IP',
-                        '#EC2_ID':'EC2_ID',
                         '#updated_time':'updated_time',
-                        '#num_finished':'number_finished'
                     }
                 )
     def update_process(self,task_id,identity_id,num_finish,status):
@@ -87,4 +81,4 @@ class TasksModel(object):
                         '#IP':'IP',
                         '#EC2_ID':'EC2_ID',
                         '#updated_time':'updated_time'
-                    }
+                    })

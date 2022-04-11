@@ -12,11 +12,12 @@ from config import *
 from response import *
 from utils import *
 from identity_check import *
-
+from consts import ConstTbl
 def batcher(iterable, size):
     iterator = iter(iterable)
     for first in iterator:
         yield list(chain([first], islice(iterator, size - 1)))
+constModel = ConstTbl()
 
 class S3(object):
     def __init__(self,project_prefix):
@@ -25,7 +26,7 @@ class S3(object):
         self.s3_key =  None
         self.project_prefix =  project_prefix
         self.bucket , self.folder =  self.split(self.project_prefix)
-        self.prefix_pwd ='/mnt/efs'
+        self.prefix_pwd = os.environ['EFSPATH']
     
     def split(self,uri):
         if not 's3' in uri:
@@ -62,11 +63,11 @@ class S3(object):
         
         for it in images:
             self.download(it,input_dir)
-        list_image = list(glob.glob(input_dir+'/**'))
+        list_image = list(map(lambda x : x.replace('/mnt',''), list(glob.glob(input_dir+'/**'))))
         
         def generator():
             yield from list_image
-        batch_size =  8
+        batch_size =  int(constModel.get_num_value(code= 'limit_request_batchsize_ai', threshold='THRESHOLD'))
         batch_input = []
         batch_output = []
         total_len = 0
@@ -77,13 +78,14 @@ class S3(object):
             batch_input.append(batch)
             nameoutput =  os.path.join(output_dir_temp,str(index))
             os.makedirs(nameoutput,exist_ok=True)
-            batch_output.append(nameoutput)
+            batch_output.append(nameoutput.replace('/mnt',''))
 
         info = {
             'images_download': len(list_image),
-            'batch_input':  batch_input ,
-            'batch_output':batch_output,
-            'batch_size': batch_size
+            'batches_input':  batch_input ,
+            'batches_output':batch_output,
+            'batch_size': batch_size,
+
         }
         return info
 
@@ -102,9 +104,4 @@ def lambda_handler(event, context):
     body = json.loads(event['body'])
     data = body['data']
     result = downloadS3ToEFS(data)
-
-    return generate_response(
-            message="OK",
-            status_code=HTTPStatus.OK,
-            data = result
-        )
+    return  result
