@@ -135,7 +135,7 @@ Resources:
   HealthCheckStateMachineLogGroup:
     Type: AWS::Logs::LogGroup
     Properties: 
-      LogGroupName: !Sub "${StagePara}-${ApplicationPara}-HealthCheckSMLogGroup"
+      LogGroupName: !Sub "/aws/vendedlogs/states/${StagePara}-${ApplicationPara}-HealthCheckSMLogGroup"
       RetentionInDays: 7
 
 

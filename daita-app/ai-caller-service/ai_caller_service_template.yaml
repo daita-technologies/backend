@@ -515,7 +515,7 @@ Resources:
   CallerServiceStateMachineLogGroup:
     Type: AWS::Logs::LogGroup
     Properties: 
-      LogGroupName: !Sub "${StagePara}-${ApplicationPara}-CallerServiceStateMachineLogGroup"
+      LogGroupName: !Sub "/aws/vendedlogs/states/${StagePara}-${ApplicationPara}-CallerServiceSMLogGr"
       RetentionInDays: 7
 
   #================ PROCESSOR STATE MACHINE ===================================
