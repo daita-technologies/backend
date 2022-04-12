@@ -1,6 +1,33 @@
 #!/bin/bash
 
-STAGE="dev"
+read -p "Please input the stage name: " STAGE
+
+if [ -z $STAGE ]
+then
+    echo Input the Stage name must not empty!
+    exit
+fi
+
+STAGE="${STAGE,,}"
+
+if [[ $STAGE == "dev" ]] || [[ $STAGE == "prod" ]]
+then
+    echo 1234
+    read -p "Are you sure that you want to deploy with dev/prod env [y/N]: " confirm
+    confirm=${confirm:-n}
+
+    if [[ $confirm == "n" ]] || [[ $confirm == "N" ]]
+    then
+        echo "Exit here"
+        exit
+    elif [[ $confirm == "y" ]] || [[ $confirm == "Y" ]]
+    then
+        echo ===============================
+        echo Start deploy with env: $STAGE
+    else
+        exit
+    fi
+fi
 
 ###=== AWS config ======
 AWS_REGION="us-east-2"
@@ -45,6 +72,3 @@ docker tag $IMAGE_REPO_NAME:$IMAGE_TAG $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazo
 
 ### Push image to ECR
 docker push $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/$IMAGE_REPO_NAME:$IMAGE_TAG
-
-
-
