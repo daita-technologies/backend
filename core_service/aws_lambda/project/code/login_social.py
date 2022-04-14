@@ -148,6 +148,7 @@ def lambda_handler(event, context):
     resqData = resq.json()
     sub, username = claimsToken(resqData['access_token'],'sub') , claimsToken(resqData['access_token'],'username')
     # print(getNamDisplay(user=username))
+    
     try:
         credentialsForIdentity = getCredentialsForIdentity(resqData['id_token'])
     except Exception as e:
