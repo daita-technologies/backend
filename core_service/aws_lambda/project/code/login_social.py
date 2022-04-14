@@ -25,7 +25,25 @@ client_id = '4cpbb5etp3q7grnnrhrc7irjoa'
 def getRedirectURI():
     return 'https://nzvw2zvu3d.execute-api.us-east-2.amazonaws.com/staging/auth/login_social'
     
+############################################################################################################
+def getNamDisplay(user):
+    displayName = ['','']
+    response = cog_provider_client.list_users(
+        UserPoolId=USERPOOLID
+    )
+    # info_user =  list(filter(lambda x : x['Username'] == user,response['Users']))
 
+    for _ , data in enumerate(response['Users']):
+        if data['Username'] == user:
+            print(data['Attributes'])
+            for  info in data['Attributes']:
+                if info['Name'] == 'given_name':
+                    displayName[0] = info['Value']
+                elif info['Name'] == 'family_name':
+                    displayName[1] = info['Value']
+    return ' '.join(displayName)
+    # return None
+#######################################################################################################
 def claimsToken(jwt_token,field):
     """
     Validate JWT claims & retrieve user identifier
@@ -46,6 +64,7 @@ class User(object):
         self.db_client = boto3.resource('dynamodb')
     
     def checkFirstLogin(self,ID,username):
+        print(ID,username)
         response = self.db_client.Table("User").get_item(
               Key={
                    'ID':ID,
@@ -53,8 +72,10 @@ class User(object):
               }
         )
         if 'Item' in response and response['Item']['status'] == "activate":
+            print(response)
             return True
-
+        print("False")
+        print(response)
         return False
     
     def updateActivateUser(self,info):
@@ -77,10 +98,11 @@ class User(object):
 
 def createKMSKey(identity):
     alias_name = identity.split(":")[1]
-    kms = boto3.client("kms", region_name="us-west-2")
+    kms = boto3.client("kms", region_name=REGION)
 
     key = kms.create_key()
     key_id = key["KeyMetadata"]["KeyId"]
+    print('KeyId: ',key)
     kms.create_alias(
         AliasName= "alias/"+alias_name,
         TargetKeyId = key_id
@@ -124,10 +146,9 @@ def lambda_handler(event, context):
     if resq.status_code != 200:
         raise Exception("Login Social Failed")
     resqData = resq.json()
-    print(resqData)
-    token = resqData['access_token']
     sub, username = claimsToken(resqData['access_token'],'sub') , claimsToken(resqData['access_token'],'username')
-
+    # print(getNamDisplay(user=username))
+    
     try:
         credentialsForIdentity = getCredentialsForIdentity(resqData['id_token'])
     except Exception as e:
@@ -137,6 +158,7 @@ def lambda_handler(event, context):
                 data={},
                 headers=RESPONSE_HEADER)
     if not model.checkFirstLogin(ID=sub,username=username):
+        print("FIRST TIME")
         kms = createKMSKey(credentialsForIdentity['identity_id'])
         model.updateActivateUser(info={
             'indentityID': credentialsForIdentity['identity_id'] ,
@@ -145,6 +167,7 @@ def lambda_handler(event, context):
             'kms': kms,
         })
     path = None
+
     if 'state' in param:
         path = base64.b64decode(param['state']).decode('utf-8')
     else: 
@@ -159,7 +182,7 @@ def lambda_handler(event, context):
         'token_expires_in':float(int((datetime.now().timestamp() + ACCESS_TOKEN_EXPIRATION)*1000)),
         'secret_key':                credentialsForIdentity['secret_key'],
         'identity_id': credentialsForIdentity['identity_id'],
-        'username':username
+        'username':getNamDisplay(user=username)
     }
     location = path + '?'
     for k, v in mapping.items():

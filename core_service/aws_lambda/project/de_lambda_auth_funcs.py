@@ -35,7 +35,7 @@ def deploy_lambda_auth(general_info, lambda_service):
                                         'staging: login')
     add_lambda_info_to_list(ls_lambda_val, lambda_uri, lambda_version, 'auth', 'user_login')
 
-    # sign up
+    # # sign up
     lambda_uri, lambda_version = lambda_service.deploy_lambda_function(f'user_signup',
                                           [ CODE_DIR.joinpath("register.py"),
                                             PROJECT_DIR.joinpath("packages"),

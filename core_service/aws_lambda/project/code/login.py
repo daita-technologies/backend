@@ -90,7 +90,7 @@ class User(object):
 #############################################################################################################
 def createKMSKey(identity):
     alias_name = identity.split(":")[1]
-    kms = boto3.client("kms", region_name="us-west-2")
+    kms = boto3.client("kms", region_name=REGION)
 
     key = kms.create_key()
     key_id = key["KeyMetadata"]["KeyId"]
