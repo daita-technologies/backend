@@ -9,6 +9,7 @@ from error_messages import *
 from identity_check import *
 from utils import create_unique_id, convert_current_date_to_iso8601
 
+
 from lambda_base_class import LambdaBaseClass
 
 
@@ -26,6 +27,7 @@ class CreateDecompressClass(LambdaBaseClass):
         super().__init__()       
         
 
+
     @LambdaBaseClass.parse_body
     def parser(self, body):
         self.logger.debug(f"body in main_parser: {body}")
@@ -42,8 +44,8 @@ class CreateDecompressClass(LambdaBaseClass):
         self.parser(event)
 
         ### check identity
-        identity_id = self.get_identity(self.id_token)  
-
+        identity_id = self.get_identity(self.id_token) 
+        
         task_id = create_unique_id()
         response = task_table.put_item(
             Item={
@@ -90,7 +92,9 @@ class CreateDecompressClass(LambdaBaseClass):
                 },
             )       
 
+
 @error_response
 def lambda_handler(event, context):
 
     return CreateDecompressClass().handle(event, context)
+
