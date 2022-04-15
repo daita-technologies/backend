@@ -9,6 +9,12 @@ RESPONSE_HEADER = {
 	"access-control-allow-headers": "Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token,X-Amz-User-Agent"
 }
 
+# RESPONSE_HEADER_2 = {
+#     'Access-Control-Allow-Headers': 'Content-Type',
+#     'Access-Control-Allow-Origin': '*',
+#     'Access-Control-Allow-Methods': 'OPTIONS,POST,GET' 
+# }
+
 def generate_response(
     message: str,
     status_code: int = HTTPStatus.OK,
@@ -16,9 +22,13 @@ def generate_response(
     data: dict = {},
     cookie: str = "",
     error: bool = False,
-    is_in_stepfunction: bool = False
+    is_in_stepfunction: bool = False,
+    is_use_header_2: bool = False
     ):
 
+    # if is_use_header_2:
+    #     headers = RESPONSE_HEADER_2
+    # else:
     headers.update(RESPONSE_HEADER)
 
     body = {

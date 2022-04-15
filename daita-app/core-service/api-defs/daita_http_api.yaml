@@ -149,6 +149,9 @@ x-amazon-apigateway-cors:
   - "x-amzm-header"
   - "x-api-key"
   - "x-apigateway-header"
+  - "*"
+  allowOrigins:
+  - "*"
   maxAge: 60
   allowCredentials: false
 x-amazon-apigateway-importexport-version: "1.0"
