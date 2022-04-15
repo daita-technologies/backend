@@ -252,9 +252,7 @@ Resources:
         Variables:
           DecompressFileStateMachineArn: !Ref ParaDecompressFileStateMachineArn
           DecompressTaskTable: !Ref ParaTableDataFlowTaskName
-          ProjectsTable: !Ref TableProjectsName
-          USER_POOL_ID: !Ref CognitoUserPoolId
-          IDENTITY_POOL_ID: !Ref CognitoIdentityPoolId 
+          ProjectsTable: !Ref TableProjectsName         
 
   GetDecompressTaskFunction:
     Type: AWS::Serverless::Function
@@ -263,9 +261,7 @@ Resources:
       Role: !GetAtt LambdaExecutionRole.Arn
       Environment:
         Variables:
-          DecompressTaskTable: !Ref ParaTableDataFlowTaskName
-          USER_POOL_ID: !Ref CognitoUserPoolId
-          IDENTITY_POOL_ID: !Ref CognitoIdentityPoolId
+          DecompressTaskTable: !Ref ParaTableDataFlowTaskName         
 
 Outputs:
   CallerServiceHttpApiUrl:

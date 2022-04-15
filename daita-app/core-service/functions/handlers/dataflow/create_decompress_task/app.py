@@ -4,6 +4,11 @@ import uuid
 from datetime import datetime
 
 import boto3
+from response import *
+from error_messages import *
+from identity_check import *
+from utils import create_unique_id, convert_current_date_to_iso8601
+
 
 
 DECOMPRESS_TASK_TABLE = os.getenv("DecompressTaskTable")
@@ -14,27 +19,7 @@ db = boto3.resource('dynamodb')
 task_table = db.Table(DECOMPRESS_TASK_TABLE)
 projects_table = db.Table(PROJECTS_TABLE)
 
-
-# Calling Cognito from VPC is hard so I move it here
-# ref: https://stackoverflow.com/a/62360784
-def aws_get_identity_id(id_token):
-    identity_client = boto3.client('cognito-identity')
-    PROVIDER = f'cognito-idp.{identity_client.meta.region_name}.amazonaws.com/{os.getenv("USER_POOL_ID")}'
-    try:
-        identity_response = identity_client.get_id(
-                              IdentityPoolId=os.getenv('IDENTITY_POOL_ID'),
-                              Logins = {PROVIDER: id_token})
-    except Exception as e:
-        print('Error: ', repr(e))
-        raise
-    identity_id = identity_response['IdentityId']
-    return identity_id
-
-def convert_current_date_to_iso8601():
-    now = datetime.now()
-    return now.isoformat()
-
-
+@error_response
 def lambda_handler(event, context):
     print(event)
     body = json.loads(event["body"])
@@ -48,7 +33,7 @@ def lambda_handler(event, context):
     
     identity_id = aws_get_identity_id(id_token)
 
-    task_id = str(uuid.uuid4())
+    task_id = create_unique_id()
     response = task_table.put_item(
         Item={
             "identity_id": identity_id,
@@ -85,12 +70,11 @@ def lambda_handler(event, context):
         input=json.dumps(stepfunction_input)
     )
 
-    print("succeed")
-    return {
-        "statusCode": 200,
-        "body": json.dumps({
-            "message": "succeed",
-            "task_id": task_id,
-            "file_url": file_url
-        }),
-    }
+    return generate_response(
+            message="OK",
+            status_code=HTTPStatus.OK,
+            data= {
+                "task_id": task_id,
+                "file_url": file_url,
+            }
+        )
