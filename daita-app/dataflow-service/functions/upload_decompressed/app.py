@@ -12,9 +12,8 @@ BUCKET = os.getenv("S3BucketName")
 
 efs_mount_point = Path(EFS_MOUNT_POINT)
 s3_client = boto3.client('s3')
-db_client = boto3.client('dynamodb')
 
-table_data_org = db_client.Table("data_original")
+table_data_org = boto3.resource('dynamodb').Table("data_original")
 
 
 def get_file_md5_hash(file):
@@ -55,7 +54,7 @@ def lambda_handler(event, context):
         if response.get('Item', None) is None:
             size_old = 0
         else:
-            size_old = response['Item']['size']
+            size_old = int(response['Item']['size'])
 
         # generate ls_object_info        
         ls_object_info.append({
