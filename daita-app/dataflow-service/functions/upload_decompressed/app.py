@@ -12,6 +12,9 @@ BUCKET = os.getenv("S3BucketName")
 
 efs_mount_point = Path(EFS_MOUNT_POINT)
 s3_client = boto3.client('s3')
+db_client = boto3.client('dynamodb')
+
+table_data_org = db_client.Table("data_original")
 
 
 def get_file_md5_hash(file):
@@ -39,9 +42,22 @@ def lambda_handler(event, context):
         object_name = str(Path(s3_prefix, filename).relative_to(BUCKET))
         response = s3_client.upload_file(file_path, BUCKET, object_name)
         print(file_path, object_name, response)
-
-        # generate ls_object_info
         file_size = os.stat(file_path).st_size
+
+        ### check data exist in DB
+        response = table_data_org.get_item(
+            Key={
+                'project_id': project_id,
+                'filename': filename,
+            },
+            ProjectionExpression= 'size'
+        )
+        if response.get('Item', None) is None:
+            size_old = 0
+        else:
+            size_old = response['Item']['size']
+
+        # generate ls_object_info        
         ls_object_info.append({
             "filename": filename,
             "gen_id": "",
@@ -49,8 +65,7 @@ def lambda_handler(event, context):
             "is_ori": True,
             "s3_key": os.path.join(BUCKET, object_name),
             "size": file_size,
-            ### TODO set size_old > 0 if filename of images exist before
-            "size_old": 0
+            "size_old": size_old
         })
 
     payload = {
