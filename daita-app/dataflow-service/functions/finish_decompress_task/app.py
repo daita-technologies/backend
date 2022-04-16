@@ -33,7 +33,7 @@ def lambda_handler(event, context):
              "identity_id": identity_id},
         ExpressionAttributeNames={'#ST': "status"},
         ExpressionAttributeValues={
-            ":st": "FINISHED",
+            ":st": "FINISH",
             ":ua": convert_current_date_to_iso8601()
         },
         UpdateExpression="SET #ST = :st, updated_at = :ua"
