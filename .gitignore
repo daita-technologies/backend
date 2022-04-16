@@ -157,3 +157,7 @@ cython_debug/
 
 core_service_sam/
 .vscode/settings.json
+
+/daita-app/.aws-sam/
+/daita-app/output.txt
+/public_opencv2_layer/

@@ -50,6 +50,8 @@ def lambda_handler(event, context):
                     "identity_id": identity_id,
                     "task_id": task_id,
                     "status": "RUNNING",
+                    "process_type": "DOWNLOAD",
+                    "project_id": project_id,
                     "create_time": create_time,
                 }
             )

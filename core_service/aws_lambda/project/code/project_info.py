@@ -7,6 +7,21 @@ import os
 from boto3.dynamodb.conditions import Key, Attr
 from utils import convert_response, aws_get_identity_id, dydb_get_project_id, dydb_get_project_full
 
+
+def get_running_task(table_name, db_resource, ls_tasks, identity_id, res_projectid, task_type=""): 
+    table = db_resource.Table(table_name)
+    item_tasks = table.query(                
+            ProjectionExpression='project_id, task_id, process_type',
+            KeyConditionExpression=Key('identity_id').eq(identity_id),
+            FilterExpression=Attr('status').ne('FINISH') & Attr('status').ne('ERROR') & Attr('project_id').eq(res_projectid)               
+        )
+    for item in item_tasks['Items']:
+        ls_tasks.append({
+                            "task_id": item.get('task_id', ''), 
+                            "process_type": item.get('process_type', task_type)
+                        })
+    return ls_tasks
+
 def lambda_handler(event, context):
     try:
         print(event['body'])
@@ -74,18 +89,13 @@ def lambda_handler(event, context):
                 'data_number': data_num
             }
             
-        # get running tasks of project
-        ls_task = []
-        table = db_resource.Table(os.environ['T_TASKS'])
-        items_task = table.query(                
-                ProjectionExpression='project_id, task_id',
-                KeyConditionExpression=Key('identity_id').eq(identity_id),
-                FilterExpression=Attr('status').ne('FINISH') & Attr('status').ne('ERROR')               
-            )
-        if items_task.get('Items'):
-            for item_task in items_task['Items']:
-                if item_task.get('project_id', '') == res_projectid:  
-                    ls_task.append(item_task.get('task_id', ''))
+        ### get running tasks of project
+        ls_tasks = []
+        ## get task of generation
+        ls_tasks = get_running_task(os.environ['T_TASKS'], db_resource, ls_tasks, identity_id, res_projectid)
+        ls_tasks = get_running_task("down_tasks", db_resource, ls_tasks, identity_id, res_projectid)
+        ls_tasks = get_running_task("dev-healthcheck-tasks", db_resource, ls_tasks, identity_id, res_projectid, "HEALTHCHECK")
+        ls_tasks = get_running_task("dev-dataflow-task", db_resource, ls_tasks, identity_id, res_projectid)
         
         return convert_response({'data': {
                     "identity_id": identity_id,
@@ -94,7 +104,7 @@ def lambda_handler(event, context):
                     "times_generated": res_times_generated,
                     "is_sample": is_sample,
                     "gen_status": gen_status,
-                    "ls_task": ls_task,
+                    "ls_task": ls_tasks,
                     "groups": groups,
                 }, 
             "error": False, 
