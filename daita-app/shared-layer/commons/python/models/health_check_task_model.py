@@ -14,6 +14,7 @@ class HealthCheckTaskItem():
     FIELD_STATUS        = "status"
     FIELD_CREATE_TIME   = "created_time"
     FIELD_UPDATE_TIME   = "updated_time"
+    FIELD_PROCESS_TYPE  = "process_type"
     
     REQUEST_TYPE_ALL            = "all"
 
@@ -25,6 +26,7 @@ class HealthCheckTaskItem():
         self.status         = ""
         self.create_time    = convert_current_date_to_iso8601()
         self.updated_time   = convert_current_date_to_iso8601()
+        self.process_type   = VALUE_PROCESS_TYPE_HEALTHCHECK
                 
     def to_dict(self, request = REQUEST_TYPE_ALL):
         print(self.__dict__)
@@ -36,7 +38,8 @@ class HealthCheckTaskItem():
                 self.FIELD_PROJECT_ID: self.project_id,
                 self.FIELD_DATA_TYPE: self.data_type,
                 self.FIELD_CREATE_TIME: self.create_time,
-                self.FIELD_UPDATE_TIME: self.updated_time
+                self.FIELD_UPDATE_TIME: self.updated_time,
+                self.FIELD_PROCESS_TYPE: self.process_type
             }
         return dict_info
         
