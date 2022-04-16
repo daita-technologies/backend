@@ -29,7 +29,7 @@ def lambda_handler(event, context):
             "task_id": task_id
         },
         ExpressionAttributeNames={'#ST': "status"},
-        ProjectionExpression="#ST, created_at, updated_at"
+        ProjectionExpression="#ST, created_at, updated_at, project_id"
     )
 
     task = response.get("Item", None)

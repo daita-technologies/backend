@@ -55,6 +55,7 @@ class CreateDecompressClass(LambdaBaseClass):
                 "status": "CREATED",
                 "created_at": convert_current_date_to_iso8601(),
                 "updated_at": convert_current_date_to_iso8601(),
+                "project_id": self.project_id
             }
         )
             
