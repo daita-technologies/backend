@@ -45,7 +45,7 @@ def getCredentialsForIdentity(token_id):
     responseIdentity = aws_get_identity_id(token_id)
     credentialsResponse = cog_identity_client.get_credentials_for_identity(
                     IdentityId=responseIdentity,
-                    Logins ={ 
+                    Logins ={
                        PROVIDER: token_id
     })
     return {
@@ -63,22 +63,25 @@ def Oauth2(code):
     result = requests.post(endpoint, data=data, headers=headers)
     return result
 ############################################################################################################
-def getNamDisplay(user):
-    displayName = ['','']
-    response = cog_provider_client.list_users(
-        UserPoolId=USERPOOLID
+def getDisplayName(username):
+    response = cog_provider_client.admin_get_user(
+        UserPoolId=USERPOOLID,
+        Username=username
     )
-    # info_user =  list(filter(lambda x : x['Username'] == user,response['Users']))
+    user_attributes = {}
+    for att in response["UserAttributes"]:
+        user_attributes[att["Name"]] = att["Value"]
 
-    for _ , data in enumerate(response['Users']):
-        if data['Username'] == user:
-            print(data['Attributes'])
-            for  info in data['Attributes']:
-                if info['Name'] == 'given_name':
-                    displayName[0] = info['Value']
-                elif info['Name'] == 'family_name':
-                    displayName[1] = info['Value']
-    return ' '.join(displayName)
+    name = ""
+    if "name" in user_attributes:
+        name = user_attributes["name"]
+    elif "given_name" in user_attributes or \
+        "family_name" in user_attributes:
+        name = f"{user_attributes.pop('given_name', '')} {user_attributes.pop('family_name', '')}"
+    else:
+        name = user_attributes["email"]
+
+    return name
     # return None
 #######################################################################################################
 def claimsToken(jwt_token,field):
@@ -99,7 +102,7 @@ def claimsToken(jwt_token,field):
 class User(object):
     def __init__(self):
         self.db_client = boto3.resource('dynamodb')
-    
+
     def checkFirstLogin(self,ID,username):
         print(ID,username)
         response = self.db_client.Table("User").get_item(
@@ -114,7 +117,7 @@ class User(object):
         print("False")
         print(response)
         return False
-    
+
     def updateActivateUser(self,info):
         self.db_client.Table("User").update_item(
                     Key={'ID': info['ID'],'username':info['username']},
@@ -174,8 +177,7 @@ def lambda_handler(event, context):
             'username': username,
             'kms': kms,
         })
-    if 'google' in username:
-        username = getNamDisplay(user=username)
+    name = getDisplayName(username)
     result ={
         'token' :resqData['access_token'],
         'resfresh_token':resqData['refresh_token'],
@@ -186,7 +188,8 @@ def lambda_handler(event, context):
         'token_expires_in':float(int((datetime.now().timestamp() + ACCESS_TOKEN_EXPIRATION)*1000)),
         'secret_key':                credentialsForIdentity['secret_key'],
         'identity_id': credentialsForIdentity['identity_id'],
-        'username': username
+        'username': username,
+        'name': name
     }
     return generate_response(
             message=MessageSuccessfullyCredential,
