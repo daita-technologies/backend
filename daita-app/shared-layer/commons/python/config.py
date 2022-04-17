@@ -24,6 +24,8 @@ VALUE_HEALTHCHECK_TASK_STATUS_FINISH        = "FINISH"
 VALUE_HEALTHCHECK_TASK_STATUS_ERROR         = "ERROR"
 
 VALUE_TASK_RUNNING                          = "RUNNING"
+VALUE_TASK_FINISH                           = "FINISH"
+VALUE_TASK_ERROR                            = "ERROR"
 
 ### config value type method
 VALUE_TYPE_METHOD_AUGMENT           = "AUGMENT"

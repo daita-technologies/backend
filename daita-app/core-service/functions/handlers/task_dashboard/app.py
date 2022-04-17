@@ -33,15 +33,16 @@ class TaskDashboardClass(LambdaBaseClass):
         self.size_ls_item = body[KEY_SIZE_LS_ITEM_QUERY]
 
         self.filter_prj_id = self.filter.get(KEY_NAME_PROJECT_ID, "")
-        self.filter_process_type = self.filter[KEY_NAME_PROCESS_TYPE]
-        self.filter_status = self.filter["status_query"]
+        self.filter_ls_process_type = self.filter[KEY_NAME_PROCESS_TYPE]
+        self.filter_ls_status = self.filter["status_query"]
 
         self.pag_page_token = self.pagination["page_token"]
 
     def _check_input_value(self):
         self.size_ls_item = min(100, self.size_ls_item)
-        if self.filter_process_type not in VALUE_LS_PROCESS_TYPE:
-            raise Exception(MESS_PROCESS_TYPE_IS_INVALID.format(self.filter_process_type))
+        for process_type in self.filter_ls_process_type:
+            if process_type not in VALUE_LS_PROCESS_TYPE:
+                raise Exception(MESS_PROCESS_TYPE_IS_INVALID.format(self.filter_process_type))
         return    
 
     def _map_process_type_w_table(self, process_type):
@@ -58,20 +59,17 @@ class TaskDashboardClass(LambdaBaseClass):
 
     def _process_get_task(self, identity_id):
         task_info_dict = {}
-        if self.filter_process_type == "ALL":
-            for process_type in VALUE_LS_PROCESS_TYPE:
-                ls_task, ls_page_token = self.table_decompressTask.get_tasks_w(identity_id, self.filter_prj_id, self.filter_status, process_type, self.pag_page_token, self.size_ls_item)
-                task_info_dict[process_type] = {
-                    "ls_task" : ls_task,
-                    "ls_page_token": ls_page_token
-                }
-        else:
-            ls_task, ls_page_token = self.table_decompressTask.get_tasks_w(identity_id, self.filter_prj_id, self.filter_status, self.filter_process_type, self.pag_page_token, self.size_ls_item)
+        if len(self.filter_ls_process_type) == 0:
+            self.filter_ls_process_type = VALUE_LS_PROCESS_TYPE
+
+        for process_type in self.filter_ls_process_type:
+            table = self._map_process_type_w_table(process_type)
+            ls_task, ls_page_token = table.get_tasks_w(identity_id, self.filter_prj_id, self.filter_ls_status, process_type, self.pag_page_token, self.size_ls_item)
             task_info_dict[process_type] = {
                 "ls_task" : ls_task,
                 "ls_page_token": ls_page_token
             }
-        
+                
         return task_info_dict
 
     def handle(self, event, context):

@@ -96,16 +96,7 @@ class TaskModel():
 
 
     def __init__(self, table_name) -> None:
-        self.table = boto3.resource('dynamodb').Table(table_name)        
-   
-    def query_running_tasks(self, identity_id, project_id):
-        response = self.table.query (
-                KeyConditionExpression=Key(GenerateTaskItem.FIELD_IDENTITY_ID).eq(identity_id),
-                FilterExpression=Attr(GenerateTaskItem.FIELD_PROJECT_ID).eq(project_id) & 
-                                Attr(GenerateTaskItem.FIELD_STATUS).ne(VALUE_GENERATE_TASK_STATUS_FINISH) & 
-                                Attr(GenerateTaskItem.FIELD_STATUS).ne(VALUE_GENERATE_TASK_STATUS_ERROR)
-            )
-        return response.get("Items", []) 
+        self.table = boto3.resource('dynamodb').Table(table_name) 
 
     def _query_task(self, identity_id, filter_exp, pag_page_token, limit_size):
         if pag_page_token is None:
@@ -138,17 +129,32 @@ class TaskModel():
                     )
             return (response.get('Items', []), [])
 
-    def get_tasks_w(self, identity_id, filter_prj_id, filter_status, filter_process_type, pag_page_token, limit_size):
+    def get_tasks_w(self, identity_id, filter_prj_id, filter_ls_status, filter_process_type, pag_page_token, limit_size):
         filterExpression = Attr(self.FIELD_PROCESS_TYPE).eq(filter_process_type)
         if len(filter_prj_id) == 0:
             filterExpression = filterExpression & Attr(self.FIELD_PROJECT_ID).exists()
         else:
             filterExpression = filterExpression & Attr(self.FIELD_PROJECT_ID).eq(filter_prj_id)
         
-        if filter_status == "ALL":
+        if len(filter_ls_status) == 0:
             filterExpression = filterExpression & Attr(self.FIELD_STATUS).exists()
         else:
-            filterExpression = filterExpression & Attr(self.FIELD_STATUS).eq(filter_status)
+            filter_status = None
+            for filter_status in filter_ls_status:
+                if filter_status in [VALUE_TASK_ERROR, VALUE_TASK_FINISH]:
+                    filter = Attr(self.FIELD_STATUS).eq(filter_status)
+                    if filter_status is None:
+                        filter_status = filter
+                    else:
+                        filter_status = filter_status | filter
+                else:
+                    filter = (Attr(self.FIELD_STATUS).ne(VALUE_TASK_ERROR) & Attr(self.FIELD_STATUS).ne(VALUE_TASK_FINISH))
+                    if filter_status is None:
+                        filter_status = filter
+                    else:
+                        filter_status = filter_status | filter
+                        
+            filterExpression = filterExpression & (filter_status)
 
         ls_task, ls_page_token = self._query_task(identity_id, filterExpression, pag_page_token, limit_size)
 
