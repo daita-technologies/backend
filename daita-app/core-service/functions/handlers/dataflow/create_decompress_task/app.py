@@ -52,11 +52,11 @@ class CreateDecompressClass(LambdaBaseClass):
                 "identity_id": identity_id,
                 "task_id": task_id,
                 "file_url": self.file_url,
-                "status": "CREATED",
-                "created_at": convert_current_date_to_iso8601(),
+                KEY_NAME_TASK_STATUS: VALUE_TASK_RUNNING,
+                KEY_NAME_CREATED_TIME: convert_current_date_to_iso8601(),
                 "updated_at": convert_current_date_to_iso8601(),
                 "project_id": self.project_id,
-                "process_type": "UPLOAD"
+                KEY_NAME_PROCESS_TYPE: VALUE_PROCESS_TYPE_UPLOAD
             }
         )
             
