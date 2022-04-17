@@ -10,19 +10,22 @@ class TaskModel():
     FIELD_STATUS = "status"    
     FIELD_PROCESS_TYPE = "process_type"
     FIELD_CREATE_TIME = "created_time"  
+    FIELD_TASK_ID = "task_id"
 
 
     def __init__(self, table_name) -> None:
         self.table = boto3.resource('dynamodb').Table(table_name) 
 
-    def _query_task(self, identity_id, filter_exp, pag_page_token, limit_size):
+    def _query_task(self, identity_id, filter_exp, pag_page_token, limit_size, projection_str="", att_name = {}):
         if pag_page_token is None:
             ls_page_token = []
             ### get all task with paginator
             response = self.table.query (
                         KeyConditionExpression=Key(self.FIELD_IDENTITY_ID).eq(identity_id),
                         FilterExpression=filter_exp,
-                        Limit = limit_size                        
+                        Limit = limit_size,
+                        ProjectionExpression= projection_str,
+                        ExpressionAttributeNames = att_name                        
                     )
             do_continue = response.get('LastEvaluatedKey')
             return_ls_items = response.get('Items', [])
@@ -33,7 +36,9 @@ class TaskModel():
                         KeyConditionExpression=Key(self.FIELD_IDENTITY_ID).eq(identity_id),
                         FilterExpression=filter_exp,
                         Limit = limit_size,
-                        ExclusiveStartKey = do_continue
+                        ExclusiveStartKey = do_continue,
+                        ProjectionExpression = projection_str,
+                        ExpressionAttributeNames = att_name
                     )
                 do_continue = response.get('LastEvaluatedKey')
             return (return_ls_items, ls_page_token)
@@ -42,7 +47,9 @@ class TaskModel():
                         KeyConditionExpression=Key(self.FIELD_IDENTITY_ID).eq(identity_id),
                         FilterExpression=filter_exp,
                         Limit = limit_size,
-                        ExclusiveStartKey = pag_page_token
+                        ExclusiveStartKey = pag_page_token,
+                        ProjectionExpression = projection_str,
+                        ExpressionAttributeNames = att_name
                     )
             return (response.get('Items', []), [])
 
@@ -73,7 +80,11 @@ class TaskModel():
 
             filterExpression = filterExpression & (filter_status)
 
-        ls_task, ls_page_token = self._query_task(identity_id, filterExpression, pag_page_token, limit_size)
+        projecttion_str = f'{self.FIELD_IDENTITY_ID}, {self.FIELD_PROCESS_TYPE}, {self.FIELD_TASK_ID}, {self.FIELD_PROJECT_ID}, #sta, {self.FIELD_CREATE_TIME}'
+        attr_name = {
+            "#sta": self.FIELD_STATUS
+        }
+        ls_task, ls_page_token = self._query_task(identity_id, filterExpression, pag_page_token, limit_size, projecttion_str, attr_name)
 
         return ls_task, ls_page_token
 

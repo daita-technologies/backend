@@ -40,10 +40,8 @@ def UploadImage(output,project_prefix):
         bucket ,folder= split(project_prefix)
         temp_namefile = os.path.basename(it_img)
         s3_namefile = os.path.join(folder,temp_namefile)
-        print(s3_namefile)
         if not '.json' in it_img:
             info.append({'filename': s3_namefile,'size': os.path.getsize(it_img)})
-            print(it_img)
             with open(it_img,'rb') as f :
                 s3.put_object(Bucket=bucket,Key=s3_namefile,Body=f)
     return info
@@ -58,15 +56,15 @@ def lambda_handler(event, context):
     print(event)
     infoUploadS3 = []
     if event['response'] == 'OK':
-        outputBatchDir = '/mnt' +event['batch']['request_json']['output_folder']
+        outputBatchDir = '/'+  '/'.join(event['batch']['request_json']['output_folder'].split('/')[2:])
         outdir = glob.glob(outputBatchDir+'/*')
-        print(outdir)
         UpdateStaskCurrentImageToTaskDB(task_id= event['task_id'], identity_id=event['identity_id'] , output=outputBatchDir)
         infoUploadS3 =  UploadImage(output=outdir,project_prefix=event['project_prefix'])   
     return {
         'response': event['response'],
         'identity_id': event['identity_id'],
         'task_id': event['task_id'],
+        'id_token': event['id_token'],
         'gen_id': str(event['batch']['request_json']['codes']),
         'project_prefix': event['project_prefix'],
         'output':event['batch']['request_json']['output_folder'],

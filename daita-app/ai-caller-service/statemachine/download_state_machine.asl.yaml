@@ -4,12 +4,12 @@ States:
     Type: Task
     Resource: 'arn:aws:states:::lambda:invoke'
     InputPath: $
-    OutputPath: $
+    OutputPath: $.Payload
     Parameters:
       FunctionName: '${HandleDownloadTask}'
       Payload:
         body.$: $.body
-    Next: DownloadComplete
+    Next: BranchesDownloadImage
     Comment: 'Check the level of parallelism, split requests into chunks and invoke'
     Retry:
       - ErrorEquals:
@@ -17,6 +17,51 @@ States:
         IntervalSeconds: 1
         MaxAttempts: 2
         BackoffRate: 1
+  BranchesDownloadImage:
+    Type: Parallel
+    Branches:
+      - StartAt: DownloadImages
+        States:
+          DownloadImages:
+            Type: Map
+            MaxConcurrency: 10
+            End: true
+            InputPath: $
+            ItemsPath: $.download_images
+            Parameters:
+              task.$: $$.Map.Item.Value
+            Iterator:
+              StartAt: DownloadImageFromEFS
+              States:
+                DownloadImageFromEFS:
+                  Type: Task
+                  Resource: 'arn:aws:states:::lambda:invoke'
+                  OutputPath: $.Payload
+                  Parameters:
+                    FunctionName: '${HandleDownloadImages}'
+                    Payload.$: $
+                  End: true
+      - StartAt: MergeDownloadImages
+        States:
+          MergeDownloadImages:
+            Type: Task
+            Resource: 'arn:aws:states:::lambda:invoke'
+            End: true
+            InputPath: $
+            OutputPath: $.Payload
+            Parameters:
+              FunctionName: '${HandleMergeResultDownloadImages}'
+              Payload.$: $
+    ResultPath: $
+    Next: GetResult
+  GetResult:
+    Type: Task
+    Resource: 'arn:aws:states:::lambda:invoke'
+    Next: DownloadComplete
+    OutputPath: $
+    Parameters:
+      FunctionName: '${HandleGetResultDownloadTask}'
+      Payload.$: $
   DownloadComplete:
     Type: Pass
     Comment: Used for result aggregation
