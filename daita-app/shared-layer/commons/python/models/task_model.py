@@ -11,6 +11,10 @@ class TaskModel():
     FIELD_PROCESS_TYPE = "process_type"
     FIELD_CREATE_TIME = "created_time"  
     FIELD_TASK_ID = "task_id"
+    FIELD_UPDATED_TIME = "updated_time"
+
+    ### field for generation task
+    FIELD_NUM_GENS_IMAGE = "number_gen_images"
 
 
     def __init__(self, table_name) -> None:
@@ -88,6 +92,81 @@ class TaskModel():
 
         return ls_task, ls_page_token
 
+    def update_status(self, task_id, identity_id, status):
+        response = self.table.update_item(
+                    Key={
+                            self.FIELD_TASK_ID: task_id,
+                            self.FIELD_IDENTITY_ID: identity_id
+                        },
+                    UpdateExpression="SET #s=:s, #updated_time=:updated_time",
+                    ExpressionAttributeValues={
+                        ':s': status,
+                        ':updated_time': convert_current_date_to_iso8601()
+                    },
+                    ExpressionAttributeNames={
+                        '#s' : self.FIELD_STATUS,
+                        '#updated_time': self.FIELD_UPDATED_TIME,
+                    }
+                )
+        
+        return response
+
+    def update_attribute(self, task_id, identity_id, ls_update):
+        exprAttValue = {
+            ":up_ti": convert_current_date_to_iso8601()
+        }
+        exprAttName = {
+            "#up_ti": self.FIELD_UPDATED_TIME
+        }
+        updateExpr = "SET #up_ti = :up_ti, "
+        for field_name, value in ls_update:
+            exprAttValue[f":{field_name}"] = value
+            exprAttName[f"#{field_name}"] = field_name
+            updateExpr += f" #{field_name}=:{field_name}, "  
+              
+        updateExpr = updateExpr[:-2]
+
+        print("update expression: \n", updateExpr)
+        print("exprAttValue: \n", exprAttValue)
+        print("exprAttName: \n", exprAttName)
+
+        response = self.table.update_item(
+                    Key={
+                            self.FIELD_TASK_ID: task_id,
+                            self.FIELD_IDENTITY_ID: identity_id
+                        },
+                    UpdateExpression = updateExpr,
+                    ExpressionAttributeValues = exprAttValue,
+                    ExpressionAttributeNames = exprAttName
+                )
+        
+        return response
+
+
+    def update_generate_progress(self, task_id, identity_id, num_finish, status):
+        response = self.table.update_item(
+                    Key = {
+                            self.FIELD_TASK_ID: task_id,
+                            self.FIELD_IDENTITY_ID: identity_id
+                        },
+                    UpdateExpression = "SET #s=:s, #num_finished=:num_finished, #updated_time=:updated_time",
+                    ExpressionAttributeValues = {
+                        ':s': status,
+                        ':num_finished': num_finish,
+                        ':updated_time': convert_current_date_to_iso8601()
+                    },
+                    ExpressionAttributeNames = {
+                                                '#s' : self.FIELD_STATUS,
+                                                '#updated_time': self.FIELD_UPDATED_TIME,
+                                                '#num_finished': 'number_finished'
+                                            }
+                )
+
+        return response
+
+
+
+    
 
 
             

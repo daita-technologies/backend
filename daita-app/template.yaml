@@ -129,6 +129,7 @@ Resources:
         SubnetIDsPara: !Ref SubnetIDs
         SecurityGroupIdsPara: !Ref SecurityGroupIds
         S3BucketNamePara: !Ref S3BucketName
+        TableGenerateTaskName: !GetAtt DatabaseService.Outputs.TableGenerateTaskName
 
   DataFlowService:
     Type: AWS::Serverless::Application

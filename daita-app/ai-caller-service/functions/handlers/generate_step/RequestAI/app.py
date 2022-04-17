@@ -20,9 +20,11 @@ def lambda_handler(event, context):
     result = event
     print(event)
     batch = result['batch']
-
+    print("request AI body: \n", batch['request_json'])
     try :
         output = requests.post(batch['host'],json=batch['request_json'])
+        print("Output from AI request: \n", output.text)
+        print("Ouput AI status_code: \n", output.status_code)
         if output.status_code != http.HTTPStatus.OK:
             raise Exception("Not OK")
     except Exception as e:

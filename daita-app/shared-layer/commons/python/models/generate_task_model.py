@@ -16,6 +16,7 @@ class GenerateTaskItem():
     FIELD_PROJECT_ID = "project_id"
     FIELD_NUM_GEN_IMAGES = "number_gen_images"
     FIELD_CREATE_TIME = "created_time"
+    FIELD_PROCESS_TYPE = "process_type"
 
     REQUEST_TYPE_ALL            = "all"
     REQUEST_TYPE_TASK_PROGRESS  = "task_progress"
@@ -30,6 +31,7 @@ class GenerateTaskItem():
         self.project_id         = ""
         self.create_time        = convert_current_date_to_iso8601()
         self.updated_time       = convert_current_date_to_iso8601()
+        self.process_type       = ""
 
 
     def to_dict(self, request = REQUEST_TYPE_ALL):
@@ -66,7 +68,7 @@ class GenerateTaskItem():
             self.task_id            = item_info.get(self.FIELD_TASK_ID)
             self.updated_time       = item_info.get(self.FIELD_UPDATE_TIME)
             self.status             = item_info.get(self.FIELD_STATUS)
-            self.process_type       = item_info.get(self.FIELD_TYPE_METHOD)
+            self.process_type       = item_info.get(self.FIELD_PROCESS_TYPE)
             self.number_finished    = int(item_info.get(self.FIELD_NUMBER_FINISHED))
             self.number_gen_images  = int(item_info.get(self.FIELD_NUM_GEN_IMAGES))
             self.project_id         = item_info.get(self.FIELD_PROJECT_ID)
@@ -78,6 +80,7 @@ class GenerateTaskItem():
         object = cls()
         object.task_id = create_unique_id()
         object.type_method = type_method
+        object.process_type = type_method
         object.status = VALUE_GENERATE_TASK_STATUS_PENDING
         object.identity_id = identity_id
         object.project_id = project_id

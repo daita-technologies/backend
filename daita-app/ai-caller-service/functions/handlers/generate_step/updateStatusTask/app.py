@@ -9,13 +9,16 @@ from response import *
 from utils import *
 from identity_check import *
 from boto3.dynamodb.conditions import Key, Attr
-from task import TasksModel
-taskModel = TasksModel()
+from models.task_model import TaskModel
+
+task_model = TaskModel(os.environ["TABLE_GENERATE_TASK"])
 
 @error_response
 def lambda_handler(event, context):
-    taskModel.update_final(task_id= event['task_id'],identity_id=event['identity_id'],status=event['status'])
+
+    task_model.update_status(event['task_id'], event['identity_id'], event['status'])
+
     return generate_response(
-         message="OK",
+        message="OK",
         status_code=HTTPStatus.OK
     )

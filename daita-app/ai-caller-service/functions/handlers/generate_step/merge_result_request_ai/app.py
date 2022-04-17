@@ -11,9 +11,7 @@ from response import *
 from utils import *
 from identity_check import *
 from boto3.dynamodb.conditions import Key, Attr
-from task import TasksModel
- 
-taskModel = TasksModel()
+
 @error_response
 def lambda_handler(event, context):
     result = {'state': '',

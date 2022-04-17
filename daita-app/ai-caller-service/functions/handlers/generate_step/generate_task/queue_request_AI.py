@@ -1,3 +1,4 @@
+import codeop
 import boto3
 from botocore.exceptions import ClientError
 from config import REGION
@@ -87,7 +88,7 @@ def assignTaskToEc2(ec2Instances,data,type_method,num_augments_per_image,code):
         for index, numbertask in enumerate(listNumberTaskQueueCurrent):
             if numbertask != maxEc2Task:
                 for _ in range(maxEc2Task - task +1):
-                    input_request_ai = parserInputJson(type_method,num_augments_per_image,num_augments_per_image,flag)
+                    input_request_ai = parserInputJson(type_method,code,num_augments_per_image,flag)
                     task = {
                             'request_json': input_request_ai,
                             'host': 'http://{}:8000/ai'.format(ec2IDs[index]['ip']),

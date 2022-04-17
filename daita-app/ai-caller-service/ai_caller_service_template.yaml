@@ -19,6 +19,7 @@ Globals:
         STAGE: Production
         TABLE_NAME: global-table
         LOGGING: !Ref minimumLogLevel
+        TABLE_GENERATE_TASK: !Ref TableGenerateTaskName
     Layers:
         - !Ref CommonCodeLayerName     
 
@@ -47,6 +48,8 @@ Parameters:
   SecurityGroupIdsPara:
     Type: CommaDelimitedList
   S3BucketNamePara:
+    Type: String
+  TableGenerateTaskName: 
     Type: String
 
 Resources:
@@ -254,6 +257,7 @@ Resources:
             - s3:PutObject
             - s3:PutObjectAcl
           Resource: "*"
+
   HandleMergeResultRequestAI:
     Type: AWS::Serverless::Function
     Properties:
@@ -299,6 +303,10 @@ Resources:
           Action:
             - "events:*"
           Resource: "*"
+      Environment:
+        Variables:
+          TABLE_GENERATE_TASK: !Ref TableGenerateTaskName
+
   WorkerRequestAI:
     Type: AWS::Serverless::Function
     Properties:
@@ -337,7 +345,7 @@ Resources:
           Action:
             - "events:*"
           Resource: "*"
-
+      
   UpdateStatusTask:
     Type: AWS::Serverless::Function
     Properties:
@@ -358,7 +366,7 @@ Resources:
           - "dynamodb:DescribeTable"
           - "dynamodb:ConditionCheckItem"
           - "lambda:InvokeFunction"
-          Resource: "*"
+          Resource: "*"      
 
   PreprocessGenerateTask:
     Type: AWS::Serverless::Function 
@@ -380,6 +388,7 @@ Resources:
           - "dynamodb:DescribeTable"
           - "dynamodb:ConditionCheckItem"
           Resource: "*"
+     
   HandleMergeResultDownloadImages:
     Type: AWS::Serverless::Function
     Properties:
@@ -601,7 +610,7 @@ Resources:
           -  "ec2:Stop*"
           - iam:PassRole
           Resource: '*'
-
+ 
   #================ EVENT BUS =================================================
 
   CallerServiceEventBus:

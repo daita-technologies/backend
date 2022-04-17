@@ -11,9 +11,12 @@ from config import *
 from response import *
 from utils import *
 from identity_check import *
-from task import TasksModel
+from models.task_model import TaskModel
+from pathlib import Path
+
+task_model = TaskModel(os.environ["TABLE_GENERATE_TASK"])
  
-taskModel = TasksModel()
+
 s3 = boto3.client('s3')
 def is_img(img):
     return not os.path.splitext(img)[1] in ['.json'] 
@@ -47,8 +50,15 @@ def UploadImage(output,project_prefix):
     return info
         
 def UpdateStaskCurrentImageToTaskDB(task_id,identity_id,output):
-    current_file = get_number_files(output)
-    taskModel.update_process(task_id = task_id,identity_id=identity_id,num_finish= current_file, status="RUNNING")
+    outputPath = Path(output)
+    parrentFolder = outputPath.parent
+    subfolders= [f.path for f in os.scandir(parrentFolder) if f.is_dir()]
+    print("list subfolder: \n", subfolders)
+    total_file = 0
+    for folder in subfolders:
+        total_file += get_number_files(folder)
+        
+    task_model.update_generate_progress(task_id = task_id, identity_id = identity_id, num_finish = total_file, status = "RUNNING")
 
 
 @error_response
@@ -58,6 +68,9 @@ def lambda_handler(event, context):
     if event['response'] == 'OK':
         outputBatchDir = '/'+  '/'.join(event['batch']['request_json']['output_folder'].split('/')[2:])
         outdir = glob.glob(outputBatchDir+'/*')
+        
+        print("OutputBatchDir: \n", outputBatchDir)
+        print("outdir: \n", outdir)
         UpdateStaskCurrentImageToTaskDB(task_id= event['task_id'], identity_id=event['identity_id'] , output=outputBatchDir)
         infoUploadS3 =  UploadImage(output=outdir,project_prefix=event['project_prefix'])   
     return {
