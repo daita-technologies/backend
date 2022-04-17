@@ -1,4 +1,5 @@
 import boto3
+import time
 from config import REGION
 ec2_resource = boto3.resource('ec2', region_name=REGION)
 clientEc2 = boto3.client('ec2',region_name=REGION)
@@ -18,17 +19,35 @@ class EC2Model(object):
         for item in self.scanTable(TableName=self.TBL):
             if item['assi_id']['S'] == 'free':
                 instance = ec2_resource.Instance(item['ec2_id']['S'])
-                ip = instance.public_ip_address
+                ip = startEc2(instance)
                 EC2Free.append({'ec2_id':item['ec2_id']['S'],'queque_id':item['queque_id']['S'],'ip':ip})
-        print(EC2Free)
+        # print(EC2Free)
         return EC2Free
 
+def start_instance(instance):
+    print('Instance id {ec2_id} stopped => start now')
+    _ = instance.start()
+    instance.load()
+    while instance.state['Name'] != 'running':
+        if instance.state['Name'] == 'running':
+            print('Running')
+            pass
+        else:
+            time.sleep(5)
+            instance.load()
+            print('status: ', instance.state['Name'])
+            pass
+    return
 
-def startEc2(instance_id):
-    instance = ec2_resource.Instance(instance_id)
+def startEc2(instance):
     if instance.state['Name'] == 'stopped':
-        try:
-            clientEc2.start_instances(InstanceIds=[instance_id])
-        except Exception as e:
-            print("ec2 :",e)
-            raise e
+        start_instance(instance=instance)
+    elif instance.state['Name'] == 'stopping':
+        instance.load()
+        while instance.state['Name'] != 'stopped':
+                time.sleep(2)
+                instance.load()
+                pass
+        print('Wait ec2 stopped to start')
+        start_instance(instance)
+    return instance.public_ip_address
