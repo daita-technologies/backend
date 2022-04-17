@@ -1,0 +1,784 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: >
+  daita-caller-service-app
+
+  Sample SAM Template for daita-caller-service-app
+
+
+# More info about Globals: https://github.com/awslabs/serverless-application-model/blob/master/docs/globals.rst
+Globals:
+  Function:
+    Timeout: 800
+    Handler: app.lambda_handler
+    Runtime: python3.8
+    Architectures:
+      - x86_64
+    Environment:
+      Variables:
+        STAGE: Production
+        TABLE_NAME: global-table
+        LOGGING: !Ref minimumLogLevel
+    Layers:
+        - !Ref CommonCodeLayerName     
+
+## The general rule seems to be to use !Sub for in line substitutions and !ref for stand alone text
+Parameters:
+  minimumLogLevel:
+    Type: String
+    Default: DEBUG
+  StagePara:
+    Type: String
+  CommonCodeLayerName:
+    Type: String
+  ApplicationPara:
+    Type: String
+  EFSFileSystemId:
+    Type: String
+    Default: fs-0199771f2dfe97ace
+  EFSStorageAI:
+    Type: String
+    Default: /mnt/efs
+  SubnetIDsPara:
+    Type: CommaDelimitedList
+  SecurityGroupIdsPara:
+    Type: CommaDelimitedList
+  S3BucketNamePara:
+    Type: String
+
+Resources:
+  ###################################EFS template####################################
+  EFSAccessPoint:
+    Type: AWS::EFS::AccessPoint
+    Properties: 
+      FileSystemId: !Ref EFSFileSystemId
+      PosixUser:
+        Gid: "1000"
+        Uid: "1000"
+      RootDirectory:
+        CreationInfo:
+          OwnerGid: "1000"
+          OwnerUid: "1000"
+          Permissions: "777"
+        Path: !Ref EFSStorageAI
+  #============================CREATE QUEUE=================================
+  SqsEc2Work1:
+    Type: AWS::SQS::Queue
+    Properties:
+      VisibilityTimeout: 60
+      QueueName: !Sub "${StagePara}-${ApplicationPara}-SqsEc2Work1"
+  SqsEc2Work2:
+    Type: AWS::SQS::Queue
+    Properties:
+      VisibilityTimeout: 60
+      QueueName: !Sub "${StagePara}-${ApplicationPara}-SqsEc2Work2"
+  ###################################CONSUMER LAMBDA#################################
+  LambdaWorker1:
+    Type:  AWS::Serverless::Function
+    Properties:
+      Timeout: 60
+      CodeUri: functions/handlers/consumer_request_ai/workerEc21
+      # ReservedConcurrentExecutions: 5
+      Events:
+        SqsEvent:
+          Type: SQS
+          Properties:
+            Queue: !GetAtt SqsEc2Work1.Arn
+            BatchSize: 10
+      Policies:
+      - Statement:
+        - Sid: CloudWatchLogsPolicy
+          Effect: Allow
+          Action:
+            - "logs:CreateLogDelivery"
+            - "logs:GetLogDelivery"
+            - "logs:UpdateLogDelivery"
+            - "logs:DeleteLogDelivery"
+            - "logs:ListLogDeliveries"
+            - "logs:PutResourcePolicy"
+            - "logs:DescribeResourcePolicies"
+            - "logs:DescribeLogGroup"
+            - "logs:DescribeLogGroups"
+          Resource: "*"
+        - Sid: CloudWatchEventsFullAccess
+          Effect: Allow
+          Action:
+            - "events:*"
+          Resource: "*"
+  LambdaWorker2:
+    Type:  AWS::Serverless::Function
+    Properties:
+      Timeout: 60
+      CodeUri: functions/handlers/consumer_request_ai/workerEc22
+      # ReservedConcurrentExecutions: 5
+      Events:
+        SqsEvent:
+          Type: SQS
+          Properties:
+            Queue: !GetAtt SqsEc2Work2.Arn
+            BatchSize: 10
+      Policies:
+      - Statement:
+        - Sid: CloudWatchLogsPolicy
+          Effect: Allow
+          Action:
+            - "logs:CreateLogDelivery"
+            - "logs:GetLogDelivery"
+            - "logs:UpdateLogDelivery"
+            - "logs:DeleteLogDelivery"
+            - "logs:ListLogDeliveries"
+            - "logs:PutResourcePolicy"
+            - "logs:DescribeResourcePolicies"
+            - "logs:DescribeLogGroup"
+            - "logs:DescribeLogGroups"
+          Resource: "*"
+        - Sid: CloudWatchEventsFullAccess
+          Effect: Allow
+          Action:
+            - "events:*"
+          Resource: "*"     
+  #================ ROLES =====================================================  
+  # EC2StartStopRole:
+  #   Type: 'AWS::IAM::Role'
+  #   Properties:
+  #     AssumeRolePolicyDocument:
+  #       Statement:
+  #         - Effect: Allow
+  #           Principal:
+  #             Service:
+  #               - lambda.amazonaws.com
+  #           Action:
+  #             - 'sts:AssumeRole'
+  # add role to start state machine from eventbus
+  CallerServiceEventBusRole:
+    Type: "AWS::IAM::Role"
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: "Allow"
+            Principal:
+              Service: "events.amazonaws.com"
+            Action: 
+              - "sts:AssumeRole"
+      Policies:
+        - PolicyName: DirectlyInvokeStepFunctions
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              Action:
+              - "states:StartExecution"
+              Effect: Allow
+              Resource:
+                - !Ref CallerServiceStateMachine  
+
+  #================ LAMBDA FUNCTIONS ==========================================
+  HandleCompleteRequestAI:
+    Type: AWS::Serverless::Function
+    Properties: 
+      CodeUri: functions/handlers/generate_step/CompleteRequestAI
+      VpcConfig:
+        SecurityGroupIds: !Split [',', !Join [',', !Ref SecurityGroupIdsPara]] 
+        SubnetIds: !Split [',', !Join [',', !Ref SubnetIDsPara]] 
+      FileSystemConfigs:
+        - Arn: !GetAtt EFSAccessPoint.Arn
+          LocalMountPath: !Ref EFSStorageAI
+    Policies:
+      - Statement:
+        - Sid: CloudWatchLogsPolicy
+          Effect: Allow
+          Action:
+            - "logs:CreateLogDelivery"
+            - "logs:GetLogDelivery"
+            - "logs:UpdateLogDelivery"
+            - "logs:DeleteLogDelivery"
+            - "logs:ListLogDeliveries"
+            - "logs:PutResourcePolicy"
+            - "logs:DescribeResourcePolicies"
+            - "logs:DescribeLogGroup"
+            - "logs:DescribeLogGroups"
+            - "lambda:InvokeFunction"
+          Resource: "*"
+  HandlerUploadBatchToS3:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: functions/handlers/generate_step/HandleBatchToS3
+      VpcConfig:
+        SecurityGroupIds: !Split [',', !Join [',', !Ref SecurityGroupIdsPara]] 
+        SubnetIds: !Split [',', !Join [',', !Ref SubnetIDsPara]] 
+      FileSystemConfigs:
+        - Arn: !GetAtt EFSAccessPoint.Arn
+          LocalMountPath: !Ref EFSStorageAI
+      Policies:
+      - Statement:
+        - Sid: CloudWatchLogsPolicy
+          Effect: Allow
+          Action:
+            - "logs:CreateLogDelivery"
+            - "logs:GetLogDelivery"
+            - "logs:UpdateLogDelivery"
+            - "logs:DeleteLogDelivery"
+            - "logs:ListLogDeliveries"
+            - "logs:PutResourcePolicy"
+            - "logs:DescribeResourcePolicies"
+            - "logs:DescribeLogGroup"
+            - "logs:DescribeLogGroups"
+          Resource: "*"
+        - Effect: Allow
+          Action:
+          - "dynamodb:GetItem"
+          - "dynamodb:DeleteItem"
+          - "dynamodb:PutItem"
+          - "dynamodb:Scan"
+          - "dynamodb:Query"
+          - "dynamodb:UpdateItem"
+          - "dynamodb:BatchWriteItem"
+          - "dynamodb:BatchGetItem"
+          - "dynamodb:DescribeTable"
+          - "dynamodb:ConditionCheckItem"
+          - "lambda:InvokeFunction"
+          Resource: "*"
+        - Sid: CloudWatchEventsFullAccess
+          Effect: Allow
+          Action:
+            - "events:*"
+          Resource: "*"
+        - Sid: AmazonElasticFileSystemClientFullAccess
+          Effect: Allow
+          Action:
+          - elasticfilesystem:ClientMount
+          - elasticfilesystem:ClientRootAccess
+          - elasticfilesystem:ClientWrite
+          - elasticfilesystem:DescribeMountTargets
+          Resource: "*"
+        - Effect: Allow
+          Action:
+            - s3:GetObject
+            - s3:PutObject
+            - s3:PutObjectAcl
+          Resource: "*"
+  HandleMergeResultRequestAI:
+    Type: AWS::Serverless::Function
+    Properties:
+      VpcConfig:
+        SecurityGroupIds: !Split [',', !Join [',', !Ref SecurityGroupIdsPara]] 
+        SubnetIds: !Split [',', !Join [',', !Ref SubnetIDsPara]] 
+      FileSystemConfigs:
+        - Arn: !GetAtt EFSAccessPoint.Arn
+          LocalMountPath: !Ref EFSStorageAI
+      CodeUri: functions/handlers/generate_step/merge_result_request_ai
+      Policies:
+      - Statement:
+        - Sid: ALLOWCRUDDynamoDB
+          Effect: Allow
+          Action:
+          - "dynamodb:GetItem"
+          - "dynamodb:DeleteItem"
+          - "dynamodb:PutItem"
+          - "dynamodb:Scan"
+          - "dynamodb:Query"
+          - "dynamodb:UpdateItem"
+          - "dynamodb:BatchWriteItem"
+          - "dynamodb:BatchGetItem"
+          - "dynamodb:DescribeTable"
+          - "dynamodb:ConditionCheckItem"
+          - "lambda:InvokeFunction"
+          Resource: "*"
+        - Sid: CloudWatchLogsPolicy
+          Effect: Allow
+          Action:
+            - "logs:CreateLogDelivery"
+            - "logs:GetLogDelivery"
+            - "logs:UpdateLogDelivery"
+            - "logs:DeleteLogDelivery"
+            - "logs:ListLogDeliveries"
+            - "logs:PutResourcePolicy"
+            - "logs:DescribeResourcePolicies"
+            - "logs:DescribeLogGroup"
+            - "logs:DescribeLogGroups"
+          Resource: "*"
+        - Sid: CloudWatchEventsFullAccess
+          Effect: Allow
+          Action:
+            - "events:*"
+          Resource: "*"
+  WorkerRequestAI:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: functions/handlers/generate_step/RequestAI
+      Policies:
+      - Statement:
+        - Effect: Allow
+          Action:
+          - "sqs:GetQueueAttributes"
+          - "sqs:SendMessage"
+          - "sqs:ReceiveMessage"
+          - "sqs:DeleteMessage"
+          - "sqs:DeleteMessageBatch"
+          - "sqs:GetQueueUrl"
+          Resource: "*"
+        - Sid: LambdaInvokefunction
+          Effect: Allow
+          Action:
+            - "lambda:InvokeFunction"
+          Resource: "*"
+        - Sid: CloudWatchLogsPolicy
+          Effect: Allow
+          Action:
+            - "logs:CreateLogDelivery"
+            - "logs:GetLogDelivery"
+            - "logs:UpdateLogDelivery"
+            - "logs:DeleteLogDelivery"
+            - "logs:ListLogDeliveries"
+            - "logs:PutResourcePolicy"
+            - "logs:DescribeResourcePolicies"
+            - "logs:DescribeLogGroup"
+            - "logs:DescribeLogGroups"
+          Resource: "*"
+        - Sid: CloudWatchEventsFullAccess
+          Effect: Allow
+          Action:
+            - "events:*"
+          Resource: "*"
+
+  UpdateStatusTask:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: functions/handlers/generate_step/updateStatusTask
+      Policies:
+      - Statement:
+        - Sid: ALLOWCRUDDynamoDB
+          Effect: Allow
+          Action:
+          - "dynamodb:GetItem"
+          - "dynamodb:DeleteItem"
+          - "dynamodb:PutItem"
+          - "dynamodb:Scan"
+          - "dynamodb:Query"
+          - "dynamodb:UpdateItem"
+          - "dynamodb:BatchWriteItem"
+          - "dynamodb:BatchGetItem"
+          - "dynamodb:DescribeTable"
+          - "dynamodb:ConditionCheckItem"
+          - "lambda:InvokeFunction"
+          Resource: "*"
+
+  PreprocessGenerateTask:
+    Type: AWS::Serverless::Function 
+    Properties:
+      CodeUri: functions/handlers/preprocess_generate_batch
+      Policies:
+      - Statement:
+        - Sid: ALLOWCRUDDynamoDB
+          Effect: Allow
+          Action:
+          - "dynamodb:GetItem"
+          - "dynamodb:DeleteItem"
+          - "dynamodb:PutItem"
+          - "dynamodb:Scan"
+          - "dynamodb:Query"
+          - "dynamodb:UpdateItem"
+          - "dynamodb:BatchWriteItem"
+          - "dynamodb:BatchGetItem"
+          - "dynamodb:DescribeTable"
+          - "dynamodb:ConditionCheckItem"
+          Resource: "*"
+
+  HandleDownloadTask:
+    Type: AWS::Serverless::Function
+    Properties:
+      VpcConfig:
+        SecurityGroupIds: !Split [',', !Join [',', !Ref SecurityGroupIdsPara]] 
+        SubnetIds: !Split [',', !Join [',', !Ref SubnetIDsPara]] 
+      FileSystemConfigs:
+        - Arn: !GetAtt EFSAccessPoint.Arn
+          LocalMountPath: !Ref EFSStorageAI
+      CodeUri: functions/handlers/download_task
+      Environment:
+        Variables:
+          EFSPATH: !Ref EFSStorageAI
+      Policies:
+      - S3FullAccessPolicy:
+          BucketName: !Ref S3BucketNamePara
+      - Statement:
+        - Sid: ALLOWCRUDDynamoDB
+          Effect: Allow
+          Action:
+          - "dynamodb:GetItem"
+          - "dynamodb:DeleteItem"
+          - "dynamodb:PutItem"
+          - "dynamodb:Scan"
+          - "dynamodb:Query"
+          - "dynamodb:UpdateItem"
+          - "dynamodb:BatchWriteItem"
+          - "dynamodb:BatchGetItem"
+          - "dynamodb:DescribeTable"
+          - "dynamodb:ConditionCheckItem"
+          - "lambda:InvokeFunction"
+          - sts:AssumeRole
+          Resource: "*"
+        - Sid: AmazonElasticFileSystemClientFullAccess
+          Effect: Allow
+          Action:
+          - elasticfilesystem:ClientMount
+          - elasticfilesystem:ClientRootAccess
+          - elasticfilesystem:ClientWrite
+          - elasticfilesystem:DescribeMountTargets
+          Resource: "*"
+
+  HandleGenerateStep:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: functions/handlers/generate_step/generate_task
+      Policies:
+      - SQSSendMessagePolicy:
+          QueueName: !GetAtt SqsEc2Work1.QueueName
+      - SQSSendMessagePolicy:
+          QueueName: !GetAtt SqsEc2Work2.QueueName
+      - S3FullAccessPolicy:
+          BucketName: !Ref S3BucketNamePara
+      - Statement:
+        - Effect: Allow
+          Action:
+          - "sqs:GetQueueAttributes"
+          - "sqs:SendMessage"
+          - "sqs:ReceiveMessage"
+          - "sqs:DeleteMessage"
+          - "sqs:DeleteMessageBatch"
+          - "sqs:GetQueueUrl"
+          Resource: "*"
+        - Sid: ALLOWCRUDDynamoDB
+          Effect: Allow
+          Action:
+          - "dynamodb:GetItem"
+          - "dynamodb:DeleteItem"
+          - "dynamodb:PutItem"
+          - "dynamodb:Scan"
+          - "dynamodb:Query"
+          - "dynamodb:UpdateItem"
+          - "dynamodb:BatchWriteItem"
+          - "dynamodb:BatchGetItem"
+          - "dynamodb:DescribeTable"
+          - "dynamodb:ConditionCheckItem"
+          - "lambda:InvokeFunction"
+          Resource: "*"
+        - Sid: AmazonElasticFileSystemClientFullAccess
+          Effect: Allow
+          Action:
+          - elasticfilesystem:ClientMount
+          - elasticfilesystem:ClientRootAccess
+          - elasticfilesystem:ClientWrite
+          - elasticfilesystem:DescribeMountTargets
+          Resource: "*"
+        - Sid: EC2ALLOW
+          Effect: Allow
+          Action:
+          - autoscaling:StartInstanceRefresh
+          - autoscaling:Describe*
+          - autoscaling:UpdateAutoScalingGroup
+          - ec2:CreateLaunchTemplateVersion
+          - ec2:DescribeLaunchTemplates
+          - ec2:RunInstances
+          - ec2:DescribeInstances
+          - sts:AssumeRole
+          -  "ec2:Start*"
+          -  "ec2:Stop*"
+          - iam:PassRole
+          Resource: '*'
+
+  #================ EVENT BUS =================================================
+
+  CallerServiceEventBus:
+    Type: AWS::Events::EventBus
+    Properties: 
+      Name: !Sub "${StagePara}-${ApplicationPara}-CallerServiceEventBus"
+
+  CallerServiceEventBusDefaultRule:
+    Type: AWS::Events::Rule
+    Properties:
+      Description: "Default Rule for Any event"
+      State: ENABLED
+      EventBusName: !Ref CallerServiceEventBus
+      EventPattern:
+        source:
+          - "source.events"
+        detail-type:
+          - "lambda.event"
+      Targets:
+        - 
+          Arn: !GetAtt CallerServiceStateMachine.Arn 
+          Id: "CallerServiceStateMachineTarget"
+          RoleArn: !GetAtt CallerServiceEventBusRole.Arn  
+
+  #================ LOGS FOR STEP FUNCTIONS ===================================
+
+  CallerServiceStateMachineLogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties: 
+      LogGroupName: !Sub "/aws/vendedlogs/states/${StagePara}-${ApplicationPara}-CallerServiceSMLogGr"
+      RetentionInDays: 7
+
+  #================ PROCESSOR STATE MACHINE ===================================
+
+  CallerServiceStateMachine:
+    Type: AWS::Serverless::StateMachine
+    Properties:
+      # Type: EXPRESS
+      Type: STANDARD
+      Name: !Sub "${StagePara}-${ApplicationPara}-CallerServiceSM"
+      Policies:
+        - Statement:
+          - Sid: AWSStepFunctionsFullAccess
+            Effect: Allow
+            Action: 
+            - "states:*"
+            Resource: 
+            - !Ref PrepareStateMachine
+            - !Ref DownloadStateMachine
+            - !Ref GenerateStateMachine
+            - !Ref UploadStateMachine
+          - Sid: CloudWatchLogsPolicy
+            Effect: Allow
+            Action:
+            - "logs:CreateLogDelivery"
+            - "logs:GetLogDelivery"
+            - "logs:UpdateLogDelivery"
+            - "logs:DeleteLogDelivery"
+            - "logs:ListLogDeliveries"
+            - "logs:PutResourcePolicy"
+            - "logs:DescribeResourcePolicies"
+            - "logs:DescribeLogGroup"
+            - "logs:DescribeLogGroups"
+            Resource: "*"
+          - Sid: CloudWatchEventsFullAccess
+            Effect: Allow
+            Action:
+            - "events:*"
+            Resource: "*"
+          - Sid: IAMPassRoleForCloudWatchEvents
+            Effect: Allow
+            Action:
+            - "iam:PassRole"
+            Resource: "arn:aws:iam::*:role/AWS_Events_Invoke_Targets"
+      Tracing:
+        Enabled: true
+      DefinitionUri: statemachine/caller_service_state_machine.asl.yaml
+      Logging:
+        Level: ALL
+        IncludeExecutionData: true
+        Destinations:
+        - CloudWatchLogsLogGroup:
+            LogGroupArn: !GetAtt CallerServiceStateMachineLogGroup.Arn
+      DefinitionSubstitutions:
+        PrepareStateMachine: !GetAtt PrepareStateMachine.Arn
+        DownloadStateMachine: !GetAtt DownloadStateMachine.Arn
+        GenerateStateMachine: !GetAtt GenerateStateMachine.Arn
+        UploadStateMachine: !GetAtt UploadStateMachine.Arn
+
+  PrepareStateMachine:
+    Type: AWS::Serverless::StateMachine
+    Properties:
+      Type: STANDARD
+      Name: !Sub "${StagePara}-${ApplicationPara}-PrepareSM"
+      Policies:
+        - LambdaInvokePolicy:
+            FunctionName: !Ref PreprocessGenerateTask   
+        - Statement:
+          - Sid: CloudWatchLogsPolicy
+            Effect: Allow
+            Action:
+            - "logs:CreateLogDelivery"
+            - "logs:GetLogDelivery"
+            - "logs:UpdateLogDelivery"
+            - "logs:DeleteLogDelivery"
+            - "logs:ListLogDeliveries"
+            - "logs:PutResourcePolicy"
+            - "logs:DescribeResourcePolicies"
+            - "logs:DescribeLogGroup"
+            - "logs:DescribeLogGroups"
+            Resource: "*"
+          - Sid: ALLOWCRUDDynamoDB
+            Effect: Allow
+            Action:
+            - "dynamodb:GetItem"
+            - "dynamodb:DeleteItem"
+            - "dynamodb:PutItem"
+            - "dynamodb:Scan"
+            - "dynamodb:Query"
+            - "dynamodb:UpdateItem"
+            - "dynamodb:BatchWriteItem"
+            - "dynamodb:BatchGetItem"
+            - "dynamodb:DescribeTable"
+            - "dynamodb:ConditionCheckItem"
+            Resource: "*"
+      Tracing:
+        Enabled: true
+      DefinitionUri: statemachine/prepare_state_machine.asl.yaml
+      Logging:
+        Level: ALL
+        IncludeExecutionData: true
+        Destinations:
+        - CloudWatchLogsLogGroup:
+            LogGroupArn: !GetAtt CallerServiceStateMachineLogGroup.Arn
+      DefinitionSubstitutions:
+        PreprocessGenerateTask: !GetAtt PreprocessGenerateTask.Arn
+
+############################################################################################################
+  DownloadStateMachine:
+    Type: AWS::Serverless::StateMachine
+    Properties:
+      Type: STANDARD
+      Name: !Sub "${StagePara}-${ApplicationPara}-DownloadSM"
+      Policies:
+        - LambdaInvokePolicy:
+            FunctionName: !Ref HandleDownloadTask    
+        - Statement:
+          - Sid: CloudWatchLogsPolicy
+            Effect: Allow
+            Action:
+            - "logs:CreateLogDelivery"
+            - "logs:GetLogDelivery"
+            - "logs:UpdateLogDelivery"
+            - "logs:DeleteLogDelivery"
+            - "logs:ListLogDeliveries"
+            - "logs:PutResourcePolicy"
+            - "logs:DescribeResourcePolicies"
+            - "logs:DescribeLogGroup"
+            - "logs:DescribeLogGroups"
+            Resource: "*"
+      Tracing:
+        Enabled: true
+      DefinitionUri: statemachine/download_state_machine.asl.yaml
+      Logging:
+        Level: ALL
+        IncludeExecutionData: true
+        Destinations:
+        - CloudWatchLogsLogGroup:
+            LogGroupArn: !GetAtt CallerServiceStateMachineLogGroup.Arn
+      DefinitionSubstitutions:
+        HandleDownloadTask: !GetAtt HandleDownloadTask.Arn
+############################################################################################################
+  GenerateStateMachine:
+    Type: AWS::Serverless::StateMachine
+    # DependsOn:
+    #   - EC2StartStopRole
+    Properties:
+      Type: STANDARD
+      Name: !Sub "${StagePara}-${ApplicationPara}-GenerateSM"
+      Policies:
+        - LambdaInvokePolicy:
+            FunctionName: !Ref HandleGenerateStep
+            FunctionName: !Ref WorkerRequestAI
+            FunctionName: !Ref HandleMergeResultRequestAI
+            FunctionName: !Ref HandlerUploadBatchToS3
+            FunctionName: !Ref HandleCompleteRequestAI
+        - Statement:
+          - Sid: CloudWatchLogsPolicy
+            Effect: Allow
+            Action:
+            - "logs:CreateLogDelivery"
+            - "logs:GetLogDelivery"
+            - "logs:UpdateLogDelivery"
+            - "logs:DeleteLogDelivery"
+            - "logs:ListLogDeliveries"
+            - "logs:PutResourcePolicy"
+            - "logs:DescribeResourcePolicies"
+            - "logs:DescribeLogGroup"
+            - "logs:DescribeLogGroups"
+            - "lambda:InvokeFunction"
+            Resource: "*"
+          - Sid: EC2ALLOW
+            Effect: Allow
+            Action:
+            - autoscaling:StartInstanceRefresh
+            - autoscaling:Describe*
+            - autoscaling:UpdateAutoScalingGroup
+            - ec2:CreateLaunchTemplateVersion
+            - ec2:DescribeLaunchTemplates
+            - ec2:RunInstances
+            - ec2:DescribeInstances
+            - iam:PassRole
+            -  "ec2:Start*"
+            -  "ec2:Stop*"
+            Resource: '*'
+          - Sid: ALLOWCRUDDynamoDB
+            Effect: Allow
+            Action:
+            - "dynamodb:GetItem"
+            - "dynamodb:DeleteItem"
+            - "dynamodb:PutItem"
+            - "dynamodb:Scan"
+            - "dynamodb:Query"
+            - "dynamodb:UpdateItem"
+            - "dynamodb:BatchWriteItem"
+            - "dynamodb:BatchGetItem"
+            - "dynamodb:DescribeTable"
+            - "dynamodb:ConditionCheckItem"
+            Resource: "*"
+      Tracing:
+        Enabled: true
+      DefinitionUri: statemachine/generate_state_machine.asl.yaml
+      Logging:
+        Level: ALL
+        IncludeExecutionData: true
+        Destinations:
+        - CloudWatchLogsLogGroup:
+            LogGroupArn: !GetAtt CallerServiceStateMachineLogGroup.Arn
+      DefinitionSubstitutions:
+        HandleGenerateStep: !GetAtt HandleGenerateStep.Arn
+        WorkerRequestAI: !GetAtt WorkerRequestAI.Arn
+        HandleMergeResultRequestAI: !GetAtt HandleMergeResultRequestAI.Arn
+        HandleCompleteRequestAI: !GetAtt HandleCompleteRequestAI.Arn
+        HandlerUploadBatchToS3: !GetAtt HandlerUploadBatchToS3.Arn
+        UpdateStatusTask: !GetAtt UpdateStatusTask.Arn
+        
+
+  UploadStateMachine:
+    Type: AWS::Serverless::StateMachine
+    Properties:
+      Type: STANDARD
+      Name: !Sub "${StagePara}-${ApplicationPara}-UploadSM"
+      Policies:
+        - LambdaInvokePolicy:
+            FunctionName: !Ref PreprocessGenerateTask  
+        - Statement:
+          - Sid: CloudWatchLogsPolicy
+            Effect: Allow
+            Action:
+            - "logs:CreateLogDelivery"
+            - "logs:GetLogDelivery"
+            - "logs:UpdateLogDelivery"
+            - "logs:DeleteLogDelivery"
+            - "logs:ListLogDeliveries"
+            - "logs:PutResourcePolicy"
+            - "logs:DescribeResourcePolicies"
+            - "logs:DescribeLogGroup"
+            - "logs:DescribeLogGroups"
+            Resource: "*"
+      Tracing:
+        Enabled: true
+      DefinitionUri: statemachine/upload_state_machine.asl.yaml
+      Logging:
+        Level: ALL
+        IncludeExecutionData: true
+        Destinations:
+        - CloudWatchLogsLogGroup:
+            LogGroupArn: !GetAtt CallerServiceStateMachineLogGroup.Arn
+      DefinitionSubstitutions:
+        PreprocessGenerateTask: !GetAtt PreprocessGenerateTask.Arn
+
+Outputs:
+  # ServerlessRestApi is an implicit API created out of Events key under Serverless::Function
+  # Find out more about other implicit resources you can reference within SAM
+  # https://github.com/awslabs/serverless-application-model/blob/master/docs/internals/generated_resources.rst#api 
+  CallerServiceEventBusArn:
+    Description: "ARN of EventBus"
+    Value: !GetAtt CallerServiceEventBus.Arn
+  CallerServiceEventBusName:
+    Description: "Name of EventBus"
+    Value: !Ref CallerServiceEventBus
+  # LayerARN:
+  #   Description: "ARN of common code layer"
+  #   Value: !GetAtt CommonCodeLayer.Arn
+
+

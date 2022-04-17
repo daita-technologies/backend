@@ -50,7 +50,9 @@ def lambda_handler(event, context):
                     "identity_id": identity_id,
                     "task_id": task_id,
                     "status": "RUNNING",
-                    "create_time": create_time,
+                    "process_type": "DOWNLOAD",
+                    "project_id": project_id,
+                    "created_time": create_time,
                 }
             )
     except Exception as e:
