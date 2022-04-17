@@ -49,11 +49,11 @@ def deploy_lambda_auth(general_info, lambda_service):
                                         'staging: register')
     add_lambda_info_to_list(ls_lambda_val, lambda_uri, lambda_version, 'auth', 'user_signup')
 
-    # login-social
+    # # login-social
     lambda_uri, lambda_version = lambda_service.deploy_lambda_function(f'login_social',
                                           [ CODE_DIR.joinpath("login_social.py"),
-                                          CODE_DIR.joinpath("utils.py"),
-                                        PROJECT_DIR.joinpath("packages"),
+                                            CODE_DIR.joinpath("utils.py"),
+                                            PROJECT_DIR.joinpath("packages"),
                                             PROJECT_DIR.joinpath("common"),
                                          ],
                                         {
@@ -63,7 +63,20 @@ def deploy_lambda_auth(general_info, lambda_service):
                                         'login_social.lambda_handler',
                                         'staging: login_social')
     add_lambda_info_to_list(ls_lambda_val, lambda_uri, lambda_version, 'auth', 'login_social')
-
+    #### Credential  
+    lambda_uri, lambda_version = lambda_service.deploy_lambda_function(f'credential',
+                                          [ CODE_DIR.joinpath("credential_login.py"),
+                                            CODE_DIR.joinpath("utils.py"),
+                                            PROJECT_DIR.joinpath("packages"),
+                                            PROJECT_DIR.joinpath("common"),
+                                         ],
+                                        {
+                                            'USER_POOL_ID' : general_info['USER_POOL_ID'],
+                                            'IDENTITY_POOL_ID': general_info['IDENTITY_POOL_ID']
+                                        },
+                                        'credential_login.lambda_handler',
+                                        'staging: credential_login')
+    add_lambda_info_to_list(ls_lambda_val, lambda_uri, lambda_version, 'auth', 'credential')
     # template email
     lambda_uri, lambda_version = lambda_service.deploy_lambda_function(f'template_mail',
                                           [ CODE_DIR.joinpath("template_mail.py"),
@@ -89,7 +102,7 @@ def deploy_lambda_auth(general_info, lambda_service):
                                         },
                                         'resend_confirmcode.lambda_handler',
                                         'staging: template_mail')
-    add_lambda_info_to_list(ls_lambda_val, lambda_uri, lambda_version, 'auth', 'resend_confirmcode')
+    # add_lambda_info_to_list(ls_lambda_val, lambda_uri, lambda_version, 'auth', 'resend_confirmcode')
 
     # confirm code after register
     lambda_uri, lambda_version = lambda_service.deploy_lambda_function(f'auth_confirm',
@@ -132,7 +145,7 @@ def deploy_lambda_auth(general_info, lambda_service):
                                         },
                                         'confirm_code_forgot_password.lambda_handler',
                                         'staging: confirm code after request forgot password')
-    add_lambda_info_to_list(ls_lambda_val, lambda_uri, lambda_version, 'auth', 'confirm-code-forgot-password')
+    add_lambda_info_to_list(ls_lambda_val, lambda_uri, lambda_version, 'auth', 'confirm_code_forgot_password')
 
     # backend/lambda/login/module/auth/login_refresh_token.go
     lambda_uri, lambda_version = lambda_service.deploy_lambda_function(f'staging-refresh-token',

@@ -1,3 +1,4 @@
+from email import header, message
 import os
 from datetime import datetime
 from http import HTTPStatus
@@ -47,17 +48,33 @@ def lambda_handler(event, context):
         if it['Name'] == 'email_verified' and it['Value'] == 'false':
             is_email_verified = False
             break
-    if is_email_verified:
+    if not is_email_verified:
+        return generate_response(
+            message= MessageUserVerifyConfirmCode,
+            headers=RESPONSE_HEADER
+        )
+    try:
         response = cog_provider_client.forgot_password(
             ClientId=CLIENTPOOLID,
             Username=username
         )
+    except cog_provider_client.exceptions.UserNotFoundException as e:
+        print(e)
         return generate_response(
-            message=MessageForgotPasswordSuccessfully,
+        message=MessageForgotPasswordUsernotExist,
+        headers=RESPONSE_HEADER
+    )
+    except Exception as e:
+        print(e)
+        return generate_response(
+            message= MessageForgotPasswordFailed,
             headers=RESPONSE_HEADER
         )
 
     return generate_response(
-        message=MessageForgotPasswordFailed,
+        message=MessageForgotPasswordSuccessfully,
         headers=RESPONSE_HEADER
     )
+    
+        
+    

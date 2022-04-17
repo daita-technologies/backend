@@ -46,7 +46,6 @@ def lambda_handler(event, context):
         sub = claimsToken(authorization_header,'sub')
     except Exception as e:
         raise e
-    print(sub)
     if CheckEventUserLogin(sub):
         EventUserLogout(sub)
     else:
