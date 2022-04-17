@@ -38,12 +38,24 @@ Parameters:
     Type: String
   CallerServiceEventBusName:
     Type: String
+
   TableGenerateTaskName:
     Type: String
   TableProjectsName:
     Type: String
   TableMethodsName:
     Type: String
+  ParaTableDownloadTaskName:
+    Type: String
+  ParaTableProjectSumName:
+    Type: String
+  TableHealthCheckTasksName:
+    Type: String
+  TableHealthCheckInfoName:
+    Type: String
+  ParaTableDataFlowTaskName:
+    Type: String
+
   CommonCodeLayerName:
     Type: String
   LimitPreprocessTimesName:
@@ -53,17 +65,9 @@ Parameters:
   HealthCheckEventBusArn:
     Type: String
   HealthCheckEventBusName:
-    Type: String
-  TableHealthCheckTasksName:
-    Type: String
-  TableHealthCheckInfoName:
-    Type: String
-  ParaTableDataFlowTaskName:
-    Type: String
+    Type: String 
   ParaDecompressFileStateMachineArn:
-    Type: String
-  ParaTableDownloadTaskName:
-    Type: String
+    Type: String  
   CognitoUserPoolId:
     Type:  String
     Default: us-east-2_ZbwpnYN4g
@@ -194,6 +198,7 @@ Resources:
           EVENT_BUS_NAME: !Ref CallerServiceEventBusName
           LIMIT_PROCESSING_TIMES: !Ref LimitPreprocessTimesName
           LIMIT_AUGMENT_TIMES: !Ref LimitAugmentTimesName
+          TABLE_PROJECT_SUM: !Ref ParaTableProjectSumName
 
   TaskProgressFunction:
     Type: AWS::Serverless::Function

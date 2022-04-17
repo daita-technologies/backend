@@ -10,6 +10,7 @@ from identity_check import *
 from system_parameter_store import SystemParameterStore
 from models.generate_task_model import GenerateTaskModel
 from models.project_model import ProjectModel, ProjectItem
+from models.project_sum_model import ProjectSumModel
 from lambda_base_class import LambdaBaseClass
 
 
@@ -21,6 +22,7 @@ class GenerateImageClass(LambdaBaseClass):
         self.const = SystemParameterStore()   
         self.project_model = ProjectModel(os.environ["TABLE_PROJECTS_NAME"])
         self.generate_task_model = GenerateTaskModel(os.environ["TABLE_GENERATE_TASK"])
+        self.project_sum_model = ProjectSumModel(os.environ["TABLE_PROJECT_SUM"])
 
     @LambdaBaseClass.parse_body
     def parser(self, body):
@@ -115,7 +117,7 @@ class GenerateImageClass(LambdaBaseClass):
                     )
         entries = response["Entries"]
 
-        return entries[0]["EventId"]     
+        return entries[0]["EventId"]  
 
     def handle(self, event, context):
     
@@ -136,6 +138,10 @@ class GenerateImageClass(LambdaBaseClass):
 
         ### update the times_augment and times_preprocess to DB
         times_preprocess, times_augment = self._update_generate_times(identity_id, self.project_name, type_method, times_augment, times_preprocess)
+
+        ### check if preprocess then reset in prj sumary
+        if type_method == VALUE_TYPE_METHOD_PREPROCESS:
+            self.project_sum_model.reset_prj_sum_preprocess(project_id = self.project_id, type_data=VALUE_TYPE_DATA_PREPROCESSED)
 
         ### create taskID and update to DB
         task_id = self._create_task(identity_id, self.project_id, type_method)

@@ -96,6 +96,8 @@ Outputs:
   TableProjectsName:
     Description: "Name of table projects"
     Value: projects
+  TableProjectSumName:
+    Value: prj_sum_all
   TableMethodsName:
     Description: "Name of table methods"
     Value: methods
