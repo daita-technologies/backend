@@ -9,7 +9,7 @@ Description: >
 # More info about Globals: https://github.com/awslabs/serverless-application-model/blob/master/docs/globals.rst
 Globals:
   Function:
-    Timeout: 800
+    Timeout: 900
     Handler: app.lambda_handler
     Runtime: python3.8
     Architectures:
@@ -39,6 +39,9 @@ Parameters:
   EFSStorageAI:
     Type: String
     Default: /mnt/efs
+  ROOTEFS:
+    Type: String
+    Default: /efs
   SubnetIDsPara:
     Type: CommaDelimitedList
   SecurityGroupIdsPara:
@@ -177,12 +180,6 @@ Resources:
     Type: AWS::Serverless::Function
     Properties: 
       CodeUri: functions/handlers/generate_step/CompleteRequestAI
-      VpcConfig:
-        SecurityGroupIds: !Split [',', !Join [',', !Ref SecurityGroupIdsPara]] 
-        SubnetIds: !Split [',', !Join [',', !Ref SubnetIDsPara]] 
-      FileSystemConfigs:
-        - Arn: !GetAtt EFSAccessPoint.Arn
-          LocalMountPath: !Ref EFSStorageAI
     Policies:
       - Statement:
         - Sid: CloudWatchLogsPolicy
@@ -383,8 +380,79 @@ Resources:
           - "dynamodb:DescribeTable"
           - "dynamodb:ConditionCheckItem"
           Resource: "*"
-
-  HandleDownloadTask:
+  HandleMergeResultDownloadImages:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: functions/handlers/download_task/merge_download
+      Policies:
+        - S3FullAccessPolicy:
+            BucketName: !Ref S3BucketNamePara
+        - Statement:
+          - Sid: ALLOWCRUDDynamoDB
+            Effect: Allow
+            Action:
+            - "dynamodb:GetItem"
+            - "dynamodb:DeleteItem"
+            - "dynamodb:PutItem"
+            - "dynamodb:Scan"
+            - "dynamodb:Query"
+            - "dynamodb:UpdateItem"
+            - "dynamodb:BatchWriteItem"
+            - "dynamodb:BatchGetItem"
+            - "dynamodb:DescribeTable"
+            - "dynamodb:ConditionCheckItem"
+            - "lambda:InvokeFunction"
+            - sts:AssumeRole
+            Resource: "*"
+          - Sid: AmazonElasticFileSystemClientFullAccess
+            Effect: Allow
+            Action:
+            - elasticfilesystem:ClientMount
+            - elasticfilesystem:ClientRootAccess
+            - elasticfilesystem:ClientWrite
+            - elasticfilesystem:DescribeMountTargets
+            Resource: "*"
+          - Effect: Allow
+            Action:
+            - s3:*
+            Resource: "*"
+  HandleGetResultDownloadTask:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: functions/handlers/download_task/get_result_download_task
+      Policies:
+        - S3FullAccessPolicy:
+            BucketName: !Ref S3BucketNamePara
+        - Statement:
+          - Sid: ALLOWCRUDDynamoDB
+            Effect: Allow
+            Action:
+            - "dynamodb:GetItem"
+            - "dynamodb:DeleteItem"
+            - "dynamodb:PutItem"
+            - "dynamodb:Scan"
+            - "dynamodb:Query"
+            - "dynamodb:UpdateItem"
+            - "dynamodb:BatchWriteItem"
+            - "dynamodb:BatchGetItem"
+            - "dynamodb:DescribeTable"
+            - "dynamodb:ConditionCheckItem"
+            - "lambda:InvokeFunction"
+            - sts:AssumeRole
+            Resource: "*"
+          - Sid: AmazonElasticFileSystemClientFullAccess
+            Effect: Allow
+            Action:
+            - elasticfilesystem:ClientMount
+            - elasticfilesystem:ClientRootAccess
+            - elasticfilesystem:ClientWrite
+            - elasticfilesystem:DescribeMountTargets
+            Resource: "*"
+          - Effect: Allow
+            Action:
+            - s3:*
+            Resource: "*"
+  HandleDownloadImages:
     Type: AWS::Serverless::Function
     Properties:
       VpcConfig:
@@ -393,10 +461,7 @@ Resources:
       FileSystemConfigs:
         - Arn: !GetAtt EFSAccessPoint.Arn
           LocalMountPath: !Ref EFSStorageAI
-      CodeUri: functions/handlers/download_task
-      Environment:
-        Variables:
-          EFSPATH: !Ref EFSStorageAI
+      CodeUri: functions/handlers/download_task/download_images
       Policies:
       - S3FullAccessPolicy:
           BucketName: !Ref S3BucketNamePara
@@ -424,6 +489,57 @@ Resources:
           - elasticfilesystem:ClientRootAccess
           - elasticfilesystem:ClientWrite
           - elasticfilesystem:DescribeMountTargets
+          Resource: "*"
+        - Effect: Allow
+          Action:
+          - s3:*
+          Resource: "*"
+
+  HandleDownloadTask:
+    Type: AWS::Serverless::Function
+    Properties:
+      VpcConfig:
+        SecurityGroupIds: !Split [',', !Join [',', !Ref SecurityGroupIdsPara]] 
+        SubnetIds: !Split [',', !Join [',', !Ref SubnetIDsPara]] 
+      FileSystemConfigs:
+        - Arn: !GetAtt EFSAccessPoint.Arn
+          LocalMountPath: !Ref EFSStorageAI
+      CodeUri: functions/handlers/download_task/download_task
+      Environment:
+        Variables:
+          EFSPATH: !Ref EFSStorageAI
+          ROOTEFS: !Ref ROOTEFS
+      Policies:
+      - S3FullAccessPolicy:
+          BucketName: !Ref S3BucketNamePara
+      - Statement:
+        - Sid: ALLOWCRUDDynamoDB
+          Effect: Allow
+          Action:
+          - "dynamodb:GetItem"
+          - "dynamodb:DeleteItem"
+          - "dynamodb:PutItem"
+          - "dynamodb:Scan"
+          - "dynamodb:Query"
+          - "dynamodb:UpdateItem"
+          - "dynamodb:BatchWriteItem"
+          - "dynamodb:BatchGetItem"
+          - "dynamodb:DescribeTable"
+          - "dynamodb:ConditionCheckItem"
+          - "lambda:InvokeFunction"
+          - sts:AssumeRole
+          Resource: "*"
+        - Sid: AmazonElasticFileSystemClientFullAccess
+          Effect: Allow
+          Action:
+          - elasticfilesystem:ClientMount
+          - elasticfilesystem:ClientRootAccess
+          - elasticfilesystem:ClientWrite
+          - elasticfilesystem:DescribeMountTargets
+          Resource: "*"
+        - Effect: Allow
+          Action:
+          - s3:*
           Resource: "*"
 
   HandleGenerateStep:
@@ -631,7 +747,10 @@ Resources:
       Name: !Sub "${StagePara}-${ApplicationPara}-DownloadSM"
       Policies:
         - LambdaInvokePolicy:
-            FunctionName: !Ref HandleDownloadTask    
+            FunctionName: !Ref HandleDownloadTask
+            FunctionName: !Ref HandleDownloadImages
+            FunctionName: !Ref HandleMergeResultDownloadImages
+            FunctionName: !Ref HandleGetResultDownloadTask
         - Statement:
           - Sid: CloudWatchLogsPolicy
             Effect: Allow
@@ -645,6 +764,7 @@ Resources:
             - "logs:DescribeResourcePolicies"
             - "logs:DescribeLogGroup"
             - "logs:DescribeLogGroups"
+            - "lambda:InvokeFunction"
             Resource: "*"
       Tracing:
         Enabled: true
@@ -657,6 +777,9 @@ Resources:
             LogGroupArn: !GetAtt CallerServiceStateMachineLogGroup.Arn
       DefinitionSubstitutions:
         HandleDownloadTask: !GetAtt HandleDownloadTask.Arn
+        HandleDownloadImages: !GetAtt HandleDownloadImages.Arn
+        HandleMergeResultDownloadImages: !GetAtt HandleMergeResultDownloadImages.Arn
+        HandleGetResultDownloadTask: !GetAtt HandleGetResultDownloadTask.Arn
 ############################################################################################################
   GenerateStateMachine:
     Type: AWS::Serverless::StateMachine
