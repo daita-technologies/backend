@@ -54,6 +54,7 @@ States:
       batch.$: $$.Map.Item.Value
       identity_id.$: $.identity_id
       task_id.$: $.task_id
+      id_token.$: $.id_token
       project_prefix.$: $.project_prefix
       current_num_retries.$: $.current_num_retries
       max_retries.$: $.max_retries
@@ -70,7 +71,16 @@ States:
           Parameters:
             FunctionName: '${WorkerRequestAI}'
             Payload.$: $
-          Next: UploadToS3
+          Next: IsCheckRetry
+        IsCheckRetry:
+          Type: Choice
+          Choices:
+            - Variable: $.is_retry
+              BooleanEquals: true
+              Next: RequestAI
+            - Variable: $.is_retry
+              BooleanEquals: false
+              Next: UploadToS3
         UploadToS3:
           Type: Task
           Resource: 'arn:aws:states:::lambda:invoke'

@@ -151,7 +151,8 @@ class GenerateImageClass(LambdaBaseClass):
             KEY_NAME_S3_PREFIX: s3_prefix,
             KEY_NAME_TIMES_AUGMENT: times_augment,
             KEY_NAME_TIMES_PREPROCESS: times_preprocess,
-            KEY_NAME_TASK_ID: task_id
+            KEY_NAME_TASK_ID: task_id,
+            KEY_NAME_ID_TOKEN: self.id_token
         }
         event_id = self._put_event_bus(detail_pass_para) 
                 

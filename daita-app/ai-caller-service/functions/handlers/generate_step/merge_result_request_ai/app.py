@@ -4,6 +4,7 @@ import os
 import boto3
 import random
 import shutil
+import glob
 from datetime import datetime
 from config import *
 from response import *
@@ -20,7 +21,7 @@ def lambda_handler(event, context):
                 'info_update_s3':[]}
     batches = event
     lenBatches =  len(batches)
-    identity_id, task_id, gen_id ,project_id ,project_name= None, None, None,None , None
+    identity_id, task_id, gen_id ,project_id ,project_name , id_token,project_prefix= None, None, None,None , None, None,None
     task_finish = 0
     for  batch in batches:
         if identity_id == None:
@@ -29,9 +30,14 @@ def lambda_handler(event, context):
             gen_id = batch['gen_id']
             project_id = batch['project_id']
             project_name = batch['project_name']
+            id_token = batch['id_token']
+            project_prefix = batch['project_prefix']
         if batch['response'] == 'OK':
             task_finish += 1
-            outputBatch = '/mnt' + batch['output']
+            outputBatch = '/'+  '/'.join(batch['output'].split('/')[2:])
+            # batch['output'] 
+            #'/'+  '/'.join(event['batch']['request_json']['output_folder'].split('/')[2:])
+            print(glob.glob(outputBatch+'/**'))
             shutil.rmtree(outputBatch)
             result['info_update_s3'].append(batch['info_upload_s3'])
     if task_finish == 0:
@@ -44,19 +50,11 @@ def lambda_handler(event, context):
     else:
         result['status'] = 'FINISH_ERROR'
         result['state'] = 'FINISH'
+    result['id_token'] = id_token
     result['task_id'] = task_id
     result['identity_id'] = identity_id
     result['gen_id'] = gen_id
     result['project_id'] = project_id
     result['project_name'] = project_name
+    result['project_prefix'] = project_prefix
     return result
-"""
-task_id
-identity_id
-gen_id
-info_update_s3:[
-    {
-        
-    }
-]
-"""

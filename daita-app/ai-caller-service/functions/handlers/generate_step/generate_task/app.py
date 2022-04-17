@@ -44,14 +44,6 @@ def lambda_handler(event, context):
     ################Start all ec2 free#####################
     taskModel.create_item(identity_id=data['identity_id'],task_id=data['task_id'],project_id=data['project_id']
                                            ,num_gens=data['num_aug_per_imgs'] ,process_type=data['type_method'],IP='',EC2_ID='')
-    try:
-        for ec2 in ec2FreeInstnaces:
-            # print(ec2['ec2_id'])
-            startEc2(ec2['ec2_id'])
-    except Exception as e:
-        print(e)
-        raise e
-    ##### assign ec2###########################
     taskModel.update_process(task_id=data['task_id'],identity_id=data['identity_id'],num_finish=0,status='PREPARING_HARDWARE')
     list_request_ai = assignTaskToEc2( ec2Instances=ec2FreeInstnaces,data= downloadTask,num_augments_per_image=data['num_aug_per_imgs'],type_method=data['type_method'],code=data['ls_method_id'])
     print(list_request_ai)
@@ -59,6 +51,7 @@ def lambda_handler(event, context):
         'state': 'Request_AI',
         'list_request_ai':list_request_ai,
         'identity_id':data['identity_id'],
+        'id_token': data['id_token'],
         'task_id': data['task_id'],
         'project_prefix': data['project_prefix'],
         'current_num_retries': 0,

@@ -18,7 +18,9 @@ sqsClient = boto3.client("sqs",REGION)
 @error_response
 def lambda_handler(event, context):
     result = event
+    print(event)
     batch = result['batch']
+
     try :
         output = requests.post(batch['host'],json=batch['request_json'])
         if output.status_code != http.HTTPStatus.OK:

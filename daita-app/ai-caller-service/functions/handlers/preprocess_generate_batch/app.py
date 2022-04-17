@@ -151,6 +151,7 @@ def lambda_handler(event, context):
     body = event['ori2']['Execution']['Input']['detail']
     imageLoad = ImageLoader()
     data = imageLoad(body)
+    data['id_token'] = body['id_token']
     data['task_id'] = body['task_id']
     data['identity_id'] = body['identity_id']
     data['project_id'] = body['project_id']
