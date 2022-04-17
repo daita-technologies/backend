@@ -274,7 +274,7 @@ Resources:
           DecompressTaskTable: !Ref ParaTableDataFlowTaskName
           TableHealthCheckTasksName: !Ref TableHealthCheckTasksName
           TableGenerateTaskName: !Ref TableGenerateTaskName
-          TableDownloadTaskName: !Ref TableDownloadTaskName
+          TableDownloadTaskName: !Ref ParaTableDownloadTaskName
 
 
 Outputs:
