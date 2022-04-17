@@ -20,7 +20,7 @@ def generate_response(
     ):
 
     headers.update(RESPONSE_HEADER)
-
+    
     body = {
         "message": message,
         "data": data,
@@ -42,7 +42,7 @@ def error_response(lambda_handler):
         except Exception as exc:
             return(
                 generate_response(
-                    message=str(repr(exc)),
+                    message=str(exc),
                     error=True
                 )
             )

@@ -1,6 +1,8 @@
 import boto3
 import json  
-import random 
+import random
+from boto3 import resource
+from boto3.dynamodb.conditions import Key
 def invoke_sendmail_cognito_service(subject,destination_email,message_email):
     client = boto3.client('lambda')
     payload_json = None 
@@ -26,13 +28,20 @@ class TriggerCustomMailcode:
             'user':info['user'],
             'code':info['code']
             })
+    def query_all_partition_key(self,value):
+        filteringExp = Key('user').eq(value)
+        return self.db_client.Table(self.TBL).query(KeyConditionExpression=filteringExp)
+    
     def delete_item(self,info):
-        self.db_client.Table(self.TBL).delete_item(
-        Key={
-            'user': info['user'],
-            'code':info['code']
-        }
-    )
+        items  = (self.query_all_partition_key(value=info['user'])).get('Items')
+        # print(items)
+        for item in items:
+            self.db_client.Table(self.TBL).delete_item(
+                    Key={
+                        'user': item['user'],
+                        'code':item['code']
+                    }
+        )
 
     def find_item(self,info):
         response = self.db_client.Table(self.TBL).get_item(
@@ -54,13 +63,14 @@ def DeleteConfirmCode(info):
     modelTrigger = TriggerCustomMailcode(REGION=info['region'])
     if not modelTrigger.find_item({'user':info['user'],'code':info['code']}):
         raise Exception("A wrong confirmation code has been entered. If you have requested a new confirmation code, use only the latest code.")
+
     modelTrigger.delete_item({
-        'user':info['user'],
-        'code':info['code']
-            })
+        'user':info['user']
+                    })
 
 def ResendCodeConfirm(info):
     modelTrigger = TriggerCustomMailcode(REGION=info['region'])
+
     try:
         modelTrigger.delete_item({
         'user':info['user']
