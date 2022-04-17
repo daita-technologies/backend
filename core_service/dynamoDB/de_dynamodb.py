@@ -18,3 +18,4 @@ def deploy_dynamoDB(general_info):
     dbservice.create_bd(general_info['T_TRIGGER_SEND_CODE'], [('user', 'HASH', 'S'),('code', 'RANGE', 'S')],)
     dbservice.create_bd(general_info['T_EVENT_USER'], [('event_ID', 'HASH', 'S'), ('type', 'RANGE', 'S')],)
     dbservice.create_bd(general_info['T_USER'], [('ID', 'HASH', 'S'), ('username', 'RANGE', 'S')],)
+    dbservice.create_bd(general_info['T_FEEDBACK'],[('ID','HASH','S'),])

@@ -1,7 +1,7 @@
 import re
 
 import boto3
-
+import json
 from config import *
 from error import *
 from response import generate_response, error_response
@@ -23,9 +23,10 @@ def lambda_handler(event, context):
     '''
     # get params REFRESH_TOKEN passed by FE in event body
     try:
-        username = event["username"]
-        password = event["password"]
-        confirm_code = event["confirm_code"]
+        body = json.loads(event['body'])
+        username = body["username"]
+        password = body["password"]
+        confirm_code = body["confirm_code"]
     except Exception as exc:
         raise Exception(MessageUnmarshalInputJson) from exc
 

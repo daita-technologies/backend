@@ -18,6 +18,8 @@ GENERAL_SETUP = {
     'USER_POOL_ID': 'us-east-2_ZbwpnYN4g',
     'IDENTITY_POOL_ID': 'us-east-2:fa0b76bc-01fa-4bb8-b7cf-a5000954aafb',
     'CLIENT_ID':'4cpbb5etp3q7grnnrhrc7irjoa',
+    'aws_access_key_id':'AKIAVKWNZXMINQ6JTYXY',
+    'aws_secret_access_key':'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',
     'DOWNLOAD_SERVICE_URL': '3.140.206.255',
 
     'T_PROJECT' : MODE_DB + 'projects',
@@ -38,7 +40,8 @@ GENERAL_SETUP = {
     "T_CONST": MODE_DB + "consts",
     "T_TRIGGER_SEND_CODE": MODE_DB + "Trigger_send_code",
     "T_USER": MODE_DB + "User",
-    "T_EVENT_USER": MODE_DB + "eventUser"
+    "T_EVENT_USER": MODE_DB + "eventUser",
+    "T_FEEDBACK": MODE_DB + "feedback"
 }
 
 
