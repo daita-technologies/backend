@@ -15,6 +15,8 @@ VALUE_PROCESS_TYPE_UPLOAD       = "UPLOAD"
 VALUE_PROCESS_TYPE_DOWNLOAD     = "DOWNLOAD"
 VALUE_PROCESS_TYPE_PREPROCESS   = "PREPROCESS"
 VALUE_PROCESS_TYPE_AUGMENT      = "AUGMENT"
+VALUE_LS_PROCESS_TYPE           = [VALUE_PROCESS_TYPE_HEALTHCHECK, VALUE_PROCESS_TYPE_DOWNLOAD, VALUE_PROCESS_TYPE_AUGMENT, VALUE_PROCESS_TYPE_PREPROCESS, 
+                                    VALUE_PROCESS_TYPE_UPLOAD]
 
 ### config for status of healthcheck task
 VALUE_HEALTHCHECK_TASK_STATUS_RUNNING       = "RUNNING"
@@ -47,9 +49,14 @@ KEY_NAME_TIMES_PREPROCESS   = "times_preprocess"
 KEY_NAME_TASK_ID            = "task_id"
 KEY_NAME_IDENTITY_ID        = "identity_id"
 KEY_NAME_TASK_STATUS        = "status"
+KEY_NAME_FILTER             = "filter"                  # for task bashboard API
+KEY_NAME_PAGINATION         = "pagination"              # for task dashboard API
+KEY_SIZE_LS_ITEM_QUERY      = "size_list_items_query"   # for task dashboard API
+KEY_NAME_PROCESS_TYPE       = "process_type"
 
 KEY_NAME_RES_AUMENTATION    = "augmentation"
 KEY_NAME_RES_PREPROCESSING  = "preprocessing"
 
 MAX_NUMBER_GEN_PER_IMAGES   = 1
+MAX_LS_ITEM_QUERY_TASK_DASHBOARD = 100
  

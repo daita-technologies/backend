@@ -167,7 +167,9 @@ Resources:
         HealthCheckEventBusArn: !GetAtt HealthCheckService.Outputs.HealthCheckEventBusArn
         HealthCheckEventBusName: !GetAtt HealthCheckService.Outputs.HealthCheckEventBusName
         ParaTableDataFlowTaskName: !GetAtt DatabaseService.Outputs.TableDataFlowTaskName
-        ParaDecompressFileStateMachineArn: !GetAtt DataFlowService.Outputs.DecompressFileStateMachineArn   
+        ParaDecompressFileStateMachineArn: !GetAtt DataFlowService.Outputs.DecompressFileStateMachineArn
+        ParaTableDownloadTaskName: !GetAtt DatabaseService.Outputs.TableDownloadTaskName
+
 
   HealthCheckService:
     Type: AWS::Serverless::Application

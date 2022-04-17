@@ -117,3 +117,5 @@ Outputs:
   TableDataFlowTaskName:
     Description: "Content task of download and upload service"
     Value: !Ref DataFlowTaskTable
+  TableDownloadTaskName:
+    Value: down_tasks
