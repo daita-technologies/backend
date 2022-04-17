@@ -30,8 +30,9 @@ def lambda_handler(event, context):
     '''
     # get params REFRESH_TOKEN passed by FE in event body
     try:
-        username = event["username"]
-        refresh_token = event["refresh_token"]
+        body = json.loads(event['body'])
+        username = body["username"]
+        refresh_token = body["refresh_token"]
     except Exception as exc:
         raise Exception(MessageUnmarshalInputJson) from exc
 
@@ -41,11 +42,7 @@ def lambda_handler(event, context):
                 AuthFlow="REFRESH_TOKEN_AUTH",
                 AuthParameters={
                     "REFRESH_TOKEN": refresh_token,
-                    "SECRET_HASH": create_secret_hash(
-                        clientSecret="",
-                        username=username,
-                        clientPoolID=CLIENTPOOLID
-                    )
+                    "USERNAME":username,
                 },
                 ClientId=CLIENTPOOLID,
             )
