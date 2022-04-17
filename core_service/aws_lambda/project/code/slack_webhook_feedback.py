@@ -1,15 +1,19 @@
+from pickle import TRUE
 import requests
 import json
+import pytz
 import os
 import json
 from datetime import datetime
 from http import HTTPStatus
 import os
+import uuid
 import boto3
 import cognitojwt
 from error import *
 from response import *
 from config import *
+
 cog_provider_client = boto3.client('cognito-idp')
 cog_identity_client = boto3.client('cognito-identity')
 RESPONSE_HEADER = {
@@ -31,32 +35,73 @@ def claimsToken(jwt_token,field):
 
     return verified_claims.get(field)
 
+class Feedback(object):
+    def __init__(self):
+        self.db_client = boto3.resource('dynamodb',region_name=REGION)
+        self.TBL = "feedback"
+    def CreateItem(self,info):
+         self.db_client.Table(self.TBL).put_item(Item={
+             "ID":info["ID"],
+             "name":info["name"],
+             "content":info["content"],
+             "created_time":info["created_time"],
+         })
+    
+    def CheckKeyIsExist(self,ID):
+        response = self.db_client.Table(self.TBL).get_item(Key={
+                "ID":ID
+        })
+        if 'Item' in response:
+            return True
+        return False
+
 @error_response
 def lambda_handler(event, context):
     headers = event['headers']['Authorization']
     authorization_header = headers
     token = authorization_header.replace('Bearer ','')
+    feedbackDB = Feedback()
+
     if not len(authorization_header):
         raise Exception(MessageMissingAuthorizationHeader)
+    
     try:
         body = json.loads(event['body'])
         text = body['text']
     except Exception as e:
         print(e)
         raise Exception(MessageUnmarshalInputJson)
+
     try:
         username = claimsToken(token,'username')
     except Exception as e:
         raise e
+    info = {}
+    while True:
+        key = str(uuid.uuid4())
+        UTC = pytz.utc
+        datetimeUTC = datetime.now(UTC)
+        datetimeString = datetimeUTC.strftime('%Y:%m:%d %H:%M:%S %Z %z')
+        if not feedbackDB.CheckKeyIsExist(key):
+            info = {
+                "ID":key,
+                "name":username,
+                "content":text,
+                "created_time": datetimeString
+            }
+            feedbackDB.CreateItem(info)
+            break
+    message = "Username: {}\n Time: {}\n Content: {}".format(info['name'],info['created_time'],info['content'])
     payload ={"channel":CHANNELWEBHOOK,
     "username":username,
-    "text":text,
+    "text":message,
     "icon_emoji":":ghost:"}
+
     req  = requests.post(
         WEBHOOK,json=payload
     )
-    #MessageSendFeedbackFailed = "Send feeback failed"
-    # MessageSendFeedbackSuccessfully = "send feedback successfully"
+
+
     if req.status_code != 200:
         return generate_response(
             message=MessageSendFeedbackFailed,
@@ -68,4 +113,3 @@ def lambda_handler(event, context):
             data={},
             headers=RESPONSE_HEADER
         )
-

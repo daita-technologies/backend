@@ -163,10 +163,16 @@ def lambda_handler(event, context):
                 'PASSWORD': password
             }
         )
+    except cog_provider_client.exceptions.UserNotConfirmedException :
+        return generate_response(
+            message=MessageUserVerifyConfirmCode,
+            data={},
+            headers=RESPONSE_HEADER
+        )
     except Exception as e:
         print(e)
         return generate_response(
-            message=MessageAuthenFailed,
+            message=MessageLoginFailed,
             data={},
             headers=RESPONSE_HEADER
         )

@@ -267,14 +267,14 @@ Resources:
   TaskDashboardInfoFunction:
     Type: AWS::Serverless::Function
     Properties:
-      CodeUri: functions/handlers/dataflow/get_decompress_task
+      CodeUri: functions/handlers/task_dashboard/get_info
       Role: !GetAtt LambdaExecutionRole.Arn
       Environment:
         Variables:
           DecompressTaskTable: !Ref ParaTableDataFlowTaskName
           TableHealthCheckTasksName: !Ref TableHealthCheckTasksName
           TableGenerateTaskName: !Ref TableGenerateTaskName
-          TableDownloadTaskName: !Ref TableDownloadTaskName
+          TableDownloadTaskName: !Ref ParaTableDownloadTaskName
 
 
 Outputs:
