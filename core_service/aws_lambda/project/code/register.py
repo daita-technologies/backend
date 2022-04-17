@@ -12,6 +12,8 @@ from error import *
 from response import *
 from config import *
 from custom_mail import *
+from verify_captcha import *
+
 from datetime import datetime
 def convert_current_date_to_iso8601():
     my_date = datetime.now()
@@ -59,7 +61,7 @@ def lambda_handler(event, context):
         username = body['username']
         mail = body['email']
         password = body['password']
-        captcha = event["captcha"]
+        captcha = body["captcha"]
     except Exception as e:
         print(e)
         raise Exception(e)

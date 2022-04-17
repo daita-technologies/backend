@@ -11,6 +11,8 @@ from utils import aws_get_identity_id
 from error import *
 from response import *
 from config import *
+from eventID import CreateEventUserLogin, CheckEventUserLogin
+from verify_captcha import *
 
 ACCESS_TOKEN_EXPIRATION = 24 * 60 * 60
 mailRegexString =re.compile('([A-Za-z0-9]+[.-_])*[A-Za-z0-9]+@[A-Za-z0-9-]+(\.[A-Z|a-z]{2,})+')
@@ -88,7 +90,7 @@ class User(object):
 #############################################################################################################
 def createKMSKey(identity):
     alias_name = identity.split(":")[1]
-    kms = boto3.client("kms", region_name="us-west-2")
+    kms = boto3.client("kms", region_name=REGION)
 
     key = kms.create_key()
     key_id = key["KeyMetadata"]["KeyId"]
@@ -108,7 +110,7 @@ def getCredentialsForIdentity(token_id):
     })
     return {
         'secret_key': credentialsResponse['Credentials']['SecretKey'],
-        'session_key': credentialsResponse['Credentials']['SecretKey'],
+        'session_key': credentialsResponse['Credentials']['SessionToken'],
         'credential_token_expires_in':credentialsResponse['Credentials']['Expiration'].timestamp() * 1000,
         'access_key': credentialsResponse['Credentials']['AccessKeyId'],
         'identity_id':responseIdentity
@@ -133,7 +135,7 @@ def lambda_handler(event, context):
     try:
         verify_captcha(captcha)
     except Exception as exc:
-        print(MessageCaptchaFailed)
+        print(exc)
         raise Exception(MessageCaptchaFailed) from exc
     
     if re.fullmatch(mailRegexString,username):
@@ -173,7 +175,7 @@ def lambda_handler(event, context):
         'token': authResponse['AuthenticationResult']['AccessToken'],
         'resfresh_token': authResponse['AuthenticationResult']['RefreshToken'],
         'id_token': authResponse['AuthenticationResult']['IdToken'],
-        'token_expires_in': datetime.now().timestamp() + ACCESS_TOKEN_EXPIRATION
+        'token_expires_in': float(int((datetime.now().timestamp() + ACCESS_TOKEN_EXPIRATION)*1000))
     }
     
     if not checkEmailVerified(response['token']):
@@ -189,6 +191,12 @@ def lambda_handler(event, context):
             headers=RESPONSE_HEADER)
         
     sub = getSub(response['token'])
+    
+    # check the user is login another device
+    if CheckEventUserLogin(sub):
+        raise Exception(MessageAnotherUserIsLoginBefore)
+    else:
+        CreateEventUserLogin(sub)
 
     if not model.checkFirstLogin(ID=sub,username=username):
         kms = createKMSKey(credentialsForIdentity['identity_id'])

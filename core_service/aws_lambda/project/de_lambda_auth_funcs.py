@@ -6,11 +6,25 @@ CODE_DIR = PROJECT_DIR.joinpath("code")
 
 def deploy_lambda_auth(general_info, lambda_service):
     ls_lambda_val = []
-
+    #log out
+    lambda_uri, lambda_version = lambda_service.deploy_lambda_function(f'logout',
+                                          [ CODE_DIR.joinpath("logout.py"),
+                                            CODE_DIR.joinpath("utils.py"),
+                                            PROJECT_DIR.joinpath("packages"),
+                                             PROJECT_DIR.joinpath("common"),
+                                         ],
+                                        {
+                                            'USER_POOL_ID' : general_info['USER_POOL_ID'],
+                                            'IDENTITY_POOL_ID': general_info['IDENTITY_POOL_ID']
+                                        },
+                                        'logout.lambda_handler',
+                                        'staging: logout')
+    add_lambda_info_to_list(ls_lambda_val, lambda_uri, lambda_version, 'auth', 'user_logout')
     #login
     lambda_uri, lambda_version = lambda_service.deploy_lambda_function(f'login',
                                           [ CODE_DIR.joinpath("login.py"),
                                             CODE_DIR.joinpath("utils.py"),
+                                            PROJECT_DIR.joinpath("packages"),
                                              PROJECT_DIR.joinpath("common"),
                                          ],
                                         {
@@ -21,10 +35,11 @@ def deploy_lambda_auth(general_info, lambda_service):
                                         'staging: login')
     add_lambda_info_to_list(ls_lambda_val, lambda_uri, lambda_version, 'auth', 'user_login')
 
-    # sign up
+    # # sign up
     lambda_uri, lambda_version = lambda_service.deploy_lambda_function(f'user_signup',
                                           [ CODE_DIR.joinpath("register.py"),
-                                             PROJECT_DIR.joinpath("common"),
+                                            PROJECT_DIR.joinpath("packages"),
+                                            PROJECT_DIR.joinpath("common"),
                                          ],
                                         {
                                             'USER_POOL_ID' : general_info['USER_POOL_ID'],
@@ -94,6 +109,7 @@ def deploy_lambda_auth(general_info, lambda_service):
                                         [
                                             CODE_DIR.joinpath("forgot_password.py"),
                                             PROJECT_DIR.joinpath("common"),
+                                            PROJECT_DIR.joinpath("packages"),
                                         ],
                                         {
                                             'USER_POOL_ID' : general_info['USER_POOL_ID'],
@@ -101,12 +117,13 @@ def deploy_lambda_auth(general_info, lambda_service):
                                         },
                                         'forgot_password.lambda_handler',
                                         'staging: forgot password')
-    add_lambda_info_to_list(ls_lambda_val, lambda_uri, lambda_version, 'auth', 'forgot-password')
+    add_lambda_info_to_list(ls_lambda_val, lambda_uri, lambda_version, 'auth', 'forgot_password')
 
     # backend/lambda/login/module/auth/confirm_code_forgot_password.go
     lambda_uri, lambda_version = lambda_service.deploy_lambda_function(f'staging-confirm-code-forgot-password',
                                         [
                                             CODE_DIR.joinpath("confirm_code_forgot_password.py"),
+                                            PROJECT_DIR.joinpath("packages"),
                                             PROJECT_DIR.joinpath("common")
                                         ],
                                         {
@@ -130,7 +147,7 @@ def deploy_lambda_auth(general_info, lambda_service):
                                         },
                                         'login_refresh_token.lambda_handler',
                                         'staging: Get refresh Token')
-    add_lambda_info_to_list(ls_lambda_val, lambda_uri, lambda_version, 'auth', 'refresh-token')
+    add_lambda_info_to_list(ls_lambda_val, lambda_uri, lambda_version, 'auth', 'refresh_token')
 
     # Wrapper for Github token api to comply with Cognito OpenID
     lambda_uri, lambda_version = lambda_service.deploy_lambda_function(f'staging-github-openid-token-wrapper',

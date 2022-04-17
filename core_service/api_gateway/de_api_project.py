@@ -21,8 +21,7 @@ def deploy_api_project(ls_lambda_info, general_info):
     auth_id = gateway.add_rest_resource(gateway.root_id, RESOURCE_AUTH)
     webhook_id =  gateway.add_rest_resource(gateway.root_id, RESOURCE_WEBHOOK)
     sendmail_id = gateway.add_rest_resource(gateway.root_id,RESOURCE_SENMAIL)
-
-    for lambda_uri, lambda_version, api_resource, api_name in ls_lambda_info:
+    for lambda_uri, lambda_version, api_resource, api_name in ls_lambda_info:  
         if api_resource == 'project':
             resource_id_choose = project_id
         elif api_resource == 'generate':

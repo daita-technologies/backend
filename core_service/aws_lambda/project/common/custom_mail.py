@@ -29,14 +29,16 @@ class TriggerCustomMailcode:
     def delete_item(self,info):
         self.db_client.Table(self.TBL).delete_item(
         Key={
-            'user': info['user']
+            'user': info['user'],
+            'code':info['code']
         }
     )
 
     def find_item(self,info):
         response = self.db_client.Table(self.TBL).get_item(
               Key={
-                   'user':info['user']
+                   'user':info['user'],
+                   'code':info['code']
                                  }
         )
         return True if 'Item' in response else False
@@ -53,7 +55,8 @@ def DeleteConfirmCode(info):
     if not modelTrigger.find_item({'user':info['user'],'code':info['code']}):
         raise Exception("A wrong confirmation code has been entered. If you have requested a new confirmation code, use only the latest code.")
     modelTrigger.delete_item({
-        'user':info['user']
+        'user':info['user'],
+        'code':info['code']
             })
 
 def ResendCodeConfirm(info):
