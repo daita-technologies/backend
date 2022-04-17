@@ -52,7 +52,7 @@ def lambda_handler(event, context):
                     "status": "RUNNING",
                     "process_type": "DOWNLOAD",
                     "project_id": project_id,
-                    "create_time": create_time,
+                    "created_time": create_time,
                 }
             )
     except Exception as e:
