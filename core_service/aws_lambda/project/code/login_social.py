@@ -150,7 +150,7 @@ def lambda_handler(event, context):
     # print(getNamDisplay(user=username))
     
     try:
-        credentialsForIdentity = getCredentialsForIdentity(resqData['id_token'])
+        credentialsForIdentity = getCredentialsForIdentity(authenticated['AuthenticationResult']['IdToken'])
     except Exception as e:
         print(e)
         return generate_response(

@@ -32,3 +32,4 @@ MessageLoginMailNotExist = "Email does not exist"
 MessageAnotherUserIsLoginBefore = "You are already logged in on another device"
 MessageErrorUserdoesnotlogin = "Current user did not login to the application!"
 MessageLogoutSuccessfully = "User log out successfully" 
+

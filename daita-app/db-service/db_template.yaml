@@ -1,0 +1,121 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: >
+  SAM Template for Nested application resources
+
+Parameters:
+  StagePara:
+    Type: String
+
+Resources:
+    #================ DYNAMODB ==================================================
+  GenerateTaskDB:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      AttributeDefinitions:
+        - 
+          AttributeName: identity_id
+          AttributeType: S
+        - 
+          AttributeName: task_id
+          AttributeType: S
+      KeySchema:
+        - 
+          AttributeName: identity_id
+          KeyType: HASH
+        -
+          AttributeName: task_id
+          KeyType: RANGE
+      TableName: !Sub "${StagePara}-generate-tasks"
+      BillingMode: PAY_PER_REQUEST
+
+  HealthCheckTaskDB:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      AttributeDefinitions:
+        - 
+          AttributeName: identity_id
+          AttributeType: S
+        - 
+          AttributeName: task_id
+          AttributeType: S
+      KeySchema:
+        - 
+          AttributeName: identity_id
+          KeyType: HASH
+        -
+          AttributeName: task_id
+          KeyType: RANGE
+      TableName: !Sub "${StagePara}-healthcheck-tasks"
+      BillingMode: PAY_PER_REQUEST
+
+  HealthCheckInfoDB:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      AttributeDefinitions:
+        - 
+          AttributeName: project_id
+          AttributeType: S
+        - 
+          AttributeName: healthcheck_id
+          AttributeType: S
+      KeySchema:
+        - 
+          AttributeName: project_id
+          KeyType: HASH
+        -
+          AttributeName: healthcheck_id
+          KeyType: RANGE
+      TableName: !Sub "${StagePara}-healthcheck-info"
+      BillingMode: PAY_PER_REQUEST
+
+  DataFlowTaskTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: !Sub "${StagePara}-dataflow-task"
+      AttributeDefinitions:
+        - 
+          AttributeName: identity_id
+          AttributeType: S
+        - 
+          AttributeName: task_id
+          AttributeType: S
+      KeySchema:
+        - 
+          AttributeName: identity_id
+          KeyType: HASH
+        -
+          AttributeName: task_id
+          KeyType: RANGE
+      BillingMode: PAY_PER_REQUEST
+
+Outputs:
+  TableGenerateTaskName:
+    Description: "Name of table generate task"
+    Value: !Ref GenerateTaskDB
+  TableProjectsName:
+    Description: "Name of table projects"
+    Value: projects
+  TableMethodsName:
+    Description: "Name of table methods"
+    Value: methods
+  TableHealthCheckTasksName:
+    Description: "Name of table health check tasks"
+    Value: !Ref HealthCheckTaskDB
+  TableHealthCheckInfoName:
+    Description: "Name of table health check info !Ref HealthCheckInfoDB"
+    Value: !Ref HealthCheckInfoDB
+  TableDataAugmentName:
+    Description: "Name of table data augment"
+    Value: data_augment
+  TableDataOriginalName:
+    Description: "Name of table data original"
+    Value: data_original
+  TableDataPreprocessName:
+    Description: "Name of table data preprocess"
+    Value: data_preprocess
+  TableDataFlowTaskName:
+    Description: "Content task of download and upload service"
+    Value: !Ref DataFlowTaskTable
+  TableDownloadTaskName:
+    Value: down_tasks
