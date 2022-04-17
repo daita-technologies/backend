@@ -27,43 +27,15 @@ client_id = '4cpbb5etp3q7grnnrhrc7irjoa'
 def getRedirectURI():
     return 'https://nzvw2zvu3d.execute-api.us-east-2.amazonaws.com/staging/auth/login_social'
     
-
-
-#############################################################################################################
-def getCredentialsForIdentity(token_id):
-    PROVIDER = f'cognito-idp.{REGION}.amazonaws.com/{USERPOOLID}'
-    responseIdentity = aws_get_identity_id(token_id)
-
-    credentialsResponse = cog_identity_client.get_credentials_for_identity(
-                IdentityId=responseIdentity,
-                Logins ={ 
-                    PROVIDER: token_id
-    })
-      
-    return {
-        'secret_key': credentialsResponse['Credentials']['SecretKey'],
-        'session_key': credentialsResponse['Credentials']['SessionToken'],
-        'credential_token_expires_in':credentialsResponse['Credentials']['Expiration'].timestamp() * 1000,
-        'access_key': credentialsResponse['Credentials']['AccessKeyId'],
-        'identity_id':responseIdentity
-    }
-#############################################################################################################################################################
-def Oauth2(code):
-    params = {"code": code, "grant_type": "authorization_code", "redirect_uri": getRedirectURI(),'client_id':client_id,'scope':'email+openid+phone+profile'}
-    headers = {"Content-Type": "application/x-www-form-urlencoded"}
-    data = urlencode(params)
-    result = requests.post(endpoint, data=data, headers=headers)
-    return result
-##############################################################################################################################################3
 @error_response
 def lambda_handler(event, context):
-    print(event,type(event))
     param = event['queryStringParameters']
     try:
         code = param['code']
     except Exception as e:
         print(e)
         raise Exception(e)
+
     if 'state' in param:
         path = base64.b64decode(param['state']).decode('utf-8')
     else: 
