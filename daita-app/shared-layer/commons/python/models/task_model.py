@@ -3,89 +3,6 @@ from boto3.dynamodb.conditions import Key, Attr
 from config import *
 from utils import *
 
-
-# class GenerateTaskItem():
-#     FIELD_IDENTITY_ID = "identity_id"
-#     FIELD_PROJECT_ID = "project_id"
-#     FIELD_STATUS = "status"
-#     FIELD_NUM_VALUE = "num_value"
-#     FIELD_TASK_ID = "task_id"
-#     FIELD_TYPE_METHOD = "type_method"
-#     FIELD_UPDATE_TIME = "updated_time"
-#     FIELD_NUMBER_FINISHED = "number_finished"
-#     FIELD_PROJECT_ID = "project_id"
-#     FIELD_NUM_GEN_IMAGES = "number_gen_images"
-#     FIELD_CREATE_TIME = "created_time"
-
-#     REQUEST_TYPE_ALL            = "all"
-#     REQUEST_TYPE_TASK_PROGRESS  = "task_progress"
-
-#     def __init__(self) -> None:
-#         self.identity_id        = ""
-#         self.task_id            = ""
-#         self.status             = ""
-#         self.type_method        = ""
-#         self.number_finished    = 0
-#         self.number_gen_images  = 0
-#         self.project_id         = ""
-#         self.create_time        = convert_current_date_to_iso8601()
-#         self.updated_time       = convert_current_date_to_iso8601()
-
-
-#     def to_dict(self, request = REQUEST_TYPE_ALL):
-#         print(self.__dict__)
-#         if request == self.REQUEST_TYPE_TASK_PROGRESS:
-#             dict_info = {
-#                 self.FIELD_IDENTITY_ID: self.identity_id,
-#                 self.FIELD_TASK_ID: self.task_id,
-#                 self.FIELD_STATUS: self.status,
-#                 self.FIELD_PROCESS_TYPE: self.process_type,
-#                 self.FIELD_NUMBER_FINISHED: self.number_finished,
-#                 self.FIELD_NUM_GEN_IMAGES: self.number_gen_images,
-#                 self.FIELD_PROJECT_ID: self.project_id
-#             }
-#         else:
-#             dict_info = {
-#                 self.FIELD_IDENTITY_ID: self.identity_id,
-#                 self.FIELD_TASK_ID: self.task_id,
-#                 self.FIELD_STATUS: self.status,
-#                 self.FIELD_TYPE_METHOD: self.type_method,
-#                 self.FIELD_NUMBER_FINISHED: self.number_finished,
-#                 self.FIELD_NUM_GEN_IMAGES: self.number_gen_images,
-#                 self.FIELD_PROJECT_ID: self.project_id,
-#                 self.FIELD_CREATE_TIME: self.create_time,
-#                 self.FIELD_UPDATE_TIME: self.updated_time
-#             }
-#         return dict_info
-
-#     def from_db_item(self, item_info):
-#         if item_info is None:
-#             return None
-#         else:
-#             self.identity_id        = item_info.get(self.FIELD_IDENTITY_ID)
-#             self.task_id            = item_info.get(self.FIELD_TASK_ID)
-#             self.updated_time       = item_info.get(self.FIELD_UPDATE_TIME)
-#             self.status             = item_info.get(self.FIELD_STATUS)
-#             self.process_type       = item_info.get(self.FIELD_TYPE_METHOD)
-#             self.number_finished    = int(item_info.get(self.FIELD_NUMBER_FINISHED))
-#             self.number_gen_images  = int(item_info.get(self.FIELD_NUM_GEN_IMAGES))
-#             self.project_id         = item_info.get(self.FIELD_PROJECT_ID)
-
-#             return self   
-
-#     @classmethod
-#     def create_new_generate_task(cls, identity_id, project_id, type_method):
-#         object = cls()
-#         object.task_id = create_unique_id()
-#         object.type_method = type_method
-#         object.status = VALUE_GENERATE_TASK_STATUS_PENDING
-#         object.identity_id = identity_id
-#         object.project_id = project_id
-        
-#         return object
-
-
-
 class TaskModel():  
 
     FIELD_IDENTITY_ID = "identity_id"
@@ -153,7 +70,7 @@ class TaskModel():
                         filter_status = filter
                     else:
                         filter_status = filter_status | filter
-                        
+
             filterExpression = filterExpression & (filter_status)
 
         ls_task, ls_page_token = self._query_task(identity_id, filterExpression, pag_page_token, limit_size)
