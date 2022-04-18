@@ -5,8 +5,8 @@ from typing import *
 
 
 RESPONSE_HEADER = {
-    "access-control-allow-origin": "*",
-	"access-control-allow-headers": "Origin, Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token,X-Amz-User-Agent"
+    "Access-Control-Allow-Origin": "*",
+	"Access-Control-Allow-Headers": "Origin, Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token,X-Amz-User-Agent"
 }
 
 RESPONSE_HEADER_1 = {
