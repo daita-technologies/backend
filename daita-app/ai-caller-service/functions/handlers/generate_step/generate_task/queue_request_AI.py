@@ -12,11 +12,11 @@ def getQueue(queue_name):
         raise e
     return response['QueueUrl']
 
-
-def countTaskInQueue(queue_id):
-    print(queue_id)
+def countTaskInQueue(queue_id):    
     sqs = sqsResourse.get_queue_by_name(QueueName=queue_id)
-    return len(sqs.receive_messages())
+    num_task_in_queue = len(sqs.receive_messages())
+    print(f"QueueID:  {queue_id} has len: {num_task_in_queue}")
+    return num_task_in_queue
 """
 batches_input
 batches_output
@@ -106,6 +106,7 @@ def assignTaskToEc2(ec2Instances,data,type_method,num_augments_per_image,code):
             'queue': getQueue(ec2IDs[index]['queque_id'])
         }
         listRequestAPI.append(task)
+        
     print("SHARE TASK")
     print(len(listRequestAPI),length_batched)
     print(listRequestAPI)
