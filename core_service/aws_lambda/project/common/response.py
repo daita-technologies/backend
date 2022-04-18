@@ -6,9 +6,14 @@ from typing import *
 
 RESPONSE_HEADER = {
     "access-control-allow-origin": "*",
-	"access-control-allow-headers": "Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token,X-Amz-User-Agent"
+	"access-control-allow-headers": "Origin, Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token,X-Amz-User-Agent"
 }
 
+RESPONSE_HEADER_1 = {
+            'Access-Control-Allow-Headers': "Origin, Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token,X-Amz-User-Agent",
+            'Access-Control-Allow-Origin': '*',
+            'Access-Control-Allow-Methods': "GET, HEAD, OPTIONS, POST, PUT"
+        }
 
 def generate_response(
     message: str,
@@ -19,7 +24,7 @@ def generate_response(
     error: bool = False
     ):
 
-    headers.update(RESPONSE_HEADER)
+    headers.update(RESPONSE_HEADER_1)
     
     body = {
         "message": message,
