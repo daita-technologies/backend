@@ -129,7 +129,8 @@ def lambda_handler(event, context):
         return generate_response(
             message=MessageUnmarshalInputJson,
             data={},
-            headers=RESPONSE_HEADER
+            headers=RESPONSE_HEADER,
+            error = True
         )
     
     try:
@@ -151,7 +152,8 @@ def lambda_handler(event, context):
         return generate_response(
             message=MessageUnmarshalInputJson,
             data={},
-            headers=RESPONSE_HEADER
+            headers=RESPONSE_HEADER,
+            error = True
         )
     
     try :
@@ -167,14 +169,16 @@ def lambda_handler(event, context):
         return generate_response(
             message=MessageUserVerifyConfirmCode,
             data={},
-            headers=RESPONSE_HEADER
+            headers=RESPONSE_HEADER,
+            error = True
         )
     except Exception as e:
         print(e)
         return generate_response(
             message=MessageLoginFailed,
             data={},
-            headers=RESPONSE_HEADER
+            headers=RESPONSE_HEADER,
+            error = True
         )
 
     response = {
@@ -194,7 +198,8 @@ def lambda_handler(event, context):
         return generate_response(
             message=MessageAuthenFailed,
             data={},
-            headers=RESPONSE_HEADER)
+            headers=RESPONSE_HEADER,
+            error = True)
         
     sub = getSub(response['token'])
     
