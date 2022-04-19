@@ -55,16 +55,21 @@ def lambda_handler(event, context):
         table = dynamodb.Table(table_name)
         if len(next_token) == 0: 
             response = table.query(
+                    IndexName='index-created-sorted',
                     KeyConditionExpression = Key('project_id').eq(project_id),
-                    ProjectionExpression='filename, s3_key, classtype, gen_id',
-                    Limit = num_limit
+                    ProjectionExpression='filename, s3_key, type_method, gen_id, created_date',
+                    Limit = num_limit,
+                    ScanIndexForward = False
                 )
             print('___Response first: ___', response)
         else:
             response = table.query(
+                                IndexName='index-created-sorted',
                                 KeyConditionExpression = Key('project_id').eq(project_id),
-                                ProjectionExpression='filename, s3_key, classtype, gen_id',
-                                ExclusiveStartKey=next_token, Limit = num_limit,                                
+                                ProjectionExpression='filename, s3_key, type_method, gen_id, created_date',
+                                ExclusiveStartKey=next_token, 
+                                Limit = num_limit, 
+                                ScanIndexForward = False
                             )
             print('___Response next: ___', response)
     
