@@ -56,7 +56,8 @@ class GenerateTaskItem():
                 self.FIELD_NUM_GEN_IMAGES: self.number_gen_images,
                 self.FIELD_PROJECT_ID: self.project_id,
                 self.FIELD_CREATE_TIME: self.create_time,
-                self.FIELD_UPDATE_TIME: self.updated_time
+                self.FIELD_UPDATE_TIME: self.updated_time,
+                self.FIELD_PROCESS_TYPE: self.process_type,
             }
         return dict_info
 
