@@ -7,3 +7,6 @@ def convert_current_date_to_iso8601():
 
 def create_unique_id():
     return str(uuid.uuid4())
+
+def create_task_id_w_created_time():
+    return f"{convert_current_date_to_iso8601()}-{create_unique_id()}"

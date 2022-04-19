@@ -79,7 +79,7 @@ class GenerateTaskItem():
     @classmethod
     def create_new_generate_task(cls, identity_id, project_id, type_method):
         object = cls()
-        object.task_id = create_unique_id()
+        object.task_id = create_task_id_w_created_time()
         object.type_method = type_method
         object.process_type = type_method
         object.status = VALUE_GENERATE_TASK_STATUS_PENDING
