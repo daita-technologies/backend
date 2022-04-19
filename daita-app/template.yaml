@@ -171,6 +171,7 @@ Resources:
         ParaDecompressFileStateMachineArn: !GetAtt DataFlowService.Outputs.DecompressFileStateMachineArn
         ParaTableDownloadTaskName: !GetAtt DatabaseService.Outputs.TableDownloadTaskName
         ParaTableProjectSumName: !GetAtt DatabaseService.Outputs.TableProjectSumName
+        ParaIndexTaskProjectIDTaskID: !GetAtt DatabaseService.Outputs.IndexTaskProjectIDTaskIDName
 
 
   HealthCheckService:

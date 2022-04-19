@@ -6,6 +6,9 @@ Description: >
 Parameters:
   StagePara:
     Type: String
+  IndexTaskProjectIDTaskIDName:
+    Type: String
+    Default: index-projectid-taskid
 
 Resources:
     #================ DYNAMODB ==================================================
@@ -19,6 +22,9 @@ Resources:
         - 
           AttributeName: task_id
           AttributeType: S
+        -
+          AttributeName: project_id
+          AttributeType: S
       KeySchema:
         - 
           AttributeName: identity_id
@@ -27,6 +33,18 @@ Resources:
           AttributeName: task_id
           KeyType: RANGE
       TableName: !Sub "${StagePara}-generate-tasks"
+      GlobalSecondaryIndexes:
+        -
+          IndexName: !Ref IndexTaskProjectIDTaskIDName
+          KeySchema:
+            - 
+              AttributeName: project_id
+              KeyType: HASH
+            -
+              AttributeName: task_id
+              KeyType: RANGE
+          Projection:
+            ProjectionType: ALL  
       BillingMode: PAY_PER_REQUEST
 
   HealthCheckTaskDB:
@@ -39,6 +57,9 @@ Resources:
         - 
           AttributeName: task_id
           AttributeType: S
+        -
+          AttributeName: project_id
+          AttributeType: S
       KeySchema:
         - 
           AttributeName: identity_id
@@ -47,6 +68,18 @@ Resources:
           AttributeName: task_id
           KeyType: RANGE
       TableName: !Sub "${StagePara}-healthcheck-tasks"
+      GlobalSecondaryIndexes:
+        -
+          IndexName: !Ref IndexTaskProjectIDTaskIDName
+          KeySchema:
+            - 
+              AttributeName: project_id
+              KeyType: HASH
+            -
+              AttributeName: task_id
+              KeyType: RANGE
+          Projection:
+            ProjectionType: ALL  
       BillingMode: PAY_PER_REQUEST
 
   HealthCheckInfoDB:
@@ -80,6 +113,9 @@ Resources:
         - 
           AttributeName: task_id
           AttributeType: S
+        -
+          AttributeName: project_id
+          AttributeType: S
       KeySchema:
         - 
           AttributeName: identity_id
@@ -87,6 +123,18 @@ Resources:
         -
           AttributeName: task_id
           KeyType: RANGE
+      GlobalSecondaryIndexes:
+        -
+          IndexName: !Ref IndexTaskProjectIDTaskIDName
+          KeySchema:
+            - 
+              AttributeName: project_id
+              KeyType: HASH
+            -
+              AttributeName: task_id
+              KeyType: RANGE
+          Projection:
+            ProjectionType: ALL        
       BillingMode: PAY_PER_REQUEST
 
 Outputs:
@@ -121,3 +169,5 @@ Outputs:
     Value: !Ref DataFlowTaskTable
   TableDownloadTaskName:
     Value: down_tasks
+  IndexTaskProjectIDTaskIDName:
+    Value: !Ref IndexTaskProjectIDTaskIDName
