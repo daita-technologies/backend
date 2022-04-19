@@ -33,7 +33,7 @@ GENERAL_SETUP = {
     'T_INSTANCES': MODE_DB + 'ec2',
     'T_EC2_TASK': MODE_DB + 'ec2_task',
 
-    'T_TASKS' : MODE_DB + 'tasks',
+    'T_TASKS' : MODE_DB + 'dev-generate-tasks',
     'T_METHODS' : MODE_DB + 'methods',
     "T_QUOTAS": MODE_DB + "quotas",
     "T_TASK_DOWNLOAD": MODE_DB + "down_tasks",
