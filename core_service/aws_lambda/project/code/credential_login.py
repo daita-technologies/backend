@@ -155,7 +155,7 @@ def lambda_handler(event, context):
         raise Exception("Login Social Failed")
     resqData = resq.json()
     sub, username = claimsToken(resqData['access_token'],'sub') , claimsToken(resqData['access_token'],'username')
-        # check the user is login another device
+    # check the user is login another device
     # if CheckEventUserLogin(sub):
     #     raise Exception(MessageAnotherUserIsLoginBefore)
     # else:
