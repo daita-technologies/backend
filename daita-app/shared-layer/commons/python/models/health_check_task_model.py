@@ -65,7 +65,7 @@ class HealthCheckTaskItem():
         object.status = VALUE_HEALTHCHECK_TASK_STATUS_RUNNING
         object.identity_id = identity_id
         object.project_id = project_id
-        
+        object.process_type = VALUE_PROCESS_TYPE_HEALTHCHECK
         return object
 
 
@@ -93,7 +93,7 @@ class HealthCheckTaskModel():
         healthcheck_task_item = HealthCheckTaskItem.create_new_healthcheck_task(identity_id, project_id, data_type)
         self.insert_new_item(healthcheck_task_item)
 
-        return healthcheck_task_item.task_id
+        return healthcheck_task_item.task_id, healthcheck_task_item.process_type
     
     def get_status_of_task(self, identity_id, task_id):
         item = self._get_item(identity_id, task_id)

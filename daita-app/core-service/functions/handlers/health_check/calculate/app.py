@@ -36,8 +36,8 @@ class HealthCheckClass(LambdaBaseClass):
 
     def _create_task(self, identity_id, project_id, data_type):
         # create task id
-        task_id = self.health_check_model.create_new_healthcheck_task(identity_id, project_id, data_type)
-        return task_id 
+        task_id, process_type = self.health_check_model.create_new_healthcheck_task(identity_id, project_id, data_type)
+        return task_id, process_type 
       
     def _put_event_bus(self, detail_pass_para):        
 
@@ -64,7 +64,7 @@ class HealthCheckClass(LambdaBaseClass):
         identity_id = self.get_identity(self.id_token)  
 
         ### create taskID and update to DB
-        task_id = self._create_task(identity_id, self.project_id, self.data_type)
+        task_id, process_type = self._create_task(identity_id, self.project_id, self.data_type)
 
         ### push event to eventbridge
         detail_pass_para = {
@@ -80,6 +80,7 @@ class HealthCheckClass(LambdaBaseClass):
             status_code=HTTPStatus.OK,
             data={
                 KEY_NAME_TASK_ID: task_id,
+                KEY_NAME_PROCESS_TYPE: process_type
             },
         )
 
