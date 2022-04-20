@@ -6,22 +6,22 @@ from config import *
 from response import *
 from error_messages import *
 from identity_check import *
+from utils import from_dynamodb_to_json
 
 from system_parameter_store import SystemParameterStore
 from lambda_base_class import LambdaBaseClass
 from models.task_model import TaskModel
 
-
-class TaskDashboardClass(LambdaBaseClass):
+class TaskDashboardClass(LambdaBaseClass):    
 
     def __init__(self) -> None:   
         super().__init__()     
         self.client_events = boto3.client('events')    
         self.const = SystemParameterStore()   
-        self.table_generateTask = TaskModel(os.environ["TableGenerateTaskName"])
-        self.table_downloadTask = TaskModel(os.environ["TableDownloadTaskName"])
-        self.table_decompressTask = TaskModel(os.environ["DecompressTaskTable"])
-        self.table_healthcheckTask = TaskModel(os.environ["TableHealthCheckTasksName"])
+        self.table_generateTask = TaskModel(os.environ["TableGenerateTaskName"], os.environ["INDEX_TASK_PROJECTID_TASKID"])
+        self.table_downloadTask = TaskModel(os.environ["TableDownloadTaskName"], os.environ["INDEX_TASK_PROJECTID_TASKID"])
+        self.table_decompressTask = TaskModel(os.environ["DecompressTaskTable"], os.environ["INDEX_TASK_PROJECTID_TASKID"])
+        self.table_healthcheckTask = TaskModel(os.environ["TableHealthCheckTasksName"], os.environ["INDEX_TASK_PROJECTID_TASKID"])
 
     @LambdaBaseClass.parse_body
     def parser(self, body):
@@ -64,11 +64,14 @@ class TaskDashboardClass(LambdaBaseClass):
 
         for process_type in self.filter_ls_process_type:
             table = self._map_process_type_w_table(process_type)
+            print(f"Process for process_type: {process_type}")
             ls_task, ls_page_token = table.get_tasks_w(identity_id, self.filter_prj_id, self.filter_ls_status, process_type, self.pag_page_token, self.size_ls_item)
+            ls_task = [from_dynamodb_to_json(item) for item in ls_task]
             task_info_dict[process_type] = {
                 "ls_task" : ls_task,
                 "ls_page_token": ls_page_token
             }
+            ls_page_token = []
                 
         return task_info_dict
 
@@ -92,6 +95,4 @@ class TaskDashboardClass(LambdaBaseClass):
 @error_response
 def lambda_handler(event, context):
 
-    return TaskDashboardClass().handle(event, context)
-
-    
+    return TaskDashboardClass().handle(event, context)    
