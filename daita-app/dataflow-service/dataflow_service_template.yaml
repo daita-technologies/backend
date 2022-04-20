@@ -177,7 +177,7 @@ Resources:
     Properties:
       Type: STANDARD
       Name: !Sub "${StagePara}-${ApplicationPara}-DecompressFileSM"
-      Definitionuri: decompress-app/statemachine/decompress_file.asl.yml
+      Definitionuri: decompress-upload-app/statemachine/decompress_file.asl.yml
       DefinitionSubstitutions:
         DecompressTaskCluster: !GetAtt DecompressTaskCluster.Arn
         DecompressTask: !Ref DecompressTask
@@ -248,7 +248,7 @@ Resources:
   DivideDecompressChunksFunction:
     Type: AWS::Serverless::Function
     Properties:
-      Codeuri: decompress-app/functions/divide_decompressed_chunks/
+      Codeuri: decompress-upload-app/functions/divide_decompressed_chunks/
       VpcConfig:
         SecurityGroupIds:
           - !Ref SecurityGroupIds
@@ -282,7 +282,7 @@ Resources:
   UploadDecompressedFunction:
     Type: AWS::Serverless::Function
     Properties:
-      Codeuri: decompress-app/functions/upload_decompressed/
+      Codeuri: decompress-upload-app/functions/upload_decompressed/
       Timeout: 30
       VpcConfig:
         SecurityGroupIds:
@@ -310,13 +310,13 @@ Resources:
   PostUploadFunction:
     Type: AWS::Serverless::Function
     Properties:
-      Codeuri: decompress-app/functions/post_upload/
+      Codeuri: decompress-upload-app/functions/post_upload/
       Timeout: 30
 
   FinishDecompressTaskFunction:
     Type: AWS::Serverless::Function
     Properties:
-      Codeuri: decompress-app/functions/finish_decompress_task/
+      Codeuri: decompress-upload-app/functions/finish_decompress_task/
       Policies:
         - AmazonDynamoDBFullAccess
         - Statement:
