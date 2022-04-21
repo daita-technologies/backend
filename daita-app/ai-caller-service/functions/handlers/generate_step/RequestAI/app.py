@@ -1,4 +1,6 @@
+from asyncio import Queue
 import http
+import queue
 import time
 import json
 import boto3
@@ -10,16 +12,27 @@ from response import *
 from utils import *
 from identity_check import *
 from boto3.dynamodb.conditions import Key, Attr
-sqsClient = boto3.client("sqs",REGION)
-## publish instance
-
-# def uploadImageFinish()
+sqs = boto3.resource("sqs",REGION)
+def deleteMessageInQueue(task):
+    queueSQS = sqs.get_queue_by_name(QueueName=task['queue'])
+    QueueResp = queueSQS.receive_messages(VisibilityTimeout=60,
+        WaitTimeSeconds=0,MaxNumberOfMessages=10)
+    for message in QueueResp :
+        # messageBody = message.body
+        print("Delete QUEUE")
+        # strTask = json.dumps(task)
+        # # if messageBody == strTask:
+        message.delete()
 
 @error_response
 def lambda_handler(event, context):
     result = event
+    if result['is_retry'] == True:
+        time.sleep(int(result['current_num_retries'])*2)
     print(event)
+
     batch = result['batch']
+    print("batch :",batch)
     print("request AI body: \n", batch['request_json'])
     try :
         output = requests.post(batch['host'],json=batch['request_json'])
@@ -32,10 +45,12 @@ def lambda_handler(event, context):
         result['is_retry'] = True
         if result['current_num_retries'] > result['max_retries']:
             result['is_retry'] = False
+            deleteMessageInQueue(batch)
             return event
         result['current_num_retries'] += 1
         return result
     print(output.text)
     result['response'] = 'OK'
     result['is_retry'] = False
+    deleteMessageInQueue(batch)
     return result

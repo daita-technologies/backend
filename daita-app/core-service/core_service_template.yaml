@@ -62,10 +62,10 @@ Parameters:
     Type: String
   LimitAugmentTimesName:
     Type: String
-  HealthCheckEventBusArn:
-    Type: String
-  HealthCheckEventBusName:
-    Type: String 
+  # HealthCheckEventBusArn:
+  #   Type: String
+  # HealthCheckEventBusName:
+  #   Type: String 
   ParaDecompressFileStateMachineArn:
     Type: String  
   CognitoUserPoolId:
@@ -218,25 +218,25 @@ Resources:
       CodeUri: functions/handlers/generate/split_data
       Role: !GetAtt LambdaExecutionRole.Arn
 
-  ### for health check functions
-  HealthCheckFunction:
-    Type: AWS::Serverless::Function
-    Properties:
-      CodeUri: functions/handlers/health_check/calculate
-      Role: !GetAtt LambdaExecutionRole.Arn
-      Environment:
-        Variables:
-          EVENT_BUS_NAME: !Ref HealthCheckEventBusName
-          TABLE_HEALTHCHECK_TASK: !Ref TableHealthCheckTasksName
+  # ### for health check functions
+  # HealthCheckFunction:
+  #   Type: AWS::Serverless::Function
+  #   Properties:
+  #     CodeUri: functions/handlers/health_check/calculate
+  #     Role: !GetAtt LambdaExecutionRole.Arn
+  #     Environment:
+  #       Variables:
+  #         EVENT_BUS_NAME: !Ref HealthCheckEventBusName
+  #         TABLE_HEALTHCHECK_TASK: !Ref TableHealthCheckTasksName
 
-  HCStatusFunction:
-    Type: AWS::Serverless::Function
-    Properties:
-      CodeUri: functions/handlers/health_check/get_status
-      Role: !GetAtt LambdaExecutionRole.Arn
-      Environment:
-        Variables:
-          TABLE_HEALTHCHECK_TASK: !Ref TableHealthCheckTasksName
+  # HCStatusFunction:
+  #   Type: AWS::Serverless::Function
+  #   Properties:
+  #     CodeUri: functions/handlers/health_check/get_status
+  #     Role: !GetAtt LambdaExecutionRole.Arn
+  #     Environment:
+  #       Variables:
+  #         TABLE_HEALTHCHECK_TASK: !Ref TableHealthCheckTasksName
 
   HCInfoFunction:
     Type: AWS::Serverless::Function
