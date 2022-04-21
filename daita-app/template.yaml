@@ -106,6 +106,7 @@ Resources:
                 Action:
                   - events:PutEvents
                   - s3:Get*
+                  - ecr:*
                 Resource: "*"
 
   #================ LAMBDA LAYERS  ============================================
@@ -167,6 +168,8 @@ Resources:
         CommonCodeLayerName: !Ref CommonCodeLayer
         HealthCheckEventBusArn: !GetAtt HealthCheckService.Outputs.HealthCheckEventBusArn
         HealthCheckEventBusName: !GetAtt HealthCheckService.Outputs.HealthCheckEventBusName
+        # HealthCheckEventBusArn: a
+        # HealthCheckEventBusName: bc
         ParaTableDataFlowTaskName: !GetAtt DatabaseService.Outputs.TableDataFlowTaskName
         ParaDecompressFileStateMachineArn: !GetAtt DataFlowService.Outputs.DecompressFileStateMachineArn
         ParaTableDownloadTaskName: !GetAtt DatabaseService.Outputs.TableDownloadTaskName
