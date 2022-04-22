@@ -22,7 +22,7 @@ class TaskModel():
     FIELD_NUM_GENS_IMAGE = "number_gen_images"
 
 
-    def __init__(self, table_name, index_task_projectid_name) -> None:
+    def __init__(self, table_name, index_task_projectid_name=None) -> None:
         self.table = boto3.resource('dynamodb').Table(table_name) 
         self.table_name = table_name
         self.index_name = index_task_projectid_name

@@ -13,13 +13,16 @@ from utils import *
 from identity_check import *
 from boto3.dynamodb.conditions import Key, Attr
 sqs = boto3.resource("sqs",REGION)
+
 def deleteMessageInQueue(task):
     queueSQS = sqs.get_queue_by_name(QueueName=task['queue'])
     QueueResp = queueSQS.receive_messages(VisibilityTimeout=60,
         WaitTimeSeconds=0,MaxNumberOfMessages=10)
+
+    print(f"Len of queueResp when deleteMessageInQueue: {len(QueueResp)}")
     for message in QueueResp :
         # messageBody = message.body
-        print("Delete QUEUE")
+        print("Delete QUEUE with body: \n", message.body)
         # strTask = json.dumps(task)
         # # if messageBody == strTask:
         message.delete()

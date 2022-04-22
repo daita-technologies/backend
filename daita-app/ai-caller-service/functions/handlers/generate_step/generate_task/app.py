@@ -10,6 +10,7 @@ from identity_check import *
 from ec2 import EC2Model, startEc2
 from queue_request_AI import assignTaskToEc2
 from models.task_model import TaskModel
+
 task_model = TaskModel(os.environ["TABLE_GENERATE_TASK"])
 
 ec2Model = EC2Model()

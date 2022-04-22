@@ -82,84 +82,9 @@ Resources:
       VisibilityTimeout: 0
       ContentBasedDeduplication: true
       QueueName: !Sub "${StagePara}-${ApplicationPara}-SqsEc2Work2.fifo"
-  ###################################CONSUMER LAMBDA#################################
-  # LambdaWorker1:
-  #   Type:  AWS::Serverless::Function
-  #   Properties:
-  #     Timeout: 60
-  #     CodeUri: functions/handlers/consumer_request_ai/workerEc21
-  #     # ReservedConcurrentExecutions: 5
-  #     Events:
-  #       SqsEvent:
-  #         Type: SQS
-  #         Properties:
-  #           Queue: !GetAtt SqsEc2Work1.Arn
-  #           BatchSize: 10
-  #     Policies:
-  #     - Statement:
-  #       - Sid: CloudWatchLogsPolicy
-  #         Effect: Allow
-  #         Action:
-  #           - "logs:CreateLogDelivery"
-  #           - "logs:GetLogDelivery"
-  #           - "logs:UpdateLogDelivery"
-  #           - "logs:DeleteLogDelivery"
-  #           - "logs:ListLogDeliveries"
-  #           - "logs:PutResourcePolicy"
-  #           - "logs:DescribeResourcePolicies"
-  #           - "logs:DescribeLogGroup"
-  #           - "logs:DescribeLogGroups"
-  #         Resource: "*"
-  #       - Sid: CloudWatchEventsFullAccess
-  #         Effect: Allow
-  #         Action:
-  #           - "events:*"
-  #         Resource: "*"
-  # LambdaWorker2:
-  #   Type:  AWS::Serverless::Function
-  #   Properties:
-  #     Timeout: 60
-  #     CodeUri: functions/handlers/consumer_request_ai/workerEc22
-  #     # ReservedConcurrentExecutions: 5
-  #     Events:
-  #       SqsEvent:
-  #         Type: SQS
-  #         Properties:
-  #           Queue: !GetAtt SqsEc2Work2.Arn
-  #           BatchSize: 10
-  #     Policies:
-  #     - Statement:
-  #       - Sid: CloudWatchLogsPolicy
-  #         Effect: Allow
-  #         Action:
-  #           - "logs:CreateLogDelivery"
-  #           - "logs:GetLogDelivery"
-  #           - "logs:UpdateLogDelivery"
-  #           - "logs:DeleteLogDelivery"
-  #           - "logs:ListLogDeliveries"
-  #           - "logs:PutResourcePolicy"
-  #           - "logs:DescribeResourcePolicies"
-  #           - "logs:DescribeLogGroup"
-  #           - "logs:DescribeLogGroups"
-  #         Resource: "*"
-  #       - Sid: CloudWatchEventsFullAccess
-  #         Effect: Allow
-  #         Action:
-  #           - "events:*"
-  #         Resource: "*"     
-  #================ ROLES =====================================================  
-  # EC2StartStopRole:
-  #   Type: 'AWS::IAM::Role'
-  #   Properties:
-  #     AssumeRolePolicyDocument:
-  #       Statement:
-  #         - Effect: Allow
-  #           Principal:
-  #             Service:
-  #               - lambda.amazonaws.com
-  #           Action:
-  #             - 'sts:AssumeRole'
-  # add role to start state machine from eventbus
+  
+  ####================ ROLES ===================================================== 
+  ### add role to start state machine from eventbus
   CallerServiceEventBusRole:
     Type: "AWS::IAM::Role"
     Properties:
@@ -203,10 +128,15 @@ Resources:
             - "logs:DescribeLogGroups"
             - "lambda:InvokeFunction"
           Resource: "*"
+
   CronJobStopEc2:
     Type: AWS::Serverless::Function
     Properties:
       CodeUri: functions/handlers/crontab/stop_ec2
+      Environment:
+        Variables:
+          QUEUE_EC2_NAME_1: !GetAtt SqsEc2Work1.QueueName
+          QUEUE_EC2_NAME_2: !GetAtt SqsEc2Work2.QueueName
       Events:
         ScheduledEvent:
           Type: Schedule
@@ -502,6 +432,7 @@ Resources:
             Action:
             - s3:*
             Resource: "*"
+
   HandleGetResultDownloadTask:
     Type: AWS::Serverless::Function
     Properties:
@@ -538,6 +469,7 @@ Resources:
             Action:
             - s3:*
             Resource: "*"
+            
   HandleDownloadImages:
     Type: AWS::Serverless::Function
     Properties:
@@ -632,6 +564,10 @@ Resources:
     Type: AWS::Serverless::Function
     Properties:
       CodeUri: functions/handlers/generate_step/generate_task
+      Environment:
+        Variables:
+          QUEUE_EC2_NAME_1: !GetAtt SqsEc2Work1.QueueName
+          QUEUE_EC2_NAME_2: !GetAtt SqsEc2Work2.QueueName
       Policies:
       - SQSSendMessagePolicy:
           QueueName: !GetAtt SqsEc2Work1.QueueName
