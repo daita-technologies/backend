@@ -56,7 +56,8 @@ class GenerateTaskItem():
                 self.FIELD_NUM_GEN_IMAGES: self.number_gen_images,
                 self.FIELD_PROJECT_ID: self.project_id,
                 self.FIELD_CREATE_TIME: self.create_time,
-                self.FIELD_UPDATE_TIME: self.updated_time
+                self.FIELD_UPDATE_TIME: self.updated_time,
+                self.FIELD_PROCESS_TYPE: self.process_type,
             }
         return dict_info
 
@@ -78,7 +79,7 @@ class GenerateTaskItem():
     @classmethod
     def create_new_generate_task(cls, identity_id, project_id, type_method):
         object = cls()
-        object.task_id = create_unique_id()
+        object.task_id = create_task_id_w_created_time()
         object.type_method = type_method
         object.process_type = type_method
         object.status = VALUE_GENERATE_TASK_STATUS_PENDING

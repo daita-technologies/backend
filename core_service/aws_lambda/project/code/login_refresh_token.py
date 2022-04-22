@@ -20,8 +20,27 @@ RESPONSE_HEADER = {
     "Access-Control-Allow-Credentials": "true",
 	"Access-Control-Allow-Methods": "GET, HEAD, OPTIONS, POST, PUT",
 }
+##################################################################################################################
+def getDisplayName(username):
+    response = cog_provider_client.admin_get_user(
+        UserPoolId=USERPOOLID,
+        Username=username
+    )
+    user_attributes = {}
+    for att in response["UserAttributes"]:
+        user_attributes[att["Name"]] = att["Value"]
 
+    name = ""
+    if "name" in user_attributes:
+        name = user_attributes["name"]
+    elif "given_name" in user_attributes or \
+        "family_name" in user_attributes:
+        name = f"{user_attributes.pop('given_name', '')} {user_attributes.pop('family_name', '')}"
+    else:
+        name = user_attributes["email"]
 
+    return name
+###################################################################################################################
 @error_response
 def lambda_handler(event, context):
     '''
@@ -59,7 +78,10 @@ def lambda_handler(event, context):
             )
     except Exception as exc:
         raise Exception(MessageRefreshTokenError) from exc
-
+    if 'github' in username or 'google' in username:
+        name = getDisplayName(username)
+    else:
+        name = username
     # reformat
     user_data = {
         "access_key": identity["Credentials"]["AccessKeyId"],
@@ -70,7 +92,8 @@ def lambda_handler(event, context):
         "credential_token_expires_in": (identity["Credentials"]["Expiration"].timestamp())*1000, # expire time in seconds
         "id_token": id_token,
         "token_expires_in":float(int((datetime.now().timestamp() + ACCESS_TOKEN_EXPIRATION)*1000)),
-        "username": username
+        "username": username, 
+        "name": name
     }
 
     # return response

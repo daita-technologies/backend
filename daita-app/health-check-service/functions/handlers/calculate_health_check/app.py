@@ -227,8 +227,6 @@ class CalculateHealthCClass(LambdaBaseClass):
             "healthcheck": result
         }
        
-
-@error_response
 def lambda_handler(event, context):
 
     return CalculateHealthCClass().handle(event, context)

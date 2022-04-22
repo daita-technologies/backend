@@ -6,9 +6,7 @@ States:
     InputPath: $.detail
     ResultSelector:
       body.$: $.Payload.body.data
-      task_id.$: $$.Execution.Input.detail.task_id
-      identity_id.$: $$.Execution.Input.detail.identity_id
-      data_type.$: $$.Execution.Input.detail.data_type
+      detail.$: $$.Execution.Input.detail
     ResultPath: $
     OutputPath: $
     Parameters:
@@ -19,12 +17,18 @@ States:
     Comment: >-
       Check the level of parallelism, split requests into chunks and invoke
       lamndas
+    Catch: 
+      - ErrorEquals: 
+        - States.ALL
+        Next: CatchErrorTaskDynamoDB 
+        ResultPath: null 
     Retry:
       - ErrorEquals:
           - RetriableCallerServiceError
         IntervalSeconds: 1
         MaxAttempts: 2
-        BackoffRate: 1
+        BackoffRate: 1    
+
   CalculateHealthCheckMap:
     Type: Map
     InputPath: $
@@ -32,10 +36,15 @@ States:
     ResultPath: null
     Parameters:
       file_s3.$: $$.Map.Item.Value
-      project_id.$: $.body.project_id
+      project_id.$: $.detail.project_id
       data_table_name.$: $.body.data_table_name
-      data_type.$: $.data_type
+      data_type.$: $.detail.data_type
     MaxConcurrency: 10
+    Catch: 
+      - ErrorEquals: 
+        - States.ALL
+        Next: CatchErrorTaskDynamoDB 
+        ResultPath: null
     Iterator:
       StartAt: CalculateHCTask
       States:
@@ -65,9 +74,30 @@ States:
               body.$: $
           End: true
     Next: UpdateStatusTask
+
   UpdateStatusTask:
     Type: Task
     Resource: 'arn:aws:states:::dynamodb:updateItem'
+    Parameters:
+      TableName: "${TableHealthCheckTasksName}"
+      Key:
+        identity_id:
+          S.$: $.detail.identity_id
+        task_id:
+          S.$: $.detail.task_id
+      UpdateExpression: 'SET #st = :st'
+      ExpressionAttributeNames:
+        '#st': status
+      ExpressionAttributeValues:
+        ':st':
+          S: FINISH
+    ResultPath: $.DynamoDB
+    End: true
+
+  CatchErrorTaskDynamoDB:
+    Type: Task
+    Resource: 'arn:aws:states:::dynamodb:updateItem'
+    InputPath: $.detail
     Parameters:
       TableName: "${TableHealthCheckTasksName}"
       Key:
@@ -80,7 +110,8 @@ States:
         '#st': status
       ExpressionAttributeValues:
         ':st':
-          S: FINISH
+          S: ERROR
     ResultPath: $.DynamoDB
     End: true
+
 TimeoutSeconds: 6000

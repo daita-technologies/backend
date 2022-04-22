@@ -129,7 +129,8 @@ def lambda_handler(event, context):
         return generate_response(
             message=MessageUnmarshalInputJson,
             data={},
-            headers=RESPONSE_HEADER
+            headers=RESPONSE_HEADER,
+            error = True
         )
     
     try:
@@ -151,7 +152,8 @@ def lambda_handler(event, context):
         return generate_response(
             message=MessageUnmarshalInputJson,
             data={},
-            headers=RESPONSE_HEADER
+            headers=RESPONSE_HEADER,
+            error = True
         )
     
     try :
@@ -167,14 +169,16 @@ def lambda_handler(event, context):
         return generate_response(
             message=MessageUserVerifyConfirmCode,
             data={},
-            headers=RESPONSE_HEADER
+            headers=RESPONSE_HEADER,
+            error = True
         )
     except Exception as e:
         print(e)
         return generate_response(
             message=MessageLoginFailed,
             data={},
-            headers=RESPONSE_HEADER
+            headers=RESPONSE_HEADER,
+            error = True
         )
 
     response = {
@@ -194,15 +198,16 @@ def lambda_handler(event, context):
         return generate_response(
             message=MessageAuthenFailed,
             data={},
-            headers=RESPONSE_HEADER)
+            headers=RESPONSE_HEADER,
+            error = True)
         
     sub = getSub(response['token'])
     
-    # check the user is login another device
-    if CheckEventUserLogin(sub):
-        raise Exception(MessageAnotherUserIsLoginBefore)
-    else:
-        CreateEventUserLogin(sub)
+    # # check the user is login another device
+    # if CheckEventUserLogin(sub):
+    #     raise Exception(MessageAnotherUserIsLoginBefore)
+    # else:
+    #     CreateEventUserLogin(sub)
 
     if not model.checkFirstLogin(ID=sub,username=username):
         kms = createKMSKey(credentialsForIdentity['identity_id'])
@@ -217,7 +222,7 @@ def lambda_handler(event, context):
     for k , v in credentialsForIdentity.items():
         response[k] = v 
     response['username'] = username
-
+    response['name'] = username
     return generate_response(
             message=MessageSignInSuccessfully,
             data=response,
