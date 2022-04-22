@@ -69,7 +69,7 @@ def assignTaskToEc2(ec2Instances,data,type_method,num_augments_per_image,code):
                     task = {
                             'request_json': input_request_ai,
                             'host': 'http://{}:8000/ai'.format(ec2IDs[index]['ip']),
-                            'queue': ec2IDs[index]['queue_env_name']
+                            'queue': os.environ[ec2IDs[index]['queue_env_name']]
                         }
                     queueSQS = sqsResourse.get_queue_by_name(QueueName=task['queue'])
                     queueSQS.send_message(

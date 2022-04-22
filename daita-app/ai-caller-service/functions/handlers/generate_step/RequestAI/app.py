@@ -17,7 +17,7 @@ sqs = boto3.resource("sqs",REGION)
 def deleteMessageInQueue(task):
     queueSQS = sqs.get_queue_by_name(QueueName=task['queue'])
     QueueResp = queueSQS.receive_messages(VisibilityTimeout=60,
-        WaitTimeSeconds=0,MaxNumberOfMessages=10)
+        WaitTimeSeconds=0,MaxNumberOfMessages=1)
 
     print(f"Len of queueResp when deleteMessageInQueue: {len(QueueResp)}")
     for message in QueueResp :
@@ -44,6 +44,7 @@ def lambda_handler(event, context):
         if output.status_code != http.HTTPStatus.OK:
             raise Exception("Not OK")
     except Exception as e:
+        print("---------REQUEST AI exception-------\n", e)
         result['response'] = 'NOT_OK'
         result['is_retry'] = True
         if result['current_num_retries'] > result['max_retries']:
