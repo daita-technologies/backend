@@ -137,6 +137,7 @@ Resources:
         Variables:
           QUEUE_EC2_NAME_1: !GetAtt SqsEc2Work1.QueueName
           QUEUE_EC2_NAME_2: !GetAtt SqsEc2Work2.QueueName
+          SF_CALL_SERVICE: !GetAtt CallerServiceStateMachine.Arn
       Events:
         ScheduledEvent:
           Type: Schedule
@@ -157,6 +158,7 @@ Resources:
             - "dynamodb:DescribeTable"
             - "dynamodb:ConditionCheckItem"
             - "lambda:InvokeFunction"
+            - "states:ListExecutions"
           Resource: "*"
         - Effect: Allow
           Action:
