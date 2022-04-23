@@ -20,7 +20,7 @@ class EC2Model(object):
             if item['assi_id']['S'] == 'free':
                 instance = ec2_resource.Instance(item['ec2_id']['S'])
                 ip = startEc2(instance)
-                EC2Free.append({'ec2_id':item['ec2_id']['S'],'queque_id':item['queque_id']['S'],'ip':ip})
+                EC2Free.append({'ec2_id':item['ec2_id']['S'],'queue_env_name':item['queue_env_name']['S'],'ip':ip})
         # print(EC2Free)
         return EC2Free
 
@@ -45,7 +45,7 @@ def startEc2(instance):
     elif instance.state['Name'] == 'stopping':
         instance.load()
         while instance.state['Name'] != 'stopped':
-                time.sleep(2)
+                time.sleep(15)
                 instance.load()
                 pass
         print('Wait ec2 stopped to start')

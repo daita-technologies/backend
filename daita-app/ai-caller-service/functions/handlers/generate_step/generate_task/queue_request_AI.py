@@ -1,13 +1,15 @@
 import json
 import boto3
-import random
+import os
 from botocore.exceptions import ClientError
 from config import REGION
+
 sqsClient = boto3.client('sqs',REGION)
 sqsResourse = boto3.resource('sqs',REGION)
-def getQueue(queue_name):
+
+def getQueue(queue_name_env):
     try:
-        response = sqsClient.get_queue_url(QueueName=queue_name)
+        response = sqsClient.get_queue_url(QueueName=os.environ[queue_name_env])
     except ClientError as e:
         print(e)
         raise e
@@ -54,7 +56,7 @@ def assignTaskToEc2(ec2Instances,data,type_method,num_augments_per_image,code):
     
     for ec2 in ec2Instances:
         ec2IDs.append(ec2)
-        numtask = countTaskInQueue(ec2['queque_id'])
+        numtask = countTaskInQueue(ec2['queue_env_name'])
         listNumberTaskQueueCurrent.append(numtask)
         if maxEc2Task < numtask:
             maxEc2Task = numtask
@@ -67,7 +69,8 @@ def assignTaskToEc2(ec2Instances,data,type_method,num_augments_per_image,code):
                     task = {
                             'request_json': input_request_ai,
                             'host': 'http://{}:8000/ai'.format(ec2IDs[index]['ip']),
-                            'queue': ec2IDs[index]['queque_id']
+                            'queue': os.environ[ec2IDs[index]['queue_env_name']],
+                            'ec2_id': ec2IDs[index]["ec2_id"]
                         }
                     queueSQS = sqsResourse.get_queue_by_name(QueueName=task['queue'])
                     queueSQS.send_message(
@@ -85,7 +88,8 @@ def assignTaskToEc2(ec2Instances,data,type_method,num_augments_per_image,code):
         task = {
             'request_json': input_request_ai,
             'host': 'http://{}:8000/ai'.format(ec2IDs[index]['ip']),
-            'queue': ec2IDs[index]['queque_id']
+            'queue': os.environ[ec2IDs[index]['queue_env_name']],
+            'ec2_id': ec2IDs[index]["ec2_id"]
         }
         queueSQS = sqsResourse.get_queue_by_name(QueueName=task['queue'])
         queueSQS.send_message(
