@@ -291,6 +291,7 @@ Resources:
           - "dynamodb:DescribeTable"
           - "dynamodb:ConditionCheckItem"
           - "lambda:InvokeFunction"
+          - "ec2:*"
           Resource: "*"
         - Sid: CloudWatchLogsPolicy
           Effect: Allow
