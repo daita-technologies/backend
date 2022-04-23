@@ -83,4 +83,4 @@ States:
     Type: Pass
     Comment: Used for result aggregation
     End: true
-TimeoutSeconds: 150
+TimeoutSeconds: 1800

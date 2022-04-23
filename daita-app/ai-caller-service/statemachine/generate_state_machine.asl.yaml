@@ -10,7 +10,7 @@ States:
       Payload.$: $
     Next: ChoiceStageRequestAI
     Comment: >-
-      Check the level of parallelism, split requests into chunks and invoke
+      Check the level of parallelism split requests into chunks and invoke
       lamndas
     Retry:
       - ErrorEquals:
@@ -52,25 +52,31 @@ States:
     ItemsPath: $.list_request_ai
     Parameters:
       batch.$: $$.Map.Item.Value
-      identity_id.$: $.identity_id
-      task_id.$: $.task_id
-      id_token.$: $.id_token
-      project_prefix.$: $.project_prefix
       current_num_retries.$: $.current_num_retries
       max_retries.$: $.max_retries
       is_retry.$: $.is_retry
-      project_id.$: $.project_id
-      project_name.$: $.project_name
     Iterator:
       StartAt: RequestAI
       States:
         RequestAI:
           Type: Task
           Resource: 'arn:aws:states:::lambda:invoke'
-          OutputPath: $.Payload
+          ResultSelector:
+            identity_id.$: $$.Execution.Input.body.identity_id
+            task_id.$: $$.Execution.Input.body.task_id
+            project_id.$: $$.Execution.Input.body.project_id
+            project_name.$: $$.Execution.Input.body.project_name
+            project_prefix.$: $$.Execution.Input.body.project_prefix
+            current_num_retries.$: $.Payload.current_num_retries
+            max_retries.$: $.Payload.max_retries
+            batch.$: $.Payload.batch
+            response.$: $.Payload.response
+            is_retry.$: $.Payload.is_retry
           Parameters:
             FunctionName: '${WorkerRequestAI}'
             Payload.$: $
+          ResultPath: $
+          OutputPath: $
           Next: IsCheckRetry
         IsCheckRetry:
           Type: Choice
@@ -96,18 +102,31 @@ States:
     Type: Task
     Resource: 'arn:aws:states:::lambda:invoke'
     InputPath: $
-    OutputPath: $.Payload
+    ResultSelector:
+      id_token.$: $$.Execution.Input.body.id_token
+      identity_id.$: $$.Execution.Input.body.identity_id
+      task_id.$: $$.Execution.Input.body.task_id
+      project_id.$: $$.Execution.Input.body.project_id
+      project_name.$: $$.Execution.Input.body.project_name
+      project_prefix.$: $$.Execution.Input.body.project_prefix
+      response.$: $.Payload.response
+      state.$: $.Payload.state
+      status.$: $.Payload.status
+      info_update_s3.$: $.Payload.info_update_s3
+      gen_id.$: $.Payload.gen_id
     Parameters:
       FunctionName: '${HandleMergeResultRequestAI}'
       Payload.$: $
+    ResultPath: $
+    OutputPath: $
     Next: CheckResponse
   CheckResponse:
     Type: Choice
     Choices:
-      - Variable: $.reponse
+      - Variable: $.response
         StringEquals: OK
         Next: HandleCompleteRequestAI
-      - Variable: $.reponse
+      - Variable: $.response
         StringEquals: NOT_OK
         Next: ChoiceStageRequestAI
   HandleCompleteRequestAI:

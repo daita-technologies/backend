@@ -195,6 +195,7 @@ Resources:
         DecompressTaskTable: !Ref TableDataFlowTaskName
         ProjectUploadUpdateFunction: staging-project-upload-update
         PostUploadFunction: !Ref PostUploadFunction
+        TableDataFlowTaskName: !Ref TableDataFlowTaskName
       Logging:
         Level: ALL
         IncludeExecutionData: true
@@ -214,6 +215,8 @@ Resources:
             FunctionName: staging-project-upload-update
         - LambdaInvokePolicy:
             FunctionName: !Ref PostUploadFunction
+        - DynamoDBCrudPolicy:
+            TableName: !Ref TableDataFlowTaskName   
         - Statement:
           - # Allow step to start ecs task
             Effect: Allow
@@ -346,7 +349,7 @@ Resources:
           DecompressTaskTable: !Ref TableDataFlowTaskName
           FileSystemId: !Ref EFSFileSystemId
           EFSMountPath: !Ref EFSMountPath
-
+  
   # ECS resources
   DecompressTaskCluster:
     Type: AWS::ECS::Cluster

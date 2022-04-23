@@ -75,13 +75,13 @@ def lambda_handler(event, context):
         infoUploadS3 =  UploadImage(output=outdir,project_prefix=event['project_prefix'])   
     return {
         'response': event['response'],
-        'identity_id': event['identity_id'],
-        'task_id': event['task_id'],
-        'id_token': event['id_token'],
+        # 'identity_id': event['identity_id'],
+        # 'task_id': event['task_id'],
+        # 'id_token': event['id_token'],
         'gen_id': str(event['batch']['request_json']['codes']),
-        'project_prefix': event['project_prefix'],
+        # 'project_prefix': event['project_prefix'],
         'output':event['batch']['request_json']['output_folder'],
         'info_upload_s3': infoUploadS3,
-        'project_id': event['project_id'],
-        'project_name': event['project_name']
+        # 'project_id': event['project_id'],
+        # 'project_name': event['project_name']
     }

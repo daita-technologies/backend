@@ -3,7 +3,7 @@ from boto3.dynamodb.conditions import Key, Attr
 from config import *
 from error_messages import *
 from typing import List
-from utils import create_unique_id, convert_current_date_to_iso8601
+from utils import create_unique_id, convert_current_date_to_iso8601, create_task_id_w_created_time
 
 class HealthCheckTaskItem():
     
@@ -60,12 +60,12 @@ class HealthCheckTaskItem():
     @classmethod
     def create_new_healthcheck_task(cls, identity_id, project_id, data_type):
         object = cls()
-        object.task_id = create_unique_id()
+        object.task_id = create_task_id_w_created_time()
         object.data_type = data_type
         object.status = VALUE_HEALTHCHECK_TASK_STATUS_RUNNING
         object.identity_id = identity_id
         object.project_id = project_id
-        
+        object.process_type = VALUE_PROCESS_TYPE_HEALTHCHECK
         return object
 
 
@@ -93,7 +93,7 @@ class HealthCheckTaskModel():
         healthcheck_task_item = HealthCheckTaskItem.create_new_healthcheck_task(identity_id, project_id, data_type)
         self.insert_new_item(healthcheck_task_item)
 
-        return healthcheck_task_item.task_id
+        return healthcheck_task_item.task_id, healthcheck_task_item.process_type
     
     def get_status_of_task(self, identity_id, task_id):
         item = self._get_item(identity_id, task_id)

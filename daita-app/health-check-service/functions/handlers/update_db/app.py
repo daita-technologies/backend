@@ -59,8 +59,6 @@ class UpdateDBClass(LambdaBaseClass):
             is_in_stepfunction=True
         )
        
-
-@error_response
 def lambda_handler(event, context):
 
     return UpdateDBClass().handle(event, context)

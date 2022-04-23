@@ -7,7 +7,7 @@ import boto3
 from response import *
 from error_messages import *
 from identity_check import *
-from utils import create_unique_id, convert_current_date_to_iso8601
+from utils import create_unique_id, convert_current_date_to_iso8601, create_task_id_w_created_time
 
 
 from lambda_base_class import LambdaBaseClass
@@ -46,7 +46,7 @@ class CreateDecompressClass(LambdaBaseClass):
         ### check identity
         identity_id = self.get_identity(self.id_token) 
         
-        task_id = create_unique_id()
+        task_id = create_task_id_w_created_time()
         response = task_table.put_item(
             Item={
                 "identity_id": identity_id,

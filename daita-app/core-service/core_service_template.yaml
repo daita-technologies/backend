@@ -23,7 +23,8 @@ Globals:
         TABLE_PROJECTS_NAME: !Ref TableProjectsName
         TABLE_METHODS_NAME: !Ref TableMethodsName
         TABLE_HEALTHCHECK_TASK: !Ref TableHealthCheckTasksName
-        TABLE_HEALTHCHECK_INFO: !Ref TableHealthCheckInfoName
+        TABLE_HEALTHCHECK_INFO: !Ref TableHealthCheckInfoName 
+        INDEX_TASK_PROJECTID_TASKID: !Ref ParaIndexTaskProjectIDTaskID
     Layers:
         - !Ref CommonCodeLayerName
 
@@ -54,6 +55,8 @@ Parameters:
   TableHealthCheckInfoName:
     Type: String
   ParaTableDataFlowTaskName:
+    Type: String
+  ParaIndexTaskProjectIDTaskID:
     Type: String
 
   CommonCodeLayerName:
@@ -100,15 +103,9 @@ Resources:
             Action:
             - "lambda:InvokeFunction"
             Effect: Allow
-            Resource: "*"
-              # insert lambda functions arn here
-              # - !GetAtt GenerateCheckConditionFunction.Arn
-              # - !GetAtt TaskProgressFunction.Arn
-              # - !GetAtt ListMethodsFunction.Arn
-              # - !GetAtt SplitDataFunction.Arn
-
-
-  ### lambda role
+            Resource: "*"              
+  
+  ### lambda role 
   LambdaExecutionRole:
     Type: AWS::IAM::Role
     Properties:

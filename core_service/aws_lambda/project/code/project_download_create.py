@@ -44,6 +44,7 @@ def lambda_handler(event, context):
     try:
         table = db_resource.Table(os.environ["T_TASK_DOWNLOAD"])
         task_id = uuid.uuid4().hex
+        task_id = f"{convert_current_date_to_iso8601()}-{task_id}"
         create_time = convert_current_date_to_iso8601()
         table.put_item(
                 Item = {

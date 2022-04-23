@@ -48,12 +48,12 @@ def lambda_handler(event, context):
         raise e
     if CheckEventUserLogin(sub):
         EventUserLogout(sub)
-    else:
-        return generate_response(
-            message= MessageErrorUserdoesnotlogin,
-            headers=RESPONSE_HEADER,
-            error = True,
-        )
+    # else:
+    #     return generate_response(
+    #         message= MessageErrorUserdoesnotlogin,
+    #         headers=RESPONSE_HEADER,
+    #         error = True,
+    #     )
     return generate_response(
             message= MessageLogoutSuccessfully,
             headers=RESPONSE_HEADER

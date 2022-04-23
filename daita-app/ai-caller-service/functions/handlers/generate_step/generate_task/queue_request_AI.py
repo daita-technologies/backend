@@ -1,55 +1,32 @@
-import codeop
+import json
 import boto3
+import os
 from botocore.exceptions import ClientError
 from config import REGION
-sqsClient = boto3.client('sqs')
-sqsResourse = boto3.resource('sqs')
-def getQueue(queue_name):
+
+sqsClient = boto3.client('sqs',REGION)
+sqsResourse = boto3.resource('sqs',REGION)
+
+def getQueue(queue_name_env):
     try:
-        response = sqsClient.get_queue_url(QueueName=queue_name)
+        response = sqsClient.get_queue_url(QueueName=os.environ[queue_name_env])
     except ClientError as e:
         print(e)
         raise e
     return response['QueueUrl']
 
-def countTaskInQueue(queue_id):    
-    sqs = sqsResourse.get_queue_by_name(QueueName=queue_id)
-    num_task_in_queue = len(sqs.receive_messages())
+def countTaskInQueue(queue_id):
+    # get_queue_attributes
+    # sqsName = sqsResourse.get_queue_by_name(QueueName=queue_id)
+    response = sqsClient.get_queue_attributes(
+                            QueueUrl=getQueue(queue_id),
+                            AttributeNames=[
+                                'ApproximateNumberOfMessages'
+                            ]
+                        )
+    num_task_in_queue = response['Attributes']['ApproximateNumberOfMessages']
     print(f"QueueID:  {queue_id} has len: {num_task_in_queue}")
-    return num_task_in_queue
-"""
-batches_input
-batches_output
-output:
-    {
-        input:
-        output:
-        api:
-
-    }
-"""
-"""
-if self.worker['process_type'] == 'AUGMENT':
-    input_json = {
-                    "images_paths":input_list,
-                    "output_folder": output_dir,
-                    "num_augments_per_image": self.worker['num_augments_per_image'],
-                    "codes": [],
-                    "type": "augmentation"
-                    }
-else:
-    input_json = {
-        "images_paths":input_list,
-        "output_folder": output_dir,
-        "type": "preprocessing",
-        "codes": []
-
-    }
-"""
-"""
-host http://{}:8000/ai
-"""
-
+    return int(num_task_in_queue)
 
 def assignTaskToEc2(ec2Instances,data,type_method,num_augments_per_image,code):
     listRequestAPI = []
@@ -79,23 +56,31 @@ def assignTaskToEc2(ec2Instances,data,type_method,num_augments_per_image,code):
     
     for ec2 in ec2Instances:
         ec2IDs.append(ec2)
-        numtask = countTaskInQueue(ec2['queque_id'])
+        numtask = countTaskInQueue(ec2['queue_env_name'])
         listNumberTaskQueueCurrent.append(numtask)
         if maxEc2Task < numtask:
             maxEc2Task = numtask
     flag = 0
     if maxEc2Task != 0:
         for index, numbertask in enumerate(listNumberTaskQueueCurrent):
-            if numbertask != maxEc2Task:
-                for _ in range(maxEc2Task - task +1):
+            if numbertask != maxEc2Task and flag < length_batched:
+                for _ in range(maxEc2Task - numbertask +1):
                     input_request_ai = parserInputJson(type_method,code,num_augments_per_image,flag)
                     task = {
                             'request_json': input_request_ai,
                             'host': 'http://{}:8000/ai'.format(ec2IDs[index]['ip']),
-                            'queue': getQueue(ec2IDs[index]['queque_id'])
+                            'queue': os.environ[ec2IDs[index]['queue_env_name']],
+                            'ec2_id': ec2IDs[index]["ec2_id"]
                         }
+                    queueSQS = sqsResourse.get_queue_by_name(QueueName=task['queue'])
+                    queueSQS.send_message(
+                            MessageBody=json.dumps(task),
+                            MessageGroupId="RequestAI",
+                            DelaySeconds=0,
+                        )
                     listRequestAPI.append(task)
                     flag += 1
+                    if flag >= length_batched:break
     
     for it in range(flag,length_batched):
         index =int(it%len(ec2IDs))
@@ -103,8 +88,15 @@ def assignTaskToEc2(ec2Instances,data,type_method,num_augments_per_image,code):
         task = {
             'request_json': input_request_ai,
             'host': 'http://{}:8000/ai'.format(ec2IDs[index]['ip']),
-            'queue': getQueue(ec2IDs[index]['queque_id'])
+            'queue': os.environ[ec2IDs[index]['queue_env_name']],
+            'ec2_id': ec2IDs[index]["ec2_id"]
         }
+        queueSQS = sqsResourse.get_queue_by_name(QueueName=task['queue'])
+        queueSQS.send_message(
+                            MessageBody=json.dumps(task),
+                            MessageGroupId="RequestAI",
+                            DelaySeconds=0,
+                        )
         listRequestAPI.append(task)
         
     print("SHARE TASK")

@@ -51,15 +51,12 @@ class GetDataClass(LambdaBaseClass):
             message="OK",
             status_code=HTTPStatus.OK,
             data={
-                    KEY_NAME_PROJECT_ID: self.project_id,
                     "data_table_name": data_table_name,
-                    "ls_file_s3": ls_info
+                    "ls_file_s3": ls_info                    
                 },
             is_in_stepfunction=True
         )
        
-
-@error_response
 def lambda_handler(event, context):
 
     return GetDataClass().handle(event, context)
