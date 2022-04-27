@@ -53,6 +53,76 @@ Parameters:
     Type: String
 
 Resources:
+  LambdaExecutionRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+        - Effect: "Allow"
+          Principal: 
+            Service: "lambda.amazonaws.com"
+          Action:
+          - "sts:AssumeRole"
+      Policies:             
+        - PolicyName: 'SecretsManagerParameterAccess'
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - ssm:GetParam*
+                  - ssm:DescribeParam*                  
+                Resource:
+                  - arn:aws:ssm:*:*:parameter/*
+        - PolicyName: 'CloudwatchPermission'
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              -
+                Effect: Allow
+                Action:
+                  - 'logs:CreateLogGroup'
+                  - 'logs:CreateLogStream'
+                  - 'logs:PutLogEvents'
+                Resource: '*'
+        - PolicyName: 'CognitoPermission'
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              -
+                Effect: Allow
+                Action:
+                  - cognito-identity:*    
+                  - cognito-idp:*       
+                Resource: '*'
+        - PolicyName: 'DynamoDBPermission'
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:             
+              - 
+                Effect: Allow
+                Action:
+                  - dynamodb:*
+                Resource: "*"
+        - PolicyName: "OtherServicePermission"
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:             
+              - 
+                Effect: Allow
+                Action:
+                  - events:PutEvents
+                Resource: "*"
+              - Effect: Allow
+                Action:
+                  - states:GetExecutionHistory
+                  - states:StartExecution
+                  - states:DescribeExecution
+                  - states:StopExecution
+                Resource: "*"
+        
+
   ###################################EFS template####################################
   EFSAccessPoint:
     Type: AWS::EFS::AccessPoint
@@ -106,107 +176,165 @@ Resources:
               Effect: Allow
               Resource:
                 - !Ref CallerServiceStateMachine  
-
+  
   #================ LAMBDA FUNCTIONS ==========================================
-  HandleCompleteRequestAI:
-    Type: AWS::Serverless::Function
-    Properties: 
-      CodeUri: functions/handlers/generate_step/CompleteRequestAI
-    Policies:
-      - Statement:
-        - Sid: CloudWatchLogsPolicy
-          Effect: Allow
-          Action:
-            - "logs:CreateLogDelivery"
-            - "logs:GetLogDelivery"
-            - "logs:UpdateLogDelivery"
-            - "logs:DeleteLogDelivery"
-            - "logs:ListLogDeliveries"
-            - "logs:PutResourcePolicy"
-            - "logs:DescribeResourcePolicies"
-            - "logs:DescribeLogGroup"
-            - "logs:DescribeLogGroups"
-            - "lambda:InvokeFunction"
-          Resource: "*"
-
-  CronJobStopEc2:
-    Type: AWS::Serverless::Function
+  StopTaskStop:
+    Type:  AWS::Serverless::Function
+    DependsOn: CallerServiceStateMachineLogGroup
     Properties:
-      CodeUri: functions/handlers/crontab/stop_ec2
+      CodeUri: functions/handlers/stop_process
+      Role: !GetAtt LambdaExecutionRole.Arn
       Environment:
         Variables:
-          QUEUE_EC2_NAME_1: !GetAtt SqsEc2Work1.QueueName
-          QUEUE_EC2_NAME_2: !GetAtt SqsEc2Work2.QueueName
-          SF_CALL_SERVICE: !GetAtt CallerServiceStateMachine.Arn
-      Events:
-        ScheduledEvent:
-          Type: Schedule
-          Properties:
-            Schedule: cron(0/5 * * * ? *)
+          TABLE_GENERATE_TASK: !Ref TableGenerateTaskName
+          EVENT_BUS_NAME: !Ref StopProcessEventBus
       Policies:
-      - Statement:
-        - Effect: Allow
-          Action:
-            - "dynamodb:GetItem"
-            - "dynamodb:DeleteItem"
-            - "dynamodb:PutItem"
-            - "dynamodb:Scan"
-            - "dynamodb:Query"
-            - "dynamodb:UpdateItem"
-            - "dynamodb:BatchWriteItem"
-            - "dynamodb:BatchGetItem"
-            - "dynamodb:DescribeTable"
-            - "dynamodb:ConditionCheckItem"
-            - "lambda:InvokeFunction"
-            - "states:ListExecutions"
-          Resource: "*"
-        - Effect: Allow
-          Action:
-            - "sqs:GetQueueAttributes"
-            - "sqs:SendMessage"
-            - "sqs:ReceiveMessage"
-            - "sqs:DeleteMessage"
-            - "sqs:DeleteMessageBatch"
-            - "sqs:GetQueueUrl"
-          Resource: "*"
-        - Sid: LambdaInvokefunction
-          Effect: Allow
-          Action:
-            - "lambda:InvokeFunction"
-          Resource: "*"
-        - Sid: CloudWatchLogsPolicy
-          Effect: Allow
-          Action:
-            - "logs:CreateLogDelivery"
-            - "logs:GetLogDelivery"
-            - "logs:UpdateLogDelivery"
-            - "logs:DeleteLogDelivery"
-            - "logs:ListLogDeliveries"
-            - "logs:PutResourcePolicy"
-            - "logs:DescribeResourcePolicies"
-            - "logs:DescribeLogGroup"
-            - "logs:DescribeLogGroups"
-          Resource: "*"
-        - Sid: CloudWatchEventsFullAccess
-          Effect: Allow
-          Action:
-            - "events:*"
-          Resource: "*"
-        - Sid: EC2ALLOW
-          Effect: Allow
-          Action:
-            - autoscaling:StartInstanceRefresh
-            - autoscaling:Describe*
-            - autoscaling:UpdateAutoScalingGroup
-            - ec2:CreateLaunchTemplateVersion
-            - ec2:DescribeLaunchTemplates
-            - ec2:RunInstances
-            - ec2:DescribeInstances
-            - sts:AssumeRole
-            -  "ec2:Start*"
-            -  "ec2:Stop*"
-            - iam:PassRole
-          Resource: '*'
+        - Statements:
+          - Effect: Allow
+            Action:
+              - "logs:*"
+              - "events:*"
+            Resource: "*"
+          -
+            Effect: Allow
+            Action: states:StartExecution
+            Resource: "*"
+          -
+            Effect: Allow
+            Action:
+              - states:DescribeExecution
+              - states:StopExecution
+            Resource: "*"
+      Events:
+        stoptask:
+          Type: EventBridgeRule
+          Properties:
+            EventBusName: !Ref StopProcessEventBus
+            Pattern:
+              source:
+                - "source.events"
+              detail-type:
+                - "lambda.event"
+  
+
+  HandleCompleteRequestAI:
+    Type: AWS::Serverless::Function
+    Properties:
+      # VpcConfig:
+      #   SecurityGroupIds: !Split [',', !Join [',', !Ref SecurityGroupIdsPara]] 
+      #   SubnetIds: !Split [',', !Join [',', !Ref SubnetIDsPara]] 
+      # FileSystemConfigs:
+      #   - Arn: !GetAtt EFSAccessPoint.Arn
+      #     LocalMountPath: !Ref EFSStorageAI
+      CodeUri: functions/handlers/generate_step/CompleteRequestAI
+      Policies:
+        - Statement:
+          - Sid: CloudWatchLogsPolicy
+            Effect: Allow
+            Action:
+              - "logs:CreateLogDelivery"
+              - "logs:GetLogDelivery"
+              - "logs:UpdateLogDelivery"
+              - "logs:DeleteLogDelivery"
+              - "logs:ListLogDeliveries"
+              - "logs:PutResourcePolicy"
+              - "logs:DescribeResourcePolicies"
+              - "logs:DescribeLogGroup"
+              - "logs:DescribeLogGroups"
+              - "lambda:InvokeFunction"
+            Resource: "*"
+          - Sid: CloudWatchEventsFullAccess
+            Effect: Allow
+            Action:
+              - "events:*"
+            Resource: "*"
+          - Sid: AmazonElasticFileSystemClientFullAccess
+            Effect: Allow
+            Action:
+            - elasticfilesystem:ClientMount
+            - elasticfilesystem:ClientRootAccess
+            - elasticfilesystem:ClientWrite
+            - elasticfilesystem:DescribeMountTargets
+            Resource: "*"
+
+  # CronJobStopEc2:
+  #   Type: AWS::Serverless::Function
+  #   Properties:
+  #     CodeUri: functions/handlers/crontab/stop_ec2
+  #     Environment:
+  #       Variables:
+  #         QUEUE_EC2_NAME_1: !GetAtt SqsEc2Work1.QueueName
+  #         QUEUE_EC2_NAME_2: !GetAtt SqsEc2Work2.QueueName
+  #         SF_CALL_SERVICE: !GetAtt CallerServiceStateMachine.Arn
+  #     # Events:
+  #     #   ScheduledEvent:
+  #     #     Type: Schedule
+  #     #     Properties:
+  #     #       Schedule: cron(0/5 * * * ? *)
+  #     Policies:
+  #     - Statement:
+  #       - Effect: Allow
+  #         Action:
+  #           - "dynamodb:GetItem"
+  #           - "dynamodb:DeleteItem"
+  #           - "dynamodb:PutItem"
+  #           - "dynamodb:Scan"
+  #           - "dynamodb:Query"
+  #           - "dynamodb:UpdateItem"
+  #           - "dynamodb:BatchWriteItem"
+  #           - "dynamodb:BatchGetItem"
+  #           - "dynamodb:DescribeTable"
+  #           - "dynamodb:ConditionCheckItem"
+  #           - "lambda:InvokeFunction"
+  #           - "states:ListExecutions"
+  #         Resource: "*"
+  #       - Effect: Allow
+  #         Action:
+  #           - "sqs:GetQueueAttributes"
+  #           - "sqs:SendMessage"
+  #           - "sqs:ReceiveMessage"
+  #           - "sqs:DeleteMessage"
+  #           - "sqs:DeleteMessageBatch"
+  #           - "sqs:GetQueueUrl"
+  #         Resource: "*"
+  #       - Sid: LambdaInvokefunction
+  #         Effect: Allow
+  #         Action:
+  #           - "lambda:InvokeFunction"
+  #         Resource: "*"
+  #       - Sid: CloudWatchLogsPolicy
+  #         Effect: Allow
+  #         Action:
+  #           - "logs:CreateLogDelivery"
+  #           - "logs:GetLogDelivery"
+  #           - "logs:UpdateLogDelivery"
+  #           - "logs:DeleteLogDelivery"
+  #           - "logs:ListLogDeliveries"
+  #           - "logs:PutResourcePolicy"
+  #           - "logs:DescribeResourcePolicies"
+  #           - "logs:DescribeLogGroup"
+  #           - "logs:DescribeLogGroups"
+  #         Resource: "*"
+  #       - Sid: CloudWatchEventsFullAccess
+  #         Effect: Allow
+  #         Action:
+  #           - "events:*"
+  #         Resource: "*"
+  #       - Sid: EC2ALLOW
+  #         Effect: Allow
+  #         Action:
+  #           - autoscaling:StartInstanceRefresh
+  #           - autoscaling:Describe*
+  #           - autoscaling:UpdateAutoScalingGroup
+  #           - ec2:CreateLaunchTemplateVersion
+  #           - ec2:DescribeLaunchTemplates
+  #           - ec2:RunInstances
+  #           - ec2:DescribeInstances
+  #           - sts:AssumeRole
+  #           -  "ec2:Start*"
+  #           -  "ec2:Stop*"
+  #           - iam:PassRole
+  #         Resource: '*'
 
   HandlerUploadBatchToS3:
     Type: AWS::Serverless::Function
@@ -355,6 +483,21 @@ Resources:
           Action:
             - "events:*"
           Resource: "*"
+        - Sid: EC2ALLOW
+          Effect: Allow
+          Action:
+          - autoscaling:StartInstanceRefresh
+          - autoscaling:Describe*
+          - autoscaling:UpdateAutoScalingGroup
+          - ec2:CreateLaunchTemplateVersion
+          - ec2:DescribeLaunchTemplates
+          - ec2:RunInstances
+          - ec2:DescribeInstances
+          - sts:AssumeRole
+          -  "ec2:Start*"
+          -  "ec2:Stop*"
+          - iam:PassRole
+          Resource: '*'
       
   UpdateStatusTask:
     Type: AWS::Serverless::Function
@@ -381,7 +524,7 @@ Resources:
   PreprocessGenerateTask:
     Type: AWS::Serverless::Function 
     Properties:
-      CodeUri: functions/handlers/preprocess_generate_batch
+      CodeUri: functions/handlers/preprocess_generate_batch/generate_batch
       Policies:
       - Statement:
         - Sid: ALLOWCRUDDynamoDB
@@ -439,6 +582,16 @@ Resources:
   HandleGetResultDownloadTask:
     Type: AWS::Serverless::Function
     Properties:
+      # VpcConfig:
+      #   SecurityGroupIds: !Split [',', !Join [',', !Ref SecurityGroupIdsPara]] 
+      #   SubnetIds: !Split [',', !Join [',', !Ref SubnetIDsPara]] 
+      # FileSystemConfigs:
+      #   - Arn: !GetAtt EFSAccessPoint.Arn
+      #     LocalMountPath: !Ref EFSStorageAI
+      # Environment:
+      #   Variables:
+      #     EFSPATH: !Ref EFSStorageAI
+      #     ROOTEFS: !Ref ROOTEFS
       CodeUri: functions/handlers/download_task/get_result_download_task
       Policies:
         - S3FullAccessPolicy:
@@ -626,8 +779,32 @@ Resources:
           -  "ec2:Stop*"
           - iam:PassRole
           Resource: '*'
+        - Effect: Allow
+          Action:
+          - s3:*
+          Resource: "*"
  
   #================ EVENT BUS =================================================
+  StopProcessEventBus:
+    Type: AWS::Events::EventBus
+    Properties: 
+      Name: !Sub "${StagePara}-${ApplicationPara}-StopProcessEventBus"
+  # StopProcessEventBusDefaultRule:
+  #   Type: AWS::Events::Rule
+  #   Properties:
+  #     Description: "Default Rule for Any event"
+  #     State: ENABLED
+  #     EventBusName: !Ref StopProcessEventBus
+  #     EventPattern:
+  #       source:
+  #         - "source.events"
+  #       detail-type:
+  #         - "lambda.event"
+  #     Targets:
+  #       - 
+  #         Arn: !GetAtt StopTaskStop.Arn 
+  #         Id: "StopTaskProcess"
+  #         RoleArn: !GetAtt CallerServiceEventBusRole.Arn 
 
   CallerServiceEventBus:
     Type: AWS::Events::EventBus
@@ -723,7 +900,7 @@ Resources:
       Name: !Sub "${StagePara}-${ApplicationPara}-PrepareSM"
       Policies:
         - LambdaInvokePolicy:
-            FunctionName: !Ref PreprocessGenerateTask   
+            FunctionName: !Ref PreprocessGenerateTask
         - Statement:
           - Sid: CloudWatchLogsPolicy
             Effect: Allow
@@ -751,6 +928,7 @@ Resources:
             - "dynamodb:BatchGetItem"
             - "dynamodb:DescribeTable"
             - "dynamodb:ConditionCheckItem"
+            - "lambda:InvokeFunction"
             Resource: "*"
       Tracing:
         Enabled: true
@@ -925,6 +1103,12 @@ Outputs:
   CallerServiceEventBusName:
     Description: "Name of EventBus"
     Value: !Ref CallerServiceEventBus
+  StopProcessEventBusArn:
+    Description: "ARN of EventBus"
+    Value: !GetAtt StopProcessEventBus.Arn
+  StopProcessEventBusName:
+    Description: "Name of EventBus"
+    Value: !Ref StopProcessEventBus
   # LayerARN:
   #   Description: "ARN of common code layer"
   #   Value: !GetAtt CommonCodeLayer.Arn

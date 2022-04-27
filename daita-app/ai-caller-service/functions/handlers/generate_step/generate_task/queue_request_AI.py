@@ -41,14 +41,18 @@ def assignTaskToEc2(ec2Instances,data,type_method,num_augments_per_image,code):
                                 "output_folder": data['batches_output'][index],
                                 "num_augments_per_image":num_augments_per_image,
                                 "codes":code ,
-                                "type": "augmentation"
+                                "type": "augmentation",
+                                "parameters":{},
+                                "reference_images":{}
                                 }       
         else:
             input_request_ai = {
                     "images_paths":data['batches_input'][index],
                     "output_folder": data['batches_output'][index],
                     "type": "preprocessing",
-                    "codes": code
+                    "codes": code,
+                    "parameters":{},
+                    "reference_images":{}
                 }
         return input_request_ai
     # get current task 
