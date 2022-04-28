@@ -31,9 +31,11 @@ def download(uri,folder):
     basename = os.path.basename(filename)
     new_image = os.path.join(folder,basename)
     s3.download_file(bucket,filename,new_image)
-    print(os.path.exists(new_image))
+
 @error_response
 def lambda_handler(event, context):
-    download(event['task']['uri'],event['task']['folder'])
-    del event['task']
-    return event
+    bucket , filename = split(event['task']['path'])
+    resultS3 = s3.get_object(Bucket=bucket, Key=filename)
+    data = json.loads(resultS3["Body"].read().decode())
+    download(data['uri'],data['folder'])
+    return {}

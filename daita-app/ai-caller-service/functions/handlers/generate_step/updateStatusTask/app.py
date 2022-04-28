@@ -1,3 +1,4 @@
+import os
 import time
 import json
 import boto3
@@ -10,14 +11,19 @@ from utils import *
 from identity_check import *
 from boto3.dynamodb.conditions import Key, Attr
 from models.task_model import TaskModel
+from models.generate_task_model import GenerateTaskModel
 
-task_model = TaskModel(os.environ["TABLE_GENERATE_TASK"])
+generate_task_model = GenerateTaskModel(os.environ["TABLE_GENERATE_TASK"])
+task_model = TaskModel(os.environ["TABLE_GENERATE_TASK"],None)
 
 @error_response
 def lambda_handler(event, context):
-
-    task_model.update_status(event['task_id'], event['identity_id'], event['status'])
-
+    item = generate_task_model.get_task_info(event['identity_id'] ,event['task_id'])
+    if item.status != 'CANCEL':
+        task_model.update_status(event['task_id'], event['identity_id'], event['status'])
+    if event['status'] == 'FINISH' or item.status == 'CANCEL':
+        folder = os.path.join(os.environ['EFSPATH'] , event['task_id'])
+        shutil.rmtree(folder)
     return generate_response(
         message="OK",
         status_code=HTTPStatus.OK

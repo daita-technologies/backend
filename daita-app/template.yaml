@@ -175,6 +175,8 @@ Resources:
         ParaTableDownloadTaskName: !GetAtt DatabaseService.Outputs.TableDownloadTaskName
         ParaTableProjectSumName: !GetAtt DatabaseService.Outputs.TableProjectSumName
         ParaIndexTaskProjectIDTaskID: !GetAtt DatabaseService.Outputs.IndexTaskProjectIDTaskIDName
+        StopProcessEventBusArn: !GetAtt  AICallerService.Outputs.StopProcessEventBusArn
+        StopProcessEventBusName: !GetAtt AICallerService.Outputs.StopProcessEventBusName
 
 
   HealthCheckService:
