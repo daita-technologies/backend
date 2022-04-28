@@ -14,6 +14,9 @@ from response import *
 from utils import *
 from identity_check import *
 from consts import ConstTbl
+from models.task_model import TaskModel
+
+task_model = TaskModel(os.environ["TABLE_GENERATE_TASK"],None)
 def batcher(iterable, size):
     iterator = iter(iterable)
     for first in iterator:
@@ -42,13 +45,10 @@ class S3(object):
         return bucket, filename 
 
     def download(self,uri,folder):
-        _ , filename =  self.split(uri)
+        bucket , filename =  self.split(uri)
         basename = os.path.basename(filename)
-        new_image = os.path.join(folder,basename)
+        new_image = os.path.join(folder,basename)        
         return new_image
-        # self.s3.download_file(bucket,filename,new_image)
-        # print("IMAGE :",os.path.exists(new_image))
-
 
     def download_images(self,images,task_id):
 
@@ -59,20 +59,6 @@ class S3(object):
         os.makedirs(input_dir,exist_ok=True)
         os.makedirs(output_dir,exist_ok=True)
 
-        # def downloadTask(q):
-        #     while True:
-        #         uri , folder = q.get()
-        #         self.download(uri=uri,folder=folder)
-        #         q.task_done()
-        # que = queue.Queue()
-        # for i in range(10):
-        #     worker = threading.Thread(target=downloadTask, args=(que,),daemon=True)
-        #     worker.start()
-        # for it in images:
-        #     que.put((it,input_dir))
-        # que.join()
-        
-        # list_image = list(map(lambda x : x, list(glob.glob(input_dir+'/**'))))
         list_image = [self.download(it,input_dir) for it in images]
         def generator():
             yield from list_image
@@ -88,7 +74,15 @@ class S3(object):
             nameoutput =  os.path.join(output_dir_temp,str(index))
             os.makedirs(nameoutput,exist_ok=True)
             batch_output.append(self.root_efs+nameoutput)
-        download_images = [{'uri':it,'folder':input_dir} for it in images]
+        download_images = []
+        for index,it in enumerate(images):
+            path ={'uri':it,'folder':input_dir}
+            self.s3.put_object(
+                Body=json.dumps(path),
+                Bucket= self.bucket,
+                Key= os.path.join(self.folder,str(index)+'_download_image.json')
+            )
+            download_images.append({'path':self.bucket+'/'+self.folder+'/'+str(index)+'_download_image.json'})
         info = {
             'images_download': len(list_image),
             'batches_input':  batch_input ,
@@ -112,5 +106,6 @@ def downloadS3ToEFS(data):
 def lambda_handler(event, context):
     body = json.loads(event['body'])
     data = body['data']
+    task_model.update_generate_progress(task_id = data['task_id'], identity_id = data['identity_id'], num_finish = 0, status = 'PREPARING_DATA')
     result = downloadS3ToEFS(data)
     return  result

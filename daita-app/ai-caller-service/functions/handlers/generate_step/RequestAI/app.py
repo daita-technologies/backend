@@ -1,4 +1,4 @@
-from asyncio import Queue
+import os
 import http
 import queue
 import time
@@ -15,6 +15,7 @@ from boto3.dynamodb.conditions import Key, Attr
 sqs = boto3.resource("sqs",REGION)
 sqsClient = boto3.client('sqs',REGION)
 ec2_resource = boto3.resource('ec2', region_name=REGION)
+
 
 def deleteMessageInQueue(task):
     queueSQS = sqs.get_queue_by_name(QueueName=task['queue'])
@@ -54,7 +55,7 @@ def countTaskInQueue(queue_id):
 def lambda_handler(event, context):
     result = event
     if result['is_retry'] == True:
-        time.sleep(int(result['current_num_retries'])*2)
+        time.sleep(int(result['current_num_retries'])*30)
     # print(event)
 
     batch = result['batch']
@@ -83,7 +84,6 @@ def lambda_handler(event, context):
             return event
         result['current_num_retries'] += 1
         return result
-        
     # print(output.text)
     result['response'] = 'OK'
     result['is_retry'] = False

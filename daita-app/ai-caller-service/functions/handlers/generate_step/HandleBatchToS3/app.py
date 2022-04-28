@@ -12,10 +12,13 @@ from response import *
 from utils import *
 from identity_check import *
 from models.task_model import TaskModel
+from models.generate_task_model import GenerateTaskModel
+
 from pathlib import Path
 
-task_model = TaskModel(os.environ["TABLE_GENERATE_TASK"])
- 
+task_model = TaskModel(os.environ["TABLE_GENERATE_TASK"],None)
+generate_task_model = GenerateTaskModel(os.environ["TABLE_GENERATE_TASK"])
+
 
 s3 = boto3.client('s3')
 def is_img(img):
@@ -65,23 +68,18 @@ def UpdateStaskCurrentImageToTaskDB(task_id,identity_id,output):
 def lambda_handler(event, context):
     print(event)
     infoUploadS3 = []
-    if event['response'] == 'OK':
+    item = generate_task_model.get_task_info(event['identity_id'] ,event['task_id'])
+    if event['response'] == 'OK' and item.status != 'CANCEL':
         outputBatchDir = '/'+  '/'.join(event['batch']['request_json']['output_folder'].split('/')[2:])
         outdir = glob.glob(outputBatchDir+'/*')
         
         print("OutputBatchDir: \n", outputBatchDir)
         print("outdir: \n", outdir)
         UpdateStaskCurrentImageToTaskDB(task_id= event['task_id'], identity_id=event['identity_id'] , output=outputBatchDir)
-        infoUploadS3 =  UploadImage(output=outdir,project_prefix=event['project_prefix'])   
+        infoUploadS3 =  UploadImage(output=outdir,project_prefix=event['project_prefix'])  
     return {
         'response': event['response'],
-        # 'identity_id': event['identity_id'],
-        # 'task_id': event['task_id'],
-        # 'id_token': event['id_token'],
         'gen_id': str(event['batch']['request_json']['codes']),
-        # 'project_prefix': event['project_prefix'],
         'output':event['batch']['request_json']['output_folder'],
         'info_upload_s3': infoUploadS3,
-        # 'project_id': event['project_id'],
-        # 'project_name': event['project_name']
     }
