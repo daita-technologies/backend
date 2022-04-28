@@ -22,8 +22,8 @@ Globals:
         TABLE_GENERATE_TASK: !Ref TableGenerateTaskName
         TABLE_PROJECTS_NAME: !Ref TableProjectsName
         TABLE_METHODS_NAME: !Ref TableMethodsName
-        # TABLE_HEALTHCHECK_TASK: !Ref TableHealthCheckTasksName
-        # TABLE_HEALTHCHECK_INFO: !Ref TableHealthCheckInfoName 
+        TABLE_HEALTHCHECK_TASK: !Ref TableHealthCheckTasksName
+        TABLE_HEALTHCHECK_INFO: !Ref TableHealthCheckInfoName 
         INDEX_TASK_PROJECTID_TASKID: !Ref ParaIndexTaskProjectIDTaskID       
     Layers:
         - !Ref CommonCodeLayerName  
@@ -50,10 +50,10 @@ Parameters:
     Type: String
   ParaTableProjectSumName:
     Type: String
-  # TableHealthCheckTasksName:
-  #   Type: String
-  # TableHealthCheckInfoName:
-  #   Type: String
+  TableHealthCheckTasksName:
+    Type: String
+  TableHealthCheckInfoName:
+    Type: String
   ParaTableDataFlowTaskName:
     Type: String
   ParaIndexTaskProjectIDTaskID:
@@ -65,12 +65,12 @@ Parameters:
     Type: String
   LimitAugmentTimesName:
     Type: String
-  # HealthCheckEventBusArn:
-  #   Type: String
-  # HealthCheckEventBusName:
-  #   Type: String 
-  # ParaDecompressFileStateMachineArn:
-  #   Type: String  
+  HealthCheckEventBusArn:
+    Type: String
+  HealthCheckEventBusName:
+    Type: String 
+  ParaDecompressFileStateMachineArn:
+    Type: String  
   CognitoUserPoolId:
     Type:  String
     Default: us-east-2_ZbwpnYN4g
@@ -229,54 +229,54 @@ Resources:
           EVENT_BUS_NAME: !Ref StopProcessEventBusName
 
   ### for health check functions
-  # HealthCheckFunction:
-  #   Type: AWS::Serverless::Function
-  #   Properties:
-  #     CodeUri: functions/handlers/health_check/calculate
-  #     Role: !GetAtt LambdaExecutionRole.Arn
-  #     Environment:
-  #       Variables:
-  #         EVENT_BUS_NAME: !Ref HealthCheckEventBusName
-  #         TABLE_HEALTHCHECK_TASK: !Ref TableHealthCheckTasksName
+  HealthCheckFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: functions/handlers/health_check/calculate
+      Role: !GetAtt LambdaExecutionRole.Arn
+      Environment:
+        Variables:
+          EVENT_BUS_NAME: !Ref HealthCheckEventBusName
+          TABLE_HEALTHCHECK_TASK: !Ref TableHealthCheckTasksName
 
-  # HCStatusFunction:
-  #   Type: AWS::Serverless::Function
-  #   Properties:
-  #     CodeUri: functions/handlers/health_check/get_status
-  #     Role: !GetAtt LambdaExecutionRole.Arn
-  #     Environment:
-  #       Variables:
-  #         TABLE_HEALTHCHECK_TASK: !Ref TableHealthCheckTasksName
+  HCStatusFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: functions/handlers/health_check/get_status
+      Role: !GetAtt LambdaExecutionRole.Arn
+      Environment:
+        Variables:
+          TABLE_HEALTHCHECK_TASK: !Ref TableHealthCheckTasksName
 
-  # HCInfoFunction:
-  #   Type: AWS::Serverless::Function
-  #   Properties:
-  #     CodeUri: functions/handlers/health_check/get_info
-  #     Role: !GetAtt LambdaExecutionRole.Arn
-  #     Environment:
-  #       Variables:
-  #         TABLE_HEALTHCHECK_INFO: !Ref TableHealthCheckInfoName
+  HCInfoFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: functions/handlers/health_check/get_info
+      Role: !GetAtt LambdaExecutionRole.Arn
+      Environment:
+        Variables:
+          TABLE_HEALTHCHECK_INFO: !Ref TableHealthCheckInfoName
 
   ### For data flow functions
-  # CreateDecompressTaskFunction:
-  #   Type: AWS::Serverless::Function
-  #   Properties:
-  #     CodeUri: functions/handlers/dataflow/create_decompress_task
-  #     Role: !GetAtt LambdaExecutionRole.Arn
-  #     Environment:
-  #       Variables:
-  #         DecompressFileStateMachineArn: !Ref ParaDecompressFileStateMachineArn
-  #         DecompressTaskTable: !Ref ParaTableDataFlowTaskName
-  #         ProjectsTable: !Ref TableProjectsName         
+  CreateDecompressTaskFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: functions/handlers/dataflow/create_decompress_task
+      Role: !GetAtt LambdaExecutionRole.Arn
+      Environment:
+        Variables:
+          DecompressFileStateMachineArn: !Ref ParaDecompressFileStateMachineArn
+          DecompressTaskTable: !Ref ParaTableDataFlowTaskName
+          ProjectsTable: !Ref TableProjectsName         
 
-  # GetDecompressTaskFunction:
-  #   Type: AWS::Serverless::Function
-  #   Properties:
-  #     CodeUri: functions/handlers/dataflow/get_decompress_task
-  #     Role: !GetAtt LambdaExecutionRole.Arn
-  #     Environment:
-  #       Variables:
-  #         DecompressTaskTable: !Ref ParaTableDataFlowTaskName  
+  GetDecompressTaskFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: functions/handlers/dataflow/get_decompress_task
+      Role: !GetAtt LambdaExecutionRole.Arn
+      Environment:
+        Variables:
+          DecompressTaskTable: !Ref ParaTableDataFlowTaskName  
 
   ### For task dashboard function
   TaskDashboardInfoFunction:
@@ -287,7 +287,7 @@ Resources:
       Environment:
         Variables:
           DecompressTaskTable: !Ref ParaTableDataFlowTaskName
-          # TableHealthCheckTasksName: !Ref TableHealthCheckTasksName
+          TableHealthCheckTasksName: !Ref TableHealthCheckTasksName
           TableGenerateTaskName: !Ref TableGenerateTaskName
           TableDownloadTaskName: !Ref ParaTableDownloadTaskName
 

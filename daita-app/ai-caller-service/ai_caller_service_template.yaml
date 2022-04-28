@@ -39,10 +39,10 @@ Parameters:
     Default: fs-0199771f2dfe97ace
   EFSStorageAI:
     Type: String
-    Default: /mnt/efs
+    Default: /generation_task
   ROOTEFS:
     Type: String
-    Default: /efs
+    Default: /mnt/efs
   SubnetIDsPara:
     Type: CommaDelimitedList
   SecurityGroupIdsPara:
@@ -257,84 +257,84 @@ Resources:
             - elasticfilesystem:DescribeMountTargets
             Resource: "*"
 
-  # CronJobStopEc2:
-  #   Type: AWS::Serverless::Function
-  #   Properties:
-  #     CodeUri: functions/handlers/crontab/stop_ec2
-  #     Environment:
-  #       Variables:
-  #         QUEUE_EC2_NAME_1: !GetAtt SqsEc2Work1.QueueName
-  #         QUEUE_EC2_NAME_2: !GetAtt SqsEc2Work2.QueueName
-  #         SF_CALL_SERVICE: !GetAtt CallerServiceStateMachine.Arn
-  #     # Events:
-  #     #   ScheduledEvent:
-  #     #     Type: Schedule
-  #     #     Properties:
-  #     #       Schedule: cron(0/5 * * * ? *)
-  #     Policies:
-  #     - Statement:
-  #       - Effect: Allow
-  #         Action:
-  #           - "dynamodb:GetItem"
-  #           - "dynamodb:DeleteItem"
-  #           - "dynamodb:PutItem"
-  #           - "dynamodb:Scan"
-  #           - "dynamodb:Query"
-  #           - "dynamodb:UpdateItem"
-  #           - "dynamodb:BatchWriteItem"
-  #           - "dynamodb:BatchGetItem"
-  #           - "dynamodb:DescribeTable"
-  #           - "dynamodb:ConditionCheckItem"
-  #           - "lambda:InvokeFunction"
-  #           - "states:ListExecutions"
-  #         Resource: "*"
-  #       - Effect: Allow
-  #         Action:
-  #           - "sqs:GetQueueAttributes"
-  #           - "sqs:SendMessage"
-  #           - "sqs:ReceiveMessage"
-  #           - "sqs:DeleteMessage"
-  #           - "sqs:DeleteMessageBatch"
-  #           - "sqs:GetQueueUrl"
-  #         Resource: "*"
-  #       - Sid: LambdaInvokefunction
-  #         Effect: Allow
-  #         Action:
-  #           - "lambda:InvokeFunction"
-  #         Resource: "*"
-  #       - Sid: CloudWatchLogsPolicy
-  #         Effect: Allow
-  #         Action:
-  #           - "logs:CreateLogDelivery"
-  #           - "logs:GetLogDelivery"
-  #           - "logs:UpdateLogDelivery"
-  #           - "logs:DeleteLogDelivery"
-  #           - "logs:ListLogDeliveries"
-  #           - "logs:PutResourcePolicy"
-  #           - "logs:DescribeResourcePolicies"
-  #           - "logs:DescribeLogGroup"
-  #           - "logs:DescribeLogGroups"
-  #         Resource: "*"
-  #       - Sid: CloudWatchEventsFullAccess
-  #         Effect: Allow
-  #         Action:
-  #           - "events:*"
-  #         Resource: "*"
-  #       - Sid: EC2ALLOW
-  #         Effect: Allow
-  #         Action:
-  #           - autoscaling:StartInstanceRefresh
-  #           - autoscaling:Describe*
-  #           - autoscaling:UpdateAutoScalingGroup
-  #           - ec2:CreateLaunchTemplateVersion
-  #           - ec2:DescribeLaunchTemplates
-  #           - ec2:RunInstances
-  #           - ec2:DescribeInstances
-  #           - sts:AssumeRole
-  #           -  "ec2:Start*"
-  #           -  "ec2:Stop*"
-  #           - iam:PassRole
-  #         Resource: '*'
+  CronJobStopEc2:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: functions/handlers/crontab/stop_ec2
+      Environment:
+        Variables:
+          QUEUE_EC2_NAME_1: !GetAtt SqsEc2Work1.QueueName
+          QUEUE_EC2_NAME_2: !GetAtt SqsEc2Work2.QueueName
+          SF_CALL_SERVICE: !GetAtt CallerServiceStateMachine.Arn
+      Events:
+        ScheduledEvent:
+          Type: Schedule
+          Properties:
+            Schedule: cron(0/10 * * * ? *)
+      Policies:
+      - Statement:
+        - Effect: Allow
+          Action:
+            - "dynamodb:GetItem"
+            - "dynamodb:DeleteItem"
+            - "dynamodb:PutItem"
+            - "dynamodb:Scan"
+            - "dynamodb:Query"
+            - "dynamodb:UpdateItem"
+            - "dynamodb:BatchWriteItem"
+            - "dynamodb:BatchGetItem"
+            - "dynamodb:DescribeTable"
+            - "dynamodb:ConditionCheckItem"
+            - "lambda:InvokeFunction"
+            - "states:ListExecutions"
+          Resource: "*"
+        - Effect: Allow
+          Action:
+            - "sqs:GetQueueAttributes"
+            - "sqs:SendMessage"
+            - "sqs:ReceiveMessage"
+            - "sqs:DeleteMessage"
+            - "sqs:DeleteMessageBatch"
+            - "sqs:GetQueueUrl"
+          Resource: "*"
+        - Sid: LambdaInvokefunction
+          Effect: Allow
+          Action:
+            - "lambda:InvokeFunction"
+          Resource: "*"
+        - Sid: CloudWatchLogsPolicy
+          Effect: Allow
+          Action:
+            - "logs:CreateLogDelivery"
+            - "logs:GetLogDelivery"
+            - "logs:UpdateLogDelivery"
+            - "logs:DeleteLogDelivery"
+            - "logs:ListLogDeliveries"
+            - "logs:PutResourcePolicy"
+            - "logs:DescribeResourcePolicies"
+            - "logs:DescribeLogGroup"
+            - "logs:DescribeLogGroups"
+          Resource: "*"
+        - Sid: CloudWatchEventsFullAccess
+          Effect: Allow
+          Action:
+            - "events:*"
+          Resource: "*"
+        - Sid: EC2ALLOW
+          Effect: Allow
+          Action:
+            - autoscaling:StartInstanceRefresh
+            - autoscaling:Describe*
+            - autoscaling:UpdateAutoScalingGroup
+            - ec2:CreateLaunchTemplateVersion
+            - ec2:DescribeLaunchTemplates
+            - ec2:RunInstances
+            - ec2:DescribeInstances
+            - sts:AssumeRole
+            -  "ec2:Start*"
+            -  "ec2:Stop*"
+            - iam:PassRole
+          Resource: '*'
 
   HandlerUploadBatchToS3:
     Type: AWS::Serverless::Function

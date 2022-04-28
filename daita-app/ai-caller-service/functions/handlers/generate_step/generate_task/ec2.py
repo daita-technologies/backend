@@ -45,7 +45,7 @@ def startEc2(instance):
     elif instance.state['Name'] == 'stopping':
         instance.load()
         while instance.state['Name'] != 'stopped':
-                time.sleep(15)
+                time.sleep(20)
                 instance.load()
                 pass
         print('Wait ec2 stopped to start')
