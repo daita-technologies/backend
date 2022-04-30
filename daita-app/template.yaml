@@ -11,7 +11,7 @@ Parameters:
   Application:
     Type: String
     Default: daita
-  SecurityGroupIds:
+  SecurityGroupIds: 
     Type: String
     Default: 'sg-0315a5ecee0dc69fe,sg-0b3b2fcc4dc7686ad,sg-af50cbde,sg-07c27f59bc172f180,sg-0796222bd5149736f'
   SubnetIDs:
@@ -107,6 +107,8 @@ Resources:
                   - events:PutEvents
                   - s3:Get*
                   - ecr:*
+                  - elasticfilesystem:*
+                  - states:*
                 Resource: "*"
 
   #================ LAMBDA LAYERS  ============================================
@@ -131,6 +133,7 @@ Resources:
         SecurityGroupIdsPara: !Ref SecurityGroupIds
         S3BucketNamePara: !Ref S3BucketName
         TableGenerateTaskName: !GetAtt DatabaseService.Outputs.TableGenerateTaskName
+        LambdaRoleARN: !GetAtt GeneralLambdaExecutionRole.Arn
 
   DataFlowService:
     Type: AWS::Serverless::Application

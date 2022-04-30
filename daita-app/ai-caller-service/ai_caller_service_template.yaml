@@ -42,7 +42,7 @@ Parameters:
     Default: /generation_task
   ROOTEFS:
     Type: String
-    Default: /mnt/efs
+    Default: /efs
   SubnetIDsPara:
     Type: CommaDelimitedList
   SecurityGroupIdsPara:
@@ -50,6 +50,8 @@ Parameters:
   S3BucketNamePara:
     Type: String
   TableGenerateTaskName: 
+    Type: String
+  LambdaRoleARN:
     Type: String
 
 Resources:

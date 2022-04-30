@@ -62,14 +62,14 @@ def lambda_handler(event, context):
     
     print(f"--Count current message in queue: {batch['queue']} is {countTaskInQueue(batch['queue'])}")
     
-    # print("request AI body: \n", batch['request_json'])
+    print("request AI body: \n", batch['request_json'])
     try :
         instance = ec2_resource.Instance(batch['ec2_id'])
         instance.load()
         print(f"Current state of instance before send request: {batch['ec2_id']} is {instance.state['Name']}")
         
         output = requests.post(batch['host'],json=batch['request_json'])
-        # print("Output from AI request: \n", output.text)
+        print("Output from AI request: \n", output.text)
 
         if output.status_code != http.HTTPStatus.OK:
             raise Exception("Not OK")
@@ -88,6 +88,6 @@ def lambda_handler(event, context):
     result['response'] = 'OK'
     result['is_retry'] = False
     
-    print("-----Normal Delete message ")
+    print("-----Normal Delete message ------------------------ ")
     deleteMessageInQueue(batch)
     return result
