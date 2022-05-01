@@ -184,7 +184,7 @@ Resources:
     Properties:
       Type: STANDARD
       Name: !Sub "${StagePara}-${ApplicationPara}-DecompressFileSM"
-      Definitionuri: decompress-upload-app/statemachine/decompress_file.asl.yml
+      DefinitionUri: ./decompress-upload-app/statemachine/decompress_file.asl.yml
       DefinitionSubstitutions:
         DecompressTaskCluster: !GetAtt DecompressTaskCluster.Arn
         DecompressTask: !Ref DecompressTask
@@ -216,7 +216,7 @@ Resources:
         - LambdaInvokePolicy:
             FunctionName: !Ref PostUploadFunction
         - DynamoDBCrudPolicy:
-            TableName: !Ref TableDataFlowTaskName   
+            TableName: !Ref TableDataFlowTaskName
         - Statement:
           - # Allow step to start ecs task
             Effect: Allow
@@ -258,7 +258,7 @@ Resources:
   DivideDecompressChunksFunction:
     Type: AWS::Serverless::Function
     Properties:
-      Codeuri: decompress-upload-app/functions/divide_decompressed_chunks/
+      CodeUri: decompress-upload-app/functions/divide_decompressed_chunks
       VpcConfig:
         SecurityGroupIds:
           - !Ref SecurityGroupIds
@@ -292,7 +292,7 @@ Resources:
   UploadDecompressedFunction:
     Type: AWS::Serverless::Function
     Properties:
-      Codeuri: decompress-upload-app/functions/upload_decompressed/
+      CodeUri: decompress-upload-app/functions/upload_decompressed
       Timeout: 30
       VpcConfig:
         SecurityGroupIds:
@@ -320,13 +320,13 @@ Resources:
   PostUploadFunction:
     Type: AWS::Serverless::Function
     Properties:
-      Codeuri: decompress-upload-app/functions/post_upload/
+      CodeUri: decompress-upload-app/functions/post_upload/
       Timeout: 30
 
   FinishDecompressTaskFunction:
     Type: AWS::Serverless::Function
     Properties:
-      Codeuri: decompress-upload-app/functions/finish_decompress_task/
+      CodeUri: decompress-upload-app/functions/finish_decompress_task/
       Policies:
         - AmazonDynamoDBFullAccess
         - Statement:
@@ -349,7 +349,7 @@ Resources:
           DecompressTaskTable: !Ref TableDataFlowTaskName
           FileSystemId: !Ref EFSFileSystemId
           EFSMountPath: !Ref EFSMountPath
-  
+
   # ECS resources
   DecompressTaskCluster:
     Type: AWS::ECS::Cluster
@@ -433,7 +433,7 @@ Resources:
     Properties:
       Type: STANDARD
       Name: !Sub "${StagePara}-${ApplicationPara}-CompressDownloadSM"
-      Definitionuri: compress-download-app/statemachine/compress_download.asl.yml
+      DefinitionUri: compress-download-app/statemachine/compress_download.asl.yml
       DefinitionSubstitutions:
         CompressDownloadTaskCluster: !GetAtt CompressDownloadTaskCluster.Arn
         CompressDownloadTask: !Ref CompressDownloadTask
