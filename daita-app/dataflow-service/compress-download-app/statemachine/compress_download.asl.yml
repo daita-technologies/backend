@@ -1,5 +1,4 @@
-StartAt: StartECSDecompressTask
-# StartAt: DivideDecompressChunksFunction
+StartAt: StartECSCompressDownloadTask
 States:
   StartECSCompressDownloadTask:
     Type: Task
@@ -19,7 +18,7 @@ States:
             Environment:
               - Name: TASK_ID
                 Value.$: $.task_id
-              - Name: IDENTIRY_ID
+              - Name: IDENTITY_ID
                 Value.$: $.identity_id
               - Name: DOWN_TYPE
                 Value.$: $.down_type
@@ -29,69 +28,16 @@ States:
                 Value.$: $.project_id
       TaskDefinition: ${CompressDownloadTask}
     ResultPath: null # Forward previous step input as this step output
-    Next: SendMailFunction
+    Next: Complete
 
-  # DivideDecompressChunksFunction:
+  # SendMailFunction:
   #   Type: Task
   #   Resource: arn:aws:states:::lambda:invoke
-  #   ResultSelector:
-  #       identity_id.$: "$$.Execution.Input.identity_id"
-  #       result.$: "$.Payload"
-  #   Parameters:
-  #     FunctionName: "${DivideDecompressChunksFunction}"
-  #     Payload.$: $
-  #   Next: UploadDecompressedMapping
-
-  # UploadDecompressedMapping:
-  #   Type: Map
   #   InputPath: $
-  #   ItemsPath: $.result.file_chunks
   #   Parameters:
-  #     file_chunk.$: $$.Map.Item.Value
-  #     project_id.$: $.result.project_id
-  #     id_token.$: $.result.id_token
-  #     project_name.$: $.result.project_name
-  #     type_method.$: $.result.type_method
-  #     s3_prefix.$: $.result.s3_prefix
-  #     identity_id.$: $.identity_id
-  #   Iterator:
-  #     StartAt: UploadDecompressedFunction
-  #     States:
-  #       UploadDecompressedFunction:
-  #         Type: Task
-  #         Resource: arn:aws:states:::lambda:invoke
-  #         Parameters:
-  #           FunctionName: "${UploadDecompressedFunction}"
-  #           Payload.$: $
-  #         Next: ProjectUploadUpdateFunction
-  #       ProjectUploadUpdateFunction:
-  #         Type: Task
-  #         Resource: arn:aws:states:::lambda:invoke
-  #         InputPath: $.Payload
-  #         Parameters:
-  #           FunctionName: "${ProjectUploadUpdateFunction}"
-  #           Payload:
-  #             body.$: $.body
-  #         Next: PostUploadFunction
-  #       PostUploadFunction:
-  #         Type: Task
-  #         Resource: arn:aws:states:::lambda:invoke
-  #         InputPath: $.Payload
-  #         Parameters:
-  #           FunctionName: "${PostUploadFunction}"
-  #           Payload.$: $
-  #         End: True
-  #   ResultPath: null
-  #   Next: FinishDecompressTaskFunction
-
-  SendMailFunction:
-    Type: Task
-    Resource: arn:aws:states:::lambda:invoke
-    InputPath: $
-    Parameters:
-      FunctionName: "${FinishDecompressTaskFunction}"
-      Payload.$: $
-    Next: Complete
+  #     FunctionName: "${FinishDecompressTaskFunction}"
+  #     Payload.$: $
+  #   Next: Complete
 
   Complete:
     Type: Pass

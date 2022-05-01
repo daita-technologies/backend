@@ -20,12 +20,12 @@ stepfunctions = boto3.client('stepfunctions')
 db = boto3.resource('dynamodb')
 task_table = db.Table(DECOMPRESS_TASK_TABLE)
 projects_table = db.Table(PROJECTS_TABLE)
-    
+
 class CreateDecompressClass(LambdaBaseClass):
-    
-    def __init__(self) -> None:   
-        super().__init__()       
-        
+
+    def __init__(self) -> None:
+        super().__init__()
+
 
 
     @LambdaBaseClass.parse_body
@@ -37,15 +37,15 @@ class CreateDecompressClass(LambdaBaseClass):
         self.project_id = body['project_id']
         self.project_name = body['project_name']
         self.type_method = body.get('type_method', 'ORIGINAL')
-        
+
     def handle(self, event, context):
-    
+
         ### parse body
         self.parser(event)
 
         ### check identity
-        identity_id = self.get_identity(self.id_token) 
-        
+        identity_id = self.get_identity(self.id_token)
+
         task_id = create_task_id_w_created_time()
         response = task_table.put_item(
             Item={
@@ -59,7 +59,7 @@ class CreateDecompressClass(LambdaBaseClass):
                 KEY_NAME_PROCESS_TYPE: VALUE_PROCESS_TYPE_UPLOAD
             }
         )
-            
+
         response = projects_table.get_item(
             Key={
                 "identity_id": identity_id,
@@ -92,11 +92,10 @@ class CreateDecompressClass(LambdaBaseClass):
                     "task_id": task_id,
                     "file_url": self.file_url,
                 },
-            )       
+            )
 
 
 @error_response
 def lambda_handler(event, context):
 
     return CreateDecompressClass().handle(event, context)
-

@@ -27,11 +27,11 @@ def lambda_handler(event, context):
             "identity_id": identity_id,
             "task_id": task_id
         },
-        ExpressionAttributeNames={'#ST': "status"},
-        ProjectionExpression="#ST, created_at, updated_at, project_id, task_id, process_type"
     )
 
     task = response.get("Item", None)
+    # pop out identity_id if needed
+    task.pop("identity_id", None)
     if task is None:
         raise Exception(MESS_TASK_NOT_EXIST.format(task_id))
 
