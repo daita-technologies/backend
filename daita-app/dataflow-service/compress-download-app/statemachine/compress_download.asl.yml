@@ -28,16 +28,16 @@ States:
                 Value.$: $.project_id
       TaskDefinition: ${CompressDownloadTask}
     ResultPath: null # Forward previous step input as this step output
-    Next: Complete
+    Next: SendCompletedMailFunction
 
-  # SendMailFunction:
-  #   Type: Task
-  #   Resource: arn:aws:states:::lambda:invoke
-  #   InputPath: $
-  #   Parameters:
-  #     FunctionName: "${FinishDecompressTaskFunction}"
-  #     Payload.$: $
-  #   Next: Complete
+  SendCompletedMailFunction:
+    Type: Task
+    Resource: arn:aws:states:::lambda:invoke
+    InputPath: $
+    Parameters:
+      FunctionName: "${SendCompletedMailFunction}"
+      Payload.$: $
+    Next: Complete
 
   Complete:
     Type: Pass
