@@ -93,9 +93,7 @@ def lambda_handler(event, context):
                         'process_type': 'AUGMENT' if 'AUG' in event['gen_id'] else 'PREPROCESS'
                     },list_file_s3= info, gen_id=event['gen_id'])
     # que.join()
-    # if event['status'] == 'FINISH':
-    #     folder = '/mnt/efs/'+ event['task_id']
-    #     shutil.rmtree(folder)
+
     return {
         'task_id':event['task_id'],
         'identity_id':event['identity_id'],

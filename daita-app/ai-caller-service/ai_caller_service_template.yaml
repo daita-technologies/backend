@@ -21,7 +21,7 @@ Globals:
         LOGGING: !Ref minimumLogLevel
         TABLE_GENERATE_TASK: !Ref TableGenerateTaskName
     Layers:
-        - !Ref CommonCodeLayerName     
+        - !Ref CommonCodeLayerName
 
 ## The general rule seems to be to use !Sub for in line substitutions and !ref for stand alone text
 Parameters:
@@ -39,24 +39,94 @@ Parameters:
     Default: fs-0199771f2dfe97ace
   EFSStorageAI:
     Type: String
-    Default: /mnt/efs
+    Default: /generation_task
   ROOTEFS:
     Type: String
-    Default: /efs
+    Default: /mnt/efs
   SubnetIDsPara:
     Type: CommaDelimitedList
   SecurityGroupIdsPara:
     Type: CommaDelimitedList
   S3BucketNamePara:
     Type: String
-  TableGenerateTaskName: 
+  TableGenerateTaskName:
     Type: String
 
 Resources:
+  LambdaExecutionRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+        - Effect: "Allow"
+          Principal:
+            Service: "lambda.amazonaws.com"
+          Action:
+          - "sts:AssumeRole"
+      Policies:
+        - PolicyName: 'SecretsManagerParameterAccess'
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - ssm:GetParam*
+                  - ssm:DescribeParam*
+                Resource:
+                  - arn:aws:ssm:*:*:parameter/*
+        - PolicyName: 'CloudwatchPermission'
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              -
+                Effect: Allow
+                Action:
+                  - 'logs:CreateLogGroup'
+                  - 'logs:CreateLogStream'
+                  - 'logs:PutLogEvents'
+                Resource: '*'
+        - PolicyName: 'CognitoPermission'
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              -
+                Effect: Allow
+                Action:
+                  - cognito-identity:*
+                  - cognito-idp:*
+                Resource: '*'
+        - PolicyName: 'DynamoDBPermission'
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              -
+                Effect: Allow
+                Action:
+                  - dynamodb:*
+                Resource: "*"
+        - PolicyName: "OtherServicePermission"
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              -
+                Effect: Allow
+                Action:
+                  - events:PutEvents
+                Resource: "*"
+              - Effect: Allow
+                Action:
+                  - states:GetExecutionHistory
+                  - states:StartExecution
+                  - states:DescribeExecution
+                  - states:StopExecution
+                Resource: "*"
+
+
   ###################################EFS template####################################
   EFSAccessPoint:
     Type: AWS::EFS::AccessPoint
-    Properties: 
+    Properties:
       FileSystemId: !Ref EFSFileSystemId
       PosixUser:
         Gid: "1000"
@@ -82,8 +152,8 @@ Resources:
       VisibilityTimeout: 0
       ContentBasedDeduplication: true
       QueueName: !Sub "${StagePara}-${ApplicationPara}-SqsEc2Work2.fifo"
-  
-  ####================ ROLES ===================================================== 
+
+  ####================ ROLES =====================================================
   ### add role to start state machine from eventbus
   CallerServiceEventBusRole:
     Type: "AWS::IAM::Role"
@@ -94,7 +164,7 @@ Resources:
           - Effect: "Allow"
             Principal:
               Service: "events.amazonaws.com"
-            Action: 
+            Action:
               - "sts:AssumeRole"
       Policies:
         - PolicyName: DirectlyInvokeStepFunctions
@@ -105,29 +175,87 @@ Resources:
               - "states:StartExecution"
               Effect: Allow
               Resource:
-                - !Ref CallerServiceStateMachine  
+                - !Ref CallerServiceStateMachine
 
   #================ LAMBDA FUNCTIONS ==========================================
+  StopTaskStop:
+    Type:  AWS::Serverless::Function
+    DependsOn: CallerServiceStateMachineLogGroup
+    Properties:
+      CodeUri: functions/handlers/stop_process
+      Role: !GetAtt LambdaExecutionRole.Arn
+      Environment:
+        Variables:
+          TABLE_GENERATE_TASK: !Ref TableGenerateTaskName
+          EVENT_BUS_NAME: !Ref StopProcessEventBus
+      Policies:
+        - Statements:
+          - Effect: Allow
+            Action:
+              - "logs:*"
+              - "events:*"
+            Resource: "*"
+          -
+            Effect: Allow
+            Action: states:StartExecution
+            Resource: "*"
+          -
+            Effect: Allow
+            Action:
+              - states:DescribeExecution
+              - states:StopExecution
+            Resource: "*"
+      Events:
+        stoptask:
+          Type: EventBridgeRule
+          Properties:
+            EventBusName: !Ref StopProcessEventBus
+            Pattern:
+              source:
+                - "source.events"
+              detail-type:
+                - "lambda.event"
+
+
   HandleCompleteRequestAI:
     Type: AWS::Serverless::Function
-    Properties: 
+    Properties:
+      # VpcConfig:
+      #   SecurityGroupIds: !Split [',', !Join [',', !Ref SecurityGroupIdsPara]]
+      #   SubnetIds: !Split [',', !Join [',', !Ref SubnetIDsPara]]
+      # FileSystemConfigs:
+      #   - Arn: !GetAtt EFSAccessPoint.Arn
+      #     LocalMountPath: !Ref EFSStorageAI
       CodeUri: functions/handlers/generate_step/CompleteRequestAI
-    Policies:
-      - Statement:
-        - Sid: CloudWatchLogsPolicy
-          Effect: Allow
-          Action:
-            - "logs:CreateLogDelivery"
-            - "logs:GetLogDelivery"
-            - "logs:UpdateLogDelivery"
-            - "logs:DeleteLogDelivery"
-            - "logs:ListLogDeliveries"
-            - "logs:PutResourcePolicy"
-            - "logs:DescribeResourcePolicies"
-            - "logs:DescribeLogGroup"
-            - "logs:DescribeLogGroups"
-            - "lambda:InvokeFunction"
-          Resource: "*"
+      Policies:
+        - Statement:
+          - Sid: CloudWatchLogsPolicy
+            Effect: Allow
+            Action:
+              - "logs:CreateLogDelivery"
+              - "logs:GetLogDelivery"
+              - "logs:UpdateLogDelivery"
+              - "logs:DeleteLogDelivery"
+              - "logs:ListLogDeliveries"
+              - "logs:PutResourcePolicy"
+              - "logs:DescribeResourcePolicies"
+              - "logs:DescribeLogGroup"
+              - "logs:DescribeLogGroups"
+              - "lambda:InvokeFunction"
+            Resource: "*"
+          - Sid: CloudWatchEventsFullAccess
+            Effect: Allow
+            Action:
+              - "events:*"
+            Resource: "*"
+          - Sid: AmazonElasticFileSystemClientFullAccess
+            Effect: Allow
+            Action:
+            - elasticfilesystem:ClientMount
+            - elasticfilesystem:ClientRootAccess
+            - elasticfilesystem:ClientWrite
+            - elasticfilesystem:DescribeMountTargets
+            Resource: "*"
 
   CronJobStopEc2:
     Type: AWS::Serverless::Function
@@ -142,7 +270,7 @@ Resources:
         ScheduledEvent:
           Type: Schedule
           Properties:
-            Schedule: cron(0/5 * * * ? *)
+            Schedule: cron(0/10 * * * ? *)
       Policies:
       - Statement:
         - Effect: Allow
@@ -213,8 +341,8 @@ Resources:
     Properties:
       CodeUri: functions/handlers/generate_step/HandleBatchToS3
       VpcConfig:
-        SecurityGroupIds: !Split [',', !Join [',', !Ref SecurityGroupIdsPara]] 
-        SubnetIds: !Split [',', !Join [',', !Ref SubnetIDsPara]] 
+        SecurityGroupIds: !Split [',', !Join [',', !Ref SecurityGroupIdsPara]]
+        SubnetIds: !Split [',', !Join [',', !Ref SubnetIDsPara]]
       FileSystemConfigs:
         - Arn: !GetAtt EFSAccessPoint.Arn
           LocalMountPath: !Ref EFSStorageAI
@@ -271,8 +399,8 @@ Resources:
     Type: AWS::Serverless::Function
     Properties:
       VpcConfig:
-        SecurityGroupIds: !Split [',', !Join [',', !Ref SecurityGroupIdsPara]] 
-        SubnetIds: !Split [',', !Join [',', !Ref SubnetIDsPara]] 
+        SecurityGroupIds: !Split [',', !Join [',', !Ref SecurityGroupIdsPara]]
+        SubnetIds: !Split [',', !Join [',', !Ref SubnetIDsPara]]
       FileSystemConfigs:
         - Arn: !GetAtt EFSAccessPoint.Arn
           LocalMountPath: !Ref EFSStorageAI
@@ -355,7 +483,22 @@ Resources:
           Action:
             - "events:*"
           Resource: "*"
-      
+        - Sid: EC2ALLOW
+          Effect: Allow
+          Action:
+          - autoscaling:StartInstanceRefresh
+          - autoscaling:Describe*
+          - autoscaling:UpdateAutoScalingGroup
+          - ec2:CreateLaunchTemplateVersion
+          - ec2:DescribeLaunchTemplates
+          - ec2:RunInstances
+          - ec2:DescribeInstances
+          - sts:AssumeRole
+          -  "ec2:Start*"
+          -  "ec2:Stop*"
+          - iam:PassRole
+          Resource: '*'
+
   UpdateStatusTask:
     Type: AWS::Serverless::Function
     Properties:
@@ -376,12 +519,12 @@ Resources:
           - "dynamodb:DescribeTable"
           - "dynamodb:ConditionCheckItem"
           - "lambda:InvokeFunction"
-          Resource: "*"      
+          Resource: "*"
 
   PreprocessGenerateTask:
-    Type: AWS::Serverless::Function 
+    Type: AWS::Serverless::Function
     Properties:
-      CodeUri: functions/handlers/preprocess_generate_batch
+      CodeUri: functions/handlers/preprocess_generate_batch/generate_batch
       Policies:
       - Statement:
         - Sid: ALLOWCRUDDynamoDB
@@ -398,7 +541,7 @@ Resources:
           - "dynamodb:DescribeTable"
           - "dynamodb:ConditionCheckItem"
           Resource: "*"
-     
+
   HandleMergeResultDownloadImages:
     Type: AWS::Serverless::Function
     Properties:
@@ -439,6 +582,16 @@ Resources:
   HandleGetResultDownloadTask:
     Type: AWS::Serverless::Function
     Properties:
+      # VpcConfig:
+      #   SecurityGroupIds: !Split [',', !Join [',', !Ref SecurityGroupIdsPara]]
+      #   SubnetIds: !Split [',', !Join [',', !Ref SubnetIDsPara]]
+      # FileSystemConfigs:
+      #   - Arn: !GetAtt EFSAccessPoint.Arn
+      #     LocalMountPath: !Ref EFSStorageAI
+      # Environment:
+      #   Variables:
+      #     EFSPATH: !Ref EFSStorageAI
+      #     ROOTEFS: !Ref ROOTEFS
       CodeUri: functions/handlers/download_task/get_result_download_task
       Policies:
         - S3FullAccessPolicy:
@@ -472,13 +625,13 @@ Resources:
             Action:
             - s3:*
             Resource: "*"
-            
+
   HandleDownloadImages:
     Type: AWS::Serverless::Function
     Properties:
       VpcConfig:
-        SecurityGroupIds: !Split [',', !Join [',', !Ref SecurityGroupIdsPara]] 
-        SubnetIds: !Split [',', !Join [',', !Ref SubnetIDsPara]] 
+        SecurityGroupIds: !Split [',', !Join [',', !Ref SecurityGroupIdsPara]]
+        SubnetIds: !Split [',', !Join [',', !Ref SubnetIDsPara]]
       FileSystemConfigs:
         - Arn: !GetAtt EFSAccessPoint.Arn
           LocalMountPath: !Ref EFSStorageAI
@@ -520,8 +673,8 @@ Resources:
     Type: AWS::Serverless::Function
     Properties:
       VpcConfig:
-        SecurityGroupIds: !Split [',', !Join [',', !Ref SecurityGroupIdsPara]] 
-        SubnetIds: !Split [',', !Join [',', !Ref SubnetIDsPara]] 
+        SecurityGroupIds: !Split [',', !Join [',', !Ref SecurityGroupIdsPara]]
+        SubnetIds: !Split [',', !Join [',', !Ref SubnetIDsPara]]
       FileSystemConfigs:
         - Arn: !GetAtt EFSAccessPoint.Arn
           LocalMountPath: !Ref EFSStorageAI
@@ -626,12 +779,36 @@ Resources:
           -  "ec2:Stop*"
           - iam:PassRole
           Resource: '*'
- 
+        - Effect: Allow
+          Action:
+          - s3:*
+          Resource: "*"
+
   #================ EVENT BUS =================================================
+  StopProcessEventBus:
+    Type: AWS::Events::EventBus
+    Properties:
+      Name: !Sub "${StagePara}-${ApplicationPara}-StopProcessEventBus"
+  # StopProcessEventBusDefaultRule:
+  #   Type: AWS::Events::Rule
+  #   Properties:
+  #     Description: "Default Rule for Any event"
+  #     State: ENABLED
+  #     EventBusName: !Ref StopProcessEventBus
+  #     EventPattern:
+  #       source:
+  #         - "source.events"
+  #       detail-type:
+  #         - "lambda.event"
+  #     Targets:
+  #       -
+  #         Arn: !GetAtt StopTaskStop.Arn
+  #         Id: "StopTaskProcess"
+  #         RoleArn: !GetAtt CallerServiceEventBusRole.Arn
 
   CallerServiceEventBus:
     Type: AWS::Events::EventBus
-    Properties: 
+    Properties:
       Name: !Sub "${StagePara}-${ApplicationPara}-CallerServiceEventBus"
 
   CallerServiceEventBusDefaultRule:
@@ -646,16 +823,16 @@ Resources:
         detail-type:
           - "lambda.event"
       Targets:
-        - 
-          Arn: !GetAtt CallerServiceStateMachine.Arn 
+        -
+          Arn: !GetAtt CallerServiceStateMachine.Arn
           Id: "CallerServiceStateMachineTarget"
-          RoleArn: !GetAtt CallerServiceEventBusRole.Arn  
+          RoleArn: !GetAtt CallerServiceEventBusRole.Arn
 
   #================ LOGS FOR STEP FUNCTIONS ===================================
 
   CallerServiceStateMachineLogGroup:
     Type: AWS::Logs::LogGroup
-    Properties: 
+    Properties:
       LogGroupName: !Sub "/aws/vendedlogs/states/${StagePara}-${ApplicationPara}-CallerServiceSMLogGr"
       RetentionInDays: 7
 
@@ -671,9 +848,9 @@ Resources:
         - Statement:
           - Sid: AWSStepFunctionsFullAccess
             Effect: Allow
-            Action: 
+            Action:
             - "states:*"
-            Resource: 
+            Resource:
             - !Ref PrepareStateMachine
             - !Ref DownloadStateMachine
             - !Ref GenerateStateMachine
@@ -723,7 +900,7 @@ Resources:
       Name: !Sub "${StagePara}-${ApplicationPara}-PrepareSM"
       Policies:
         - LambdaInvokePolicy:
-            FunctionName: !Ref PreprocessGenerateTask   
+            FunctionName: !Ref PreprocessGenerateTask
         - Statement:
           - Sid: CloudWatchLogsPolicy
             Effect: Allow
@@ -751,6 +928,7 @@ Resources:
             - "dynamodb:BatchGetItem"
             - "dynamodb:DescribeTable"
             - "dynamodb:ConditionCheckItem"
+            - "lambda:InvokeFunction"
             Resource: "*"
       Tracing:
         Enabled: true
@@ -879,7 +1057,7 @@ Resources:
         HandleCompleteRequestAI: !GetAtt HandleCompleteRequestAI.Arn
         HandlerUploadBatchToS3: !GetAtt HandlerUploadBatchToS3.Arn
         UpdateStatusTask: !GetAtt UpdateStatusTask.Arn
-        
+
 
   UploadStateMachine:
     Type: AWS::Serverless::StateMachine
@@ -888,7 +1066,7 @@ Resources:
       Name: !Sub "${StagePara}-${ApplicationPara}-UploadSM"
       Policies:
         - LambdaInvokePolicy:
-            FunctionName: !Ref PreprocessGenerateTask  
+            FunctionName: !Ref PreprocessGenerateTask
         - Statement:
           - Sid: CloudWatchLogsPolicy
             Effect: Allow
@@ -918,15 +1096,19 @@ Resources:
 Outputs:
   # ServerlessRestApi is an implicit API created out of Events key under Serverless::Function
   # Find out more about other implicit resources you can reference within SAM
-  # https://github.com/awslabs/serverless-application-model/blob/master/docs/internals/generated_resources.rst#api 
+  # https://github.com/awslabs/serverless-application-model/blob/master/docs/internals/generated_resources.rst#api
   CallerServiceEventBusArn:
     Description: "ARN of EventBus"
     Value: !GetAtt CallerServiceEventBus.Arn
   CallerServiceEventBusName:
     Description: "Name of EventBus"
     Value: !Ref CallerServiceEventBus
+  StopProcessEventBusArn:
+    Description: "ARN of EventBus"
+    Value: !GetAtt StopProcessEventBus.Arn
+  StopProcessEventBusName:
+    Description: "Name of EventBus"
+    Value: !Ref StopProcessEventBus
   # LayerARN:
   #   Description: "ARN of common code layer"
   #   Value: !GetAtt CommonCodeLayer.Arn
-
-

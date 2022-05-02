@@ -1,4 +1,4 @@
-from asyncio import Queue
+import os
 import http
 import queue
 import time
@@ -26,18 +26,18 @@ def deleteMessageInQueue(task):
         # messageBody = message.body
         mss_id = message.message_id
         print("Delete QUEUE with id: \n", mss_id)
-        # delete_message= sqsClient.delete_message(QueueUrl=QueueUrl, ReceiptHandle=msg["ReceiptHandle"]) 
-            
+        # delete_message= sqsClient.delete_message(QueueUrl=QueueUrl, ReceiptHandle=msg["ReceiptHandle"])
+
         # # strTask = json.dumps(task)
         # # # if messageBody == strTask:
         message.delete()
-        
+
     print(f"--Count AFTER DELETE message in queue: {task['queue']} is {countTaskInQueue(task['queue'])}")
-        
+
 def getQueue(queue_name_env):
     response = sqsClient.get_queue_url(QueueName=queue_name_env)
     return response['QueueUrl']
-    
+
 def countTaskInQueue(queue_id):
     # get_queue_attributes
     # sqsName = sqsResourse.get_queue_by_name(QueueName=queue_id)
@@ -54,19 +54,19 @@ def countTaskInQueue(queue_id):
 def lambda_handler(event, context):
     result = event
     if result['is_retry'] == True:
-        time.sleep(int(result['current_num_retries'])*2)
+        time.sleep(int(result['current_num_retries'])*30)
     # print(event)
 
     batch = result['batch']
-    
+
     print(f"--Count current message in queue: {batch['queue']} is {countTaskInQueue(batch['queue'])}")
-    
+
     # print("request AI body: \n", batch['request_json'])
     try :
         instance = ec2_resource.Instance(batch['ec2_id'])
         instance.load()
         print(f"Current state of instance before send request: {batch['ec2_id']} is {instance.state['Name']}")
-        
+
         output = requests.post(batch['host'],json=batch['request_json'])
         # print("Output from AI request: \n", output.text)
 
@@ -83,11 +83,10 @@ def lambda_handler(event, context):
             return event
         result['current_num_retries'] += 1
         return result
-        
     # print(output.text)
     result['response'] = 'OK'
     result['is_retry'] = False
-    
+
     print("-----Normal Delete message ")
     deleteMessageInQueue(batch)
     return result

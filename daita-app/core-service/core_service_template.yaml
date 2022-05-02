@@ -23,7 +23,7 @@ Globals:
         TABLE_PROJECTS_NAME: !Ref TableProjectsName
         TABLE_METHODS_NAME: !Ref TableMethodsName
         TABLE_HEALTHCHECK_TASK: !Ref TableHealthCheckTasksName
-        TABLE_HEALTHCHECK_INFO: !Ref TableHealthCheckInfoName 
+        TABLE_HEALTHCHECK_INFO: !Ref TableHealthCheckInfoName
         INDEX_TASK_PROJECTID_TASKID: !Ref ParaIndexTaskProjectIDTaskID
     Layers:
         - !Ref CommonCodeLayerName
@@ -79,6 +79,10 @@ Parameters:
   CognitoIdentityPoolId:
     Type:  String
     Default: us-east-2:fa0b76bc-01fa-4bb8-b7cf-a5000954aafb
+  StopProcessEventBusArn:
+    Type: String
+  StopProcessEventBusName:
+    Type: String
 
 Resources:
   #================ ROLES =====================================================
@@ -103,9 +107,9 @@ Resources:
             Action:
             - "lambda:InvokeFunction"
             Effect: Allow
-            Resource: "*"              
-  
-  ### lambda role 
+            Resource: "*"
+
+  ### lambda role
   LambdaExecutionRole:
     Type: AWS::IAM::Role
     Properties:
@@ -216,6 +220,15 @@ Resources:
     Properties:
       CodeUri: functions/handlers/generate/split_data
       Role: !GetAtt LambdaExecutionRole.Arn
+
+  StopProcessTask:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: functions/handlers/caller_stop_process
+      Role: !GetAtt LambdaExecutionRole.Arn
+      Environment:
+        Variables:
+          EVENT_BUS_NAME: !Ref StopProcessEventBusName
 
   ### for health check functions
   HealthCheckFunction:

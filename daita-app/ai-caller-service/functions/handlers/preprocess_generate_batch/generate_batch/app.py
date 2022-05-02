@@ -1,6 +1,6 @@
 import time
 import json
-
+import os
 import boto3
 import random
 from datetime import datetime
@@ -9,12 +9,12 @@ from response import *
 from utils import *
 from identity_check import *
 from boto3.dynamodb.conditions import Key, Attr
-
+from models.generate_task_model import GenerateTaskModel
 TBL_data_original = 'data_original'
 TBL_data_proprocess= 'data_preprocess'
 TBL_PROJECT = 'projects'
 MAX_NUMBER_GEN_PER_IMAGES = 5
-
+generate_task_model = GenerateTaskModel(os.environ["TABLE_GENERATE_TASK"])
 def dydb_update_project_data_type_number(db_resource, identity_id, project_name, data_type, data_number, times_generated):
     try:
         table = db_resource.Table(TBL_PROJECT)
@@ -149,6 +149,10 @@ def lambda_handler(event, context):
     print("START PREPARE STATE")
     print(event)
     body = event['ori2']['Execution']['Input']['detail']
+    exceArn = event['abcd']
+    generate_task_model.update_ExecutionArn(
+        identity_id=body['identity_id'], task_id=body['task_id'],executionArn=exceArn
+    )
     imageLoad = ImageLoader()
     data = imageLoad(body)
     data['id_token'] = body['id_token']

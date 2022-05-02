@@ -62,7 +62,19 @@ paths:
         httpMethod: "POST"
         type: "aws_proxy"
         payloadFormatVersion: "2.0"
-
+  /task/stop_proceess:
+    post:
+      responses:
+        default:
+          description: "stop task process"
+      x-amazon-apigateway-integration:
+        credentials:
+          Fn::GetAtt: [ApiGatewayCallLambdaRole, Arn]
+        uri: 
+          Fn::Sub: arn:${AWS::Partition}:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${StopProcessTask.Arn}/invocations
+        httpMethod: "POST"
+        type: "aws_proxy"
+        payloadFormatVersion: "2.0"
   ####===================================================================================
   #### For healthcheck API
   /health_check/calculate:
@@ -107,8 +119,8 @@ paths:
         type: "aws_proxy"
         payloadFormatVersion: "2.0"
 
-  ####===================================================================================
-  #### For dataflow API
+  ###===================================================================================
+  ### For dataflow API
   /dataflow/create_decompress_task:
     post:
       responses:

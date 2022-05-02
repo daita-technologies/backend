@@ -7,8 +7,8 @@ import os
 from utils import convert_response, aws_get_identity_id
 
 
-MAX_NUMBER_ITEM_QUERY = 500
-MAX_NUM_IMAGES_IN_ORIGINAL = 500
+MAX_NUMBER_ITEM_QUERY = 1000
+MAX_NUM_IMAGES_IN_ORIGINAL = 1000
 
 
 def lambda_handler(event, context):
