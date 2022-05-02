@@ -149,8 +149,6 @@ Resources:
         DecompressEcrRepositoryName: !Ref DecompressEcrRepository
         CompressDownloadEcrRepositoryName: !Ref CompressDownloadEcrRepository
         TableDownloadTaskName: !GetAtt DatabaseService.Outputs.TableDownloadTaskName
-        CommonCodeLayerName: !Ref CommonCodeLayer
-
 
   DatabaseService:
     Type: AWS::Serverless::Application
