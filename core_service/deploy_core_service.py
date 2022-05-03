@@ -41,7 +41,8 @@ GENERAL_SETUP = {
     "T_TRIGGER_SEND_CODE": MODE_DB + "Trigger_send_code",
     "T_USER": MODE_DB + "User",
     "T_EVENT_USER": MODE_DB + "eventUser",
-    "T_FEEDBACK": MODE_DB + "feedback"
+    "T_FEEDBACK": MODE_DB + "feedback",
+    "IS_ENABLE_KMS": 'False'
 }
 
 

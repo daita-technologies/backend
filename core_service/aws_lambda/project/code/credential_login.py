@@ -161,6 +161,8 @@ def lambda_handler(event, context):
     #     raise Exception(MessageAnotherUserIsLoginBefore)
     # else:
     #     CreateEventUserLogin(sub)
+    if not CheckEventUserLogin(sub):
+        CreateEventUserLoginOauth2(sub,code)
     try:
         credentialsForIdentity = getCredentialsForIdentity(resqData['id_token'])
     except Exception as e:
@@ -171,7 +173,10 @@ def lambda_handler(event, context):
                 headers=RESPONSE_HEADER)
     if not model.checkFirstLogin(ID=sub,username=username):
         responseIdentity = aws_get_identity_id(resqData['id_token'])
-        kms = createKMSKey(responseIdentity)
+        if 'IS_ENABLE_KMS' in os.environ and eval(os.environ['IS_ENABLE_KMS']) == True:
+            kms = createKMSKey(responseIdentity)
+        else:
+            kms = ''
         model.updateActivateUser(info={
             'indentityID': responseIdentity ,
             'ID': sub,
