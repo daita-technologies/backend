@@ -39,7 +39,7 @@ Parameters:
     Default: fs-0199771f2dfe97ace
   EFSStorageAI:
     Type: String
-    Default: /generation_task
+    Default: /mnt/generation-task
   ROOTEFS:
     Type: String
     Default: /efs
