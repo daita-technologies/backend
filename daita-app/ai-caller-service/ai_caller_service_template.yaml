@@ -229,8 +229,37 @@ Resources:
       #   - Arn: !GetAtt EFSAccessPoint.Arn
       #     LocalMountPath: !Ref EFSStorageAI
       CodeUri: functions/handlers/generate_step/CompleteRequestAI
+      Environment:
+        Variables:
+          TABLE_GENERATE_TASK: !Ref TableGenerateTaskName
       Policies:
         - Statement:
+          -
+            Effect: Allow
+            Action:
+              - "dynamodb:GetItem"
+              - "dynamodb:DeleteItem"
+              - "dynamodb:PutItem"
+              - "dynamodb:Scan"
+              - "dynamodb:Query"
+              - "dynamodb:UpdateItem"
+              - "dynamodb:BatchWriteItem"
+              - "dynamodb:BatchGetItem"
+              - "dynamodb:DescribeTable"
+              - "dynamodb:ConditionCheckItem"
+              - "lambda:InvokeFunction"
+              - "ec2:*"
+            Resource: "*"
+          -
+            Effect: Allow
+            Action: states:StartExecution
+            Resource: "*"
+          -
+            Effect: Allow
+            Action:
+              - states:DescribeExecution
+              - states:StopExecution
+            Resource: "*"
           - Sid: CloudWatchLogsPolicy
             Effect: Allow
             Action:
@@ -425,6 +454,16 @@ Resources:
           - "lambda:InvokeFunction"
           - "ec2:*"
           Resource: "*"
+        -
+          Effect: Allow
+          Action: states:StartExecution
+          Resource: "*"
+        -
+          Effect: Allow
+          Action:
+            - states:DescribeExecution
+            - states:StopExecution
+          Resource: "*"
         - Sid: CloudWatchLogsPolicy
           Effect: Allow
           Action:
@@ -500,7 +539,21 @@ Resources:
           -  "ec2:Stop*"
           - iam:PassRole
           Resource: '*'
-      
+        - Sid: ALLOWCRUDDynamoDB
+          Effect: Allow
+          Action:
+          - "dynamodb:GetItem"
+          - "dynamodb:DeleteItem"
+          - "dynamodb:PutItem"
+          - "dynamodb:Scan"
+          - "dynamodb:Query"
+          - "dynamodb:UpdateItem"
+          - "dynamodb:BatchWriteItem"
+          - "dynamodb:BatchGetItem"
+          - "dynamodb:DescribeTable"
+          - "dynamodb:ConditionCheckItem"
+          - "lambda:InvokeFunction"
+          Resource: "*" 
   UpdateStatusTask:
     Type: AWS::Serverless::Function
     Properties:
@@ -894,6 +947,7 @@ Resources:
         DownloadStateMachine: !GetAtt DownloadStateMachine.Arn
         GenerateStateMachine: !GetAtt GenerateStateMachine.Arn
         UploadStateMachine: !GetAtt UploadStateMachine.Arn
+        TableGenerateTaskName: !Ref TableGenerateTaskName
 
   PrepareStateMachine:
     Type: AWS::Serverless::StateMachine

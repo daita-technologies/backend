@@ -12,10 +12,13 @@ from response import *
 from utils import *
 from identity_check import *
 from boto3.dynamodb.conditions import Key, Attr
+from models.generate_task_model import GenerateTaskModel
+
 sqs = boto3.resource("sqs",REGION)
 sqsClient = boto3.client('sqs',REGION)
 ec2_resource = boto3.resource('ec2', region_name=REGION)
 
+generate_task_model = GenerateTaskModel(os.environ["TABLE_GENERATE_TASK"])
 
 def deleteMessageInQueue(task):
     queueSQS = sqs.get_queue_by_name(QueueName=task['queue'])
@@ -57,8 +60,13 @@ def lambda_handler(event, context):
     if result['is_retry'] == True:
         time.sleep(int(result['current_num_retries'])*30)
     # print(event)
-
     batch = result['batch']
+    item = generate_task_model.get_task_info(result['identity_id'] ,result['task_id'])
+    if item.status == 'CANCEL':
+        result['response'] = 'NOT_OK'
+        result['is_retry'] = False
+        deleteMessageInQueue(batch)
+        return result
     
     print(f"--Count current message in queue: {batch['queue']} is {countTaskInQueue(batch['queue'])}")
     
@@ -90,4 +98,5 @@ def lambda_handler(event, context):
     
     print("-----Normal Delete message ------------------------ ")
     deleteMessageInQueue(batch)
+
     return result
