@@ -111,7 +111,7 @@ def lambda_handler(event, context):
             }
             feedbackDB.CreateItem(info)
             break
-    message = "Username: {}\n Time: {}\n Content: {}".format(info['name'],info['created_time'],info['content'])
+    message = "Username: {}\n Time: {}\n Content: {}".format(getDisplayName(info['name']),info['created_time'],info['content'])
     payload ={"channel":CHANNELWEBHOOK,
     "username":getDisplayName(username),
     "text":message,
