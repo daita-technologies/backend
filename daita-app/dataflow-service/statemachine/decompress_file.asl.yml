@@ -58,6 +58,11 @@ States:
       type_method.$: $.result.type_method
       s3_prefix.$: $.result.s3_prefix
       identity_id.$: $.identity_id
+    Catch: 
+      - ErrorEquals: 
+        - States.ALL
+        Next: CatchErrorTaskDynamoDB 
+        ResultPath: null 
     Iterator:
       StartAt: UploadDecompressedFunction
       States:
