@@ -115,8 +115,6 @@ class User(object):
         if 'Item' in response and response['Item']['status'] == "activate":
             print(response)
             return True
-        print("False")
-        print(response)
         return False
 
     def updateActivateUser(self,info):

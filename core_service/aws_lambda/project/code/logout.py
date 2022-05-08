@@ -62,7 +62,15 @@ def lambda_handler(event, context):
     if CheckEventUserLogin(sub):
         if 'github' in username or 'google' in username:
             code = get_code_oauth2_cognito(sub)
-            data['code'] = code
+            data['code'] = 'code'
+            # location = 'https://auth.daita.tech/logout?client_id=4cpbb5etp3q7grnnrhrc7irjoa&logout_uri=https://dev.daita.tech/login'
+            # headers = {"Location":location,	  'Content-Type': 'application/x-www-form-urlencoded'}
+            # return{
+            #     "statusCode": 200,
+            #     "headers": RESPONSE_HEADER,
+            #     "body":data,
+            #     "isBase64Encoded": False
+            #  }
         EventUserLogout(sub)
 
     return generate_response(
