@@ -1,0 +1,181 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Transform: AWS::Serverless-2016-10-31
+Description: >
+  dataflow-app
+
+Parameters:
+  StagePara:
+    Type: String
+  ApplicationPara:
+    Type: String
+  SecurityGroupIds:
+    Type: String
+    Default: 'sg-af50cbde'
+  VpcId:
+    Type: String
+    Default: vpc-53239e38
+  SubnetId:
+    Type: String
+    Default: subnet-31ff5b5a
+  EFSFileSystemId:
+    Type:  String
+    Default: fs-0199771f2dfe97ace
+  EFSMountPath:
+    Type: String
+    Default: /mnt/efs
+  EFSAccessPointRootPath:
+    Type: String
+    Default: /decompress-app
+  CompressDownloadEFSAccessPointRootPath:
+    Type: String
+    Default: /compress-download-app
+  S3BucketName:
+    Type: String
+  TableDataFlowTaskName:
+    Type: String
+  TableDownloadTaskName:
+    Type: String
+  DecompressEcrRepositoryName:
+    Type: String
+  CompressDownloadEcrRepositoryName:
+    Type: String
+  SESIdentityName:
+    Type: String
+    Default: 'noreply@daita.tech'
+
+
+Globals:
+  Function:
+    Timeout: 10
+    Handler: app.lambda_handler
+    Runtime: python3.8
+    Architectures:
+      - x86_64
+
+
+Resources:
+  #================ ROLES =====================================================
+  # AWSServiceRoleForECS :
+  #   Type: AWS::IAM::ServiceLinkedRole
+  #   Properties:
+  #     AWSServiceName: ecs.amazonaws.com
+  #     Description: "Using for ECS Fargate"
+
+  # DefaultSubnet: # Fargate required a awsvpc config so
+  #   Type: AWS::EC2::Subnet
+  #   Properties:
+  #     VpcId: !Ref VpcId
+  #     CidrBlock: 172.31.0.0/16
+
+  CodeBuildRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - codebuild.amazonaws.com
+            Action:
+              - "sts:AssumeRole"
+      Policies:
+        - PolicyName: "PushImageToEcr"
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Effect: Allow
+                Action:
+                  - ecr:BatchGetImage
+                  - ecr:BatchCheckLayerAvailability
+                  - ecr:CompleteLayerUpload
+                  - ecr:GetDownloadUrlForLayer
+                  - ecr:InitiateLayerUpload
+                  - ecr:PutImage
+                  - ecr:UploadLayerPart
+                  - ecr:GetAuthorizationToken
+                Resource: "*"
+        - PolicyName: "CodeBuildLogsRole"
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Effect: Allow
+                Action:
+                  - logs:CreateLogGroup
+                  - logs:CreateLogStream
+                  - logs:PutLogEvents
+                Resource:
+                  - !Sub "arn:aws:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/codebuild/*"
+        - PolicyName: "GetAndPutArtifacts"
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Effect: "Allow"
+                Action:
+                  - s3:GetObject
+                  - s3:PutObject
+                  - s3:ListBucket
+                Resource: "*"
+
+
+  #======================= NETWORKING ==========================================
+
+  VPCEndpointForS3:
+    Type: AWS::EC2::VPCEndpoint
+    Properties:
+      ServiceName: !Sub "com.amazonaws.${AWS::Region}.s3"
+      VpcId: !Ref VpcId
+
+  VPCEndpointForDynamoDB:
+    Type: AWS::EC2::VPCEndpoint
+    Properties:
+      ServiceName: !Sub "com.amazonaws.${AWS::Region}.dynamodb"
+      VpcId: !Ref VpcId
+
+  # ==================== Nested application ==========================================
+
+  DecompressUploadApp:
+    Type: AWS::Serverless::Application
+    Properties:
+      Location: decompress-upload-app/template.yaml
+      Parameters:
+        StagePara: !Ref StagePara
+        ApplicationPara: !Ref ApplicationPara
+        SecurityGroupIds: !Ref SecurityGroupIds
+        SubnetId: !Ref SubnetId
+        EFSMountPath: !Ref EFSMountPath
+        EFSAccessPointRootPath: !Ref EFSAccessPointRootPath
+        S3BucketName: !Ref S3BucketName
+        TableDataFlowTaskName: !Ref TableDataFlowTaskName
+        DecompressEcrRepositoryName: !Ref DecompressEcrRepositoryName
+        VPCEndpointForS3: !Ref VPCEndpointForS3
+        VPCEndpointForDynamoDB: !Ref VPCEndpointForDynamoDB
+
+  CompressDownloadApp:
+    Type: AWS::Serverless::Application
+    Properties:
+      Location: compress-download-app/template.yaml
+      Parameters:
+        StagePara: !Ref StagePara
+        ApplicationPara: !Ref ApplicationPara
+        SecurityGroupIds: !Ref SecurityGroupIds
+        SubnetId: !Ref SubnetId
+        EFSMountPath: !Ref EFSMountPath
+        EFSAccessPointRootPath: !Ref EFSAccessPointRootPath
+        S3BucketName: !Ref S3BucketName
+        TableDataFlowTaskName: !Ref TableDataFlowTaskName
+        CompressDownloadEcrRepositoryName: !Ref CompressDownloadEcrRepositoryName
+        VPCEndpointForS3: !Ref VPCEndpointForS3
+        VPCEndpointForDynamoDB: !Ref VPCEndpointForDynamoDB
+        SESIdentityName: noreply@daita.tech
+        TableDownloadTaskName: !Ref TableDownloadTaskName
+
+
+
+Outputs:
+  DecompressFileStateMachineArn:
+    Description: "Arn of DecompressFileStateMachineArn"
+    Value: !GetAtt DecompressUploadApp.Outputs.DecompressFileStateMachineArn
+  CompressDownloadStateMachineArn:
+    Description: "Arn of CompressDownloadStateMachineArn"
+    Value: !GetAtt CompressDownloadApp.Outputs.CompressDownloadStateMachineArn

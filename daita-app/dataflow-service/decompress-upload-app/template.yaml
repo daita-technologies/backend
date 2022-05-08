@@ -1,7 +1,7 @@
 AWSTemplateFormatVersion: "2010-09-09"
 Transform: AWS::Serverless-2016-10-31
 Description: >
-  decompress-app
+  decompress-upload-app
 
 Parameters:
   StagePara:
@@ -11,9 +11,6 @@ Parameters:
   SecurityGroupIds:
     Type: String
     Default: 'sg-af50cbde'
-  VpcId:
-    Type: String
-    Default: vpc-53239e38
   SubnetId:
     Type: String
     Default: subnet-31ff5b5a
@@ -26,23 +23,16 @@ Parameters:
   EFSAccessPointRootPath:
     Type: String
     Default: /decompress-app
-  CompressDownloadEFSAccessPointRootPath:
-    Type: String
-    Default: /compress-download-app
   S3BucketName:
     Type: String
   TableDataFlowTaskName:
     Type: String
-  TableDownloadTaskName:
-    Type: String
   DecompressEcrRepositoryName:
     Type: String
-  CompressDownloadEcrRepositoryName:
+  VPCEndpointForS3:
     Type: String
-  SESIdentityName:
+  VPCEndpointForDynamoDB:
     Type: String
-    Default: 'noreply@daita.tech'
-
 
 Globals:
   Function:
@@ -66,56 +56,6 @@ Resources:
   #   Properties:
   #     VpcId: !Ref VpcId
   #     CidrBlock: 172.31.0.0/16
-
-  CodeBuildRole:
-    Type: AWS::IAM::Role
-    Properties:
-      AssumeRolePolicyDocument:
-        Version: "2012-10-17"
-        Statement:
-          - Effect: Allow
-            Principal:
-              Service:
-                - codebuild.amazonaws.com
-            Action:
-              - "sts:AssumeRole"
-      Policies:
-        - PolicyName: "PushImageToEcr"
-          PolicyDocument:
-            Version: "2012-10-17"
-            Statement:
-              - Effect: Allow
-                Action:
-                  - ecr:BatchGetImage
-                  - ecr:BatchCheckLayerAvailability
-                  - ecr:CompleteLayerUpload
-                  - ecr:GetDownloadUrlForLayer
-                  - ecr:InitiateLayerUpload
-                  - ecr:PutImage
-                  - ecr:UploadLayerPart
-                  - ecr:GetAuthorizationToken
-                Resource: "*"
-        - PolicyName: "CodeBuildLogsRole"
-          PolicyDocument:
-            Version: "2012-10-17"
-            Statement:
-              - Effect: Allow
-                Action:
-                  - logs:CreateLogGroup
-                  - logs:CreateLogStream
-                  - logs:PutLogEvents
-                Resource:
-                  - !Sub "arn:aws:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/codebuild/*"
-        - PolicyName: "GetAndPutArtifacts"
-          PolicyDocument:
-            Version: "2012-10-17"
-            Statement:
-              - Effect: "Allow"
-                Action:
-                  - s3:GetObject
-                  - s3:PutObject
-                  - s3:ListBucket
-                Resource: "*"
 
   #================ LOGS FOR STEP FUNCTIONS ===================================
 
@@ -150,22 +90,6 @@ Resources:
   #     GatewayId: !GetAtt InternetGateway.InternetGatewayId
   #     DestinationCidrBlock: 0.0.0.0/0
 
-  VPCEndpointForS3:
-    Type: AWS::EC2::VPCEndpoint
-    Properties:
-      ServiceName: !Sub "com.amazonaws.${AWS::Region}.s3"
-      VpcId: !Ref VpcId
-      # RouteTableIds:
-      #   - !GetAtt InternetRouteTable.RouteTableId
-
-  VPCEndpointForDynamoDB:
-    Type: AWS::EC2::VPCEndpoint
-    Properties:
-      ServiceName: !Sub "com.amazonaws.${AWS::Region}.dynamodb"
-      VpcId: !Ref VpcId
-      # RouteTableIds:
-      #   - !GetAtt InternetRouteTable.RouteTableId
-
   EFSAccessPoint:
     Type: AWS::EFS::AccessPoint
     Properties:
@@ -187,7 +111,7 @@ Resources:
     Properties:
       Type: STANDARD
       Name: !Sub "${StagePara}-${ApplicationPara}-DecompressFileSM"
-      DefinitionUri: ./decompress-upload-app/statemachine/decompress_file.asl.yml
+      DefinitionUri: statemachine/decompress_file.asl.yml
       DefinitionSubstitutions:
         DecompressTaskCluster: !GetAtt DecompressTaskCluster.Arn
         DecompressTask: !Ref DecompressTask
@@ -261,7 +185,7 @@ Resources:
   DivideDecompressChunksFunction:
     Type: AWS::Serverless::Function
     Properties:
-      CodeUri: decompress-upload-app/functions/divide_decompressed_chunks
+      CodeUri: functions/divide_decompressed_chunks
       VpcConfig:
         SecurityGroupIds:
           - !Ref SecurityGroupIds
@@ -295,7 +219,7 @@ Resources:
   UploadDecompressedFunction:
     Type: AWS::Serverless::Function
     Properties:
-      CodeUri: decompress-upload-app/functions/upload_decompressed
+      CodeUri: functions/upload_decompressed
       Timeout: 30
       VpcConfig:
         SecurityGroupIds:
@@ -323,13 +247,13 @@ Resources:
   PostUploadFunction:
     Type: AWS::Serverless::Function
     Properties:
-      CodeUri: decompress-upload-app/functions/post_upload/
+      CodeUri: functions/post_upload/
       Timeout: 30
 
   FinishDecompressTaskFunction:
     Type: AWS::Serverless::Function
     Properties:
-      CodeUri: decompress-upload-app/functions/finish_decompress_task/
+      CodeUri: functions/finish_decompress_task/
       Policies:
         - AmazonDynamoDBFullAccess
         - Statement:
@@ -401,163 +325,7 @@ Resources:
           Name: "my-vol"
 
 
-############## compress download app
-
-  CompressDownloadEFSAccessPoint:
-    Type: AWS::EFS::AccessPoint
-    Properties:
-      FileSystemId: !Ref EFSFileSystemId
-      PosixUser:
-        Gid: "1000"
-        Uid: "1000"
-      RootDirectory:
-        CreationInfo:
-          OwnerGid: "1000"
-          OwnerUid: "1000"
-          Permissions: "777"
-        Path: !Ref CompressDownloadEFSAccessPointRootPath
-
-#================ LOGS FOR STEP FUNCTIONS ===================================
-
-  CompressDownloadStateMachineLogGroup:
-    Type: AWS::Logs::LogGroup
-    Properties:
-      LogGroupName: !Sub "/aws/vendedlogs/states/${StagePara}-CompressDownloadSMLogGroup-${AWS::StackName}"
-      RetentionInDays: 7
-
-  CompressDownloadECSTaskLogGroup:
-    Type: AWS::Logs::LogGroup
-    Properties:
-      LogGroupName: !Sub "/aws/vendedlogs/states/${StagePara}-CompressDownloadECSTaskLogGroup-${AWS::StackName}"
-      RetentionInDays: 7
-
-  CompressDownloadStateMachine:
-    Type: AWS::Serverless::StateMachine # More info about State Machine Resource: https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/sam-resource-statemachine.html
-    Properties:
-      Type: STANDARD
-      Name: !Sub "${StagePara}-${ApplicationPara}-CompressDownloadSM"
-      DefinitionUri: compress-download-app/statemachine/compress_download.asl.yml
-      DefinitionSubstitutions:
-        CompressDownloadTaskCluster: !GetAtt CompressDownloadTaskCluster.Arn
-        CompressDownloadTask: !Ref CompressDownloadTask
-        SubnetId: !Ref SubnetId
-        SendCompletedMailFunction: !GetAtt SendCompletedMailFunction.Arn
-      Logging:
-        Level: ALL
-        IncludeExecutionData: true
-        Destinations:
-        - CloudWatchLogsLogGroup:
-            LogGroupArn: !GetAtt CompressDownloadStateMachineLogGroup.Arn
-      Tracing:
-        Enabled: true
-      Policies: # Find out more about SAM policy templates: https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/serverless-policy-templates.html
-        - LambdaInvokePolicy:
-            FunctionName: !Ref SendCompletedMailFunction
-        - Statement:
-          - # Allow step to start ecs task
-            Effect: Allow
-            Action:
-              - ecs:RunTask
-              - ecs:StopTask
-              - ecs:DescribeTasks
-            Resource:
-              - "*"
-          -
-            Effect: Allow
-            Action:
-              - events:PutTargets
-              - events:PutRule
-              - events:DescribeRule
-            Resource:
-              - !Sub arn:${AWS::Partition}:events:${AWS::Region}:${AWS::AccountId}:rule/StepFunctionsGetEventsForECSTaskRule
-          -
-            Effect: Allow
-            Action:
-              - iam:PassRole
-            Resource:
-              - "*"
-          - # Allow access log groups
-            Sid: CloudWatchLogsPolicy
-            Effect: Allow
-            Action:
-              - "logs:CreateLogDelivery"
-              - "logs:GetLogDelivery"
-              - "logs:UpdateLogDelivery"
-              - "logs:DeleteLogDelivery"
-              - "logs:ListLogDeliveries"
-              - "logs:PutResourcePolicy"
-              - "logs:DescribeResourcePolicies"
-              - "logs:DescribeLogGroup"
-              - "logs:DescribeLogGroups"
-            Resource: "*"
-
-  # Lambda functions
-
-  SendCompletedMailFunction:
-    Type: AWS::Serverless::Function
-    Properties:
-      CodeUri: compress-download-app/functions/send_completed_email
-      Policies:
-        - SESCrudPolicy:
-            IdentityName: !Ref SESIdentityName
-
-
-  # ECS resources
-  CompressDownloadTaskCluster:
-    Type: AWS::ECS::Cluster
-    Properties:
-      CapacityProviders:
-        - FARGATE
-
-  CompressDownloadTask:
-    Type: AWS::ECS::TaskDefinition
-    Properties:
-      RequiresCompatibilities:
-        - "FARGATE"
-      ExecutionRoleArn: arn:aws:iam::366577564432:role/ecsTaskExecutionRole #TODO:create this in template
-      TaskRoleArn: arn:aws:iam::366577564432:role/DecompressTaskRole #TODO:create this in template
-      Cpu: 256
-      Memory: 512
-      NetworkMode: awsvpc
-      ContainerDefinitions:
-        -
-          Name: "compress-download"
-          Image: !Sub "366577564432.dkr.ecr.${AWS::Region}.amazonaws.com/${CompressDownloadEcrRepositoryName}:latest"
-          Cpu: 256
-          Memory: 512
-          Environment:
-            - Name: TableDownloadTaskName
-              Value: !Ref TableDownloadTaskName
-            - Name: EFSMountPath
-              Value: !Ref EFSMountPath
-          LogConfiguration:
-            LogDriver: awslogs
-            Options:
-              awslogs-region: !Sub "${AWS::Region}"
-              awslogs-group: !Ref CompressDownloadECSTaskLogGroup
-              awslogs-stream-prefix: compress-download
-          MountPoints:
-            -
-              SourceVolume: "my-vol"
-              ContainerPath: !Ref EFSMountPath
-      Volumes:
-        -
-          EFSVolumeConfiguration:
-            AuthorizationConfig:
-              AccessPointId: !Ref CompressDownloadEFSAccessPoint
-            FilesystemId: !Ref EFSFileSystemId
-            TransitEncryption: ENABLED # enable this so maybe we don't need to config a access point https://docs.aws.amazon.com/pt_br/AWSCloudFormation/latest/UserGuide/aws-properties-ecs-taskdefinition-authorizationconfig.html
-          Name: "my-vol"
-  # Test nested app
-  HelloWorld:
-    Type: AWS::Serverless::Application
-    Properties:
-      Location: sam-app/template.yaml
-
 Outputs:
   DecompressFileStateMachineArn:
     Description: "Arn of DecompressFileStateMachineArn"
     Value: !GetAtt DecompressFileStateMachine.Arn
-  CompressDownloadStateMachineArn:
-    Description: "Arn of CompressDownloadStateMachineArn"
-    Value: !GetAtt CompressDownloadStateMachine.Arn

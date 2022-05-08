@@ -124,23 +124,23 @@ Resources:
         - python3.8
 
   #================ APPLICATIONS  =============================================
-  AICallerService:
-    Type: AWS::Serverless::Application
-    Properties:
-      Location: ai-caller-service/ai_caller_service_template.yaml
-      Parameters:
-        StagePara: !Ref Stage
-        CommonCodeLayerName: !Ref CommonCodeLayer
-        ApplicationPara: !Ref Application
-        SubnetIDsPara: !Ref SubnetIDs
-        SecurityGroupIdsPara: !Ref SecurityGroupIds
-        S3BucketNamePara: !Ref S3BucketName
-        TableGenerateTaskName: !GetAtt DatabaseService.Outputs.TableGenerateTaskName
+  # AICallerService:
+  #   Type: AWS::Serverless::Application
+  #   Properties:
+  #     Location: ai-caller-service/ai_caller_service_template.yaml
+  #     Parameters:
+  #       StagePara: !Ref Stage
+  #       CommonCodeLayerName: !Ref CommonCodeLayer
+  #       ApplicationPara: !Ref Application
+  #       SubnetIDsPara: !Ref SubnetIDs
+  #       SecurityGroupIdsPara: !Ref SecurityGroupIds
+  #       S3BucketNamePara: !Ref S3BucketName
+  #       TableGenerateTaskName: !GetAtt DatabaseService.Outputs.TableGenerateTaskName
 
   DataFlowService:
     Type: AWS::Serverless::Application
     Properties:
-      Location: dataflow-service/dataflow_service_template.yaml
+      Location: dataflow-service/template.yaml
       Parameters:
         StagePara: !Ref Stage
         ApplicationPara: !Ref Application
@@ -163,8 +163,14 @@ Resources:
       Location: core-service/core_service_template.yaml
       Parameters:
         StagePara: !Ref Stage
-        CallerServiceEventBusArn: !GetAtt AICallerService.Outputs.CallerServiceEventBusArn
-        CallerServiceEventBusName: !GetAtt AICallerService.Outputs.CallerServiceEventBusName
+        # CallerServiceEventBusArn: !GetAtt AICallerService.Outputs.CallerServiceEventBusArn
+        # CallerServiceEventBusName: !GetAtt AICallerService.Outputs.CallerServiceEventBusName
+        # StopProcessEventBusArn: !GetAtt  AICallerService.Outputs.StopProcessEventBusArn
+        # StopProcessEventBusName: !GetAtt AICallerService.Outputs.StopProcessEventBusName
+        CallerServiceEventBusArn: dummy
+        CallerServiceEventBusName: dummy
+        StopProcessEventBusArn: dummy
+        StopProcessEventBusName: dummy
         TableGenerateTaskName: !GetAtt DatabaseService.Outputs.TableGenerateTaskName
         TableProjectsName: !GetAtt DatabaseService.Outputs.TableProjectsName
         TableMethodsName: !GetAtt DatabaseService.Outputs.TableMethodsName
@@ -173,33 +179,32 @@ Resources:
         LimitPreprocessTimesName: !Ref LimitPreprocessTimes
         LimitAugmentTimesName: !Ref LimitAugmentTimes
         CommonCodeLayerName: !Ref CommonCodeLayer
-        HealthCheckEventBusArn: !GetAtt HealthCheckService.Outputs.HealthCheckEventBusArn
-        HealthCheckEventBusName: !GetAtt HealthCheckService.Outputs.HealthCheckEventBusName
-        # HealthCheckEventBusArn: a
-        # HealthCheckEventBusName: bc
+        # HealthCheckEventBusArn: !GetAtt HealthCheckService.Outputs.HealthCheckEventBusArn
+        # HealthCheckEventBusName: !GetAtt HealthCheckService.Outputs.HealthCheckEventBusName
+        HealthCheckEventBusArn: a
+        HealthCheckEventBusName: bc
         ParaTableDataFlowTaskName: !GetAtt DatabaseService.Outputs.TableDataFlowTaskName
         ParaDecompressFileStateMachineArn: !GetAtt DataFlowService.Outputs.DecompressFileStateMachineArn
+        ParaCompressDownloadStateMachineArn: !GetAtt DataFlowService.Outputs.CompressDownloadStateMachineArn
         ParaTableDownloadTaskName: !GetAtt DatabaseService.Outputs.TableDownloadTaskName
         ParaTableProjectSumName: !GetAtt DatabaseService.Outputs.TableProjectSumName
         ParaIndexTaskProjectIDTaskID: !GetAtt DatabaseService.Outputs.IndexTaskProjectIDTaskIDName
-        StopProcessEventBusArn: !GetAtt  AICallerService.Outputs.StopProcessEventBusArn
-        StopProcessEventBusName: !GetAtt AICallerService.Outputs.StopProcessEventBusName
 
 
-  HealthCheckService:
-    Type: AWS::Serverless::Application
-    Properties:
-      Location: health-check-service/health_check_service.yaml
-      Parameters:
-        StagePara: !Ref Stage
-        LambdaRole: !GetAtt GeneralLambdaExecutionRole.Arn
-        TableHealthCheckTasksName: !GetAtt DatabaseService.Outputs.TableHealthCheckTasksName
-        TableHealthCheckInfoName: !GetAtt DatabaseService.Outputs.TableHealthCheckInfoName
-        TableDataAugmentName: !GetAtt DatabaseService.Outputs.TableDataAugmentName
-        TableDataOriginalName: !GetAtt DatabaseService.Outputs.TableDataOriginalName
-        TableDataPreprocessName: !GetAtt DatabaseService.Outputs.TableDataPreprocessName
-        CommonCodeLayerName: !Ref CommonCodeLayer
-        ApplicationPara: !Ref Application
+  # HealthCheckService:
+  #   Type: AWS::Serverless::Application
+  #   Properties:
+  #     Location: health-check-service/health_check_service.yaml
+  #     Parameters:
+  #       StagePara: !Ref Stage
+  #       LambdaRole: !GetAtt GeneralLambdaExecutionRole.Arn
+  #       TableHealthCheckTasksName: !GetAtt DatabaseService.Outputs.TableHealthCheckTasksName
+  #       TableHealthCheckInfoName: !GetAtt DatabaseService.Outputs.TableHealthCheckInfoName
+  #       TableDataAugmentName: !GetAtt DatabaseService.Outputs.TableDataAugmentName
+  #       TableDataOriginalName: !GetAtt DatabaseService.Outputs.TableDataOriginalName
+  #       TableDataPreprocessName: !GetAtt DatabaseService.Outputs.TableDataPreprocessName
+  #       CommonCodeLayerName: !Ref CommonCodeLayer
+  #       ApplicationPara: !Ref Application
 
 Outputs:
   ZZBC:
