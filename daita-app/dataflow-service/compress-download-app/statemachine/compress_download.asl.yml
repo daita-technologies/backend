@@ -4,19 +4,27 @@ States:
   DivideDownloadKeysFunction:
     Type: Task
     Resource: arn:aws:states:::lambda:invoke
-    InputPath: $
+    # Inputs: down_type, project_name, project_id, task_id, identity_id
     Parameters:
-      FunctionName: "${DivideDownloadKeysFunction}"
+      FunctionName: ${DivideDownloadKeysFunction}
       Payload.$: $
+    ResultSelector:
+      file_chunks.$: $.Payload.file_chunks
+      workdir.$: $.Payload.workdir
+    ResultPath: $.taskresult
+    Catch:
+      - ErrorEquals:
+        - States.ALL
+        Next: SetTaskStatusError
+        ResultPath: null
     Next: DownloadFilesMapping
 
   DownloadFilesMapping:
     Type: Map
-    InputPath: $
-    ItemsPath: $.Payload.file_chunks
+    ItemsPath: $.taskresult.file_chunks
     Parameters:
       file_chunk.$: $$.Map.Item.Value
-      workdir.$: $.Payload.workdir
+      workdir.$: $.taskresult.workdir
     Iterator:
       StartAt: DownloadFilesFunction
       States:
@@ -28,11 +36,15 @@ States:
             Payload.$: $
           End: True
     ResultPath: null
+    Catch:
+      - ErrorEquals:
+        - States.ALL
+        Next: SetTaskStatusError
+        ResultPath: null
     Next: StartECSCompressDownloadTask
 
   StartECSCompressDownloadTask:
     Type: Task
-    InputPath: $.Payload
     Resource: arn:aws:states:::ecs:runTask.sync
     Parameters:
       Cluster: ${CompressDownloadTaskCluster}
@@ -58,19 +70,49 @@ States:
               - Name: PROJECT_ID
                 Value.$: $.project_id
               - Name: WORKDIR
-                Value.$: $.workdir
+                Value.$: $.taskresult.workdir
       TaskDefinition: ${CompressDownloadTask}
     ResultPath: null # Forward previous step input as this step output
+    Catch:
+      - ErrorEquals:
+        - States.ALL
+        Next: SetTaskStatusError
+        ResultPath: null
+    Next: SendCompletedMailFunction
+
+  SendCompletedMailFunction:
+    Type: Task
+    Resource: arn:aws:states:::lambda:invoke
+    InputPath: $
+    Parameters:
+      FunctionName: "${SendCompletedMailFunction}"
+      Payload.$: $
+    Catch:
+      - ErrorEquals:
+        - States.ALL
+        Next: SetTaskStatusError
+        ResultPath: null
     Next: Complete
 
-  # SendCompletedMailFunction:
-  #   Type: Task
-  #   Resource: arn:aws:states:::lambda:invoke
-  #   InputPath: $
-  #   Parameters:
-  #     FunctionName: "${SendCompletedMailFunction}"
-  #     Payload.$: $
-  #   Next: Complete
+  SetTaskStatusError:
+    Type: Task
+    Resource: 'arn:aws:states:::dynamodb:updateItem'
+    InputPath: $
+    Parameters:
+      TableName: "${TableDownloadTaskName}"
+      Key:
+        identity_id:
+          S.$: $.identity_id
+        task_id:
+          S.$: $.task_id
+      UpdateExpression: 'SET #st = :st'
+      ExpressionAttributeNames:
+        '#st': status
+      ExpressionAttributeValues:
+        ':st':
+          S: ERROR
+    ResultPath: $.DynamoDB
+    Next: Complete
 
   Complete:
     Type: Pass

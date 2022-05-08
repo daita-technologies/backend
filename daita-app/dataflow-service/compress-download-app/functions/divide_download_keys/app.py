@@ -64,11 +64,6 @@ def lambda_handler(event, context):
         file_chunks.append(ls_object[size:size + CHUNK_SIZE])
 
     return {
-        "down_type": down_type,
-        "project_name": project_name,
-        "project_id": project_id,
         "file_chunks": file_chunks,
         "workdir": task_id,
-        "task_id": task_id,
-        "identity_id": identity_id,
     }

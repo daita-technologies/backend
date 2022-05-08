@@ -104,6 +104,7 @@ Resources:
         SendCompletedMailFunction: !GetAtt SendCompletedMailFunction.Arn
         DivideDownloadKeysFunction: !GetAtt DivideDownloadKeysFunction.Arn
         DownloadFilesFunction: !GetAtt DownloadFilesFunction.Arn
+        TableDownloadTaskName: !Ref TableDownloadTaskName
       Logging:
         Level: ALL
         IncludeExecutionData: true
@@ -119,6 +120,8 @@ Resources:
             FunctionName: !Ref DivideDownloadKeysFunction
         - LambdaInvokePolicy:
             FunctionName: !Ref DownloadFilesFunction
+        - DynamoDBCrudPolicy:
+            TableName: !Ref TableDownloadTaskName
         - Statement:
           - # Allow step to start ecs task
             Effect: Allow
@@ -206,7 +209,6 @@ Resources:
         Variables:
           S3_BUCKET: !Ref S3BucketName
           EFSMountPath: !Ref EFSMountPath
-
 
   SendCompletedMailFunction:
     Type: AWS::Serverless::Function
