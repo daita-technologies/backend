@@ -14,25 +14,13 @@ from response import *
 from utils import *
 from identity_check import *
 from boto3.dynamodb.conditions import Key, Attr
-
+from models.generate_task_model import GenerateTaskModel
+generate_task_model = GenerateTaskModel(os.environ["TABLE_GENERATE_TASK"])
+sfn_client = boto3.client('stepfunctions')
 def batcher(iterable, size):
     iterator = iter(iterable)
     for first in iterator:
         yield list(chain([first], islice(iterator, size - 1)))
-# def invoke_sendmail_cognito_service(payload_body):
-#     client = boto3.client('lambda')
-#     payload_json = None 
-#     try :
-#         response = client.invoke(
-#                 FunctionName="staging-project-upload-update",
-#                 InvocationType="RequestResponse",
-#                 Payload=json.dumps(payload_body)
-#             )
-#         payload_json = json.loads(response['Payload'].read())
-#     except Exception as e:
-#         return None , e
-    
-#     return payload_json , None 
 
 def request_update_proj(update_pro_info,list_file_s3,gen_id):
     batch_list_s3 = list(batcher(list_file_s3,20))
@@ -93,7 +81,9 @@ def lambda_handler(event, context):
                         'process_type': 'AUGMENT' if 'AUG' in event['gen_id'] else 'PREPROCESS'
                     },list_file_s3= info, gen_id=event['gen_id'])
     # que.join()
-
+    item = generate_task_model.get_task_info(event['identity_id'] ,event['task_id'])
+    if item.status == 'CANCEL':
+        sfn_client.stop_execution(executionArn=item.executeArn)
     return {
         'task_id':event['task_id'],
         'identity_id':event['identity_id'],

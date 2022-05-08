@@ -2,6 +2,7 @@ from email import header
 import os
 import json
 import logging
+import requests
 from datetime import datetime
 from http import HTTPStatus
 import os
@@ -10,7 +11,8 @@ import cognitojwt
 from error import *
 from response import *
 from config import *
-from eventID import EventUserLogout, CheckEventUserLogin
+from urllib.parse import urlencode
+from eventID import EventUserLogout, CheckEventUserLogin, get_code_oauth2_cognito
 
 cog_provider_client = boto3.client('cognito-idp')
 cog_identity_client = boto3.client('cognito-identity')
@@ -18,7 +20,15 @@ RESPONSE_HEADER = {
     "Access-Control-Allow-Creentials": "true",
 	"Access-Control-Allow-Methods": "GET, HEAD, OPTIONS, POST, PUT",
 }
+endpoint ='https://auth.daita.tech/logout'
+def getRedirectURI():
+    return 'https://dev.daita.tech/login'
 
+def logoutOauth2(code):
+    newendpoint = 'https://auth.daita.tech/logout?'+'response_type='+code+ \
+                '&redirect_uri=https://dev.daita.tech/login&client_id=4cpbb5etp3q7grnnrhrc7irjoa&scope=openid+profile+aws.cognito.signin.user.admin'
+    result = requests.get(newendpoint)
+    return result
 
 def claimsToken(jwt_token,field):
     """
@@ -44,17 +54,19 @@ def lambda_handler(event, context):
         raise Exception(MessageMissingAuthorizationHeader)
     try:
         sub = claimsToken(authorization_header,'sub')
+        username = claimsToken(authorization_header,'username')
     except Exception as e:
         raise e
+    code = None 
+    data = {}
     if CheckEventUserLogin(sub):
+        if 'github' in username or 'google' in username:
+            code = get_code_oauth2_cognito(sub)
+            data['code'] = code
         EventUserLogout(sub)
-    # else:
-    #     return generate_response(
-    #         message= MessageErrorUserdoesnotlogin,
-    #         headers=RESPONSE_HEADER,
-    #         error = True,
-    #     )
+
     return generate_response(
             message= MessageLogoutSuccessfully,
-            headers=RESPONSE_HEADER
+            headers=RESPONSE_HEADER,
+            data = data
         )

@@ -29,7 +29,9 @@ def deploy_lambda_auth(general_info, lambda_service):
                                          ],
                                         {
                                             'USER_POOL_ID' : general_info['USER_POOL_ID'],
-                                            'IDENTITY_POOL_ID': general_info['IDENTITY_POOL_ID']
+                                            'IDENTITY_POOL_ID': general_info['IDENTITY_POOL_ID'],
+                                            'IS_ENABLE_KMS': general_info['IS_ENABLE_KMS']
+
                                         },
                                         'login.lambda_handler',
                                         'staging: login')
@@ -58,7 +60,8 @@ def deploy_lambda_auth(general_info, lambda_service):
                                          ],
                                         {
                                             'USER_POOL_ID' : general_info['USER_POOL_ID'],
-                                            'IDENTITY_POOL_ID': general_info['IDENTITY_POOL_ID']
+                                            'IDENTITY_POOL_ID': general_info['IDENTITY_POOL_ID'],
+                                            'IS_ENABLE_KMS': general_info['IS_ENABLE_KMS']
                                         },
                                         'login_social.lambda_handler',
                                         'staging: login_social')
@@ -72,7 +75,8 @@ def deploy_lambda_auth(general_info, lambda_service):
                                          ],
                                         {
                                             'USER_POOL_ID' : general_info['USER_POOL_ID'],
-                                            'IDENTITY_POOL_ID': general_info['IDENTITY_POOL_ID']
+                                            'IDENTITY_POOL_ID': general_info['IDENTITY_POOL_ID'],
+                                            'IS_ENABLE_KMS': general_info['IS_ENABLE_KMS']
                                         },
                                         'credential_login.lambda_handler',
                                         'staging: credential_login')
@@ -102,7 +106,7 @@ def deploy_lambda_auth(general_info, lambda_service):
                                         },
                                         'resend_confirmcode.lambda_handler',
                                         'staging: template_mail')
-    # add_lambda_info_to_list(ls_lambda_val, lambda_uri, lambda_version, 'auth', 'resend_confirmcode')
+    add_lambda_info_to_list(ls_lambda_val, lambda_uri, lambda_version, 'auth', 'resend_confirmcode')
 
     # confirm code after register
     lambda_uri, lambda_version = lambda_service.deploy_lambda_function(f'auth_confirm',

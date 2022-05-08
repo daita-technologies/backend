@@ -47,7 +47,7 @@ States:
         BackoffRate: 1
   HandleBatchRequestAI:
     Type: Map
-    MaxConcurrency: 2
+    MaxConcurrency: 10
     InputPath: $
     ItemsPath: $.list_request_ai
     Parameters:
@@ -55,6 +55,8 @@ States:
       current_num_retries.$: $.current_num_retries
       max_retries.$: $.max_retries
       is_retry.$: $.is_retry
+      identity_id.$: $$.Execution.Input.body.identity_id
+      task_id.$: $$.Execution.Input.body.task_id
     Iterator:
       StartAt: RequestAI
       States:

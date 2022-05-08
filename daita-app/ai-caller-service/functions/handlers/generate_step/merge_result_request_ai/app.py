@@ -12,7 +12,6 @@ from utils import *
 from identity_check import *
 from boto3.dynamodb.conditions import Key, Attr
 
-
 @error_response
 def lambda_handler(event, context):
     result = {'state': '',
@@ -21,6 +20,10 @@ def lambda_handler(event, context):
     batches = event
     lenBatches =  len(batches)
     # identity_id, task_id, gen_id ,project_id ,project_name , id_token,project_prefix= None, None, None,None , None, None,None
+    
+    # item = generate_task_model.get_task_info(event['identity_id'] ,event['task_id'])
+    # if item.status == 'CANCEL':
+    #     sfn_client.stop_execution(executionArn=item.executeArn)
     task_finish = 0
     for  batch in batches:
         result['gen_id'] = batch['gen_id']
@@ -38,5 +41,4 @@ def lambda_handler(event, context):
     else:
         result['status'] = 'FINISH_ERROR'
         result['state'] = 'FINISH'
-    result
     return result

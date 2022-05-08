@@ -210,7 +210,10 @@ def lambda_handler(event, context):
     #     CreateEventUserLogin(sub)
 
     if not model.checkFirstLogin(ID=sub,username=username):
-        kms = createKMSKey(credentialsForIdentity['identity_id'])
+        if 'IS_ENABLE_KMS' in os.environ and eval(os.environ['IS_ENABLE_KMS']) == True:
+            kms = createKMSKey(credentialsForIdentity['identity_id'])
+        else:
+            kms = ''
         model.updateActivateUser(info={
             'indentityID': credentialsForIdentity['identity_id'] ,
             'ID': sub,

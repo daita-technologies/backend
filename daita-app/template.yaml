@@ -112,6 +112,8 @@ Resources:
                   - events:PutEvents
                   - s3:Get*
                   - ecr:*
+                  - elasticfilesystem:*
+                  - states:*
                 Resource: "*"
 
   #================ LAMBDA LAYERS  ============================================
@@ -124,18 +126,19 @@ Resources:
         - python3.8
 
   #================ APPLICATIONS  =============================================
-  # AICallerService:
-  #   Type: AWS::Serverless::Application
-  #   Properties:
-  #     Location: ai-caller-service/ai_caller_service_template.yaml
-  #     Parameters:
-  #       StagePara: !Ref Stage
-  #       CommonCodeLayerName: !Ref CommonCodeLayer
-  #       ApplicationPara: !Ref Application
-  #       SubnetIDsPara: !Ref SubnetIDs
-  #       SecurityGroupIdsPara: !Ref SecurityGroupIds
-  #       S3BucketNamePara: !Ref S3BucketName
-  #       TableGenerateTaskName: !GetAtt DatabaseService.Outputs.TableGenerateTaskName
+  AICallerService:
+    Type: AWS::Serverless::Application
+    Properties:
+      Location: ai-caller-service/ai_caller_service_template.yaml
+      Parameters:
+        StagePara: !Ref Stage
+        CommonCodeLayerName: !Ref CommonCodeLayer
+        ApplicationPara: !Ref Application
+        SubnetIDsPara: !Ref SubnetIDs
+        SecurityGroupIdsPara: !Ref SecurityGroupIds
+        S3BucketNamePara: !Ref S3BucketName
+        TableGenerateTaskName: !GetAtt DatabaseService.Outputs.TableGenerateTaskName
+        LambdaRoleARN: !GetAtt GeneralLambdaExecutionRole.Arn
 
   DataFlowService:
     Type: AWS::Serverless::Application

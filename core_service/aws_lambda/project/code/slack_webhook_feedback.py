@@ -1,4 +1,3 @@
-from pickle import TRUE
 import requests
 import json
 import pytz
@@ -20,6 +19,27 @@ RESPONSE_HEADER = {
     "Access-Control-Allow-Creentials": "true",
 	"Access-Control-Allow-Methods": "GET, HEAD, OPTIONS, POST, PUT",
 }
+############################################################################################################
+def getDisplayName(username):
+    response = cog_provider_client.admin_get_user(
+        UserPoolId=USERPOOLID,
+        Username=username
+    )
+    user_attributes = {}
+    for att in response["UserAttributes"]:
+        user_attributes[att["Name"]] = att["Value"]
+
+    name = ""
+    if "name" in user_attributes:
+        name = user_attributes["name"]
+    elif "given_name" in user_attributes or \
+        "family_name" in user_attributes:
+        name = f"{user_attributes.pop('given_name', '')} {user_attributes.pop('family_name', '')}"
+    else:
+        name = user_attributes["email"]
+
+    return name
+####################################################################################################
 def claimsToken(jwt_token,field):
     """
     Validate JWT claims & retrieve user identifier
@@ -91,9 +111,9 @@ def lambda_handler(event, context):
             }
             feedbackDB.CreateItem(info)
             break
-    message = "Username: {}\n Time: {}\n Content: {}".format(info['name'],info['created_time'],info['content'])
+    message = "Username: {}\n Time: {}\n Content: {}".format(getDisplayName(info['name']),info['created_time'],info['content'])
     payload ={"channel":CHANNELWEBHOOK,
-    "username":username,
+    "username":getDisplayName(username),
     "text":message,
     "icon_emoji":":ghost:"}
 

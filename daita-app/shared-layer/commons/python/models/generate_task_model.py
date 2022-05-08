@@ -103,7 +103,8 @@ class GenerateTaskModel():
                 KeyConditionExpression=Key(GenerateTaskItem.FIELD_IDENTITY_ID).eq(identity_id),
                 FilterExpression=Attr(GenerateTaskItem.FIELD_PROJECT_ID).eq(project_id) &
                                 Attr(GenerateTaskItem.FIELD_STATUS).ne(VALUE_GENERATE_TASK_STATUS_FINISH) &
-                                Attr(GenerateTaskItem.FIELD_STATUS).ne(VALUE_GENERATE_TASK_STATUS_ERROR)
+                                Attr(GenerateTaskItem.FIELD_STATUS).ne(VALUE_GENERATE_TASK_STATUS_ERROR) &
+                                Attr(GenerateTaskItem.FIELD_STATUS).ne(VALUE_GENERATE_TASK_STATUS_CANCEL)
             )
         return response.get("Items", [])
 

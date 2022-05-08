@@ -12,9 +12,13 @@ from response import *
 from utils import *
 from identity_check import *
 from boto3.dynamodb.conditions import Key, Attr
+from models.generate_task_model import GenerateTaskModel
+
 sqs = boto3.resource("sqs",REGION)
 sqsClient = boto3.client('sqs',REGION)
 ec2_resource = boto3.resource('ec2', region_name=REGION)
+
+generate_task_model = GenerateTaskModel(os.environ["TABLE_GENERATE_TASK"])
 
 def deleteMessageInQueue(task):
     queueSQS = sqs.get_queue_by_name(QueueName=task['queue'])
@@ -56,19 +60,24 @@ def lambda_handler(event, context):
     if result['is_retry'] == True:
         time.sleep(int(result['current_num_retries'])*30)
     # print(event)
-
     batch = result['batch']
+    item = generate_task_model.get_task_info(result['identity_id'] ,result['task_id'])
+    if item.status == 'CANCEL':
+        result['response'] = 'NOT_OK'
+        result['is_retry'] = False
+        deleteMessageInQueue(batch)
+        return result
 
     print(f"--Count current message in queue: {batch['queue']} is {countTaskInQueue(batch['queue'])}")
 
-    # print("request AI body: \n", batch['request_json'])
+    print("request AI body: \n", batch['request_json'])
     try :
         instance = ec2_resource.Instance(batch['ec2_id'])
         instance.load()
         print(f"Current state of instance before send request: {batch['ec2_id']} is {instance.state['Name']}")
 
         output = requests.post(batch['host'],json=batch['request_json'])
-        # print("Output from AI request: \n", output.text)
+        print("Output from AI request: \n", output.text)
 
         if output.status_code != http.HTTPStatus.OK:
             raise Exception("Not OK")
@@ -87,6 +96,7 @@ def lambda_handler(event, context):
     result['response'] = 'OK'
     result['is_retry'] = False
 
-    print("-----Normal Delete message ")
+    print("-----Normal Delete message ------------------------ ")
     deleteMessageInQueue(batch)
+
     return result

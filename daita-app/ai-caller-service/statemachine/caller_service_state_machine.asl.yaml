@@ -12,6 +12,11 @@ States:
         abcd.$: $$.Execution.Id
         ori.$: $
         ori2.$: $$
+    Catch:
+      - ErrorEquals:
+          - States.ALL
+        Next: CatchErrorTaskDynamoDB
+        ResultPath: null
     Next: DownloadTask
     Comment: >-
       Check the level of parallelism, split requests into chunks and invoke
@@ -32,6 +37,11 @@ States:
       Input:
         test: test
         body.$: $
+    Catch:
+      - ErrorEquals:
+          - States.ALL
+        Next: CatchErrorTaskDynamoDB
+        ResultPath: null
     Next: GenerateTask
     Comment: >-
       Check the level of parallelism, split requests into chunks and invoke
@@ -52,6 +62,11 @@ States:
       Input:
         test: helloword
         body.$: $
+    Catch:
+      - ErrorEquals:
+          - States.ALL
+        Next: CatchErrorTaskDynamoDB
+        ResultPath: null
     Next: UploadTask
     Comment: >-
       Check the level of parallelism, split requests into chunks and invoke
@@ -62,6 +77,25 @@ States:
         IntervalSeconds: 1
         MaxAttempts: 2
         BackoffRate: 1
+  CatchErrorTaskDynamoDB:
+    Type: Task
+    Resource: 'arn:aws:states:::dynamodb:updateItem'
+    InputPath: $
+    Parameters:
+      TableName: '${TableGenerateTaskName}'
+      Key:
+        identity_id:
+          S.$: $.identity_id
+        task_id:
+          S.$: $.task_id
+      UpdateExpression: 'SET #st = :st'
+      ExpressionAttributeNames:
+        '#st': status
+      ExpressionAttributeValues:
+        ':st':
+          S: ERROR
+    ResultPath: $.DynamoDB
+    Next: Complete
   UploadTask:
     Type: Task
     Resource: 'arn:aws:states:::states:startExecution.sync:2'
