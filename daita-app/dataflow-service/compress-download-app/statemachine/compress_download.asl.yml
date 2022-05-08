@@ -1,7 +1,38 @@
-StartAt: StartECSCompressDownloadTask
+# StartAt: StartECSCompressDownloadTask
+StartAt: DivideDownloadKeysFunction
 States:
+  DivideDownloadKeysFunction:
+    Type: Task
+    Resource: arn:aws:states:::lambda:invoke
+    InputPath: $
+    Parameters:
+      FunctionName: "${DivideDownloadKeysFunction}"
+      Payload.$: $
+    Next: DownloadFilesMapping
+
+  DownloadFilesMapping:
+    Type: Map
+    InputPath: $
+    ItemsPath: $.Payload.file_chunks
+    Parameters:
+      file_chunk.$: $$.Map.Item.Value
+      workdir.$: $.Payload.workdir
+    Iterator:
+      StartAt: DownloadFilesFunction
+      States:
+        DownloadFilesFunction:
+          Type: Task
+          Resource: arn:aws:states:::lambda:invoke
+          Parameters:
+            FunctionName: "${DownloadFilesFunction}"
+            Payload.$: $
+          End: True
+    ResultPath: null
+    Next: StartECSCompressDownloadTask
+
   StartECSCompressDownloadTask:
     Type: Task
+    InputPath: $.Payload
     Resource: arn:aws:states:::ecs:runTask.sync
     Parameters:
       Cluster: ${CompressDownloadTaskCluster}
@@ -26,18 +57,20 @@ States:
                 Value.$: $.project_name
               - Name: PROJECT_ID
                 Value.$: $.project_id
+              - Name: WORKDIR
+                Value.$: $.workdir
       TaskDefinition: ${CompressDownloadTask}
     ResultPath: null # Forward previous step input as this step output
-    Next: SendCompletedMailFunction
-
-  SendCompletedMailFunction:
-    Type: Task
-    Resource: arn:aws:states:::lambda:invoke
-    InputPath: $
-    Parameters:
-      FunctionName: "${SendCompletedMailFunction}"
-      Payload.$: $
     Next: Complete
+
+  # SendCompletedMailFunction:
+  #   Type: Task
+  #   Resource: arn:aws:states:::lambda:invoke
+  #   InputPath: $
+  #   Parameters:
+  #     FunctionName: "${SendCompletedMailFunction}"
+  #     Payload.$: $
+  #   Next: Complete
 
   Complete:
     Type: Pass

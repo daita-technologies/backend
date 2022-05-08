@@ -15,7 +15,7 @@ from botocore.exceptions import ClientError
 import time
 
 
-relative_path = os.getenv("EFSMountPath")
+EFS_ROOT = os.getenv("EFSMountPath")
 
 # relative_path = '/mnt/efs/images'
 # os.makedirs(relative_path, exist_ok=True)
@@ -42,70 +42,6 @@ log = logging.getLogger('s3_uploader')
 def convert_current_date_to_iso8601():
     my_date = datetime.now()
     return my_date.isoformat()
-
-def fetch(info):
-    abs_path = os.path.abspath(relative_path)
-    key = info["s3_key"]
-    type_method = info["type_method"]
-
-    folder = os.path.split(key)[0]
-    filename = os.path.split(key)[1]
-    file = f'{abs_path}/{folder}/{type_method}/{filename}'
-    os.makedirs(os.path.split(file)[0], exist_ok=True)
-
-    key = key.replace(f'{bucket_name}/', "")
-    # print('key request: ', key)
-    with open(file, 'wb') as data:
-        s3.download_fileobj(bucket_name, key, data)
-
-    return (file, f'{type_method}/{filename}', info)
-
-def fetch_all(keys):
-    print("fetch_all")
-    with futures.ThreadPoolExecutor(max_workers=MAX_WORKERS) as executor:
-        future_to_key = {executor.submit(fetch, key): key for key in keys}
-
-        print("All URLs submitted.")
-
-        for future in futures.as_completed(future_to_key):
-            key = future_to_key[future]
-            exception = future.exception()
-
-            if not exception:
-                yield key, future.result()
-            else:
-                yield key, exception
-
-def get_all_file_paths(directory):
-    # initializing empty file paths list
-    file_paths = []
-
-    # crawling through directory and subdirectories
-    for root, directories, files in os.walk(directory):
-        for filename in files:
-            # join the two strings in order to form the full filepath.
-            filepath = os.path.join(root, filename)
-            file_paths.append(filepath)
-
-    # returning all file paths
-    return file_paths
-
-def aws_get_identity_id(id_token):
-
-    identity_client = boto3.client('cognito-identity')
-    PROVIDER = f'cognito-idp.{identity_client.meta.region_name}.amazonaws.com/{USER_POOL_ID}'
-
-    try:
-        identity_response = identity_client.get_id(
-                            IdentityPoolId=IDENTITY_POOL_ID,
-                            Logins = {PROVIDER: id_token})
-    except Exception as e:
-        print('Error: ', repr(e))
-        raise Exception("Id_token is invalid!")
-
-    identity_id = identity_response['IdentityId']
-
-    return identity_id
 
 def convert_method_name(dict_method, ls_method_id_str):
     """
@@ -208,61 +144,13 @@ def put_zip_to_s3(filepath, bucket_name, key_name, metadata=None):
             log.exception(e)
             raise Exception("Error")
 
-def download(data):
+def download(
+    down_type,
+    project_name,
+    workdir,
+    identity_id):
     try:
-        # id_token: str = data["id_token"]
-        down_type: str = data["down_type"]   # ALL, augment, preprocess, original
-        project_name: str = data["project_name"]
-        project_id: str = data["project_id"]
-
-        # project_name = 'Driving Dataset Sample'
-        # project_id = 'Driving Dataset Sample_c64bd36f28a84897ad77b598046bfbd1'
-        # print("call aws get_identity: ", id_token)
-        # identity_id = aws_get_identity_id(id_token)
-        # print(identity_id)
-
-        # get list key of the project
         db_resource = boto3.resource("dynamodb")
-
-        ls_table = []
-        if down_type == "ALL":
-            ls_table.append(db_resource.Table('data_original'))
-            ls_table.append(db_resource.Table('data_augment'))
-            ls_table.append(db_resource.Table('data_preprocess'))
-        elif down_type == "ORIGINAL":
-            ls_table.append(db_resource.Table('data_original'))
-        elif down_type == "PREPROCESS":
-            ls_table.append(db_resource.Table('data_preprocess'))
-        elif down_type == "AUGMENT":
-            ls_table.append(db_resource.Table('data_augment'))
-        else:
-            return "Error"
-            # return Response(
-            #     status_code=500,
-            #     content=f"Field 'down_type' must be ALL | ORIGINAL | PREPROCESS | AUGMENT. Got type={down_type}"
-            # )
-
-        ## get all dowloaded object information from DB
-        ls_object = []
-        for table in ls_table:
-            response = table.query(
-                    KeyConditionExpression = Key('project_id').eq(project_id),
-                    ProjectionExpression='filename, s3_key, classtype, gen_id, type_method, size',
-                    Limit = 500
-                )
-            ls_object = ls_object + response['Items']
-            # print("total len response: ", len(response['Items']))
-            next_token = response.get('LastEvaluatedKey', None)
-            while next_token is not None:
-                response = table.query(
-                    KeyConditionExpression = Key('project_id').eq(project_id),
-                    ProjectionExpression='filename, s3_key, classtype, gen_id, type_method, size',
-                    Limit = 500,
-                    ExclusiveStartKey=next_token,
-                )
-                next_token = response.get('LastEvaluatedKey', None)
-                # print("total len response next: ", len(response['Items']))
-                ls_object = ls_object + response['Items']
 
         ## get all methods
         table = db_resource.Table('methods')
@@ -272,62 +160,53 @@ def download(data):
             dict_method[item["method_id"]] = item["method_name"]
         # print("dict_method: \n", dict_method)
 
-
-        if len(ls_object) == 0:
-            return {"s3_key": None}
-        print("Final len: ", len(ls_object))
-
-        # setup dir
-        folder_s3 = ls_object[0]['s3_key'].replace(f'{bucket_name}/', "").replace(f"/{ls_object[0]['filename']}", "")
-        delete_dir = ls_object[0]['s3_key'].replace(f"/{ls_object[0]['filename']}", "")
-
-
         # dowload and zip
         starttime = time.time()
+
+        workdir = Path(EFS_ROOT, workdir)
+        zip_dir = Path(EFS_ROOT)
+        zip_dir.mkdir(parents=True, exist_ok=True)
         zipfile_name = f"{project_name}_{down_type}.zip"
-        zip_dir = f"/mnt/efs/zip"
-        os.makedirs(zip_dir, exist_ok=True)
-        zip_path = os.path.join(zip_dir, zipfile_name)
+        zip_path = zip_dir.joinpath(zipfile_name)
         json_object = {}
-        with ZipFile(zip_path,'w') as zip:
-            for key, result in fetch_all(ls_object):
+
+        with ZipFile(zip_path, 'w') as zip:
+            for file_ in workdir.glob("**/*.[!.json]*"):
+                with file_.with_suffix(".json").open() as rstr:
+                    file_info = json.load(rstr)
+                type_method = file_info["type_method"]
                 # print("result: ", result)
-                zip.write(result[0], result[1])
-                json_object[result[2]["filename"]] = {
-                    "name": result[2]["filename"],
-                    "typeOfImage": result[2]["type_method"],
-                    "class": result[2].get("classtype", ""),
-                    "methodToCreate": convert_method_name(dict_method, result[2].get("gen_id", "")),
-                    "size": int(result[2].get("size", 0)),
+                zip.write(file_, f"{type_method}/{file_.name}")
+                json_object[file_info["filename"]] = {
+                    "name": file_info["filename"],
+                    "typeOfImage": file_info["type_method"],
+                    "class": file_info.get("classtype", ""),
+                    "methodToCreate": convert_method_name(dict_method, file_info.get("gen_id", "")),
+                    "size": int(file_info.get("size", 0)),
                     "nameOfProject": project_name
                 }
 
             # write this object to json file
             json_filename = f"{project_name}_{down_type}_{str(int(time.time()))}.json"
-            dir_path = f'{relative_path}/{delete_dir}'
-            filepath = os.path.join(dir_path, json_filename)
-            with open(filepath, 'w') as outfile:
-                json.dump(json_object, outfile)
+            filepath = workdir.joinpath(json_filename)
+            with filepath.open('w') as wstr:
+                json.dump(json_object, wstr)
 
             # write to zip file
-            zip.write(filepath, f"{json_filename}")
+            zip.write(filepath, json_filename)
         endtime_down_zip = time.time()
 
 
 
         # put to s3
-        key_name = f"{folder_s3}/download/{zipfile_name}"
-        put_zip_to_s3(zip_path, bucket_name, key_name)
+        key_name = os.path.join(identity_id, project_id, "download", zipfile_name)
+        put_zip_to_s3(str(zip_path), bucket_name, key_name)
         endtime_put_s3 = time.time()
 
 
         # delete data in EFS
-        dir_path = f'{relative_path}/{delete_dir}'
-        print("delete dir path: ", dir_path)
-        try:
-            shutil.rmtree(dir_path)
-        except OSError as e:
-            print("Error: %s : %s" % (dir_path, e.strerror))
+        os.remove(zip_path)
+        shutil.rmtree(workdir)
 
         # get presign url for this zip file:
         s3_conf = boto3.client('s3', config=Config(signature_version='s3v4'))
@@ -355,12 +234,8 @@ if __name__ == "__main__":
     down_type = os.getenv("DOWN_TYPE")
     project_name = os.getenv("PROJECT_NAME")
     project_id = os.getenv("PROJECT_ID")
+    workdir = os.getenv("WORKDIR")
 
-    data = {
-        "down_type": down_type,
-        "project_name": project_name,
-        "project_id": project_id
-    }
-    url, s3_key = download(data)
+    url, s3_key = download(down_type, project_name, workdir, identity_id)
     upload_progress_db(VALUE_TASK_FINISH, identity_id, task_id, url, s3_key)
     print(url, s3_key)
