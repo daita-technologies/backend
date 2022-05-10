@@ -47,6 +47,8 @@ Resources:
             ProjectionType: ALL  
       BillingMode: PAY_PER_REQUEST
 
+  
+  ###==== Healthcheck service database
   HealthCheckTaskDB:
     Type: AWS::DynamoDB::Table
     Properties:
@@ -102,6 +104,62 @@ Resources:
       TableName: !Sub "${StagePara}-healthcheck-info"
       BillingMode: PAY_PER_REQUEST
 
+  ###==== Reference Image service database
+  TableReferenceImageTasks:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      AttributeDefinitions:
+        - 
+          AttributeName: identity_id
+          AttributeType: S
+        - 
+          AttributeName: task_id
+          AttributeType: S
+        -
+          AttributeName: project_id
+          AttributeType: S
+      KeySchema:
+        - 
+          AttributeName: identity_id
+          KeyType: HASH
+        -
+          AttributeName: task_id
+          KeyType: RANGE
+      TableName: !Sub "${StagePara}-reference-image-tasks"
+      GlobalSecondaryIndexes:
+        -
+          IndexName: !Ref IndexTaskProjectIDTaskIDName
+          KeySchema:
+            - 
+              AttributeName: project_id
+              KeyType: HASH
+            -
+              AttributeName: task_id
+              KeyType: RANGE
+          Projection:
+            ProjectionType: ALL  
+      BillingMode: PAY_PER_REQUEST
+
+  TableReferenceImageInfo:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      AttributeDefinitions:
+        - 
+          AttributeName: project_id
+          AttributeType: S
+        - 
+          AttributeName: method_id
+          AttributeType: S
+      KeySchema:
+        - 
+          AttributeName: project_id
+          KeyType: HASH
+        -
+          AttributeName: method_id
+          KeyType: RANGE
+      TableName: !Sub "${StagePara}-reference-image-info"
+      BillingMode: PAY_PER_REQUEST
+
   DataFlowTaskTable:
     Type: AWS::DynamoDB::Table
     Properties:
@@ -155,6 +213,12 @@ Outputs:
   TableHealthCheckInfoName:
     Description: "Name of table health check info !Ref HealthCheckInfoDB"
     Value: !Ref HealthCheckInfoDB
+  TableReferenceImageTasksName:
+    Description: "Name of table reference image tasks"
+    Value: !Ref TableReferenceImageTasks
+  TableReferenceImageInfoName:
+    Description: "Name of table health check info !Ref HealthCheckInfoDB"
+    Value: !Ref TableReferenceImageInfo
   TableDataAugmentName:
     Description: "Name of table data augment"
     Value: data_augment

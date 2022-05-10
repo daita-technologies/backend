@@ -16,6 +16,7 @@ from response import *
 from utils import *
 from identity_check import *
 s3 = boto3.client('s3')
+
 def split(uri):
     if not 's3' in uri[:2]:
         temp = uri.split('/')
@@ -26,6 +27,7 @@ def split(uri):
         bucket = match.group(1)
         filename = match.group(2)
     return bucket, filename 
+    
 @error_response
 def lambda_handler(event, context):
     result = None

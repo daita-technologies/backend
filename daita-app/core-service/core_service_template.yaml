@@ -58,6 +58,10 @@ Parameters:
     Type: String
   ParaIndexTaskProjectIDTaskID:
     Type: String
+  TableReferenceImageTasksName:
+    Type: String
+  TableReferenceImageInfoName:
+    Type: String
 
   CommonCodeLayerName:
     Type: String
@@ -65,10 +69,14 @@ Parameters:
     Type: String
   LimitAugmentTimesName:
     Type: String
+
   HealthCheckEventBusArn:
     Type: String
   HealthCheckEventBusName:
     Type: String 
+  ReferenceImageEventBusName:
+    Type: String
+  
   ParaDecompressFileStateMachineArn:
     Type: String  
   CognitoUserPoolId:
@@ -256,6 +264,36 @@ Resources:
       Environment:
         Variables:
           TABLE_HEALTHCHECK_INFO: !Ref TableHealthCheckInfoName
+
+  ### for reference images functions
+  RICalculateFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: functions/handlers/reference_image/calculate
+      Role: !GetAtt LambdaExecutionRole.Arn
+      Environment:
+        Variables:
+          EVENT_BUS_NAME: !Ref ReferenceImageEventBusName
+          TABLE_REFERENCE_IMAGE_TASK: !Ref TableReferenceImageTasksName
+
+  RIStatusFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: functions/handlers/reference_image/get_status
+      Role: !GetAtt LambdaExecutionRole.Arn
+      Environment:
+        Variables:
+          TABLE_REFERENCE_IMAGE_TASK: !Ref TableReferenceImageTasksName
+
+  RIInfoFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: functions/handlers/reference_image/get_info
+      Role: !GetAtt LambdaExecutionRole.Arn
+      Environment:
+        Variables:
+          TABLE_REFERENCE_IMAGE_INFO: !Ref TableReferenceImageInfoName
+
 
   ### For data flow functions
   CreateDecompressTaskFunction:
