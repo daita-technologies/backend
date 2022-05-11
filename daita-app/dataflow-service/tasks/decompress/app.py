@@ -59,11 +59,11 @@ def main():
         efs_destination_dir = os.path.join(EFS_MOUNT_POINT, destination_dir)
 
         commands = [
-            f"mkdir -p {efs_work_dir}",
-            f"cd {efs_work_dir}",
-            f"/usr/local/bin/aws s3 cp {FILE_URL} {filename}",
-            f"unzip -j -d {efs_destination_dir} {filename}",
-            f"rm {filename}"
+            f"mkdir -p '{efs_work_dir}'",
+            f"cd '{efs_work_dir}'",
+            f"/usr/local/bin/aws s3 cp '{FILE_URL}' '{filename}'",
+            f"unzip -j -d '{efs_destination_dir}' '{filename}'",
+            f"rm '{filename}'"
         ]
         command = " && ".join(commands)
 
