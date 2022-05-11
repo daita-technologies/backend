@@ -38,7 +38,7 @@ def main():
     work_dir = TASK_ID
     filename = os.path.basename(FILE_URL)
     file_stemp = os.path.splitext(filename)[0]
-    destination_dir = os.path.join(work_dir, file_stemp)   
+    destination_dir = os.path.join(work_dir, file_stemp)
 
     try:
         table.update_item(
@@ -62,11 +62,11 @@ def main():
             f"mkdir -p {efs_work_dir}",
             f"cd {efs_work_dir}",
             f"/usr/local/bin/aws s3 cp {FILE_URL} {filename}",
-            f"unzip {filename} -d {efs_destination_dir}",
+            f"unzip -j -d {efs_destination_dir} {filename}",
             f"rm {filename}"
         ]
         command = " && ".join(commands)
-        
+
         subprocess.run(command, shell=True)
     except Exception:
         update_task_status("ERROR")
