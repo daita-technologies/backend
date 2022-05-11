@@ -13,7 +13,7 @@ def get_running_task(table_name, db_resource, ls_tasks, identity_id, res_project
     item_tasks = table.query(                
             ProjectionExpression='project_id, task_id, process_type',
             KeyConditionExpression=Key('identity_id').eq(identity_id),
-            FilterExpression=Attr('status').ne('FINISH') & Attr('status').ne('ERROR') & Attr('project_id').eq(res_projectid)               
+            FilterExpression=Attr('status').ne('FINISH') & Attr('status').ne('ERROR') & Attr('status').ne('CANCEL') & Attr('project_id').eq(res_projectid)               
         )
     for item in item_tasks['Items']:
         ls_tasks.append({
@@ -96,6 +96,7 @@ def lambda_handler(event, context):
         ls_tasks = get_running_task("down_tasks", db_resource, ls_tasks, identity_id, res_projectid)
         ls_tasks = get_running_task("dev-healthcheck-tasks", db_resource, ls_tasks, identity_id, res_projectid, "HEALTHCHECK")
         ls_tasks = get_running_task("dev-dataflow-task", db_resource, ls_tasks, identity_id, res_projectid)
+        ls_tasks = get_running_task("dev-reference-image-tasks", db_resource, ls_tasks, identity_id, res_projectid)
         
         return convert_response({'data': {
                     "identity_id": identity_id,
