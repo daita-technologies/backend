@@ -40,7 +40,10 @@ class RIInfoClass(LambdaBaseClass):
         
         ### get list info
         items = self.refer_info_model.get_info_of_project(self.project_id)
-          
+
+        ### add filename to output
+        for item in items:
+            item["filename"] = item["image_s3_path"].split("/")[-1]          
                 
         return generate_response(
             message="OK",
