@@ -99,7 +99,7 @@ States:
     Resource: 'arn:aws:states:::dynamodb:updateItem'
     InputPath: $
     Parameters:
-      TableName: "${TableDownloadTaskName}"
+      TableName: "${TableDataFlowTaskName}"
       Key:
         identity_id:
           S.$: $.identity_id

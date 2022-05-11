@@ -288,7 +288,7 @@ Resources:
       Environment:
         Variables:
           CompressDownloadStateMachineArn: !Ref ParaCompressDownloadStateMachineArn
-          TableDownloadTaskName: !Ref ParaTableDownloadTaskName
+          TableDataFlowTaskName: !Ref ParaTableDataFlowTaskName
 
   GetCompressDownloadTaskFunction:
     Type: AWS::Serverless::Function
@@ -297,7 +297,7 @@ Resources:
       Role: !GetAtt LambdaExecutionRole.Arn
       Environment:
         Variables:
-          TableDownloadTaskName: !Ref ParaTableDownloadTaskName
+          TableDataFlowTaskName: !Ref ParaTableDataFlowTaskName
 
   ### For task dashboard function
   TaskDashboardInfoFunction:

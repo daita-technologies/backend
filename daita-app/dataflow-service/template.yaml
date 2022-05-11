@@ -33,7 +33,7 @@ Parameters:
     Type: String
   TableDataFlowTaskName:
     Type: String
-  TableDownloadTaskName:
+  TableMethodsName:
     Type: String
   DecompressEcrRepositoryName:
     Type: String
@@ -164,11 +164,11 @@ Resources:
         EFSAccessPointRootPath: !Ref EFSAccessPointRootPath
         S3BucketName: !Ref S3BucketName
         TableDataFlowTaskName: !Ref TableDataFlowTaskName
+        TableMethodsName: !Ref TableMethodsName
         CompressDownloadEcrRepositoryName: !Ref CompressDownloadEcrRepositoryName
         VPCEndpointForS3: !Ref VPCEndpointForS3
         VPCEndpointForDynamoDB: !Ref VPCEndpointForDynamoDB
         SESIdentityName: noreply@daita.tech
-        TableDownloadTaskName: !Ref TableDownloadTaskName
 
 
 

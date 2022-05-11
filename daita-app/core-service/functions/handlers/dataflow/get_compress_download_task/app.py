@@ -5,13 +5,11 @@ import boto3
 from identity_check import *
 from response import *
 from error_messages import *
+from models.task_model import TaskModel
 
 
+task_table = TaskModel(os.environ["TableDataFlowTaskName"], None)
 
-TASK_TABLE = os.getenv("TableDownloadTaskName")
-
-db = boto3.resource('dynamodb')
-table = db.Table(TASK_TABLE)
 
 @error_response
 def lambda_handler(event, context):
@@ -22,7 +20,7 @@ def lambda_handler(event, context):
 
     identity_id = aws_get_identity_id(id_token)
 
-    response = table.get_item(
+    response = task_table.table.get_item(
         Key={
             "identity_id": identity_id,
             "task_id": task_id

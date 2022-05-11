@@ -151,7 +151,7 @@ Resources:
         TableDataFlowTaskName: !GetAtt DatabaseService.Outputs.TableDataFlowTaskName
         DecompressEcrRepositoryName: !Ref DecompressEcrRepository
         CompressDownloadEcrRepositoryName: !Ref CompressDownloadEcrRepository
-        TableDownloadTaskName: !GetAtt DatabaseService.Outputs.TableDownloadTaskName
+        TableMethodsName: !GetAtt DatabaseService.Outputs.TableMethodsName
 
   DatabaseService:
     Type: AWS::Serverless::Application

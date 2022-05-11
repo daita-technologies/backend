@@ -16,20 +16,11 @@ import time
 
 
 EFS_ROOT = os.getenv("EFSMountPath")
-
-# relative_path = '/mnt/efs/images'
-# os.makedirs(relative_path, exist_ok=True)
-bucket_name = 'daita-client-data'
+TableDataFlowTaskName = os.getenv("TableDataFlowTaskName")
+TableMethodsName = os.getenv("TableMethodsName")
+bucket_name = os.getenv("S3BucketName")
 s3 = boto3.client('s3')
 VALUE_TASK_FINISH = "FINISH"
-
-
-IDENTITY_POOL_ID =   'us-east-2:fa0b76bc-01fa-4bb8-b7cf-a5000954aafb' #'us-east-2:639788f0-a9b0-460d-9f50-23bbe5bc7140'
-USER_POOL_ID = 'us-east-2_ZbwpnYN4g'   #'us-east-2_6Sc8AZij7'
-
-# max_workers = 5
-# self.abs_path = os.path.abspath(relative_path)
-MAX_WORKERS = 8
 
 # config for uploading zipfile to s3
 MULTIPART_THRESHOLD = 1
@@ -39,9 +30,11 @@ MAX_RETRY_COUNT = 3
 
 log = logging.getLogger('s3_uploader')
 
+
 def convert_current_date_to_iso8601():
     my_date = datetime.now()
     return my_date.isoformat()
+
 
 def convert_method_name(dict_method, ls_method_id_str):
     """
@@ -63,7 +56,7 @@ def convert_method_name(dict_method, ls_method_id_str):
 
 def upload_progress_db(status, identity_id, task_id, presign_url, s3_key):
     db_resource = boto3.resource("dynamodb")
-    table = db_resource.Table('down_tasks')
+    table = db_resource.Table(TableDataFlowTaskName)
     response = table.update_item(
                     Key={
                         'identity_id': identity_id,
@@ -153,7 +146,7 @@ def download(
         db_resource = boto3.resource("dynamodb")
 
         ## get all methods
-        table = db_resource.Table('methods')
+        table = db_resource.Table(TableMethodsName)
         response = table.scan()
         dict_method = {}
         for item in response["Items"]:
