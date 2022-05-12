@@ -5,14 +5,10 @@ import boto3
 from identity_check import *
 from response import *
 from error_messages import *
-
-
-
-DECOMPRESS_TASK_TABLE = os.getenv("DecompressTaskTable")
+from models.task_model import TaskModel
 
 stepfunctions = boto3.client('stepfunctions')
-db = boto3.resource('dynamodb')
-table = db.Table(DECOMPRESS_TASK_TABLE)
+task_model = TaskModel(os.environ["DecompressTaskTable"])
 
 @error_response
 def lambda_handler(event, context):
@@ -23,23 +19,19 @@ def lambda_handler(event, context):
     
     identity_id = aws_get_identity_id(id_token)
 
-    response = table.get_item(
-        Key={
-            "identity_id": identity_id,
-            "task_id": task_id
-        },
-        ExpressionAttributeNames={'#ST': "status"},
-        ProjectionExpression="#ST, created_at, updated_at, project_id, task_id, process_type"
-    )
-
-    task = response.get("Item", None)
-    if task is None:
+    task_info = task_model.get_task_info_w_atribute(identity_id, task_id,
+                                    ls_attribute=[TaskModel.FIELD_STATUS, TaskModel.FIELD_PROCESS_TYPE,
+                                            TaskModel.FIELD_PROJECT_ID, TaskModel.FIELD_TASK_ID, 
+                                            TaskModel.FIELD_UPDATED_TIME])
+        
+    
+    if task_info is None:
         raise Exception(MESS_TASK_NOT_EXIST.format(task_id))
 
-    print("Task return: ", task)
+    print("Task return: ", task_info)
 
     return generate_response(
             message="OK",
             status_code=HTTPStatus.OK,
-            data=task,
+            data=task_info,
         )    

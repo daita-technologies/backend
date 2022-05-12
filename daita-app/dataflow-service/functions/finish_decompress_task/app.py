@@ -1,6 +1,7 @@
 import os
 import shutil
 from datetime import datetime
+from models.task_model import TaskModel
 
 import boto3
 
@@ -36,7 +37,7 @@ def lambda_handler(event, context):
             ":st": "FINISH",
             ":ua": convert_current_date_to_iso8601()
         },
-        UpdateExpression="SET #ST = :st, updated_at = :ua"
+        UpdateExpression=f"SET #ST = :st, {TaskModel.FIELD_UPDATED_TIME} = :ua"
     )
     print(response)
 

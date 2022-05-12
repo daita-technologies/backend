@@ -31,7 +31,7 @@ def update_task_status(status):
             ":st": status,
             ":ua": convert_current_date_to_iso8601()
         },
-        UpdateExpression="SET #ST = :st, updated_at = :ua"
+        UpdateExpression="SET #ST = :st, updated_time = :ua"
     )
 
 def main():
@@ -52,7 +52,7 @@ def main():
                 ":ua": convert_current_date_to_iso8601(),
                 ":dst": destination_dir
             },
-            UpdateExpression="SET #ST = :st, updated_at = :ua, destination_dir = :dst"
+            UpdateExpression="SET #ST = :st, updated_time = :ua, destination_dir = :dst"
         )
 
         efs_work_dir = os.path.join(EFS_MOUNT_POINT, work_dir)
