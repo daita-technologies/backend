@@ -28,7 +28,8 @@ class RIStatusClass(LambdaBaseClass):
         
     def _get_task_status(self, identity_id, task_id):
         task_info = self.task_model.get_task_info_w_atribute(identity_id, task_id,
-                                    ls_attribute=[TaskModel.FIELD_STATUS, TaskModel.FIELD_PROCESS_TYPE])
+                                    ls_attribute=[TaskModel.FIELD_STATUS, TaskModel.FIELD_PROCESS_TYPE,
+                                            TaskModel.FIELD_PROJECT_ID, TaskModel.FIELD_TASK_ID, TaskModel.FIELD_UPDATED_TIME])
         return task_info
 
     def handle(self, event, context):
