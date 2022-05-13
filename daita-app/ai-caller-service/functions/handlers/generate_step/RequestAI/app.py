@@ -59,7 +59,7 @@ def lambda_handler(event, context):
     result = event
     if result['is_retry'] == True:
         time.sleep(int(result['current_num_retries'])*30)
-    # print(event)
+    print("Input event: ", event)
     batch = result['batch']
     item = generate_task_model.get_task_info(result['identity_id'] ,result['task_id'])
     if item.status == 'CANCEL':

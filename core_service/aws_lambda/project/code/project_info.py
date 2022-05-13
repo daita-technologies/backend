@@ -54,6 +54,14 @@ def lambda_handler(event, context):
         is_sample = res_project.get("is_sample", False)
         gen_status = res_project.get("gen_status", "FINISH")  # default is finish, else GENERATING
         res_times_generated = int(res_project.get('times_generated', 0))
+        reference_images = res_project.get("reference_images", {})
+        reference_info = {}
+        for method, s3_path in reference_images.items():
+            filename = s3_path.split("/")[-1]
+            reference_info[method] = {
+                "s3_path": s3_path,
+                "filename": filename
+            }
         
     except Exception as e:
         print('Error: ', repr(e))
@@ -107,6 +115,7 @@ def lambda_handler(event, context):
                     "gen_status": gen_status,
                     "ls_task": ls_tasks,
                     "groups": groups,
+                    "reference_images": reference_info
                 }, 
             "error": False, 
             "success": True, 
@@ -120,7 +129,8 @@ def lambda_handler(event, context):
                     "is_sample": is_sample,
                     "gen_status": gen_status,
                     "ls_task": [],
-                    "groups": None
+                    "groups": None,
+                    "reference_images": reference_info
                 },
             "error": False, 
             "success": True, 

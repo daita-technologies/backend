@@ -32,6 +32,8 @@ Parameters:
     Type: String
   DecompressEcrRepositoryName:
     Type: String
+  CommonCodeLayerName:
+    Type: String
   
 
 Globals:
@@ -41,6 +43,8 @@ Globals:
     Runtime: python3.8
     Architectures:
       - x86_64
+    Layers:
+        - !Ref CommonCodeLayerName
 
 
 Resources:

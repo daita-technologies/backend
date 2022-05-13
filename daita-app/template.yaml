@@ -152,6 +152,7 @@ Resources:
         S3BucketName: !Ref S3BucketName
         TableDataFlowTaskName: !GetAtt DatabaseService.Outputs.TableDataFlowTaskName
         DecompressEcrRepositoryName: !Ref DecompressEcrRepository
+        CommonCodeLayerName: !Ref CommonCodeLayer
 
   DatabaseService:
     Type: AWS::Serverless::Application

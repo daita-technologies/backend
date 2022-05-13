@@ -105,6 +105,8 @@ def downloadS3ToEFS(data):
 @error_response
 def lambda_handler(event, context):
     body = json.loads(event['body'])
+
+    print("body in event: ", body)
     data = body['data']
     task_model.update_generate_progress(task_id = data['task_id'], identity_id = data['identity_id'], num_finish = 0, status = 'PREPARING_DATA')
     result = downloadS3ToEFS(data)

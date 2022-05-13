@@ -74,14 +74,16 @@ def lambda_handler(event, context):
     ### update num_gens for task
     task_model.update_attribute(data['task_id'], data['identity_id'], [[TaskModel.FIELD_NUM_GENS_IMAGE, len(data["images"])]])
     task_model.update_generate_progress(task_id = data['task_id'], identity_id = data['identity_id'], num_finish = 0, status = 'PREPARING_HARDWARE')
-
-    ### assign code to [] with old flow
-    ### TODO: check again when use choose option
-    data['ls_method_id'] = []
-    
-    list_request_ai = assignTaskToEc2( ec2Instances=ec2FreeInstnaces,data= downloadTask,num_augments_per_image=data['num_aug_per_imgs'],type_method=data['type_method'],code=data['ls_method_id'])
+        
+    list_request_ai = assignTaskToEc2(ec2Instances=ec2FreeInstnaces, data=downloadTask,
+                                      num_augments_per_image=data['num_aug_per_imgs'],
+                                      type_method=data['type_method'],
+                                      code=data['ls_method_id'],
+                                      reference_images=data[KEY_NAME_REFERENCE_IMAGES])
     time.sleep(5)
-    task_model.update_generate_progress(task_id = data['task_id'], identity_id = data['identity_id'], num_finish = 0, status = 'RUNNING')
+    task_model.update_generate_progress(task_id=data['task_id'],
+                                        identity_id=data['identity_id'],
+                                        num_finish=0, status='RUNNING')
     print(list_request_ai)
     return {
         'state': 'Request_AI',

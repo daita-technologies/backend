@@ -60,6 +60,7 @@ KEY_NAME_PAGINATION         = "pagination"              # for task dashboard API
 KEY_SIZE_LS_ITEM_QUERY      = "size_list_items_query"   # for task dashboard API
 KEY_NAME_PROCESS_TYPE       = "process_type"
 KEY_NAME_CREATED_TIME       = "created_time"
+KEY_NAME_REFERENCE_IMAGES   = "reference_images"
 
 KEY_NAME_RES_AUMENTATION    = "augmentation"
 KEY_NAME_RES_PREPROCESSING  = "preprocessing"
@@ -68,3 +69,4 @@ MAX_NUMBER_GEN_PER_IMAGES   = 1
 MAX_LS_ITEM_QUERY_TASK_DASHBOARD = 100
 
 LS_METHOD_ID_SUPPORT_REFERENCE_IMG = ["PRE-002", "PRE-003", "PRE-004", "PRE-005", "PRE-006", "PRE-008"]
+LS_METHOD_KEEP_IF_EXIST_PRE001 = ["PRE-001", "PRE-000", "PRE-009"]

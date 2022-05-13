@@ -92,13 +92,8 @@ class ImageLoader(object):
         data_type = info_image['data_type']
         data_number = info_image['data_number']
         # get type of process
-        type_method = 'PREPROCESS'
-        if 'AUG' in ls_methods_id[0]:
-            type_method = 'AUGMENT'
-        elif 'PRE' in ls_methods_id[0]:
-            type_method = 'PREPROCESS'
-        else:
-            raise(Exception('list method is not valid!'))
+        type_method = info_image[KEY_NAME_PROCESS_TYPE]
+
         infor = dydb_get_project(self.db_resource, identity_id, project_name)
         s3_prefix = infor['s3_prefix']
         
@@ -142,7 +137,6 @@ class ImageLoader(object):
                     
                 dydb_update_class_data(table, project_id, data["filename"], classtype)
         return {"images": ls_process, "project_prefix":s3_prefix, 'type_method':type_method}    
-        
 
 @error_response
 def lambda_handler(event, context):
@@ -162,6 +156,9 @@ def lambda_handler(event, context):
     data['project_name'] = body['project_name']
     data['ls_method_id'] = body['ls_method_id']
     data['num_aug_per_imgs'] = body['num_aug_per_imgs'] if 'num_aug_per_imgs' in body else 1 
+    data[KEY_NAME_PROCESS_TYPE] = body[KEY_NAME_PROCESS_TYPE]
+    data[KEY_NAME_REFERENCE_IMAGES] = body[KEY_NAME_REFERENCE_IMAGES]
+
     return generate_response(
             message="OK",
             status_code=HTTPStatus.OK,
