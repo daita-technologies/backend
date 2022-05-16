@@ -28,7 +28,7 @@ def countTaskInQueue(queue_id):
     print(f"QueueID:  {queue_id} has len: {num_task_in_queue}")
     return int(num_task_in_queue)
 
-def assignTaskToEc2(ec2Instances,data,type_method,num_augments_per_image,code):
+def assignTaskToEc2(ec2Instances, data, type_method, num_augments_per_image, code, reference_images={}):
     listRequestAPI = []
     listNumberTaskQueueCurrent= []
     ec2IDs= []
@@ -52,9 +52,20 @@ def assignTaskToEc2(ec2Instances,data,type_method,num_augments_per_image,code):
                     "type": "preprocessing",
                     "codes": code,
                     "parameters":{},
-                    "reference_images":{}
+                    "reference_images": reference_images
                 }
         return input_request_ai
+
+    def parser_host_api(method, ip):
+        host_api = 'http://{}:8000/{}'
+        if method == 'AUGMENT':
+            route = 'augmentation'            
+        else:
+            route = 'preprocessing'
+        host_api = 'http://{}:8000/{}'.format(ip, route)
+
+        return host_api
+
     # get current task 
     length_batched = len(data['batches_input'])
     
@@ -70,9 +81,10 @@ def assignTaskToEc2(ec2Instances,data,type_method,num_augments_per_image,code):
             if numbertask != maxEc2Task and flag < length_batched:
                 for _ in range(maxEc2Task - numbertask +1):
                     input_request_ai = parserInputJson(type_method,code,num_augments_per_image,flag)
+                    host_api = parser_host_api(type_method, ec2IDs[index]['ip'])
                     task = {
                             'request_json': input_request_ai,
-                            'host': 'http://{}:8000/ai'.format(ec2IDs[index]['ip']),
+                            'host': host_api,
                             'queue': os.environ[ec2IDs[index]['queue_env_name']],
                             'ec2_id': ec2IDs[index]["ec2_id"]
                         }
@@ -89,9 +101,10 @@ def assignTaskToEc2(ec2Instances,data,type_method,num_augments_per_image,code):
     for it in range(flag,length_batched):
         index =int(it%len(ec2IDs))
         input_request_ai = parserInputJson(type_method,code,num_augments_per_image,it)
+        host_api = parser_host_api(type_method, ec2IDs[index]['ip'])
         task = {
             'request_json': input_request_ai,
-            'host': 'http://{}:8000/ai'.format(ec2IDs[index]['ip']),
+            'host': host_api,
             'queue': os.environ[ec2IDs[index]['queue_env_name']],
             'ec2_id': ec2IDs[index]["ec2_id"]
         }

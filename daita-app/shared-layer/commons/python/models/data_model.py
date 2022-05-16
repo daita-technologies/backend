@@ -112,6 +112,15 @@ class DataModel():
         ls_s3_key = [(item[DataItem.FIELD_FILENAME], item[DataItem.FIELD_S3_KEY]) for item in items]
         
         return ls_s3_key
+
+    def get_all_data_in_project(self, project_id):
+        response = self.table.query (
+                KeyConditionExpression=Key(DataItem.FIELD_PROJECT_ID).eq(project_id),
+                ProjectionExpression=f"{DataItem.FIELD_FILENAME}, {DataItem.FIELD_S3_KEY}",
+            )
+        items = response.get("Items", [])
+
+        return items
     
     def update_healthcheck_id(self, project_id, filename, healthcheck_id):
         self._update_healthcheck_id(project_id, filename, healthcheck_id)

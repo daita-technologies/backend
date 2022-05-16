@@ -30,6 +30,15 @@ def lambda_handler(event, context):
         code = param['code']
     except Exception as e:
         print(e)
+        if 'error_description' in param:
+            location = 'https://dev.daita.tech/'
+            headers = {"Location":location,	"Access-Control-Allow-Methods": "GET,HEAD,OPTIONS,POST,PUT"}
+            return {
+                    "statusCode": 302,
+                    "headers": headers,
+                    "body":'',
+                    "isBase64Encoded": False
+                }
         raise Exception(e)
 
     if 'state' in param:

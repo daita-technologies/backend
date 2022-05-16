@@ -66,11 +66,21 @@ class S3(object):
         batch_input = []
         batch_output = []
         total_len = 0
-        
+        jsonInputLoads = os.path.join(self.folder,'input_json')
+        # os.makedirs(jsonInputLoads,exist_ok=True)
         for index,  batch in enumerate(batcher(generator(),batch_size)):
             output_dir_temp =  output_dir
             total_len += len(batch)
-            batch_input.append([self.root_efs+it for it in batch])
+            jsonBatchImages = [self.root_efs+it for it in batch]
+            # nameJsonBatches = os.path.join(jsonInputLoads,'input_batch_'+str(index)+'.json')
+            # with open(nameJsonBatches,'w') as f:
+            #     json.dump(jsonBatchImages,f)
+            self.s3.put_object(
+                Body=json.dumps(jsonBatchImages),
+                Bucket= self.bucket,
+                Key= os.path.join(jsonInputLoads,str(index)+'_download_image.json')
+            )
+            batch_input.append(self.bucket+'/'+jsonInputLoads+'/'+str(index)+'_download_image.json')
             nameoutput =  os.path.join(output_dir_temp,str(index))
             os.makedirs(nameoutput,exist_ok=True)
             batch_output.append(self.root_efs+nameoutput)
@@ -105,6 +115,8 @@ def downloadS3ToEFS(data):
 @error_response
 def lambda_handler(event, context):
     body = json.loads(event['body'])
+
+    print("body in event: ", body)
     data = body['data']
     task_model.update_generate_progress(task_id = data['task_id'], identity_id = data['identity_id'], num_finish = 0, status = 'PREPARING_DATA')
     result = downloadS3ToEFS(data)

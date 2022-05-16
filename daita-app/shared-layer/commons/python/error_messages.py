@@ -12,4 +12,5 @@ MESS_TASK_NOT_EXIST                 = "Task ID {} does not exist"
 MESS_DATA_TYPE_INPUT                = "Data type value {} does not belong to {}."
 MESS_PROJECT_NOT_FOUND              = "Project {} not found."
 MESS_PROCESS_TYPE_IS_INVALID        = "Process type {} is invalid!"
+MESS_METHOD_REFERENCE_IMAGE_INVALID = "Method id must belong to prerpocess method!"
 

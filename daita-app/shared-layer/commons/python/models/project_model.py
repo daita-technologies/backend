@@ -16,6 +16,7 @@ class ProjectItem():
     FIELD_TIMES_AUGMENT         = "times_generated"
     FIELD_TIMES_PREPRO          = "times_propr"
     FIELD_UPDATE_DATE           = "updated_date"
+    FIELD_REFERENCE_IMAGES      = KEY_NAME_REFERENCE_IMAGES
     FIELD_DATANUM_ORIGINAL      = VALUE_TYPE_DATA_ORIGINAL
     FIELD_DATANUM_PREPROCESS    = VALUE_TYPE_DATA_PREPROCESSED
 
@@ -73,7 +74,7 @@ class ProjectModel():
 
         return
 
-    def update_project_generate_times(self, identity_id, project_name, times_augment, times_preprocess):
+    def update_project_generate_times(self, identity_id, project_name, times_augment, times_preprocess, reference_images):
         response = self.table.update_item(
             Key={
                 ProjectItem.FIELD_IDENTITY_ID: identity_id,
@@ -82,14 +83,16 @@ class ProjectModel():
             ExpressionAttributeNames= {
                 '#P_T': ProjectItem.FIELD_TIMES_PREPRO,
                 '#A_T': ProjectItem.FIELD_TIMES_AUGMENT,
-                '#UP_DATE': ProjectItem.FIELD_UPDATE_DATE
+                '#UP_DATE': ProjectItem.FIELD_UPDATE_DATE,
+                "#RE_IM": ProjectItem.FIELD_REFERENCE_IMAGES
             },
             ExpressionAttributeValues = {
                 ':vp_t': times_preprocess,
                 ':va_t': times_augment,
-                ':da': convert_current_date_to_iso8601(),                
+                ':da': convert_current_date_to_iso8601(),   
+                ':re_im': reference_images             
             },
-            UpdateExpression = 'SET #P_T = :vp_t , #A_T = :va_t, #UP_DATE = :da'
+            UpdateExpression = 'SET #P_T = :vp_t , #A_T = :va_t, #UP_DATE = :da, #RE_IM = :re_im'
         )
 
         return

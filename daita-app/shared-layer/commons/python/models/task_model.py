@@ -21,6 +21,10 @@ class TaskModel():
     ### field for generation task
     FIELD_NUM_GENS_IMAGE = "number_gen_images"
 
+    ### field for reference image
+    FIELD_LS_METHOD_ID = "ls_method_id"
+    FIELD_EXECUTION_SM_ID = "execution_id"
+
 
     def __init__(self, table_name, index_task_projectid_name=None) -> None:
         self.table = boto3.resource('dynamodb').Table(table_name) 
@@ -161,18 +165,25 @@ class TaskModel():
                     else:
                         attr_value[":val_ta_finish"] = {"S": VALUE_TASK_FINISH}
                         filter = f"#sta = :val_ta_finish "
+
                     if filter_status is None:
                         filter_status_exp = filter
                     else:
-                        filter_status_exp = f" {filter_status_exp} OR {filter} "
+                        if len(filter_status_exp)>0:
+                            filter_status_exp = f" {filter_status_exp} OR {filter} "
+                        else:
+                            filter_status_exp = f"{filter}"
                 else:
                     attr_value[":val_ta_err"] = {"S": VALUE_TASK_ERROR}
                     attr_value[":val_ta_finish"] = {"S": VALUE_TASK_FINISH}
-                    filter = f" (#sta <> :val_ta_err AND #sta <> :val_ta_finish )"
+                    filter = f"#sta <> :val_ta_err AND #sta <> :val_ta_finish"
                     if filter_status_exp is None:
                         filter_status_exp = filter
                     else:
-                        filter_status_exp = f" {filter_status_exp} OR {filter} "
+                        if len(filter_status_exp)>0:
+                            filter_status_exp = f" {filter_status_exp} OR ( {filter} )"
+                        else:
+                            filter_status_exp = f"{filter}"                        
 
             filterExpression = f"{filterExpression} AND ({filter_status_exp})"
 
@@ -205,6 +216,12 @@ class TaskModel():
         return response
 
     def update_attribute(self, task_id, identity_id, ls_update):
+        """
+        Update the list of attribute (not contains key) with value
+
+        params:
+        - ls_udpate: List[(<Field_name>, <value>)]
+        """
         exprAttValue = {
             ":up_ti": convert_current_date_to_iso8601()
         }
@@ -256,3 +273,48 @@ class TaskModel():
                 )
 
         return response
+
+    def create_task_reference_image(self, identity_id, project_id, ls_method_id):
+        process_type = VALUE_PROCESS_TYPE_REFERENCE_IM
+        task_id = create_task_id_w_created_time()
+        dict_info = {
+            self.FIELD_IDENTITY_ID: identity_id,
+            self.FIELD_TASK_ID: task_id,
+            self.FIELD_STATUS: VALUE_TASK_RUNNING,                
+            self.FIELD_PROJECT_ID: project_id,
+            self.FIELD_LS_METHOD_ID: ls_method_id,
+            self.FIELD_CREATE_TIME: convert_current_date_to_iso8601(),
+            self.FIELD_UPDATED_TIME: convert_current_date_to_iso8601(),
+            self.FIELD_PROCESS_TYPE: process_type
+        }
+        self.table.put_item(
+            Item = dict_info
+        )
+
+        return task_id, process_type
+
+    def get_task_info_w_atribute(self, identity_id, task_id, ls_attribute=[FIELD_TASK_ID, FIELD_STATUS, FIELD_PROCESS_TYPE]):
+        a = {
+                    self.FIELD_IDENTITY_ID: identity_id,
+                    self.FIELD_TASK_ID: task_id                    
+                }
+        print("key structure: ", a)
+        print("self.tablename: ", self.table_name)
+        print("key_schema: ", self.table.key_schema)
+        response = self.table.get_item(
+                Key={
+                    self.FIELD_IDENTITY_ID: identity_id,
+                    self.FIELD_TASK_ID: task_id                    
+                }                
+            )
+        item = response.get("Item", None)
+        if item:
+            info = {}
+            for attr in ls_attribute:
+                info[attr] = item[attr]
+        else:
+            info = None
+        
+        return info
+        
+    

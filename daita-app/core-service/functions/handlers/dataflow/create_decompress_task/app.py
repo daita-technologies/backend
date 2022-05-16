@@ -8,7 +8,7 @@ from response import *
 from error_messages import *
 from identity_check import *
 from utils import create_unique_id, convert_current_date_to_iso8601, create_task_id_w_created_time
-
+from models.task_model import TaskModel
 
 from lambda_base_class import LambdaBaseClass
 
@@ -49,14 +49,14 @@ class CreateDecompressClass(LambdaBaseClass):
         task_id = create_task_id_w_created_time()
         response = task_table.put_item(
             Item={
-                "identity_id": identity_id,
-                "task_id": task_id,
+                TaskModel.FIELD_IDENTITY_ID: identity_id,
+                TaskModel.FIELD_TASK_ID: task_id,
                 "file_url": self.file_url,
-                KEY_NAME_TASK_STATUS: VALUE_TASK_RUNNING,
-                KEY_NAME_CREATED_TIME: convert_current_date_to_iso8601(),
-                "updated_at": convert_current_date_to_iso8601(),
-                "project_id": self.project_id,
-                KEY_NAME_PROCESS_TYPE: VALUE_PROCESS_TYPE_UPLOAD
+                TaskModel.FIELD_STATUS: VALUE_TASK_RUNNING,
+                TaskModel.FIELD_CREATE_TIME: convert_current_date_to_iso8601(),
+                TaskModel.FIELD_UPDATED_TIME: convert_current_date_to_iso8601(),
+                TaskModel.FIELD_PROJECT_ID: self.project_id,
+                TaskModel.FIELD_PROCESS_TYPE: VALUE_PROCESS_TYPE_UPLOAD
             }
         )
             
