@@ -235,7 +235,16 @@ Resources:
       Environment:
         Variables:
           EVENT_BUS_NAME: !Ref StopProcessEventBusName
-
+  # DeleteImages:
+  #   Type: AWS::Serverless::Function
+  #   Properties:
+  #     CodeUri: functions/handlers/delete_images
+  #     Role: !GetAtt LambdaExecutionRole.Arn
+  #     Environment:
+  #       Variables:
+  #         TABLE_HEALTHCHECK_INFO: !Ref TableHealthCheckInfoName
+  #         T_PROJECT_SUMMARY:
+  #         T_DATA_ORI: 
   ### for health check functions
   HealthCheckFunction:
     Type: AWS::Serverless::Function

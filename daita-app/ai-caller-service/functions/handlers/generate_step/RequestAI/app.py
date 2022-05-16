@@ -10,10 +10,11 @@ from datetime import datetime
 from config import *
 from response import *
 from utils import *
+from s3_utils import split
 from identity_check import *
 from boto3.dynamodb.conditions import Key, Attr
 from models.generate_task_model import GenerateTaskModel
-
+s3 = boto3.client('s3')
 sqs = boto3.resource("sqs",REGION)
 sqsClient = boto3.client('sqs',REGION)
 ec2_resource = boto3.resource('ec2', region_name=REGION)
@@ -61,6 +62,10 @@ def lambda_handler(event, context):
         time.sleep(int(result['current_num_retries'])*30)
     print("Input event: ", event)
     batch = result['batch']
+    if not isinstance(batch['request_json']['images_paths'],list):
+        bucket , filename =  split(batch['request_json']['images_paths'])
+        resultS3 =  s3.get_object(Bucket=bucket, Key=filename)
+        batch['request_json']['images_paths'] = json.loads(resultS3["Body"].read().decode())
     item = generate_task_model.get_task_info(result['identity_id'] ,result['task_id'])
     if item.status == 'CANCEL':
         result['response'] = 'NOT_OK'

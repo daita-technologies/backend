@@ -553,7 +553,11 @@ Resources:
           - "dynamodb:DescribeTable"
           - "dynamodb:ConditionCheckItem"
           - "lambda:InvokeFunction"
-          Resource: "*" 
+          Resource: "*"
+        - Effect: Allow
+          Action:
+          - s3:*
+          Resource: "*"
   UpdateStatusTask:
     Type: AWS::Serverless::Function
     Properties:
@@ -600,6 +604,16 @@ Resources:
   HandleMergeResultDownloadImages:
     Type: AWS::Serverless::Function
     Properties:
+      VpcConfig:
+        SecurityGroupIds: !Split [',', !Join [',', !Ref SecurityGroupIdsPara]] 
+        SubnetIds: !Split [',', !Join [',', !Ref SubnetIDsPara]] 
+      FileSystemConfigs:
+        - Arn: !GetAtt EFSAccessPoint.Arn
+          LocalMountPath: !Ref EFSStorageAI
+      Environment:
+        Variables:
+          EFSPATH: !Ref EFSStorageAI
+          ROOTEFS: !Ref ROOTEFS
       CodeUri: functions/handlers/download_task/merge_download
       Policies:
         - S3FullAccessPolicy:
@@ -1148,7 +1162,6 @@ Resources:
             LogGroupArn: !GetAtt CallerServiceStateMachineLogGroup.Arn
       DefinitionSubstitutions:
         PreprocessGenerateTask: !GetAtt PreprocessGenerateTask.Arn
-
 Outputs:
   # ServerlessRestApi is an implicit API created out of Events key under Serverless::Function
   # Find out more about other implicit resources you can reference within SAM
