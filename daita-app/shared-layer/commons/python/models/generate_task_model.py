@@ -77,7 +77,7 @@ class GenerateTaskItem():
             self.number_gen_images  = int(item_info.get(self.FIELD_NUM_GEN_IMAGES))
             self.project_id         = item_info.get(self.FIELD_PROJECT_ID)
             self.executeArn         = item_info.get(self.FIELD_EXECUTEARN)
-            return self   
+            return self
 
     @classmethod
     def create_new_generate_task(cls, identity_id, project_id, type_method):
@@ -88,15 +88,15 @@ class GenerateTaskItem():
         object.status = VALUE_GENERATE_TASK_STATUS_PENDING
         object.identity_id = identity_id
         object.project_id = project_id
-        
+
         return object
 
 
 
-class GenerateTaskModel():    
+class GenerateTaskModel():
 
     def __init__(self, table_name) -> None:
-        self.table = boto3.resource('dynamodb').Table(table_name)        
+        self.table = boto3.resource('dynamodb').Table(table_name)
 
     def query_running_tasks(self, identity_id, project_id):
         response = self.table.query (
@@ -114,15 +114,15 @@ class GenerateTaskModel():
                 GenerateTaskItem.FIELD_IDENTITY_ID: identity_id,
                 GenerateTaskItem.FIELD_TASK_ID: task_id,
             }
-        )    
+        )
         item = GenerateTaskItem().from_db_item(response.get('Item', None))
-        return item  
+        return item
 
     def insert_new_generate_task(self, item) -> None:
         response = self.table.put_item(
-                Item = item.to_dict()                               
-            ) 
-        
+                Item = item.to_dict()
+            )
+
         return
 
     def create_new_generate_task(self, identity_id, project_id, type_method):
@@ -130,7 +130,7 @@ class GenerateTaskModel():
         self.insert_new_generate_task(generate_task_item)
 
         return generate_task_item.task_id
-    
+
     def update_status(self,identity_id, task_id,status):
         self.table.update_item(
             Key={
@@ -159,4 +159,3 @@ class GenerateTaskModel():
                 '#e': 'ExecutionArn',
             }
         )
-    

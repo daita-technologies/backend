@@ -8,7 +8,7 @@ class EC2Model(object):
     def __init__(self):
         self.db_client = boto3.client('dynamodb')
         self.TBL = 'ec2'
-    
+
     def scanTable(self,TableName,**kwargs):
         paginator = self.db_client.get_paginator("scan")
         for item in paginator.paginate(TableName=TableName,**kwargs):

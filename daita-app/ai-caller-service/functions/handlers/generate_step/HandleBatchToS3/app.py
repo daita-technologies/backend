@@ -22,7 +22,7 @@ generate_task_model = GenerateTaskModel(os.environ["TABLE_GENERATE_TASK"])
 
 s3 = boto3.client('s3')
 def is_img(img):
-    return not os.path.splitext(img)[1] in ['.json'] 
+    return not os.path.splitext(img)[1] in ['.json']
 def get_number_files(output_dir):
     img_list = []
     for r,_,f in os.walk(output_dir):
@@ -39,7 +39,7 @@ def split(uri):
         match =  re.match(r's3:\/\/(.+?)\/(.+)', uri)
         bucket = match.group(1)
         filename = match.group(2)
-    return bucket, filename 
+    return bucket, filename
 def UploadImage(output,project_prefix):
     info = []
     for it_img  in output:
@@ -51,7 +51,7 @@ def UploadImage(output,project_prefix):
             with open(it_img,'rb') as f :
                 s3.put_object(Bucket=bucket,Key=s3_namefile,Body=f)
     return info
-        
+
 def UpdateStaskCurrentImageToTaskDB(task_id,identity_id,output):
     outputPath = Path(output)
     parrentFolder = outputPath.parent
@@ -60,7 +60,7 @@ def UpdateStaskCurrentImageToTaskDB(task_id,identity_id,output):
     total_file = 0
     for folder in subfolders:
         total_file += get_number_files(folder)
-        
+
     task_model.update_generate_progress(task_id = task_id, identity_id = identity_id, num_finish = total_file, status = "RUNNING")
 
 
@@ -72,11 +72,11 @@ def lambda_handler(event, context):
     if event['response'] == 'OK' and item.status != 'CANCEL':
         outputBatchDir = '/'+  '/'.join(event['batch']['request_json']['output_folder'].split('/')[2:])
         outdir = glob.glob(outputBatchDir+'/*')
-        
+
         print("OutputBatchDir: \n", outputBatchDir)
         print("outdir: \n", outdir)
         UpdateStaskCurrentImageToTaskDB(task_id= event['task_id'], identity_id=event['identity_id'] , output=outputBatchDir)
-        infoUploadS3 =  UploadImage(output=outdir,project_prefix=event['project_prefix'])  
+        infoUploadS3 =  UploadImage(output=outdir,project_prefix=event['project_prefix'])
     return {
         'response': event['response'],
         'gen_id': str(event['batch']['request_json']['codes']),

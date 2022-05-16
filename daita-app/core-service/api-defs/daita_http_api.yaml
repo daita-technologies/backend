@@ -6,7 +6,7 @@ info:
 tags:
 - name: "httpapi:createdBy"
   x-amazon-apigateway-tag-value: "SAM"
-paths:  
+paths:
   /generate/generate_images:
     post:
       responses:
@@ -15,7 +15,7 @@ paths:
       x-amazon-apigateway-integration:
         credentials:
           Fn::GetAtt: [ApiGatewayCallLambdaRole, Arn]
-        uri: 
+        uri:
           Fn::Sub: arn:${AWS::Partition}:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${GenerateCheckConditionFunction.Arn}/invocations
         httpMethod: "POST"
         type: "aws_proxy"
@@ -29,7 +29,7 @@ paths:
       x-amazon-apigateway-integration:
         credentials:
           Fn::GetAtt: [ApiGatewayCallLambdaRole, Arn]
-        uri: 
+        uri:
           Fn::Sub: arn:${AWS::Partition}:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${TaskProgressFunction.Arn}/invocations
         httpMethod: "POST"
         type: "aws_proxy"
@@ -43,7 +43,7 @@ paths:
       x-amazon-apigateway-integration:
         credentials:
           Fn::GetAtt: [ApiGatewayCallLambdaRole, Arn]
-        uri: 
+        uri:
           Fn::Sub: arn:${AWS::Partition}:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${ListMethodsFunction.Arn}/invocations
         httpMethod: "POST"
         type: "aws_proxy"
@@ -57,7 +57,7 @@ paths:
       x-amazon-apigateway-integration:
         credentials:
           Fn::GetAtt: [ApiGatewayCallLambdaRole, Arn]
-        uri: 
+        uri:
           Fn::Sub: arn:${AWS::Partition}:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${SplitDataFunction.Arn}/invocations
         httpMethod: "POST"
         type: "aws_proxy"
@@ -85,7 +85,7 @@ paths:
       x-amazon-apigateway-integration:
         credentials:
           Fn::GetAtt: [ApiGatewayCallLambdaRole, Arn]
-        uri: 
+        uri:
           Fn::Sub: arn:${AWS::Partition}:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${HealthCheckFunction.Arn}/invocations
         httpMethod: "POST"
         type: "aws_proxy"
@@ -99,7 +99,7 @@ paths:
       x-amazon-apigateway-integration:
         credentials:
           Fn::GetAtt: [ApiGatewayCallLambdaRole, Arn]
-        uri: 
+        uri:
           Fn::Sub: arn:${AWS::Partition}:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${HCStatusFunction.Arn}/invocations
         httpMethod: "POST"
         type: "aws_proxy"
@@ -113,7 +113,7 @@ paths:
       x-amazon-apigateway-integration:
         credentials:
           Fn::GetAtt: [ApiGatewayCallLambdaRole, Arn]
-        uri: 
+        uri:
           Fn::Sub: arn:${AWS::Partition}:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${HCInfoFunction.Arn}/invocations
         httpMethod: "POST"
         type: "aws_proxy"
@@ -173,7 +173,7 @@ paths:
       x-amazon-apigateway-integration:
         credentials:
           Fn::GetAtt: [ApiGatewayCallLambdaRole, Arn]
-        uri: 
+        uri:
           Fn::Sub: arn:${AWS::Partition}:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${CreateDecompressTaskFunction.Arn}/invocations
         httpMethod: "POST"
         type: "aws_proxy"
@@ -187,8 +187,36 @@ paths:
       x-amazon-apigateway-integration:
         credentials:
           Fn::GetAtt: [ApiGatewayCallLambdaRole, Arn]
-        uri: 
+        uri:
           Fn::Sub: arn:${AWS::Partition}:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${GetDecompressTaskFunction.Arn}/invocations
+        httpMethod: "POST"
+        type: "aws_proxy"
+        payloadFormatVersion: "2.0"
+
+  /dataflow/create_compress_download_task:
+    post:
+      responses:
+        default:
+          description: "create task for compress_download zip file"
+      x-amazon-apigateway-integration:
+        credentials:
+          Fn::GetAtt: [ApiGatewayCallLambdaRole, Arn]
+        uri:
+          Fn::Sub: arn:${AWS::Partition}:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${CreateCompressDownloadTaskFunction.Arn}/invocations
+        httpMethod: "POST"
+        type: "aws_proxy"
+        payloadFormatVersion: "2.0"
+
+  /dataflow/get_compress_download_task:
+    get:
+      responses:
+        default:
+          description: "create task for decompress zip file"
+      x-amazon-apigateway-integration:
+        credentials:
+          Fn::GetAtt: [ApiGatewayCallLambdaRole, Arn]
+        uri:
+          Fn::Sub: arn:${AWS::Partition}:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${GetCompressDownloadTaskFunction.Arn}/invocations
         httpMethod: "POST"
         type: "aws_proxy"
         payloadFormatVersion: "2.0"
@@ -201,12 +229,12 @@ paths:
       x-amazon-apigateway-integration:
         credentials:
           Fn::GetAtt: [ApiGatewayCallLambdaRole, Arn]
-        uri: 
+        uri:
           Fn::Sub: arn:${AWS::Partition}:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${TaskDashboardInfoFunction.Arn}/invocations
         httpMethod: "POST"
         type: "aws_proxy"
         payloadFormatVersion: "2.0"
-  
+
 x-amazon-apigateway-cors:
   allowMethods:
   - "GET"

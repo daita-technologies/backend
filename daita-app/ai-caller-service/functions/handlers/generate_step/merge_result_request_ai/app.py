@@ -30,7 +30,7 @@ def lambda_handler(event, context):
         if batch['response'] == 'OK':
             task_finish += 1
             result['info_update_s3'].append(batch['info_upload_s3'])
-        
+
     if task_finish == 0:
         result['status'] = 'ERROR'
         result['response'] = 'NOT_OK'

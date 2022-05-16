@@ -17,6 +17,16 @@ task_model = TaskModel(os.environ["TABLE_GENERATE_TASK"],None)
 
 ec2Model = EC2Model()
 s3 = boto3.client('s3')
+def split(uri):
+    if not 's3' in uri[:2]:
+        temp = uri.split('/')
+        bucket = temp[0]
+        filename = '/'.join([temp[i] for i in range(1,len(temp))])
+    else:
+        match =  re.match(r's3:\/\/(.+?)\/(.+)', uri)
+        bucket = match.group(1)
+        filename = match.group(2)
+    return bucket, filename
 
 # def download(uri,folder):
 #     bucket, filename =  split(uri)
@@ -25,11 +35,11 @@ s3 = boto3.client('s3')
 #     s3.download_file(bucket,filename,new_image)
 
 """
-    download_task: 
+    download_task:
         images_download:
         batched_input:
         batched_output:
-        batch_size 
+        batch_size
     output:
             state:
             list_request_ai :

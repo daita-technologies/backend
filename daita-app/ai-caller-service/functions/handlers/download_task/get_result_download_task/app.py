@@ -17,7 +17,7 @@ from response import *
 from utils import *
 from identity_check import *
 s3 = boto3.client('s3')
-    
+
 @error_response
 def lambda_handler(event, context):
     result = None

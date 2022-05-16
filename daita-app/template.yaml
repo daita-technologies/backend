@@ -47,10 +47,15 @@ Resources:
     Type: AWS::ECR::Repository
     Properties:
       RepositoryName: !Sub "${Stage}-${Application}-dataflow-decompress"
-      
+
+  CompressDownloadEcrRepository:
+    Type: AWS::ECR::Repository
+    Properties:
+      RepositoryName: !Sub "${Stage}-${Application}-dataflow-compress-download"
+
 
   #================ ROLES =====================================================
-  # lambda role 
+  # lambda role
   GeneralLambdaExecutionRole:
     Type: AWS::IAM::Role
     Properties:
@@ -58,11 +63,11 @@ Resources:
         Version: "2012-10-17"
         Statement:
         - Effect: "Allow"
-          Principal: 
+          Principal:
             Service: "lambda.amazonaws.com"
           Action:
           - "sts:AssumeRole"
-      Policies:             
+      Policies:
         - PolicyName: 'SecretsManagerParameterAccess'
           PolicyDocument:
             Version: '2012-10-17'
@@ -70,7 +75,7 @@ Resources:
               - Effect: Allow
                 Action:
                   - ssm:GetParam*
-                  - ssm:DescribeParam*                  
+                  - ssm:DescribeParam*
                 Resource:
                   - arn:aws:ssm:*:*:parameter/*
         - PolicyName: 'CloudwatchPermission'
@@ -91,14 +96,14 @@ Resources:
               -
                 Effect: Allow
                 Action:
-                  - cognito-identity:*    
-                  - cognito-idp:*       
+                  - cognito-identity:*
+                  - cognito-idp:*
                 Resource: '*'
         - PolicyName: 'DynamoDBPermission'
           PolicyDocument:
             Version: '2012-10-17'
-            Statement:             
-              - 
+            Statement:
+              -
                 Effect: Allow
                 Action:
                   - dynamodb:*
@@ -106,8 +111,8 @@ Resources:
         - PolicyName: "OtherServicePermission"
           PolicyDocument:
             Version: '2012-10-17'
-            Statement:             
-              - 
+            Statement:
+              -
                 Effect: Allow
                 Action:
                   - events:PutEvents
@@ -125,7 +130,7 @@ Resources:
       LayerName: !Sub "${Stage}-CommonCodeLayer"
       ContentUri: shared-layer/commons/
       CompatibleRuntimes:
-        - python3.8 
+        - python3.8
 
   #================ APPLICATIONS  =============================================
   AICallerService:
@@ -145,14 +150,18 @@ Resources:
   DataFlowService:
     Type: AWS::Serverless::Application
     Properties:
-      Location: dataflow-service/dataflow_service_template.yaml
+      Location: dataflow-service/template.yaml
       Parameters:
         StagePara: !Ref Stage
         ApplicationPara: !Ref Application
         S3BucketName: !Ref S3BucketName
         TableDataFlowTaskName: !GetAtt DatabaseService.Outputs.TableDataFlowTaskName
         DecompressEcrRepositoryName: !Ref DecompressEcrRepository
+        CompressDownloadEcrRepositoryName: !Ref CompressDownloadEcrRepository
+        TableMethodsName: !GetAtt DatabaseService.Outputs.TableMethodsName
         CommonCodeLayerName: !Ref CommonCodeLayer
+
+
 
   DatabaseService:
     Type: AWS::Serverless::Application
@@ -167,8 +176,10 @@ Resources:
       Location: core-service/core_service_template.yaml
       Parameters:
         StagePara: !Ref Stage
-        CallerServiceEventBusArn: !GetAtt AICallerService.Outputs.CallerServiceEventBusArn         
+        CallerServiceEventBusArn: !GetAtt AICallerService.Outputs.CallerServiceEventBusArn
         CallerServiceEventBusName: !GetAtt AICallerService.Outputs.CallerServiceEventBusName
+        StopProcessEventBusArn: !GetAtt  AICallerService.Outputs.StopProcessEventBusArn
+        StopProcessEventBusName: !GetAtt AICallerService.Outputs.StopProcessEventBusName
         TableGenerateTaskName: !GetAtt DatabaseService.Outputs.TableGenerateTaskName
         TableProjectsName: !GetAtt DatabaseService.Outputs.TableProjectsName
         TableMethodsName: !GetAtt DatabaseService.Outputs.TableMethodsName
@@ -183,11 +194,13 @@ Resources:
         HealthCheckEventBusName: !GetAtt HealthCheckService.Outputs.HealthCheckEventBusName
         ParaTableDataFlowTaskName: !GetAtt DatabaseService.Outputs.TableDataFlowTaskName
         ParaDecompressFileStateMachineArn: !GetAtt DataFlowService.Outputs.DecompressFileStateMachineArn
+        ParaCompressDownloadStateMachineArn: !GetAtt DataFlowService.Outputs.CompressDownloadStateMachineArn
         ParaTableDownloadTaskName: !GetAtt DatabaseService.Outputs.TableDownloadTaskName
         ParaTableProjectSumName: !GetAtt DatabaseService.Outputs.TableProjectSumName
         ParaIndexTaskProjectIDTaskID: !GetAtt DatabaseService.Outputs.IndexTaskProjectIDTaskIDName
         StopProcessEventBusArn: !GetAtt  AICallerService.Outputs.StopProcessEventBusArn
         StopProcessEventBusName: !GetAtt AICallerService.Outputs.StopProcessEventBusName
+
         ### for reference image para
         TableReferenceImageTasksName: !GetAtt DatabaseService.Outputs.TableReferenceImageTasksName
         TableReferenceImageInfoName: !GetAtt DatabaseService.Outputs.TableReferenceImageInfoName
@@ -228,6 +241,7 @@ Outputs:
     Value: Stage
   DecompressEcrRepositoryName:
     Value: !Ref DecompressEcrRepository
+  CompressDownloadEcrRepositoryName:
+    Value: !Ref CompressDownloadEcrRepository
   ABC:
     Value: !Ref Stage
-
