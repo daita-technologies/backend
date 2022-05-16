@@ -5,6 +5,8 @@ States:
     Resource: 'arn:aws:states:::states:startExecution.sync:2'
     InputPath: $.detail
     OutputPath: $.Output.Payload
+    HeartbeatSeconds: 60
+    TimeoutSeconds: 1800
     Parameters:
       StateMachineArn: '${PrepareStateMachine}'
       Input:
@@ -32,6 +34,8 @@ States:
     Resource: 'arn:aws:states:::states:startExecution.sync:2'
     InputPath: $.body
     OutputPath: $.Output.Payload
+    HeartbeatSeconds: 60
+    TimeoutSeconds: 1800
     Parameters:
       StateMachineArn: '${DownloadStateMachine}'
       Input:
@@ -57,6 +61,8 @@ States:
     Resource: 'arn:aws:states:::states:startExecution.sync:2'
     InputPath: $
     OutputPath: $
+    HeartbeatSeconds: 60
+    TimeoutSeconds: 1800
     Parameters:
       StateMachineArn: '${GenerateStateMachine}'
       Input:
@@ -101,6 +107,8 @@ States:
     Resource: 'arn:aws:states:::states:startExecution.sync:2'
     InputPath: $
     OutputPath: $
+    HeartbeatSeconds: 60
+    TimeoutSeconds: 1800
     Parameters:
       StateMachineArn: '${UploadStateMachine}'
     Next: Complete

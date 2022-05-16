@@ -12,21 +12,11 @@ from identity_check import *
 from ec2 import EC2Model, startEc2
 from queue_request_AI import assignTaskToEc2
 from models.task_model import TaskModel
-
+from s3_utils import *
 task_model = TaskModel(os.environ["TABLE_GENERATE_TASK"],None)
 
 ec2Model = EC2Model()
 s3 = boto3.client('s3')
-def split(uri):
-    if not 's3' in uri[:2]:
-        temp = uri.split('/')
-        bucket = temp[0]
-        filename = '/'.join([temp[i] for i in range(1,len(temp))])
-    else:
-        match =  re.match(r's3:\/\/(.+?)\/(.+)', uri)
-        bucket = match.group(1)
-        filename = match.group(2)
-    return bucket, filename 
 
 # def download(uri,folder):
 #     bucket, filename =  split(uri)
@@ -93,7 +83,7 @@ def lambda_handler(event, context):
         'task_id': data['task_id'],
         'project_prefix': data['project_prefix'],
         'current_num_retries': 0,
-        'max_retries': 20,
+        'max_retries': 13,
         'is_retry': False ,
         "project_id": data['project_id'],
         "project_name": data['project_name']
