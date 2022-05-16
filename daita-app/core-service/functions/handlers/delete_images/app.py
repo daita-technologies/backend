@@ -74,12 +74,17 @@ def lambda_handler(event, context):
             # delete in data table
             table = get_table_dydb_object(db_resource, key)
             for request in value['ls_rq']:
-
+                item = table.get_item(Key={
+                    'project_id': project_id,
+                    'filename': request['filename']
+                })
+                if not item['healthcheck_id'] is None or  isinstance(item['healthcheck_id'],str):
+                    delete_image_healthycheck_info(db_resource=db_resource,project_id=project_id,healthcheck_id=item['healthcheck_id'])
                 table.delete_item(Key={
                     'project_id': project_id,
                     'filename': request['filename']
                 })
-            
+
             # if we delete in original, we also delete in preprocess
             if key == "ORIGINAL":
                 table = get_table_dydb_object(db_resource, "PREPROCESS")
@@ -146,10 +151,6 @@ def lambda_handler(event, context):
                                         UpdateExpression='SET #TK = :tk, #TN = :tn' 
                                     )
                     print('update ok')
-                else:
-                    item = response['Item']
-                    if not item['healthcheck_id'] is None or  isinstance(item['healthcheck_id'],str):
-                        delete_image_healthycheck_info(db_resource=db_resource,project_id=project_id,healthcheck_id=item['healthcheck_id'])
     except Exception as e:
         print('Error: ', repr(e))
         return convert_response({"error": True, 
