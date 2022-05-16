@@ -119,6 +119,50 @@ paths:
         type: "aws_proxy"
         payloadFormatVersion: "2.0"
 
+  ####===================================================================================
+  #### For reference image API
+  /reference_image/calculate:
+    post:
+      responses:
+        default:
+          description: "health check for dataset"
+      x-amazon-apigateway-integration:
+        credentials:
+          Fn::GetAtt: [ApiGatewayCallLambdaRole, Arn]
+        uri: 
+          Fn::Sub: arn:${AWS::Partition}:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${RICalculateFunction.Arn}/invocations
+        httpMethod: "POST"
+        type: "aws_proxy"
+        payloadFormatVersion: "2.0"
+
+  /reference_image/status:
+    post:
+      responses:
+        default:
+          description: "Check status of task"
+      x-amazon-apigateway-integration:
+        credentials:
+          Fn::GetAtt: [ApiGatewayCallLambdaRole, Arn]
+        uri: 
+          Fn::Sub: arn:${AWS::Partition}:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${RIStatusFunction.Arn}/invocations
+        httpMethod: "POST"
+        type: "aws_proxy"
+        payloadFormatVersion: "2.0"
+
+  /reference_image/info:
+    post:
+      responses:
+        default:
+          description: "Get info of healthcheck"
+      x-amazon-apigateway-integration:
+        credentials:
+          Fn::GetAtt: [ApiGatewayCallLambdaRole, Arn]
+        uri: 
+          Fn::Sub: arn:${AWS::Partition}:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${RIInfoFunction.Arn}/invocations
+        httpMethod: "POST"
+        type: "aws_proxy"
+        payloadFormatVersion: "2.0"
+
   ###===================================================================================
   ### For dataflow API
   /dataflow/create_decompress_task:

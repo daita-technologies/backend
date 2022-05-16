@@ -42,7 +42,8 @@ Parameters:
   SESIdentityName:
     Type: String
     Default: 'noreply@daita.tech'
-
+  CommonCodeLayerName:
+    Type: String
 
 Globals:
   Function:
@@ -51,6 +52,8 @@ Globals:
     Runtime: python3.8
     Architectures:
       - x86_64
+    Layers:
+        - !Ref CommonCodeLayerName
 
 
 Resources:

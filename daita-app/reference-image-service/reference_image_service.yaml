@@ -1,9 +1,9 @@
 AWSTemplateFormatVersion: '2010-09-09'
 Transform: AWS::Serverless-2016-10-31
 Description: >
-  daita-caller-service-app
+  daita-reference-image-service
 
-  Sample SAM Template for daita-caller-service-app
+  Sample SAM Template for daita-reference-image-service
 
 
 Parameters:
@@ -14,19 +14,19 @@ Parameters:
     Type: String
   StagePara:
     Type: String
-  TableHealthCheckTasksName:
+  TableReferenceImageTasksName:
     Type: String
-  TableHealthCheckInfoName:
-    Type: String
-  TableDataAugmentName:
-    Type: String
+  TableReferenceImageInfoName:
+    Type: String  
   TableDataOriginalName:
-    Type: String
-  TableDataPreprocessName:
-    Type: String
+    Type: String  
   CommonCodeLayerName:
     Type: String
   ApplicationPara:
+    Type: String
+  
+  ### System parameters
+  BatchsizeCalculateReferenceImage:
     Type: String
 
 Globals:
@@ -36,17 +36,16 @@ Globals:
       Variables:
         STAGE: !Ref StagePara        
         LOGGING: !Ref minimumLogLevel
-        TABLE_HEALTHCHECK_TASK: !Ref TableHealthCheckTasksName
-        TABLE_HEALTHCHECK_INFO: !Ref TableHealthCheckInfoName
-        TABLE_DATA_AUGMENT: !Ref TableDataAugmentName
-        TABLE_DATA_ORIGINAL: !Ref TableDataOriginalName
-        TABLE_DATA_PREPROCESS: !Ref TableDataPreprocessName    
+        TABLE_REFERENCE_IMAGE_TASK: !Ref TableReferenceImageTasksName
+        TABLE_REFERENCE_IMAGE_INFO: !Ref TableReferenceImageInfoName
+        TABLE_DATA_ORIGINAL: !Ref TableDataOriginalName   
+        BATCHSIZE_REF_IMG: !Ref BatchsizeCalculateReferenceImage     
 
 Resources:
   #================ ROLES =====================================================  
 
   # add role to start state machine from eventbus
-  HealthCheckServiceEventBusRole:
+  ReferenceImageServiceEventBusRole:
     Type: "AWS::IAM::Role"
     Properties:
       AssumeRolePolicyDocument:
@@ -66,20 +65,20 @@ Resources:
               - "states:StartExecution"
               Effect: Allow
               Resource:
-                - !Ref HealthCheckStateMachine
+                - !Ref ReferenceImageStateMachine
 
   #================ EVENT BUS =================================================
-  HealthCheckEventBus:
+  ReferenceImageEventBus:
     Type: AWS::Events::EventBus
     Properties: 
-      Name: !Sub "${StagePara}-${ApplicationPara}-HealthCheckEventBus"
+      Name: !Sub "${StagePara}-${ApplicationPara}-ReferenceImageEventBus"
 
-  HealthCheckEventBusDefaultRule:
+  ReferenceImageEventBusDefaultRule:
     Type: AWS::Events::Rule
     Properties:
       Description: "Default Rule for Any event"
       State: ENABLED
-      EventBusName: !Ref HealthCheckEventBus
+      EventBusName: !Ref ReferenceImageEventBus
       EventPattern:
         source:
           - "source.events"
@@ -87,9 +86,9 @@ Resources:
           - "lambda.event"
       Targets:
         - 
-          Arn: !GetAtt HealthCheckStateMachine.Arn 
-          Id: "HealthCheckSMTarget"
-          RoleArn: !GetAtt HealthCheckServiceEventBusRole.Arn  
+          Arn: !GetAtt ReferenceImageStateMachine.Arn 
+          Id: "ReferenceImageSMTarget"
+          RoleArn: !GetAtt ReferenceImageServiceEventBusRole.Arn  
 
   #================ LAMBDA FUNCTIONS ==========================================
 
@@ -105,57 +104,58 @@ Resources:
       Layers:
         - !Ref CommonCodeLayerName
 
-  UpdateDBFunction:
+  MergeResultFunction:
     Type: AWS::Serverless::Function 
     Properties:
       Runtime: python3.8
       Handler: app.lambda_handler
       Architectures:
         - x86_64
-      CodeUri: functions/handlers/update_db
+      CodeUri: functions/handlers/merge_result
       Role: !Ref LambdaRole
+      MemorySize: 256
       Layers:
         - !Ref CommonCodeLayerName
 
-  CalculateHealthCheckFunction:
+  CalculateReferenceImageFunction:
     Type: AWS::Serverless::Function 
     Properties:
       PackageType: Image            
       Role: !Ref LambdaRole
-      MemorySize: 4096
+      MemorySize: 2048
       Architectures:
         - x86_64
     Metadata:
       Dockerfile: Dockerfile
-      DockerContext: ./functions/handlers/calculate_health_check
+      DockerContext: ./functions/handlers/calculate_reference_image
       DockerTag: python3.8-v1
   
   #================ LOGS FOR STEP FUNCTIONS ===================================
 
-  HealthCheckStateMachineLogGroup:
+  ReferenceImageStateMachineLogGroup:
     Type: AWS::Logs::LogGroup
     Properties: 
-      LogGroupName: !Sub "/aws/vendedlogs/states/${StagePara}-${ApplicationPara}-HealthCheckSMLogGroup"
+      LogGroupName: !Sub "/aws/vendedlogs/states/${StagePara}-${ApplicationPara}-ReferenceImageSMLogGroup"
       RetentionInDays: 7
 
 
   #================ PROCESSOR STATE MACHINE ===================================
 
-  HealthCheckStateMachine:
+  ReferenceImageStateMachine:
     Type: AWS::Serverless::StateMachine
     Properties:
       # Type: EXPRESS
       Type: STANDARD
-      Name: !Sub "${StagePara}-${ApplicationPara}-HealthCheckSM"
+      Name: !Sub "${StagePara}-${ApplicationPara}-ReferenceImageSM"
       Policies:
         - LambdaInvokePolicy:
             FunctionName: !Ref GetDataFunction
         - LambdaInvokePolicy:
-            FunctionName: !Ref CalculateHealthCheckFunction
+            FunctionName: !Ref CalculateReferenceImageFunction
         - LambdaInvokePolicy:
-            FunctionName: !Ref UpdateDBFunction
+            FunctionName: !Ref MergeResultFunction
         - DynamoDBCrudPolicy:
-            TableName: !Ref TableHealthCheckTasksName
+            TableName: !Ref TableReferenceImageTasksName
         - Statement: 
           - Sid: CloudWatchLogsPolicy
             Effect: Allow
@@ -182,26 +182,26 @@ Resources:
             Resource: "arn:aws:iam::*:role/AWS_Events_Invoke_Targets"
       Tracing:
         Enabled: true
-      DefinitionUri: ./statemachine/health_check_state_machine.asl.yaml
+      DefinitionUri: ./statemachine/reference_image_state_machine.asl.yaml
       Logging:
         Level: ALL
         IncludeExecutionData: true
         Destinations:
         - CloudWatchLogsLogGroup:
-            LogGroupArn: !GetAtt HealthCheckStateMachineLogGroup.Arn
+            LogGroupArn: !GetAtt ReferenceImageStateMachineLogGroup.Arn
       DefinitionSubstitutions:
         GetDataFunction: !GetAtt GetDataFunction.Arn
-        CalculateHealthCheckFunction: !GetAtt CalculateHealthCheckFunction.Arn
-        UpdateDBFunction: !GetAtt UpdateDBFunction.Arn
-        TableHealthCheckTasksName: !Ref TableHealthCheckTasksName
+        CalculateReferenceImageFunction: !GetAtt CalculateReferenceImageFunction.Arn
+        MergeResultFunction: !GetAtt MergeResultFunction.Arn
+        TableReferenceImageTasksName: !Ref TableReferenceImageTasksName
 
 Outputs:
   # ServerlessRestApi is an implicit API created out of Events key under Serverless::Function
   # Find out more about other implicit resources you can reference within SAM
   # https://github.com/awslabs/serverless-application-model/blob/master/docs/internals/generated_resources.rst#api 
-  HealthCheckEventBusArn:
+  ReferenceImageEventBusArn:
     Description: "ARN of EventBus"
-    Value: !GetAtt HealthCheckEventBus.Arn
-  HealthCheckEventBusName:
+    Value: !GetAtt ReferenceImageEventBus.Arn
+  ReferenceImageEventBusName:
     Description: "Name of EventBus"
-    Value: !Ref HealthCheckEventBus
+    Value: !Ref ReferenceImageEventBus

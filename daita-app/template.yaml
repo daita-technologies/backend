@@ -11,7 +11,7 @@ Parameters:
   Application:
     Type: String
     Default: daita
-  SecurityGroupIds:
+  SecurityGroupIds: 
     Type: String
     Default: 'sg-0315a5ecee0dc69fe,sg-0b3b2fcc4dc7686ad,sg-af50cbde,sg-07c27f59bc172f180,sg-0796222bd5149736f'
   SubnetIDs:
@@ -35,6 +35,12 @@ Resources:
       Name: !Sub "${Stage}-LimitAugmentTimes"
       Type: String
       Value: "5"
+  BatchsizeCalculateReferenceImage:
+    Type: AWS::SSM::Parameter
+    Properties:
+      Name: !Sub "${Stage}-BatchsizeCalculateReferenceImage"
+      Type: String
+      Value: "4"
 
   #=============== ECR ========================================================
   DecompressEcrRepository:
@@ -114,6 +120,7 @@ Resources:
                   - ecr:*
                   - elasticfilesystem:*
                   - states:*
+                  - s3:*
                 Resource: "*"
 
   #================ LAMBDA LAYERS  ============================================
@@ -152,6 +159,8 @@ Resources:
         DecompressEcrRepositoryName: !Ref DecompressEcrRepository
         CompressDownloadEcrRepositoryName: !Ref CompressDownloadEcrRepository
         TableMethodsName: !GetAtt DatabaseService.Outputs.TableMethodsName
+        CommonCodeLayerName: !Ref CommonCodeLayer
+
 
   DatabaseService:
     Type: AWS::Serverless::Application
@@ -166,14 +175,10 @@ Resources:
       Location: core-service/core_service_template.yaml
       Parameters:
         StagePara: !Ref Stage
-        # CallerServiceEventBusArn: !GetAtt AICallerService.Outputs.CallerServiceEventBusArn
-        # CallerServiceEventBusName: !GetAtt AICallerService.Outputs.CallerServiceEventBusName
-        # StopProcessEventBusArn: !GetAtt  AICallerService.Outputs.StopProcessEventBusArn
-        # StopProcessEventBusName: !GetAtt AICallerService.Outputs.StopProcessEventBusName
-        CallerServiceEventBusArn: dummy
-        CallerServiceEventBusName: dummy
-        StopProcessEventBusArn: dummy
-        StopProcessEventBusName: dummy
+        CallerServiceEventBusArn: !GetAtt AICallerService.Outputs.CallerServiceEventBusArn
+        CallerServiceEventBusName: !GetAtt AICallerService.Outputs.CallerServiceEventBusName
+        StopProcessEventBusArn: !GetAtt  AICallerService.Outputs.StopProcessEventBusArn
+        StopProcessEventBusName: !GetAtt AICallerService.Outputs.StopProcessEventBusName
         TableGenerateTaskName: !GetAtt DatabaseService.Outputs.TableGenerateTaskName
         TableProjectsName: !GetAtt DatabaseService.Outputs.TableProjectsName
         TableMethodsName: !GetAtt DatabaseService.Outputs.TableMethodsName
@@ -182,33 +187,49 @@ Resources:
         LimitPreprocessTimesName: !Ref LimitPreprocessTimes
         LimitAugmentTimesName: !Ref LimitAugmentTimes
         CommonCodeLayerName: !Ref CommonCodeLayer
-        # HealthCheckEventBusArn: !GetAtt HealthCheckService.Outputs.HealthCheckEventBusArn
-        # HealthCheckEventBusName: !GetAtt HealthCheckService.Outputs.HealthCheckEventBusName
-        HealthCheckEventBusArn: a
-        HealthCheckEventBusName: bc
+        HealthCheckEventBusArn: !GetAtt HealthCheckService.Outputs.HealthCheckEventBusArn
+        HealthCheckEventBusName: !GetAtt HealthCheckService.Outputs.HealthCheckEventBusName
         ParaTableDataFlowTaskName: !GetAtt DatabaseService.Outputs.TableDataFlowTaskName
         ParaDecompressFileStateMachineArn: !GetAtt DataFlowService.Outputs.DecompressFileStateMachineArn
         ParaCompressDownloadStateMachineArn: !GetAtt DataFlowService.Outputs.CompressDownloadStateMachineArn
         ParaTableDownloadTaskName: !GetAtt DatabaseService.Outputs.TableDownloadTaskName
         ParaTableProjectSumName: !GetAtt DatabaseService.Outputs.TableProjectSumName
         ParaIndexTaskProjectIDTaskID: !GetAtt DatabaseService.Outputs.IndexTaskProjectIDTaskIDName
+        ### for reference image para
+        TableReferenceImageTasksName: !GetAtt DatabaseService.Outputs.TableReferenceImageTasksName
+        TableReferenceImageInfoName: !GetAtt DatabaseService.Outputs.TableReferenceImageInfoName
+        ReferenceImageEventBusName: !GetAtt ReferenceImageService.Outputs.ReferenceImageEventBusName
 
 
-  # HealthCheckService:
-  #   Type: AWS::Serverless::Application
-  #   Properties:
-  #     Location: health-check-service/health_check_service.yaml
-  #     Parameters:
-  #       StagePara: !Ref Stage
-  #       LambdaRole: !GetAtt GeneralLambdaExecutionRole.Arn
-  #       TableHealthCheckTasksName: !GetAtt DatabaseService.Outputs.TableHealthCheckTasksName
-  #       TableHealthCheckInfoName: !GetAtt DatabaseService.Outputs.TableHealthCheckInfoName
-  #       TableDataAugmentName: !GetAtt DatabaseService.Outputs.TableDataAugmentName
-  #       TableDataOriginalName: !GetAtt DatabaseService.Outputs.TableDataOriginalName
-  #       TableDataPreprocessName: !GetAtt DatabaseService.Outputs.TableDataPreprocessName
-  #       CommonCodeLayerName: !Ref CommonCodeLayer
-  #       ApplicationPara: !Ref Application
+  HealthCheckService:
+    Type: AWS::Serverless::Application
+    Properties:
+      Location: health-check-service/health_check_service.yaml
+      Parameters:
+        StagePara: !Ref Stage
+        LambdaRole: !GetAtt GeneralLambdaExecutionRole.Arn
+        TableHealthCheckTasksName: !GetAtt DatabaseService.Outputs.TableHealthCheckTasksName
+        TableHealthCheckInfoName: !GetAtt DatabaseService.Outputs.TableHealthCheckInfoName
+        TableDataAugmentName: !GetAtt DatabaseService.Outputs.TableDataAugmentName
+        TableDataOriginalName: !GetAtt DatabaseService.Outputs.TableDataOriginalName
+        TableDataPreprocessName: !GetAtt DatabaseService.Outputs.TableDataPreprocessName
+        CommonCodeLayerName: !Ref CommonCodeLayer
+        ApplicationPara: !Ref Application
 
+  ReferenceImageService:
+    Type: AWS::Serverless::Application
+    Properties:
+      Location: reference-image-service/reference_image_service.yaml
+      Parameters:
+        StagePara: !Ref Stage
+        LambdaRole: !GetAtt GeneralLambdaExecutionRole.Arn
+        TableReferenceImageTasksName: !GetAtt DatabaseService.Outputs.TableReferenceImageTasksName
+        TableReferenceImageInfoName: !GetAtt DatabaseService.Outputs.TableReferenceImageInfoName
+        TableDataOriginalName: !GetAtt DatabaseService.Outputs.TableDataOriginalName
+        CommonCodeLayerName: !Ref CommonCodeLayer
+        ApplicationPara: !Ref Application
+        BatchsizeCalculateReferenceImage: !Ref BatchsizeCalculateReferenceImage
+        
 Outputs:
   ZZBC:
     Value: Stage

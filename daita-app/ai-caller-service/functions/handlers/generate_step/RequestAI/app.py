@@ -59,7 +59,9 @@ def lambda_handler(event, context):
     result = event
     if result['is_retry'] == True:
         time.sleep(int(result['current_num_retries'])*30)
-    # print(event)
+
+    print("Input event: ", event)
+
     batch = result['batch']
     item = generate_task_model.get_task_info(result['identity_id'] ,result['task_id'])
     if item.status == 'CANCEL':
@@ -67,9 +69,8 @@ def lambda_handler(event, context):
         result['is_retry'] = False
         deleteMessageInQueue(batch)
         return result
-
-    print(f"--Count current message in queue: {batch['queue']} is {countTaskInQueue(batch['queue'])}")
-
+    
+    print(f"--Count current message in queue: {batch['queue']} is {countTaskInQueue(batch['queue'])}")  
     print("request AI body: \n", batch['request_json'])
     try :
         instance = ec2_resource.Instance(batch['ec2_id'])
@@ -95,7 +96,6 @@ def lambda_handler(event, context):
     # print(output.text)
     result['response'] = 'OK'
     result['is_retry'] = False
-
     print("-----Normal Delete message ------------------------ ")
     deleteMessageInQueue(batch)
 

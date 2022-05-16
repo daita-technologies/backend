@@ -35,6 +35,12 @@ class GenerateImageClass(LambdaBaseClass):
         self.data_type = body.get(KEY_NAME_DATA_TYPE, 'ORIGINAL')  # type is one of ORIGINAL or PREPROCESS, default is original        
         self.num_aug_per_imgs = min(MAX_NUMBER_GEN_PER_IMAGES, body.get(KEY_NAME_NUM_AUG_P_IMG, 1)) # default is 1
         self.data_number = body[KEY_NAME_DATA_NUMBER]  # array of number data in train/val/test  [100, 19, 1]
+        self.process_type = body.get(KEY_NAME_PROCESS_TYPE, VALUE_TYPE_METHOD_PREPROCESS)
+        self.reference_images = body.get(KEY_NAME_REFERENCE_IMAGES, {})
+
+        ### update value for ls_reference
+        for method, s3_link in self.reference_images.items():
+            self.reference_images[method] = f"s3://{s3_link}"
 
     def _check_input_value(self):
         if len(self.data_number)>0:
@@ -42,10 +48,12 @@ class GenerateImageClass(LambdaBaseClass):
                 raise Exception(MESS_NUMBER_TRAINING)        
         for number in self.data_number:
             if number<0:
-                raise Exception(MESS_NUMBER_DATA)
-            
-        if len(self.ls_methods_id) == 0:
-            raise Exception(MESS_LIST_METHODS_EMPTY)
+                raise Exception(MESS_NUMBER_DATA)   
+
+        ### if len(ls_reference)>0, it means that we are in the expert mode, 
+        ### we will only work with id PRE-2,3,4,5,6,8  
+        ### and the code in ls_methods_id much match with code in ls_re
+        # TODO
 
         return
 
@@ -61,6 +69,9 @@ class GenerateImageClass(LambdaBaseClass):
 
     def _get_type_method(self, ls_methods_id):
         type_method = VALUE_TYPE_METHOD_PREPROCESS
+        if len(ls_methods_id)==0:
+            return self.process_type
+
         if VALUE_TYPE_METHOD_NAME_AUGMENT in ls_methods_id[0]:
             type_method = VALUE_TYPE_METHOD_AUGMENT
         elif VALUE_TYPE_METHOD_NAME_PREPROCESS in ls_methods_id[0]:
@@ -88,13 +99,13 @@ class GenerateImageClass(LambdaBaseClass):
 
         return times_generated, times_preprocess, s3_prefix
 
-    def _update_generate_times(self, identity_id, project_name, type_method, times_augment, times_preprocess):
+    def _update_generate_times(self, identity_id, project_name, type_method, times_augment, times_preprocess, reference_images):
         if type_method == VALUE_TYPE_METHOD_PREPROCESS:
             times_preprocess += 1
         elif type_method == VALUE_TYPE_METHOD_AUGMENT:
             times_augment += 1
 
-        self.project_model.update_project_generate_times(identity_id, project_name, times_augment, times_preprocess)
+        self.project_model.update_project_generate_times(identity_id, project_name, times_augment, times_preprocess, reference_images)
 
         return times_preprocess, times_augment
 
@@ -119,6 +130,13 @@ class GenerateImageClass(LambdaBaseClass):
 
         return entries[0]["EventId"]  
 
+    def _update_ls_method_for_preprocessing(self, ls_method_id):
+        if "PRE-001" in ls_method_id:
+            for method in list(ls_method_id):
+                if method not in LS_METHOD_KEEP_IF_EXIST_PRE001:
+                    ls_method_id.remove(method)
+        return ls_method_id
+
     def handle(self, event, context):
     
         ### parse body
@@ -128,20 +146,30 @@ class GenerateImageClass(LambdaBaseClass):
         identity_id = self.get_identity(self.id_token) 
 
         ### check running task        
-        self._check_running_task(self.generate_task_model, identity_id, self.project_id)
+        self._check_running_task(self.generate_task_model, identity_id, self.project_id)        
         
         ### get type of process
         type_method = self._get_type_method(self.ls_methods_id)
 
+        ### update the ls_method_id for preprocess
+        if type_method == VALUE_TYPE_METHOD_PREPROCESS:
+            self.ls_methods_id = self._update_ls_method_for_preprocessing(self.ls_methods_id)
+            print(f"ls_method_id after updating: {self.ls_methods_id}")
+
         ### check generate times limitation and get times of preprocess and augment
-        times_augment, times_preprocess, s3_prefix = self._check_generate_times_limitation(identity_id, self.project_name, type_method)   
+        times_augment, times_preprocess, s3_prefix = self._check_generate_times_limitation(
+                                                        identity_id, self.project_name, type_method)
 
         ### update the times_augment and times_preprocess to DB
-        times_preprocess, times_augment = self._update_generate_times(identity_id, self.project_name, type_method, times_augment, times_preprocess)
+        ### update reference images for last running
+        times_preprocess, times_augment = self._update_generate_times(identity_id, 
+                                                            self.project_name, type_method, 
+                                                            times_augment, times_preprocess, self.reference_images)       
 
         ### check if preprocess then reset in prj sumary
         if type_method == VALUE_TYPE_METHOD_PREPROCESS:
-            self.project_sum_model.reset_prj_sum_preprocess(project_id = self.project_id, type_data=VALUE_TYPE_DATA_PREPROCESSED)
+            self.project_sum_model.reset_prj_sum_preprocess(project_id = self.project_id, 
+                                                            type_data=VALUE_TYPE_DATA_PREPROCESSED)
 
         ### create taskID and update to DB
         task_id = self._create_task(identity_id, self.project_id, type_method)
@@ -158,7 +186,9 @@ class GenerateImageClass(LambdaBaseClass):
             KEY_NAME_TIMES_AUGMENT: times_augment,
             KEY_NAME_TIMES_PREPROCESS: times_preprocess,
             KEY_NAME_TASK_ID: task_id,
-            KEY_NAME_ID_TOKEN: self.id_token
+            KEY_NAME_ID_TOKEN: self.id_token,
+            KEY_NAME_PROCESS_TYPE: type_method,
+            KEY_NAME_REFERENCE_IMAGES: self.reference_images
         }
         event_id = self._put_event_bus(detail_pass_para) 
                 

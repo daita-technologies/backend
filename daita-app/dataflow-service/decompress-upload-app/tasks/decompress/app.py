@@ -31,14 +31,14 @@ def update_task_status(status):
             ":st": status,
             ":ua": convert_current_date_to_iso8601()
         },
-        UpdateExpression="SET #ST = :st, updated_at = :ua"
+        UpdateExpression="SET #ST = :st, updated_time = :ua"
     )
 
 def main():
     work_dir = TASK_ID
     filename = os.path.basename(FILE_URL)
     file_stemp = os.path.splitext(filename)[0]
-    destination_dir = os.path.join(work_dir, file_stemp)   
+    destination_dir = os.path.join(work_dir, file_stemp)
 
     try:
         table.update_item(
@@ -52,21 +52,21 @@ def main():
                 ":ua": convert_current_date_to_iso8601(),
                 ":dst": destination_dir
             },
-            UpdateExpression="SET #ST = :st, updated_at = :ua, destination_dir = :dst"
+            UpdateExpression="SET #ST = :st, updated_time = :ua, destination_dir = :dst"
         )
 
         efs_work_dir = os.path.join(EFS_MOUNT_POINT, work_dir)
         efs_destination_dir = os.path.join(EFS_MOUNT_POINT, destination_dir)
 
         commands = [
-            f"mkdir -p {efs_work_dir}",
-            f"cd {efs_work_dir}",
-            f"/usr/local/bin/aws s3 cp {FILE_URL} {filename}",
-            f"unzip {filename} -d {efs_destination_dir}",
-            f"rm {filename}"
+            f"mkdir -p '{efs_work_dir}'",
+            f"cd '{efs_work_dir}'",
+            f"/usr/local/bin/aws s3 cp '{FILE_URL}' '{filename}'",
+            f"unzip -j -d '{efs_destination_dir}' '{filename}'",
+            f"rm '{filename}'"
         ]
         command = " && ".join(commands)
-        
+
         subprocess.run(command, shell=True)
     except Exception:
         update_task_status("ERROR")

@@ -53,6 +53,8 @@ Parameters:
     Type: String
   LambdaRoleARN:
     Type: String
+  LambdaRoleARN:
+    Type: String
 
 Resources:
   LambdaExecutionRole:
@@ -553,7 +555,8 @@ Resources:
           - "dynamodb:DescribeTable"
           - "dynamodb:ConditionCheckItem"
           - "lambda:InvokeFunction"
-          Resource: "*"
+          Resource: "*" 
+
   UpdateStatusTask:
     Type: AWS::Serverless::Function
     Properties:

@@ -13,7 +13,7 @@ def get_running_task(table_name, db_resource, ls_tasks, identity_id, res_project
     item_tasks = table.query(                
             ProjectionExpression='project_id, task_id, process_type',
             KeyConditionExpression=Key('identity_id').eq(identity_id),
-            FilterExpression=Attr('status').ne('FINISH') & Attr('status').ne('ERROR') & Attr('project_id').eq(res_projectid)               
+            FilterExpression=Attr('status').ne('FINISH') & Attr('status').ne('ERROR') & Attr('status').ne('CANCEL') & Attr('project_id').eq(res_projectid)               
         )
     for item in item_tasks['Items']:
         ls_tasks.append({
@@ -54,6 +54,14 @@ def lambda_handler(event, context):
         is_sample = res_project.get("is_sample", False)
         gen_status = res_project.get("gen_status", "FINISH")  # default is finish, else GENERATING
         res_times_generated = int(res_project.get('times_generated', 0))
+        reference_images = res_project.get("reference_images", {})
+        reference_info = {}
+        for method, s3_path in reference_images.items():
+            filename = s3_path.split("/")[-1]
+            reference_info[method] = {
+                "s3_path": s3_path,
+                "filename": filename
+            }
         
     except Exception as e:
         print('Error: ', repr(e))
@@ -96,6 +104,7 @@ def lambda_handler(event, context):
         ls_tasks = get_running_task("down_tasks", db_resource, ls_tasks, identity_id, res_projectid)
         ls_tasks = get_running_task("dev-healthcheck-tasks", db_resource, ls_tasks, identity_id, res_projectid, "HEALTHCHECK")
         ls_tasks = get_running_task("dev-dataflow-task", db_resource, ls_tasks, identity_id, res_projectid)
+        ls_tasks = get_running_task("dev-reference-image-tasks", db_resource, ls_tasks, identity_id, res_projectid)
         
         return convert_response({'data': {
                     "identity_id": identity_id,
@@ -106,6 +115,7 @@ def lambda_handler(event, context):
                     "gen_status": gen_status,
                     "ls_task": ls_tasks,
                     "groups": groups,
+                    "reference_images": reference_info
                 }, 
             "error": False, 
             "success": True, 
@@ -119,7 +129,8 @@ def lambda_handler(event, context):
                     "is_sample": is_sample,
                     "gen_status": gen_status,
                     "ls_task": [],
-                    "groups": None
+                    "groups": None,
+                    "reference_images": reference_info
                 },
             "error": False, 
             "success": True, 
