@@ -22,8 +22,9 @@ def lambda_handler(event, context):
     if item.status != 'CANCEL':
         task_model.update_status(event['task_id'], event['identity_id'], event['status'])
     if event['status'] == 'FINISH' or item.status == 'CANCEL':
-        folder = os.path.join(os.environ['EFSPATH'] , event['task_id'])
-        shutil.rmtree(folder)
+        folder = os.environ['ROOTEFS'] + os.environ['EFSPATH'] +'/'+ event['task_id'] +'/'
+        if os.path.exists(folder):
+            shutil.rmtree(folder)
     return generate_response(
         message="OK",
         status_code=HTTPStatus.OK

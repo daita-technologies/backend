@@ -562,6 +562,16 @@ Resources:
     Type: AWS::Serverless::Function
     Properties:
       CodeUri: functions/handlers/generate_step/updateStatusTask
+      VpcConfig:
+        SecurityGroupIds: !Split [',', !Join [',', !Ref SecurityGroupIdsPara]] 
+        SubnetIds: !Split [',', !Join [',', !Ref SubnetIDsPara]] 
+      FileSystemConfigs:
+        - Arn: !GetAtt EFSAccessPoint.Arn
+          LocalMountPath: !Ref EFSStorageAI
+      Environment:
+        Variables:
+          EFSPATH: !Ref EFSStorageAI
+          ROOTEFS: !Ref ROOTEFS
       Policies:
       - Statement:
         - Sid: ALLOWCRUDDynamoDB
@@ -924,6 +934,21 @@ Resources:
             - !Ref DownloadStateMachine
             - !Ref GenerateStateMachine
             - !Ref UploadStateMachine
+          - Sid: ALLOWCRUDDynamoDB
+            Effect: Allow
+            Action:
+            - "dynamodb:GetItem"
+            - "dynamodb:DeleteItem"
+            - "dynamodb:PutItem"
+            - "dynamodb:Scan"
+            - "dynamodb:Query"
+            - "dynamodb:UpdateItem"
+            - "dynamodb:BatchWriteItem"
+            - "dynamodb:BatchGetItem"
+            - "dynamodb:DescribeTable"
+            - "dynamodb:ConditionCheckItem"
+            - "lambda:InvokeFunction"
+            Resource: "*"
           - Sid: CloudWatchLogsPolicy
             Effect: Allow
             Action:
@@ -1025,6 +1050,21 @@ Resources:
             FunctionName: !Ref HandleMergeResultDownloadImages
             FunctionName: !Ref HandleGetResultDownloadTask
         - Statement:
+          - Sid: ALLOWCRUDDynamoDB
+            Effect: Allow
+            Action:
+            - "dynamodb:GetItem"
+            - "dynamodb:DeleteItem"
+            - "dynamodb:PutItem"
+            - "dynamodb:Scan"
+            - "dynamodb:Query"
+            - "dynamodb:UpdateItem"
+            - "dynamodb:BatchWriteItem"
+            - "dynamodb:BatchGetItem"
+            - "dynamodb:DescribeTable"
+            - "dynamodb:ConditionCheckItem"
+            - "lambda:InvokeFunction"
+            Resource: "*"
           - Sid: CloudWatchLogsPolicy
             Effect: Allow
             Action:
@@ -1137,7 +1177,23 @@ Resources:
       Policies:
         - LambdaInvokePolicy:
             FunctionName: !Ref PreprocessGenerateTask  
+        
         - Statement:
+          - Sid: ALLOWCRUDDynamoDB
+            Effect: Allow
+            Action:
+            - "dynamodb:GetItem"
+            - "dynamodb:DeleteItem"
+            - "dynamodb:PutItem"
+            - "dynamodb:Scan"
+            - "dynamodb:Query"
+            - "dynamodb:UpdateItem"
+            - "dynamodb:BatchWriteItem"
+            - "dynamodb:BatchGetItem"
+            - "dynamodb:DescribeTable"
+            - "dynamodb:ConditionCheckItem"
+            - "lambda:InvokeFunction"
+            Resource: "*"
           - Sid: CloudWatchLogsPolicy
             Effect: Allow
             Action:

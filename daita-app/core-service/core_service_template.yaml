@@ -39,7 +39,18 @@ Parameters:
     Type: String
   CallerServiceEventBusName:
     Type: String
-
+  ProjectSummary:
+    Type: String
+    Default: prj_sum_all
+  DataOrigin:
+    Type: String
+    Default: data_original
+  TableProject:
+    Type: String
+    Default: projects
+  TableProjectDel:
+    Type: String
+    Default: projects_save_delete
   TableGenerateTaskName:
     Type: String
   TableProjectsName:
@@ -235,16 +246,30 @@ Resources:
       Environment:
         Variables:
           EVENT_BUS_NAME: !Ref StopProcessEventBusName
-  # DeleteImages:
-  #   Type: AWS::Serverless::Function
-  #   Properties:
-  #     CodeUri: functions/handlers/delete_images
-  #     Role: !GetAtt LambdaExecutionRole.Arn
-  #     Environment:
-  #       Variables:
-  #         TABLE_HEALTHCHECK_INFO: !Ref TableHealthCheckInfoName
-  #         T_PROJECT_SUMMARY:
-  #         T_DATA_ORI: 
+  DeleteImages:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: functions/handlers/delete_images
+      Role: !GetAtt LambdaExecutionRole.Arn
+      Environment:
+        Variables:
+          TABLE_HEALTHCHECK_INFO: !Ref TableHealthCheckInfoName
+          T_PROJECT_SUMMARY: !Ref ProjectSummary
+          T_DATA_ORI: !Ref DataOrigin
+  DeleteProject:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: functions/handlers/delete_project
+      Role: !GetAtt LambdaExecutionRole.Arn
+      Environment:
+        Variables:
+          TABLE_HEALTHCHECK_INFO: !Ref TableHealthCheckInfoName
+          TABLE_HEALTHCHECK_TASK: !Ref TableHealthCheckTasksName
+          T_PROJECT_SUMMARY: !Ref ProjectSummary
+          T_DATA_ORI: !Ref DataOrigin
+          T_TASKS: !Ref TableGenerateTaskName
+          T_PROJECT: !Ref TableProject
+          T_PROJECT_DEL: !Ref TableProjectDel
   ### for health check functions
   HealthCheckFunction:
     Type: AWS::Serverless::Function
