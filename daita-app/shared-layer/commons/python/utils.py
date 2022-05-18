@@ -43,3 +43,55 @@ def split_ls_into_batch(ls_info, batch_size=8):
         ls_batch.append(ls_batch_current)
     
     return ls_batch
+def get_data_table_name(type_method):
+    if type_method == 'ORIGINAL':
+        return 'data_original'
+    elif type_method == 'AUGMENT':
+        return 'data_augment'
+    elif type_method == 'PREPROCESS':
+        return 'data_preprocess'
+    else:
+        raise Exception(f'Method {type_method} is not exist!')
+def get_table_dydb_object(db_resource, type_method):
+    table_name = get_data_table_name(type_method)
+    return db_resource.Table(table_name)
+
+def dydb_update_prj_sum(table, project_id, type_method, count_add, size_add):
+    response = table.update_item(
+            Key={
+                'project_id': project_id,
+                'type': type_method,
+            },
+            ExpressionAttributeNames= {
+                '#CO': 'count',
+                '#TS': 'total_size'
+            },
+            ExpressionAttributeValues = {
+                ':ts':  -size_add,
+                ':co': -count_add
+            },
+            UpdateExpression = 'ADD #TS :ts, #CO :co'
+        )
+def dydb_update_delete_project(table, table_project_delete, identity_id, project_name):
+    # get current project
+    response = table.get_item(Key={
+                'identity_id': identity_id,
+                'project_name': project_name,
+            })
+
+    if response.get('Item'):
+        new_item = response['Item']
+        new_item['delete_date'] = convert_current_date_to_iso8601()
+
+        # create new item in table project delete
+        table_project_delete.put_item(
+                Item = new_item
+            )
+
+        # delete item in table project
+        table.delete_item(
+                Key = {
+                    'identity_id': identity_id,
+                    'project_name': project_name,
+                }
+            )

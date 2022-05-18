@@ -6,8 +6,11 @@ import base64
 import os
 
 from boto3.dynamodb.conditions import Key, Attr
-from utils import convert_response, aws_get_identity_id, get_table_dydb_object, dydb_update_prj_sum
-
+from config import *
+from response import *
+from error_messages import *
+from identity_check import *
+from utils import *
 MAX_NUMBER_ITEM_DELETE = 100
 
 
@@ -57,10 +60,12 @@ def lambda_handler(event, context):
             }
             dict_request[type_method]['ls_rq'].append(request)
     except Exception as e:
-        return convert_response({"error": True, 
-                "success": False, 
-                "message": repr(e), 
-                "data": None})
+        return  generate_response(
+            message=str(e),
+            status_code=HTTPStatus.OK,
+            data={ },
+            error= False
+        )    
 
     # update data to DB 
     # we use batch_write, it means that if key are existed in tables => overwrite
@@ -78,8 +83,9 @@ def lambda_handler(event, context):
                     'project_id': project_id,
                     'filename': request['filename']
                 })
-                if not item['healthcheck_id'] is None or  isinstance(item['healthcheck_id'],str):
-                    delete_image_healthycheck_info(db_resource=db_resource,project_id=project_id,healthcheck_id=item['healthcheck_id'])
+                print(item)
+                if not item['Item']['healthcheck_id'] is None or  isinstance(item['Item']['healthcheck_id'],str):
+                    delete_image_healthycheck_info(db_resource=db_resource,project_id=project_id,healthcheck_id=item['Item']['healthcheck_id'])
                 table.delete_item(Key={
                     'project_id': project_id,
                     'filename': request['filename']
@@ -153,12 +159,15 @@ def lambda_handler(event, context):
                     print('update ok')
     except Exception as e:
         print('Error: ', repr(e))
-        return convert_response({"error": True, 
-                "success": False, 
-                "message": repr(e), 
-                "data": None})
+        return generate_response(
+            message=str(e),
+            status_code=HTTPStatus.OK,
+            data={ },
+            error= False
+        )    
     
-    return convert_response({'data': {}, 
-            "error": False, 
-            "success": True, 
-            "message": None})
+    return generate_response(
+            message="OK",
+            status_code=HTTPStatus.OK,
+            data={ },
+        )    
