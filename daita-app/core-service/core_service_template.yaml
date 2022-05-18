@@ -23,11 +23,11 @@ Globals:
         TABLE_PROJECTS_NAME: !Ref TableProjectsName
         TABLE_METHODS_NAME: !Ref TableMethodsName
         TABLE_HEALTHCHECK_TASK: !Ref TableHealthCheckTasksName
-        TABLE_HEALTHCHECK_INFO: !Ref TableHealthCheckInfoName 
-        INDEX_TASK_PROJECTID_TASKID: !Ref ParaIndexTaskProjectIDTaskID       
+        TABLE_HEALTHCHECK_INFO: !Ref TableHealthCheckInfoName
+        INDEX_TASK_PROJECTID_TASKID: !Ref ParaIndexTaskProjectIDTaskID
     Layers:
-        - !Ref CommonCodeLayerName  
-     
+        - !Ref CommonCodeLayerName
+
 ## The general rule seems to be to use !Sub for in line substitutions and !ref for stand alone text
 Parameters:
   minimumLogLevel:
@@ -89,7 +89,9 @@ Parameters:
     Type: String
   
   ParaDecompressFileStateMachineArn:
-    Type: String  
+    Type: String
+  ParaCompressDownloadStateMachineArn:
+    Type: String
   CognitoUserPoolId:
     Type:  String
     Default: us-east-2_ZbwpnYN4g
@@ -101,7 +103,7 @@ Parameters:
   StopProcessEventBusName:
     Type: String
 
-Resources:  
+Resources:
   #================ ROLES =====================================================
 
   # use this role for apigateway access lambda
@@ -112,7 +114,7 @@ Resources:
         Version: "2012-10-17"
         Statement:
         - Effect: "Allow"
-          Principal: 
+          Principal:
             Service: "apigateway.amazonaws.com"
           Action:
           - "sts:AssumeRole"
@@ -124,9 +126,9 @@ Resources:
             Action:
             - "lambda:InvokeFunction"
             Effect: Allow
-            Resource: "*"              
-  
-  ### lambda role 
+            Resource: "*"
+
+  ### lambda role
   LambdaExecutionRole:
     Type: AWS::IAM::Role
     Properties:
@@ -134,11 +136,11 @@ Resources:
         Version: "2012-10-17"
         Statement:
         - Effect: "Allow"
-          Principal: 
+          Principal:
             Service: "lambda.amazonaws.com"
           Action:
           - "sts:AssumeRole"
-      Policies:             
+      Policies:
         - PolicyName: 'SecretsManagerParameterAccess'
           PolicyDocument:
             Version: '2012-10-17'
@@ -146,7 +148,7 @@ Resources:
               - Effect: Allow
                 Action:
                   - ssm:GetParam*
-                  - ssm:DescribeParam*                  
+                  - ssm:DescribeParam*
                 Resource:
                   - arn:aws:ssm:*:*:parameter/*
         - PolicyName: 'CloudwatchPermission'
@@ -167,14 +169,14 @@ Resources:
               -
                 Effect: Allow
                 Action:
-                  - cognito-identity:*    
-                  - cognito-idp:*       
+                  - cognito-identity:*
+                  - cognito-idp:*
                 Resource: '*'
         - PolicyName: 'DynamoDBPermission'
           PolicyDocument:
             Version: '2012-10-17'
-            Statement:             
-              - 
+            Statement:
+              -
                 Effect: Allow
                 Action:
                   - dynamodb:*
@@ -182,14 +184,14 @@ Resources:
         - PolicyName: "OtherServicePermission"
           PolicyDocument:
             Version: '2012-10-17'
-            Statement:             
-              - 
+            Statement:
+              -
                 Effect: Allow
                 Action:
                   - events:PutEvents
                 Resource: "*"
               - Effect: Allow
-                Action: 
+                Action:
                   - states:StartExecution
                 Resource: "*"
 
@@ -204,10 +206,10 @@ Resources:
           Name: AWS::Include
           Parameters:
             Location: './api-defs/daita_http_api.yaml'
-      
 
-  #================ LAMBDA FUNCTIONS ==========================================    
-                
+
+  #================ LAMBDA FUNCTIONS ==========================================
+
   GenerateCheckConditionFunction:
     Type: AWS::Serverless::Function
     Properties:
@@ -224,13 +226,13 @@ Resources:
     Type: AWS::Serverless::Function
     Properties:
       CodeUri: functions/handlers/generate/task_progress
-      Role: !GetAtt LambdaExecutionRole.Arn     
+      Role: !GetAtt LambdaExecutionRole.Arn
 
   ListMethodsFunction:
     Type: AWS::Serverless::Function
     Properties:
       CodeUri: functions/handlers/generate/list_methods
-      Role: !GetAtt LambdaExecutionRole.Arn      
+      Role: !GetAtt LambdaExecutionRole.Arn
 
   SplitDataFunction:
     Type: AWS::Serverless::Function
@@ -339,7 +341,7 @@ Resources:
         Variables:
           DecompressFileStateMachineArn: !Ref ParaDecompressFileStateMachineArn
           DecompressTaskTable: !Ref ParaTableDataFlowTaskName
-          ProjectsTable: !Ref TableProjectsName         
+          ProjectsTable: !Ref TableProjectsName
 
   GetDecompressTaskFunction:
     Type: AWS::Serverless::Function
@@ -348,7 +350,26 @@ Resources:
       Role: !GetAtt LambdaExecutionRole.Arn
       Environment:
         Variables:
-          DecompressTaskTable: !Ref ParaTableDataFlowTaskName  
+          DecompressTaskTable: !Ref ParaTableDataFlowTaskName
+
+  CreateCompressDownloadTaskFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: functions/handlers/dataflow/create_compress_download_task
+      Role: !GetAtt LambdaExecutionRole.Arn
+      Environment:
+        Variables:
+          CompressDownloadStateMachineArn: !Ref ParaCompressDownloadStateMachineArn
+          TableDataFlowTaskName: !Ref ParaTableDataFlowTaskName
+
+  GetCompressDownloadTaskFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: functions/handlers/dataflow/get_compress_download_task
+      Role: !GetAtt LambdaExecutionRole.Arn
+      Environment:
+        Variables:
+          TableDataFlowTaskName: !Ref ParaTableDataFlowTaskName
 
   ### For task dashboard function
   TaskDashboardInfoFunction:
