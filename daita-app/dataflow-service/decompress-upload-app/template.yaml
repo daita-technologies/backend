@@ -33,6 +33,8 @@ Parameters:
     Type: String
   VPCEndpointForDynamoDB:
     Type: String
+  CommonCodeLayerName:
+    Type: String
 
 Globals:
   Function:
@@ -41,6 +43,8 @@ Globals:
     Runtime: python3.8
     Architectures:
       - x86_64
+    Layers:
+      - !Ref CommonCodeLayerName
 
 
 Resources:

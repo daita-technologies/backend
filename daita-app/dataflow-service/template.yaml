@@ -42,6 +42,8 @@ Parameters:
   SESIdentityName:
     Type: String
     Default: 'noreply@daita.tech'
+  CommonCodeLayerName:
+    Type: String
 
 
 Globals:
@@ -150,6 +152,7 @@ Resources:
         DecompressEcrRepositoryName: !Ref DecompressEcrRepositoryName
         VPCEndpointForS3: !Ref VPCEndpointForS3
         VPCEndpointForDynamoDB: !Ref VPCEndpointForDynamoDB
+        CommonCodeLayerName: !Ref CommonCodeLayerName
 
   CompressDownloadApp:
     Type: AWS::Serverless::Application
