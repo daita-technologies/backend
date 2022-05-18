@@ -9,7 +9,6 @@ from error_messages import *
 from identity_check import *
 from utils import create_unique_id, convert_current_date_to_iso8601, create_task_id_w_created_time
 from models.task_model import TaskModel
-
 from lambda_base_class import LambdaBaseClass
 
 
@@ -21,12 +20,10 @@ db = boto3.resource('dynamodb')
 task_table = db.Table(DECOMPRESS_TASK_TABLE)
 projects_table = db.Table(PROJECTS_TABLE)
 
-class CreateDecompressClass(LambdaBaseClass):
 
+class CreateDecompressClass(LambdaBaseClass):
     def __init__(self) -> None:
         super().__init__()
-
-
 
     @LambdaBaseClass.parse_body
     def parser(self, body):
@@ -39,7 +36,6 @@ class CreateDecompressClass(LambdaBaseClass):
         self.type_method = body.get('type_method', 'ORIGINAL')
 
     def handle(self, event, context):
-
         ### parse body
         self.parser(event)
 
@@ -97,5 +93,4 @@ class CreateDecompressClass(LambdaBaseClass):
 
 @error_response
 def lambda_handler(event, context):
-
     return CreateDecompressClass().handle(event, context)

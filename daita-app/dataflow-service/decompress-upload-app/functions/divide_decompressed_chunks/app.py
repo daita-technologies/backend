@@ -4,13 +4,14 @@ import glob
 
 import boto3
 
-DECOMPRESS_TASK_TABLE = os.getenv("DecompressTaskTable")
-
-EFS_MOUNT_POINT = os.getenv("EFSMountPath")
-CHUNK_SIZE = 100
 
 db = boto3.resource('dynamodb')
-table = db.Table(DECOMPRESS_TASK_TABLE)
+table = db.Table(os.getenv("TableDataFlowTask"))
+
+CHUNK_SIZE = 100
+EFS_MOUNT_POINT = os.getenv("EFSMountPath")
+ALLOWED_IMAGE_EXTENSIONS = os.getenv("AllowedImageExtenesions").split(",")
+ALLOWED_IMAGE_EXTENSIONS = [ext.upper() for ext in ALLOWED_IMAGE_EXTENSIONS] + [ext.lower() for ext in ALLOWED_IMAGE_EXTENSIONS]
 
 
 def lambda_handler(event, context):
@@ -33,8 +34,11 @@ def lambda_handler(event, context):
     print(response)
     destination_dir = response["Item"].get("destination_dir")
 
-    glob_pattern = os.path.join(EFS_MOUNT_POINT, destination_dir, "*")
-    all_files = glob.glob(glob_pattern)
+    all_files = []
+    for extension in ALLOWED_IMAGE_EXTENSIONS:
+        glob_pattern = os.path.join(EFS_MOUNT_POINT, destination_dir, f"*{extension}")
+        all_files.extend(glob.glob(glob_pattern))
+
     # get absolute path on EFS
     all_files = list(map(lambda x: os.path.join(destination_dir, os.path.basename(x)), all_files))
     file_chunks = []
