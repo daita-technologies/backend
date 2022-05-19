@@ -58,6 +58,23 @@ a=${BASH_REMATCH[0]}
 a=${a##*( )}
 a=${a%%*( )}
 
+keyname2="CompressDownloadEcrRepositoryName"
+b=$output
+echo -----------------------
+echo $b
+
+[[ $b =~ Key[[:space:]]$keyname2[[:space:]].+$keyname ]]
+b=${BASH_REMATCH[0]}
+[[ $b =~ Value.+Key ]]
+b=${BASH_REMATCH[0]}
+echo b0   $b
+[[ $b =~ [[:space:]].+[[:space:]] ]]
+b=${BASH_REMATCH[0]}
+### strip space
+b=${b##*( )}
+b=${b%%*( )}
+
+
 ###=== ECR config=========
 IMAGE_REPO_NAME=$a
 IMAGE_TAG="latest"
@@ -65,10 +82,26 @@ IMAGE_TAG="latest"
 ### Login to ecr
 aws ecr get-login-password --region $AWS_REGION | docker login --username AWS --password-stdin $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com
 
-### Build image
-cd ./dataflow-service/tasks/decompress
+### Build image for decompress
+cd ./dataflow-service/decompress-upload-app/tasks/decompress
 docker build -t $IMAGE_REPO_NAME:$IMAGE_TAG .
 docker tag $IMAGE_REPO_NAME:$IMAGE_TAG $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/$IMAGE_REPO_NAME:$IMAGE_TAG
 
 ### Push image to ECR
 docker push $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/$IMAGE_REPO_NAME:$IMAGE_TAG
+
+###=== ECR config=========
+IMAGE_REPO_NAME1=$b
+IMAGE_TAG1="latest"
+echo build $IMAGE_REPO_NAME1
+cd ..
+cd ..
+cd ..
+pwd
+cd ./compress-download-app/tasks/download
+pwd
+docker build -t $IMAGE_REPO_NAME1:$IMAGE_TAG1 .
+docker tag $IMAGE_REPO_NAME1:$IMAGE_TAG1 $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/$IMAGE_REPO_NAME1:$IMAGE_TAG1
+
+### Push image to ECR
+docker push $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/$IMAGE_REPO_NAME1:$IMAGE_TAG1
