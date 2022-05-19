@@ -330,6 +330,12 @@ Resources:
         Variables:
           TABLE_REFERENCE_IMAGE_INFO: !Ref TableReferenceImageInfoName
 
+  ### For augment_img_review
+  GetAugmentationImageReviewFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: functions/handlers/augmentation_review/get_aug_review
+      Role: !GetAtt LambdaExecutionRole.Arn
 
   ### For data flow functions
   CreateDecompressTaskFunction:

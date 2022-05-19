@@ -189,6 +189,23 @@ paths:
         type: "aws_proxy"
         payloadFormatVersion: "2.0"
 
+  ####===================================================================================
+  #### For augmentation image review
+
+  /augmentation_review/get_aug_review:
+    post:
+      responses:
+        default:
+          description: "Get augmentation review image"
+      x-amazon-apigateway-integration:
+        credentials:
+          Fn::GetAtt: [ApiGatewayCallLambdaRole, Arn]
+        uri: 
+          Fn::Sub: arn:${AWS::Partition}:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${GetAugmentationImageReviewFunction.Arn}/invocations
+        httpMethod: "POST"
+        type: "aws_proxy"
+        payloadFormatVersion: "2.0"
+
   ###===================================================================================
   ### For dataflow API
   /dataflow/create_decompress_task:

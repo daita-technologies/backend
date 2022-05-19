@@ -61,6 +61,7 @@ KEY_SIZE_LS_ITEM_QUERY      = "size_list_items_query"   # for task dashboard API
 KEY_NAME_PROCESS_TYPE       = "process_type"
 KEY_NAME_CREATED_TIME       = "created_time"
 KEY_NAME_REFERENCE_IMAGES   = "reference_images"
+KEY_NAME_METHOD_ID          = "method_id"
 
 KEY_NAME_RES_AUMENTATION    = "augmentation"
 KEY_NAME_RES_PREPROCESSING  = "preprocessing"
