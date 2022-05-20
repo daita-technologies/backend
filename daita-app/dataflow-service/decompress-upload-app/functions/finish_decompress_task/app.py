@@ -27,10 +27,10 @@ def lambda_handler(event, context):
     # clean up extracted file dir
     efs_destination_dir = os.path.join(EFS_MOUNT_POINT, destination_dir)
     shutil.rmtree(efs_destination_dir)
-    print("efs_destination_dir exists: ", os.path.exists(efs_destination_dir))
+    print("deteled destination folder: ", os.path.exists(efs_destination_dir))
 
     response = table.update_item(
-        Key={"task_id": task_id, 
+        Key={"task_id": task_id,
              "identity_id": identity_id},
         ExpressionAttributeNames={'#ST': "status"},
         ExpressionAttributeValues={
