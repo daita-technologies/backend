@@ -70,7 +70,7 @@ paths:
       x-amazon-apigateway-integration:
         credentials:
           Fn::GetAtt: [ApiGatewayCallLambdaRole, Arn]
-        uri: 
+        uri:
           Fn::Sub: arn:${AWS::Partition}:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${StopProcessTask.Arn}/invocations
         httpMethod: "POST"
         type: "aws_proxy"
@@ -83,7 +83,7 @@ paths:
       x-amazon-apigateway-integration:
         credentials:
           Fn::GetAtt: [ApiGatewayCallLambdaRole, Arn]
-        uri: 
+        uri:
           Fn::Sub: arn:${AWS::Partition}:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${DeleteImages.Arn}/invocations
         httpMethod: "POST"
         type: "aws_proxy"
@@ -96,7 +96,7 @@ paths:
       x-amazon-apigateway-integration:
         credentials:
           Fn::GetAtt: [ApiGatewayCallLambdaRole, Arn]
-        uri: 
+        uri:
           Fn::Sub: arn:${AWS::Partition}:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${DeleteProject.Arn}/invocations
         httpMethod: "POST"
         type: "aws_proxy"
@@ -155,7 +155,7 @@ paths:
       x-amazon-apigateway-integration:
         credentials:
           Fn::GetAtt: [ApiGatewayCallLambdaRole, Arn]
-        uri: 
+        uri:
           Fn::Sub: arn:${AWS::Partition}:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${RICalculateFunction.Arn}/invocations
         httpMethod: "POST"
         type: "aws_proxy"
@@ -169,7 +169,7 @@ paths:
       x-amazon-apigateway-integration:
         credentials:
           Fn::GetAtt: [ApiGatewayCallLambdaRole, Arn]
-        uri: 
+        uri:
           Fn::Sub: arn:${AWS::Partition}:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${RIStatusFunction.Arn}/invocations
         httpMethod: "POST"
         type: "aws_proxy"
@@ -183,7 +183,7 @@ paths:
       x-amazon-apigateway-integration:
         credentials:
           Fn::GetAtt: [ApiGatewayCallLambdaRole, Arn]
-        uri: 
+        uri:
           Fn::Sub: arn:${AWS::Partition}:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${RIInfoFunction.Arn}/invocations
         httpMethod: "POST"
         type: "aws_proxy"
@@ -251,10 +251,10 @@ paths:
         payloadFormatVersion: "2.0"
 
   /dataflow/get_compress_download_task:
-    get:
+    post:
       responses:
         default:
-          description: "create task for decompress zip file"
+          description: "get task for decompress zip file"
       x-amazon-apigateway-integration:
         credentials:
           Fn::GetAtt: [ApiGatewayCallLambdaRole, Arn]
