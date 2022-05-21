@@ -1,3 +1,4 @@
+from curses import keyname
 import time
 import json
 import os
@@ -159,6 +160,7 @@ def lambda_handler(event, context):
     data[KEY_NAME_PROCESS_TYPE] = body[KEY_NAME_PROCESS_TYPE]
     data[KEY_NAME_REFERENCE_IMAGES] = body[KEY_NAME_REFERENCE_IMAGES]
     data[KEY_NAME_IS_RESOLUTION] = body[KEY_NAME_IS_RESOLUTION]
+    data[KEY_NAME_AUG_PARAMS] = body[KEY_NAME_AUG_PARAMS]
 
     return generate_response(
             message="OK",

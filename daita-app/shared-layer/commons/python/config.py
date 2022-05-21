@@ -63,6 +63,7 @@ KEY_NAME_CREATED_TIME       = "created_time"
 KEY_NAME_REFERENCE_IMAGES   = "reference_images"
 KEY_NAME_METHOD_ID          = "method_id"
 KEY_NAME_IS_RESOLUTION      = "is_normalize_resolution"
+KEY_NAME_AUG_PARAMS         = "aug_parameters"
 
 KEY_NAME_RES_AUMENTATION    = "augmentation"
 KEY_NAME_RES_PREPROCESSING  = "preprocessing"

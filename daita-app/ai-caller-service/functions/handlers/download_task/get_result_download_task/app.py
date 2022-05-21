@@ -43,6 +43,7 @@ def lambda_handler(event, context):
                 "ls_method_id":result["ls_method_id"],
                 "num_aug_per_imgs": result["num_aug_per_imgs"],
                 KEY_NAME_REFERENCE_IMAGES: result[KEY_NAME_REFERENCE_IMAGES],
-                KEY_NAME_IS_RESOLUTION: result[KEY_NAME_IS_RESOLUTION]
+                KEY_NAME_IS_RESOLUTION: result[KEY_NAME_IS_RESOLUTION],
+                KEY_NAME_AUG_PARAMS: result[KEY_NAME_AUG_PARAMS]
     }
     return output

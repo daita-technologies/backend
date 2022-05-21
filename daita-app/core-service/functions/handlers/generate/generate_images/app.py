@@ -37,6 +37,7 @@ class GenerateImageClass(LambdaBaseClass):
         self.data_number = body[KEY_NAME_DATA_NUMBER]  # array of number data in train/val/test  [100, 19, 1]
         self.process_type = body.get(KEY_NAME_PROCESS_TYPE, VALUE_TYPE_METHOD_PREPROCESS)
         self.reference_images = body.get(KEY_NAME_REFERENCE_IMAGES, {})
+        self.aug_parameters  = body.get(KEY_NAME_AUG_PARAMS, {})
         self.is_normalize_resolution = body.get(KEY_NAME_IS_RESOLUTION, False)
 
         ### update value for ls_reference
@@ -191,6 +192,7 @@ class GenerateImageClass(LambdaBaseClass):
             KEY_NAME_PROCESS_TYPE: type_method,
             KEY_NAME_REFERENCE_IMAGES: self.reference_images,
             KEY_NAME_IS_RESOLUTION: self.is_normalize_resolution,
+            KEY_NAME_AUG_PARAMS: self.aug_parameters
         }
         event_id = self._put_event_bus(detail_pass_para) 
                 

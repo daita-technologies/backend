@@ -28,7 +28,8 @@ def countTaskInQueue(queue_id):
     print(f"QueueID:  {queue_id} has len: {num_task_in_queue}")
     return int(num_task_in_queue)
 
-def assignTaskToEc2(ec2Instances, data, type_method, num_augments_per_image, code, reference_images={}, is_normalize_resolution=False):
+def assignTaskToEc2(ec2Instances, data, type_method, num_augments_per_image, code, reference_images={}, 
+                    is_normalize_resolution=False, aug_parameters = {}):
     listRequestAPI = []
     listNumberTaskQueueCurrent= []
     ec2IDs= []
@@ -42,7 +43,7 @@ def assignTaskToEc2(ec2Instances, data, type_method, num_augments_per_image, cod
                                 "num_augments_per_image":num_augments_per_image,
                                 "codes":code ,
                                 "type": "augmentation",
-                                "parameters":{},
+                                "parameters": aug_parameters,
                                 "reference_images":{}                                
                                 }       
         else:

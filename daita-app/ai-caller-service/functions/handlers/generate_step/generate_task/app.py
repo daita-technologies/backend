@@ -80,7 +80,8 @@ def lambda_handler(event, context):
                                       type_method=data['type_method'],
                                       code=data['ls_method_id'],
                                       reference_images=data[KEY_NAME_REFERENCE_IMAGES],
-                                      is_normalize_resolution=data[KEY_NAME_IS_RESOLUTION]
+                                      is_normalize_resolution=data[KEY_NAME_IS_RESOLUTION],
+                                      aug_parameters = data[KEY_NAME_AUG_PARAMS]
                                       )
     time.sleep(5)
     task_model.update_generate_progress(task_id=data['task_id'],
