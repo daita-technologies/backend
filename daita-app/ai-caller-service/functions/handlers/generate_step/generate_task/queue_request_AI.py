@@ -28,7 +28,7 @@ def countTaskInQueue(queue_id):
     print(f"QueueID:  {queue_id} has len: {num_task_in_queue}")
     return int(num_task_in_queue)
 
-def assignTaskToEc2(ec2Instances, data, type_method, num_augments_per_image, code, reference_images={}):
+def assignTaskToEc2(ec2Instances, data, type_method, num_augments_per_image, code, reference_images={}, is_normalize_resolution=False):
     listRequestAPI = []
     listNumberTaskQueueCurrent= []
     ec2IDs= []
@@ -43,7 +43,7 @@ def assignTaskToEc2(ec2Instances, data, type_method, num_augments_per_image, cod
                                 "codes":code ,
                                 "type": "augmentation",
                                 "parameters":{},
-                                "reference_images":{}
+                                "reference_images":{}                                
                                 }       
         else:
             input_request_ai = {
@@ -52,7 +52,8 @@ def assignTaskToEc2(ec2Instances, data, type_method, num_augments_per_image, cod
                     "type": "preprocessing",
                     "codes": code,
                     "parameters":{},
-                    "reference_images": reference_images
+                    "reference_images": reference_images,
+                    "is_normalize_resolution": is_normalize_resolution
                 }
         return input_request_ai
 

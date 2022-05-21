@@ -79,7 +79,9 @@ def lambda_handler(event, context):
                                       num_augments_per_image=data['num_aug_per_imgs'],
                                       type_method=data['type_method'],
                                       code=data['ls_method_id'],
-                                      reference_images=data[KEY_NAME_REFERENCE_IMAGES])
+                                      reference_images=data[KEY_NAME_REFERENCE_IMAGES],
+                                      is_normalize_resolution=data[KEY_NAME_IS_RESOLUTION]
+                                      )
     time.sleep(5)
     task_model.update_generate_progress(task_id=data['task_id'],
                                         identity_id=data['identity_id'],
