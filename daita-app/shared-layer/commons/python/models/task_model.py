@@ -20,10 +20,14 @@ class TaskModel():
 
     ### field for generation task
     FIELD_NUM_GENS_IMAGE = "number_gen_images"
+    FIELD_NUM_FINISHED = "number_finished"    
 
     ### field for reference image
     FIELD_LS_METHOD_ID = "ls_method_id"
     FIELD_EXECUTION_SM_ID = "execution_id"
+
+    ### fields for download
+    FIELD_DOWNLOAD_PRESIGN_URL = "presign_url"
 
 
     def __init__(self, table_name, index_task_projectid_name=None) -> None:
@@ -188,6 +192,12 @@ class TaskModel():
             filterExpression = f"{filterExpression} AND ({filter_status_exp})"
 
         projecttion_str = f'{self.FIELD_IDENTITY_ID}, {self.FIELD_PROCESS_TYPE}, {self.FIELD_TASK_ID}, {self.FIELD_PROJECT_ID}, #sta, {self.FIELD_CREATE_TIME}'
+        if filter_process_type in [VALUE_PROCESS_TYPE_AUGMENT, VALUE_PROCESS_TYPE_PREPROCESS]:
+            projecttion_str = f'{projecttion_str}, {self.FIELD_NUM_GENS_IMAGE}, {self.FIELD_NUM_FINISHED}'
+        elif filter_process_type == VALUE_PROCESS_TYPE_DOWNLOAD:
+            projecttion_str = f'{projecttion_str}, {self.FIELD_DOWNLOAD_PRESIGN_URL}'
+        else:
+            pass
         
         print(f"Before query: \n index_name: {index_table}. \n key_condition_exp: {key_condition_exp}")
         ls_task, ls_page_token = self._query_task(pag_page_token, key_condition_exp, filterExpression, limit_size, projection_str=projecttion_str, 

@@ -19,9 +19,10 @@ class TaskDashboardClass(LambdaBaseClass):
         self.client_events = boto3.client('events')    
         self.const = SystemParameterStore()   
         self.table_generateTask = TaskModel(os.environ["TableGenerateTaskName"], os.environ["INDEX_TASK_PROJECTID_TASKID"])
-        self.table_downloadTask = TaskModel(os.environ["TableDownloadTaskName"], os.environ["INDEX_TASK_PROJECTID_TASKID"])
-        self.table_decompressTask = TaskModel(os.environ["DecompressTaskTable"], os.environ["INDEX_TASK_PROJECTID_TASKID"])
+        self.table_dataflowTask = TaskModel(os.environ["TableDataFlowTaskName"], os.environ["INDEX_TASK_PROJECTID_TASKID"])
         self.table_healthcheckTask = TaskModel(os.environ["TableHealthCheckTasksName"], os.environ["INDEX_TASK_PROJECTID_TASKID"])
+        self.table_referenceImageTask = TaskModel(os.environ["TableReferenceImageName"], os.environ["INDEX_TASK_PROJECTID_TASKID"])
+
 
     @LambdaBaseClass.parse_body
     def parser(self, body):
@@ -48,12 +49,12 @@ class TaskDashboardClass(LambdaBaseClass):
     def _map_process_type_w_table(self, process_type):
         if process_type in [VALUE_PROCESS_TYPE_AUGMENT, VALUE_PROCESS_TYPE_PREPROCESS]:
             return self.table_generateTask
-        elif process_type == VALUE_PROCESS_TYPE_DOWNLOAD:
-            return self.table_downloadTask
-        elif process_type == VALUE_PROCESS_TYPE_UPLOAD:
-            return self.table_decompressTask
+        elif process_type in [VALUE_PROCESS_TYPE_DOWNLOAD, VALUE_PROCESS_TYPE_UPLOAD]:
+            return self.table_dataflowTask
         elif process_type == VALUE_PROCESS_TYPE_HEALTHCHECK:
             return self.table_healthcheckTask
+        elif process_type == VALUE_PROCESS_TYPE_REFERENCE_IM:
+            return self.table_referenceImageTask
         else:
             return None
 

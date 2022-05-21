@@ -1,4 +1,5 @@
 from datetime import datetime
+from decimal import Decimal
 import uuid
 from boto3.dynamodb.types import TypeDeserializer, TypeSerializer
 import re
@@ -8,14 +9,28 @@ def convert_current_date_to_iso8601():
     return my_date.isoformat()
 
 def create_unique_id():
+    """
+    Create an unique id 
+    """
     return str(uuid.uuid4())
 
 def create_task_id_w_created_time():
+    """
+    Create unique id combine with current day for task_id of all task table
+    """
     return f"{convert_current_date_to_iso8601()}-{create_unique_id()}"
 
 def from_dynamodb_to_json(item):
-    d = TypeDeserializer()
-    return {k: d.deserialize(value=v) for k, v in item.items()}
+    # print(f"Item to serialize: \n {item}")
+    d = TypeDeserializer()    
+    serialize = {k: d.deserialize(value=v) for k, v in item.items()}
+
+    for key, value in serialize.items():
+        if type(value) is Decimal:
+            serialize[key] = int(value)
+
+    # print(f"Result after serialize: \n {serialize}")
+    return serialize
 
 def get_bucket_key_from_s3_uri(uri: str):
     if not 's3' in uri[:2]:

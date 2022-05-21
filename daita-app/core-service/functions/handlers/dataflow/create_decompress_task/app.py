@@ -7,7 +7,7 @@ import boto3
 from response import *
 from error_messages import *
 from identity_check import *
-from utils import create_unique_id, convert_current_date_to_iso8601, create_task_id_w_created_time
+from utils import convert_current_date_to_iso8601, create_task_id_w_created_time
 from models.task_model import TaskModel
 from lambda_base_class import LambdaBaseClass
 

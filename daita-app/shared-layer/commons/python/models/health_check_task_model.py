@@ -3,7 +3,7 @@ from boto3.dynamodb.conditions import Key, Attr
 from config import *
 from error_messages import *
 from typing import List
-from utils import create_unique_id, convert_current_date_to_iso8601, create_task_id_w_created_time
+from utils import convert_current_date_to_iso8601, create_task_id_w_created_time
 
 class HealthCheckTaskItem():
     

@@ -3,7 +3,7 @@ import boto3
 from boto3.dynamodb.conditions import Key, Attr
 from config import *
 from typing import List
-from utils import create_unique_id, convert_current_date_to_iso8601
+from utils import convert_current_date_to_iso8601
 
 
 class ReferenceImageInfoModel():

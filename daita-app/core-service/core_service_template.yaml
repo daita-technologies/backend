@@ -386,10 +386,10 @@ Resources:
       Role: !GetAtt LambdaExecutionRole.Arn
       Environment:
         Variables:
-          DecompressTaskTable: !Ref ParaTableDataFlowTaskName
+          TableDataFlowTaskName: !Ref ParaTableDataFlowTaskName
           TableHealthCheckTasksName: !Ref TableHealthCheckTasksName
           TableGenerateTaskName: !Ref TableGenerateTaskName
-          TableDownloadTaskName: !Ref ParaTableDownloadTaskName
+          TableReferenceImageName: !Ref TableReferenceImageInfoName
 
 
 Outputs:
