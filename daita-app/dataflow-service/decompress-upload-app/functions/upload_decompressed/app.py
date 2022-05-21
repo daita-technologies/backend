@@ -5,7 +5,12 @@ from pathlib import Path
 from hashlib import md5
 
 import boto3
+from PIL import Image
 
+
+MAX_IMAGE_SIZE_IN_BYTES = 5*1024*1024
+MAX_IMAGE_HEIGHT = 4000
+MAX_IMAGE_WIDTH = 4000
 
 EFS_MOUNT_POINT = os.getenv("EFSMountPath")
 BUCKET = os.getenv("S3BucketName")
@@ -14,6 +19,19 @@ efs_mount_point = Path(EFS_MOUNT_POINT)
 s3_client = boto3.client('s3')
 
 table_data_org = boto3.resource('dynamodb').Table("data_original")
+
+
+def validate_image(file_path: str):
+    # validate max size
+    if os.path.getsize(file_path) > MAX_IMAGE_SIZE_IN_BYTES:
+        return False
+    # validate max resolution
+    with Image.open(file_path) as image:
+        width, height = image.size
+        if width > MAX_IMAGE_WIDTH or \
+            height > MAX_IMAGE_HEIGHT:
+            return False
+    return True
 
 
 def get_file_md5_hash(file):
@@ -37,6 +55,8 @@ def lambda_handler(event, context):
         file_path = efs_mount_point.joinpath(file_)
         filename = file_path.name
         file_path = str(file_path)
+        if not validate_image(file_path):
+            continue
         # s3_prefix is include bucket name so we have to extract the relative path
         object_name = str(Path(s3_prefix, filename).relative_to(BUCKET))
         response = s3_client.upload_file(file_path, BUCKET, object_name)
@@ -56,7 +76,7 @@ def lambda_handler(event, context):
         else:
             size_old = int(response['Item']['size'])
 
-        # generate ls_object_info        
+        # generate ls_object_info
         ls_object_info.append({
             "filename": filename,
             "gen_id": "",
