@@ -1303,10 +1303,10 @@ EXAMPLE
       ```
 
 ### Get Download task
-- Path: [GET] `/dataflow/get_compress_download_task`
+- Path: [POST] `/dataflow/get_compress_download_task`
 - Request
-  - Paramteters:
-    ```
+  - Body:
+    ```json
     {
         "id_token": string,
         "task_id": uuid,
@@ -1330,6 +1330,7 @@ EXAMPLE
               "updated_at": string,
               "updated_date": string,
               "updated_time": string,
+              ...
           },
           "error": boolean
       }
