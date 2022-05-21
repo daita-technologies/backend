@@ -113,7 +113,7 @@ EXAMPLE
 
 ### Project Delete Images
 
-URL: https://119u2071ul.execute-api.us-east-2.amazonaws.com/dev/project/delete_images
+URL: https://119u2071ul.execute-api.us-east-2.amazonaws.com/dev/projects/delete_images
 
 FUNCTION
 
@@ -160,7 +160,7 @@ EXAMPLE
 
 ### Project Delete
 
-URL: https://119u2071ul.execute-api.us-east-2.amazonaws.com/dev/project/delete_project
+URL: https://119u2071ul.execute-api.us-east-2.amazonaws.com/dev/projects/delete
 
 FUNCTION
 

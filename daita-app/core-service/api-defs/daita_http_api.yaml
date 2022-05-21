@@ -75,7 +75,7 @@ paths:
         httpMethod: "POST"
         type: "aws_proxy"
         payloadFormatVersion: "2.0"
-  /project/delete_images:
+  /projects/delete_images:
     post:
       responses:
         default:
@@ -88,7 +88,7 @@ paths:
         httpMethod: "POST"
         type: "aws_proxy"
         payloadFormatVersion: "2.0"
-  /project/delete_project:
+  /projects/delete:
     post:
       responses:
         default:
