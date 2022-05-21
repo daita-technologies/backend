@@ -158,6 +158,7 @@ def lambda_handler(event, context):
     data['num_aug_per_imgs'] = body['num_aug_per_imgs'] if 'num_aug_per_imgs' in body else 1 
     data[KEY_NAME_PROCESS_TYPE] = body[KEY_NAME_PROCESS_TYPE]
     data[KEY_NAME_REFERENCE_IMAGES] = body[KEY_NAME_REFERENCE_IMAGES]
+    data[KEY_NAME_IS_RESOLUTION] = body[KEY_NAME_IS_RESOLUTION]
 
     return generate_response(
             message="OK",
