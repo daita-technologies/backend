@@ -28,6 +28,33 @@ client_id = '4cpbb5etp3q7grnnrhrc7irjoa'
 def getRedirectURI():
     return 'https://nzvw2zvu3d.execute-api.us-east-2.amazonaws.com/staging/auth/login_social'
 #############################################################################################################################################################
+def getMail(user):
+    response = cog_provider_client.list_users(
+        UserPoolId=USERPOOLID
+    )
+    # info_user =  list(filter(lambda x : x['Username'] == user,response['Users']))
+
+    for _ , data in enumerate(response['Users']):
+        if data['Username'] == user:
+            for  info in data['Attributes']:
+                if info['Name'] == 'email':
+                    return info['Value']
+    return None
+def checkInvalidUserRegister(user,mail):
+    isCheckUser , isCheckMail = True, True
+    response = cog_provider_client.list_users(
+        UserPoolId=USERPOOLID
+    )
+    info_user =  list(filter(lambda x : x['Username'] == user,response['Users']))
+    if len(info_user):
+        isCheckUser = False
+    for _ , data in enumerate(response['Users']):
+        for  info in data['Attributes']:
+            if info['Name'] == 'email' and info['Value'] == mail:
+                isCheckMail = False
+                break
+    return isCheckUser, isCheckMail
+#############################################################################################################################################################
 def createKMSKey(identity):
     alias_name = identity.split(":")[1]
     kms = boto3.client("kms", region_name=REGION)
@@ -161,6 +188,7 @@ def lambda_handler(event, context):
     #     raise Exception(MessageAnotherUserIsLoginBefore)
     # else:
     #     CreateEventUserLogin(sub)
+
     if not CheckEventUserLogin(sub):
         CreateEventUserLoginOauth2(sub,code)
     try:
@@ -173,6 +201,17 @@ def lambda_handler(event, context):
                 headers=RESPONSE_HEADER)
     if not model.checkFirstLogin(ID=sub,username=username):
         responseIdentity = aws_get_identity_id(resqData['id_token'])
+        mail = getMail(username)
+        print(mail)
+        _, checkemail = checkInvalidUserRegister(user=username,mail=mail)
+
+        if not checkemail:
+            resp = cog_provider_client.admin_delete_user(
+                UserPoolId= USERPOOLID,
+                Username= username
+            )
+            print(resp)
+            raise Exception(MessageSignUPEmailInvalid)
         if 'IS_ENABLE_KMS' in os.environ and eval(os.environ['IS_ENABLE_KMS']) == True:
             kms = createKMSKey(responseIdentity)
         else:
