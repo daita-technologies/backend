@@ -389,7 +389,7 @@ Resources:
           TableDataFlowTaskName: !Ref ParaTableDataFlowTaskName
           TableHealthCheckTasksName: !Ref TableHealthCheckTasksName
           TableGenerateTaskName: !Ref TableGenerateTaskName
-          TableReferenceImageName: !Ref TableReferenceImageInfoName
+          TableReferenceImageName: !Ref TableReferenceImageTasksName
 
 
 Outputs:
