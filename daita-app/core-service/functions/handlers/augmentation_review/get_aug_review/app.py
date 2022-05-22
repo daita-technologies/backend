@@ -49,6 +49,20 @@ class GetAugmentationImgReviewClass(LambdaBaseClass):
                 key = '|'.join(str_key)
                 method_info["dict_aug_img"][key] = generate_presigned_url(value["aug_review_img"])
 
+            ### generate for ls_param_info
+            method_info["ls_param_info"] = {}
+            for method, ls_value in ls_param_value.items():
+                if type(ls_value[0]) is bool:
+                    type = "boolean"
+                    step = ""
+                else:
+                    type = "number"
+                    step = ls_value[1]-ls_value[0]
+                method_info["ls_param_info"][method] = {
+                    "step": step,
+                    "type": type
+                }
+
             method_info.pop("ls_aug_img")
             return method_info
         
