@@ -87,11 +87,6 @@ States:
     Parameters:
       FunctionName: "${SendCompletedMailFunction}"
       Payload.$: $
-    Catch:
-      - ErrorEquals:
-        - States.ALL
-        Next: SetTaskStatusError
-        ResultPath: null
     Next: Complete
 
   SetTaskStatusError:

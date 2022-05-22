@@ -9,7 +9,7 @@ client = boto3.client('ses')
 
 def get_email(id_token):
     header, payload, signature = id_token.split(".")
-    user_info = json.loads(base64.b64decode(payload))
+    user_info = json.loads(base64.b64decode(payload + "="*10)) #add missing padding
     return user_info["email"]
 
 
