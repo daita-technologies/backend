@@ -52,7 +52,7 @@ class GetAugmentationImgReviewClass(LambdaBaseClass):
             ### generate for ls_param_info
             method_info["ls_param_info"] = {}
             for method, ls_value in ls_param_value.items():
-                if type(ls_value[0]) is bool:
+                if isinstance(ls_value[0], bool):
                     type = "boolean"
                     step = ""
                 else:
