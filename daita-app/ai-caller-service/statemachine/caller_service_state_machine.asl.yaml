@@ -91,9 +91,9 @@ States:
       TableName: '${TableGenerateTaskName}'
       Key:
         identity_id:
-          S.$: $.identity_id
+          S.$: $$.Execution.Input.detail.identity_id
         task_id:
-          S.$: $.task_id
+          S.$: $$.Execution.Input.detail.task_id
       UpdateExpression: 'SET #st = :st'
       ExpressionAttributeNames:
         '#st': status
