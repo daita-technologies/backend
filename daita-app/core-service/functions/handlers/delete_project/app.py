@@ -64,7 +64,7 @@ def lambda_handler(event, context):
                 message=str(e),
                 status_code=HTTPStatus.OK,
                 data={ },
-                error= False)    
+                error= True)    
         tableHeathyCheckInfo = db_resource.Table(os.environ['TABLE_HEALTHCHECK_INFO'])
         queryTableHealthyCheckInfo = tableHeathyCheckInfo.query(
              KeyConditionExpression=Key("project_id").eq(project_id) 
@@ -122,7 +122,7 @@ def lambda_handler(event, context):
             message=str(e),
             status_code=HTTPStatus.OK,
             data={ },
-            error= False
+            error= True
         )    
     return generate_response(
             message="OK",

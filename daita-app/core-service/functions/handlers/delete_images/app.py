@@ -84,7 +84,7 @@ def lambda_handler(event, context):
                     'filename': request['filename']
                 })
                 print(item)
-                if not item['Item']['healthcheck_id'] is None or  isinstance(item['Item']['healthcheck_id'],str):
+                if ('healthcheck_id' in item['Item']) and (not item['Item']['healthcheck_id'] is None or  isinstance(item['Item']['healthcheck_id'],str)):
                     delete_image_healthycheck_info(db_resource=db_resource,project_id=project_id,healthcheck_id=item['Item']['healthcheck_id'])
                 table.delete_item(Key={
                     'project_id': project_id,
@@ -163,7 +163,7 @@ def lambda_handler(event, context):
             message=str(e),
             status_code=HTTPStatus.OK,
             data={ },
-            error= False
+            error= True
         )    
     
     return generate_response(
