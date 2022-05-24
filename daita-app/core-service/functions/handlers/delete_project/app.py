@@ -14,7 +14,7 @@ from utils import *
 def CheckRunningAndDeleteTask(tableTask,identity_id,project_id,name):
     queryResp = tableTask.query(
         KeyConditionExpression=Key('identity_id').eq(identity_id),
-        FilterExpression=Attr('project_id').eq(project_id) & Attr('status').eq('RUNNING')
+        FilterExpression=Attr('project_id').eq(project_id) & (Attr('status').eq('PREPARING_DATA') | Attr('status').eq('PREPARING_HARDWARE') | Attr('status').eq('PENDING') | Attr('status').eq('RUNNING'))
     )
     
     if len(queryResp['Items']) > 0:
@@ -22,7 +22,7 @@ def CheckRunningAndDeleteTask(tableTask,identity_id,project_id,name):
     
     queryResp = tableTask.query(
         KeyConditionExpression=Key('identity_id').eq(identity_id),
-        FilterExpression=Attr('project_id').eq(project_id) & Attr('status').eq('FINISH')
+        FilterExpression=Attr('project_id').eq(project_id) & (Attr('status').eq('CANCEL') | Attr('status').eq('FINISH') | Attr('status').eq('ERROR') | Attr('status').eq('FINISH_ERROR'))
     )
 
     with tableTask.batch_writer() as batch:
@@ -59,7 +59,12 @@ def lambda_handler(event, context):
             CheckRunningAndDeleteTask(tableTask=tableReferenceImages,identity_id=identity_id,project_id=project_id,name='reference image')
             CheckRunningAndDeleteTask(tableTask=tableHealthycheckTask,identity_id=identity_id,project_id=project_id,name='healthycheck')
         except Exception as e:
-            raise e
+            print(e)
+            return generate_response(
+                message=str(e),
+                status_code=HTTPStatus.OK,
+                data={ },
+                error= False)    
         tableHeathyCheckInfo = db_resource.Table(os.environ['TABLE_HEALTHCHECK_INFO'])
         queryTableHealthyCheckInfo = tableHeathyCheckInfo.query(
              KeyConditionExpression=Key("project_id").eq(project_id) 
