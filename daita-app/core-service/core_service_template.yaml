@@ -273,6 +273,9 @@ Resources:
           T_TASKS: !Ref TableGenerateTaskName
           T_PROJECT: !Ref TableProject
           T_PROJECT_DEL: !Ref TableProjectDel
+          T_DATA_FLOW: !Ref ParaTableDataFlowTaskName
+          T_REFERENCE_IMAGE: !Ref TableReferenceImageTasksName
+
   ### for health check functions
   HealthCheckFunction:
     Type: AWS::Serverless::Function
