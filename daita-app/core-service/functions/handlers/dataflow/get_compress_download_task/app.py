@@ -37,7 +37,7 @@ class GetCompressDownloadClass(LambdaBaseClass):
         task = response.get("Item", None)
         # pop out identity_id if needed
         if task is None:
-            raise Exception(MESS_TASK_NOT_EXIST.format(task_id))
+            raise Exception(MESS_TASK_NOT_EXIST.format(self.task_id))
 
         task.pop("identity_id", None)
         print("Task return: ", task)
