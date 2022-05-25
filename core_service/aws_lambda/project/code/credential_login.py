@@ -50,7 +50,7 @@ def checkInvalidUserRegister(user,mail):
         isCheckUser = False
     for _ , data in enumerate(response['Users']):
         for  info in data['Attributes']:
-            if info['Name'] == 'email' and info['Value'] == mail:
+            if info['Name'] == 'email' and info['Value'] == mail and data['Username'] != user:
                 isCheckMail = False
                 break
     return isCheckUser, isCheckMail
@@ -183,6 +183,17 @@ def lambda_handler(event, context):
         raise Exception("Login Social Failed")
     resqData = resq.json()
     sub, username = claimsToken(resqData['access_token'],'sub') , claimsToken(resqData['access_token'],'username')
+    mail = getMail(username)
+    print(mail)
+    _, checkemail = checkInvalidUserRegister(user=username,mail=mail)
+
+    if not checkemail:
+        resp = cog_provider_client.admin_delete_user(
+            UserPoolId= USERPOOLID,
+            Username= username
+        )
+        print(resp)
+        raise Exception(MessageSignUPEmailInvalid)
     # check the user is login another device
     # if CheckEventUserLogin(sub):
     #     raise Exception(MessageAnotherUserIsLoginBefore)
@@ -201,17 +212,6 @@ def lambda_handler(event, context):
                 headers=RESPONSE_HEADER)
     if not model.checkFirstLogin(ID=sub,username=username):
         responseIdentity = aws_get_identity_id(resqData['id_token'])
-        mail = getMail(username)
-        print(mail)
-        _, checkemail = checkInvalidUserRegister(user=username,mail=mail)
-
-        if not checkemail:
-            resp = cog_provider_client.admin_delete_user(
-                UserPoolId= USERPOOLID,
-                Username= username
-            )
-            print(resp)
-            raise Exception(MessageSignUPEmailInvalid)
         if 'IS_ENABLE_KMS' in os.environ and eval(os.environ['IS_ENABLE_KMS']) == True:
             kms = createKMSKey(responseIdentity)
         else:
