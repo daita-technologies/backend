@@ -131,7 +131,7 @@ class User(object):
     def __init__(self):
         self.db_client = boto3.resource('dynamodb')
 
-    def checkFirstLogin(self,ID,username):
+    def IsNotcheckFirstLogin(self,ID,username):
         print(ID,username)
         response = self.db_client.Table("User").get_item(
               Key={
@@ -184,16 +184,10 @@ def lambda_handler(event, context):
     resqData = resq.json()
     sub, username = claimsToken(resqData['access_token'],'sub') , claimsToken(resqData['access_token'],'username')
     mail = getMail(username)
-    print(mail)
+    print(mail,username)
     _, checkemail = checkInvalidUserRegister(user=username,mail=mail)
 
-    if not checkemail:
-        resp = cog_provider_client.admin_delete_user(
-            UserPoolId= USERPOOLID,
-            Username= username
-        )
-        print(resp)
-        raise Exception(MessageSignUPEmailInvalid)
+    
     # check the user is login another device
     # if CheckEventUserLogin(sub):
     #     raise Exception(MessageAnotherUserIsLoginBefore)
@@ -210,7 +204,14 @@ def lambda_handler(event, context):
                 message=MessageAuthenFailed,
                 data={},
                 headers=RESPONSE_HEADER)
-    if not model.checkFirstLogin(ID=sub,username=username):
+    if not model.IsNotcheckFirstLogin(ID=sub,username=username) :
+        # if not checkemail:
+        #     resp = cog_provider_client.admin_delete_user(
+        #         UserPoolId= USERPOOLID,
+        #         Username= username
+        #     )
+        #     print(resp)
+        #     raise Exception(MessageSignUPEmailInvalid)
         responseIdentity = aws_get_identity_id(resqData['id_token'])
         if 'IS_ENABLE_KMS' in os.environ and eval(os.environ['IS_ENABLE_KMS']) == True:
             kms = createKMSKey(responseIdentity)
