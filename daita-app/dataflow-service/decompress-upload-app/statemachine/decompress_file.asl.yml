@@ -1,5 +1,4 @@
 StartAt: StartECSDecompressTask
-# StartAt: DivideDecompressChunksFunction
 States:
   StartECSDecompressTask:
     Type: Task
@@ -32,15 +31,15 @@ States:
   DivideDecompressChunksFunction:
     Type: Task
     Resource: arn:aws:states:::lambda:invoke
-    ResultSelector: 
+    ResultSelector:
         identity_id.$: "$$.Execution.Input.identity_id"
         task_id.$: "$.Payload.task_id"
-        result.$: "$.Payload"      
+        result.$: "$.Payload"
     Parameters:
       FunctionName: "${DivideDecompressChunksFunction}"
       Payload.$: $
-    Catch: 
-      - ErrorEquals: 
+    Catch:
+      - ErrorEquals:
         - States.ALL
         Next: CatchErrorTaskDynamoDB
         ResultPath: null
@@ -58,11 +57,11 @@ States:
       type_method.$: $.result.type_method
       s3_prefix.$: $.result.s3_prefix
       identity_id.$: $.identity_id
-    Catch: 
-      - ErrorEquals: 
+    Catch:
+      - ErrorEquals:
         - States.ALL
-        Next: CatchErrorTaskDynamoDB 
-        ResultPath: null 
+        Next: CatchErrorTaskDynamoDB
+        ResultPath: null
     Iterator:
       StartAt: UploadDecompressedFunction
       States:
@@ -100,11 +99,11 @@ States:
     Parameters:
       FunctionName: "${FinishDecompressTaskFunction}"
       Payload.$: $
-    Catch: 
-      - ErrorEquals: 
+    Catch:
+      - ErrorEquals:
         - States.ALL
-        Next: CatchErrorTaskDynamoDB 
-        ResultPath: null          
+        Next: CatchErrorTaskDynamoDB
+        ResultPath: null
     Next: Complete
 
   CatchErrorTaskDynamoDB:

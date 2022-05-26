@@ -38,6 +38,9 @@ Parameters:
   AllowedImageExtenesions:
     Type: String
     Default: ".jpeg,.jpg,.png"
+  UploadS3FileChunk:
+    Type: String
+    Default: 8
 
 Globals:
   Function:
@@ -201,6 +204,7 @@ Resources:
       FileSystemConfigs:
         - Arn: !GetAtt EFSAccessPoint.Arn
           LocalMountPath: !Ref EFSMountPath
+      Timeout: 120
       Policies:
         - AmazonDynamoDBFullAccess
         - Statement:
@@ -223,6 +227,7 @@ Resources:
           TableDataFlowTask: !Ref TableDataFlowTaskName
           EFSMountPath: !Ref EFSMountPath
           AllowedImageExtenesions: !Ref AllowedImageExtenesions
+          UploadS3FileChunk: !Ref UploadS3FileChunk
 
   UploadDecompressedFunction:
     Type: AWS::Serverless::Function
