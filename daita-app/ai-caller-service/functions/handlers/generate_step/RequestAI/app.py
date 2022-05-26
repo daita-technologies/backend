@@ -58,8 +58,8 @@ def countTaskInQueue(queue_id):
 @error_response
 def lambda_handler(event, context):
     result = event
-    if result['is_retry'] == True:
-        time.sleep(int(result['current_num_retries'])*30)
+    if result['is_retry'] == True :
+        time.sleep(int(result['current_num_retries'])*15)
     print("Input event: ", event)
     batch = result['batch']
     if not isinstance(batch['request_json']['images_paths'],list):
@@ -80,7 +80,11 @@ def lambda_handler(event, context):
         instance = ec2_resource.Instance(batch['ec2_id'])
         instance.load()
         print(f"Current state of instance before send request: {batch['ec2_id']} is {instance.state['Name']}")
-
+        ip_public_current = instance.public_ip_address
+        print(f"Current IP public {ip_public_current} and {batch['host']}")
+        if not str(ip_public_current) in batch['host']:
+            batch['host'] =  f"http://{ip_public_current}:8000/{batch['type']}"
+            print(batch['host'])
         output = requests.post(batch['host'],json=batch['request_json'])
         print("Output from AI request: \n", output.text)
 

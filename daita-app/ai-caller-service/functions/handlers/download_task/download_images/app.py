@@ -31,7 +31,7 @@ def download(uri,folder):
     basename = os.path.basename(filename)
     new_image = os.path.join(folder,basename)
     s3.download_file(bucket,filename,new_image)
-
+    
 @error_response
 def lambda_handler(event, context):
     bucket , filename = split(event['task']['path'])
