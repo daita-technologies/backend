@@ -41,19 +41,16 @@ def getMail(user):
                     return info['Value']
     return None
 def checkInvalidUserRegister(user,mail):
-    isCheckUser , isCheckMail = True, True
+    isCheckMail = True
     response = cog_provider_client.list_users(
         UserPoolId=USERPOOLID
     )
-    info_user =  list(filter(lambda x : x['Username'] == user,response['Users']))
-    if len(info_user):
-        isCheckUser = False
     for _ , data in enumerate(response['Users']):
         for  info in data['Attributes']:
-            if info['Name'] == 'email' and info['Value'] == mail:
+            if info['Name'] == 'email' and info['Value'] == mail and data['Username'] != user:
                 isCheckMail = False
-                break
-    return isCheckUser, isCheckMail
+                # break
+    return isCheckMail
 #############################################################################################################################################################
 def createKMSKey(identity):
     alias_name = identity.split(":")[1]
@@ -131,7 +128,7 @@ class User(object):
     def __init__(self):
         self.db_client = boto3.resource('dynamodb')
 
-    def checkFirstLogin(self,ID,username):
+    def IsNotcheckFirstLogin(self,ID,username):
         print(ID,username)
         response = self.db_client.Table("User").get_item(
               Key={
@@ -139,11 +136,9 @@ class User(object):
                    'username': username
               }
         )
-        if 'Item' in response and response['Item']['status'] == "activate":
-            print(response)
-            return True
-        print("False")
         print(response)
+        if 'Item' in response and (response['Item']['status'] == "activate" or response['Item']['status'] == "deactivate"):
+            return True
         return False
 
     def updateActivateUser(self,info):
@@ -183,12 +178,9 @@ def lambda_handler(event, context):
         raise Exception("Login Social Failed")
     resqData = resq.json()
     sub, username = claimsToken(resqData['access_token'],'sub') , claimsToken(resqData['access_token'],'username')
-    # check the user is login another device
-    # if CheckEventUserLogin(sub):
-    #     raise Exception(MessageAnotherUserIsLoginBefore)
-    # else:
-    #     CreateEventUserLogin(sub)
-
+    mail = getMail(username)
+    print(mail,username)
+    checkemail = checkInvalidUserRegister(user=username,mail=mail)
     if not CheckEventUserLogin(sub):
         CreateEventUserLoginOauth2(sub,code)
     try:
@@ -199,12 +191,7 @@ def lambda_handler(event, context):
                 message=MessageAuthenFailed,
                 data={},
                 headers=RESPONSE_HEADER)
-    if not model.checkFirstLogin(ID=sub,username=username):
-        responseIdentity = aws_get_identity_id(resqData['id_token'])
-        mail = getMail(username)
-        print(mail)
-        _, checkemail = checkInvalidUserRegister(user=username,mail=mail)
-
+    if not model.IsNotcheckFirstLogin(ID=sub,username=username) :
         if not checkemail:
             resp = cog_provider_client.admin_delete_user(
                 UserPoolId= USERPOOLID,
@@ -212,6 +199,7 @@ def lambda_handler(event, context):
             )
             print(resp)
             raise Exception(MessageSignUPEmailInvalid)
+        responseIdentity = aws_get_identity_id(resqData['id_token'])
         if 'IS_ENABLE_KMS' in os.environ and eval(os.environ['IS_ENABLE_KMS']) == True:
             kms = createKMSKey(responseIdentity)
         else:

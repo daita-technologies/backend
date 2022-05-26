@@ -11,6 +11,28 @@ from error_messages import *
 from identity_check import *
 from utils import *
 
+def CheckRunningAndDeleteTask(tableTask,identity_id,project_id,name):
+    queryResp = tableTask.query(
+        KeyConditionExpression=Key('identity_id').eq(identity_id),
+        FilterExpression=Attr('project_id').eq(project_id) & (Attr('status').eq('PREPARING_DATA') | Attr('status').eq('PREPARING_HARDWARE') | Attr('status').eq('PENDING') | Attr('status').eq('RUNNING'))
+    )
+    
+    if len(queryResp['Items']) > 0:
+        raise Exception(f'There are {len(queryResp["Items"])} {name} tasks are running. Please stop all tasks before deleting the project!')
+    
+    queryResp = tableTask.query(
+        KeyConditionExpression=Key('identity_id').eq(identity_id),
+        FilterExpression=Attr('project_id').eq(project_id) & (Attr('status').eq('CANCEL') | Attr('status').eq('FINISH') | Attr('status').eq('ERROR') | Attr('status').eq('FINISH_ERROR'))
+    )
+
+    with tableTask.batch_writer() as batch:
+        for each in queryResp['Items']:
+            tableTask.delete_item(Key={
+                'identity_id': each['identity_id'],
+                'task_id':each['task_id']
+            })
+
+
 def lambda_handler(event, context):
     try:
         print(event['body'])
@@ -27,14 +49,32 @@ def lambda_handler(event, context):
         db_resource = boto3.resource('dynamodb')
         
         #### check task that belongs to the project id
-        table = db_resource.Table(os.environ['T_TASKS'])
-        response = table.query(
-                KeyConditionExpression=Key('identity_id').eq(identity_id),
-                FilterExpression=Attr('project_id').eq(project_id) & Attr('status').eq('RUNNING')
-            )
-        if len(response['Items']) > 0:
-            raise Exception(f'There are {len(response["Items"])} tasks are running. Please stop all tasks before deleting the project!')
-            
+        tableGenerateTask = db_resource.Table(os.environ['T_TASKS'])
+        tableDataFlowstask = db_resource.Table(os.environ['T_DATA_FLOW'])
+        tableReferenceImages = db_resource.Table(os.environ['T_REFERENCE_IMAGE'])
+        tableHealthycheckTask = db_resource.Table(os.environ['TABLE_HEALTHCHECK_TASK'])
+        try :
+            CheckRunningAndDeleteTask(tableTask=tableGenerateTask,identity_id=identity_id,project_id=project_id,name='generate')
+            CheckRunningAndDeleteTask(tableTask=tableDataFlowstask,identity_id=identity_id,project_id=project_id,name='dataflow')
+            CheckRunningAndDeleteTask(tableTask=tableReferenceImages,identity_id=identity_id,project_id=project_id,name='reference image')
+            CheckRunningAndDeleteTask(tableTask=tableHealthycheckTask,identity_id=identity_id,project_id=project_id,name='healthycheck')
+        except Exception as e:
+            print(e)
+            return generate_response(
+                message=str(e),
+                status_code=HTTPStatus.OK,
+                data={ },
+                error= True)    
+        tableHeathyCheckInfo = db_resource.Table(os.environ['TABLE_HEALTHCHECK_INFO'])
+        queryTableHealthyCheckInfo = tableHeathyCheckInfo.query(
+             KeyConditionExpression=Key("project_id").eq(project_id) 
+        )
+        with tableHeathyCheckInfo.batch_writer() as batch:
+            for each in queryTableHealthyCheckInfo['Items']:
+                tableHeathyCheckInfo.delete_item(Key={
+                    'project_id': each['project_id'],
+                    'healthcheck_id': each['healthcheck_id']
+                })
         #### delete in project summary
         table = db_resource.Table(os.environ['T_PROJECT_SUMMARY'])
         for type_method in ['ORIGINAL', 'PREPROCESS', 'AUGMENT']:
@@ -48,34 +88,9 @@ def lambda_handler(event, context):
         table_project_delete = db_resource.Table(os.environ['T_PROJECT_DEL'])
         dydb_update_delete_project(table_project, table_project_delete, identity_id, project_name)
         
+
         print('after update delete')
         
-        tableHealthycheckTask = db_resource.Table(os.environ['TABLE_HEALTHCHECK_TASK'])
-        queryTableHealthyCheckTask = tableHealthycheckTask.query(
-            KeyConditionExpression=Key("identity_id").eq(identity_id) ,
-            FilterExpression= Attr("project_id").eq(project_id) & Attr("status").eq("FINISH")
-        )
-
-        # flag = False
-        # while not flag:
-        with tableHealthycheckTask.batch_writer() as batch:
-            for each in queryTableHealthyCheckTask['Items']:
-                tableHealthycheckTask.delete_item(Key={
-                                    'identity_id': each['identity_id'],
-                                    'task_id':each['task_id']
-                })
-                # flag = True
-        
-        tableHeathyCheckInfo = db_resource.Table(os.environ['TABLE_HEALTHCHECK_INFO'])
-        queryTableHealthyCheckInfo = tableHeathyCheckInfo.query(
-             KeyConditionExpression=Key("project_id").eq(project_id) 
-        )
-        with tableHeathyCheckInfo.batch_writer() as batch:
-            for each in queryTableHealthyCheckInfo['Items']:
-                tableHeathyCheckInfo.delete_item(Key={
-                    'project_id': each['project_id'],
-                    'healthcheck_id': each['healthcheck_id']
-                })
         # delete in data
         for type_method in ['ORIGINAL', 'PREPROCESS', 'AUGMENT']:
             table = get_table_dydb_object(db_resource, type_method)
@@ -107,7 +122,7 @@ def lambda_handler(event, context):
             message=str(e),
             status_code=HTTPStatus.OK,
             data={ },
-            error= False
+            error= True
         )    
     return generate_response(
             message="OK",
