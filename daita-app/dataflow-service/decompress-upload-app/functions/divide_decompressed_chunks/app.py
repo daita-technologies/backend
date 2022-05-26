@@ -8,7 +8,7 @@ import boto3
 db = boto3.resource('dynamodb')
 table = db.Table(os.getenv("TableDataFlowTask"))
 
-CHUNK_SIZE = 100
+CHUNK_SIZE = int(os.getenv("UploadS3FileChunk"))
 EFS_MOUNT_POINT = os.getenv("EFSMountPath")
 ALLOWED_IMAGE_EXTENSIONS = os.getenv("AllowedImageExtenesions").split(",")
 ALLOWED_IMAGE_EXTENSIONS = [ext.upper() for ext in ALLOWED_IMAGE_EXTENSIONS] + [ext.lower() for ext in ALLOWED_IMAGE_EXTENSIONS]
