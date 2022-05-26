@@ -31,7 +31,7 @@ def lambda_handler(event, context):
     except Exception as e:
         print(e)
         if 'error_description' in param:
-            location = 'https://dev.daita.tech/'
+            location = 'https://app.daita.tech/'
             headers = {"Location":location,	"Access-Control-Allow-Methods": "GET,HEAD,OPTIONS,POST,PUT"}
             return {
                     "statusCode": 302,
