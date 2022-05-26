@@ -17,7 +17,7 @@ States:
     Catch:
       - ErrorEquals:
           - States.ALL
-          - States.Timeout
+          # - States.Timeout
         Next: CatchErrorTaskDynamoDB
         ResultPath: null
     Next: DownloadTask
@@ -45,7 +45,7 @@ States:
     Catch:
       - ErrorEquals:
           - States.ALL
-          - States.Timeout
+          # - States.Timeout
         Next: CatchErrorTaskDynamoDB
         ResultPath: null
     Next: GenerateTask
@@ -73,7 +73,7 @@ States:
     Catch:
       - ErrorEquals:
           - States.ALL
-          - States.Timeout
+          # - States.Timeout
         Next: CatchErrorTaskDynamoDB
         ResultPath: null
     Next: UploadTask
