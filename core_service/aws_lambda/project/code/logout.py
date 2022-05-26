@@ -22,11 +22,11 @@ RESPONSE_HEADER = {
 }
 endpoint ='https://auth.daita.tech/logout'
 def getRedirectURI():
-    return 'https://dev.daita.tech/login'
+    return 'https://app.daita.tech/login'
 
 def logoutOauth2(code):
     newendpoint = 'https://auth.daita.tech/logout?'+'response_type='+code+ \
-                '&redirect_uri=https://dev.daita.tech/login&client_id=4cpbb5etp3q7grnnrhrc7irjoa&scope=openid+profile+aws.cognito.signin.user.admin'
+                '&redirect_uri=https://app.daita.tech/login&client_id=4cpbb5etp3q7grnnrhrc7irjoa&scope=openid+profile+aws.cognito.signin.user.admin'
     result = requests.get(newendpoint)
     return result
 

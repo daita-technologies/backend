@@ -47,7 +47,7 @@ States:
         BackoffRate: 1
   HandleBatchRequestAI:
     Type: Map
-    MaxConcurrency: 10
+    MaxConcurrency: 5
     InputPath: $
     ItemsPath: $.list_request_ai
     Parameters:
