@@ -30,6 +30,9 @@ Parameters:
     Default: DEBUG
   StagePara:
     Type: String
+  MaxConcurrencyTasks:
+    Type: String
+    Default: 3
   CommonCodeLayerName:
     Type: String
   ApplicationPara:
@@ -158,7 +161,13 @@ Resources:
       VisibilityTimeout: 0
       ContentBasedDeduplication: true
       QueueName: !Sub "${StagePara}-${ApplicationPara}-SqsEc2Work2.fifo"
-
+  TaskQueue:
+    Type: AWS::SQS::Queue
+    Properties:
+      FifoQueue: true
+      VisibilityTimeout: 0
+      ContentBasedDeduplication: true
+      QueueName: !Sub "${StagePara}-${ApplicationPara}-TaskQueue.fifo"
   ####================ ROLES =====================================================
   ### add role to start state machine from eventbus
   CallerServiceEventBusRole:
@@ -226,12 +235,6 @@ Resources:
   HandleCompleteRequestAI:
     Type: AWS::Serverless::Function
     Properties:
-      # VpcConfig:
-      #   SecurityGroupIds: !Split [',', !Join [',', !Ref SecurityGroupIdsPara]]
-      #   SubnetIds: !Split [',', !Join [',', !Ref SubnetIDsPara]]
-      # FileSystemConfigs:
-      #   - Arn: !GetAtt EFSAccessPoint.Arn
-      #     LocalMountPath: !Ref EFSStorageAI
       CodeUri: functions/handlers/generate_step/CompleteRequestAI
       Environment:
         Variables:
@@ -665,16 +668,6 @@ Resources:
   HandleGetResultDownloadTask:
     Type: AWS::Serverless::Function
     Properties:
-      # VpcConfig:
-      #   SecurityGroupIds: !Split [',', !Join [',', !Ref SecurityGroupIdsPara]]
-      #   SubnetIds: !Split [',', !Join [',', !Ref SubnetIDsPara]]
-      # FileSystemConfigs:
-      #   - Arn: !GetAtt EFSAccessPoint.Arn
-      #     LocalMountPath: !Ref EFSStorageAI
-      # Environment:
-      #   Variables:
-      #     EFSPATH: !Ref EFSStorageAI
-      #     ROOTEFS: !Ref ROOTEFS
       CodeUri: functions/handlers/download_task/get_result_download_task
       Policies:
         - S3FullAccessPolicy:
@@ -867,27 +860,93 @@ Resources:
           - s3:*
           Resource: "*"
 
+  CronJobConsumer:
+    Type:  AWS::Serverless::Function
+    Properties:
+      CodeUri: functions/handlers/crontab/consumer
+      Environment:
+        Variables:
+          TASK_QUEUE: !GetAtt TaskQueue.QueueName
+          EVENT_BUS_NAME: !Ref CallerServiceEventBus
+          TABLE_GENERATE_TASK: !Ref TableGenerateTaskName
+          MAX_CONCURRENCY_TASKS : !Ref MaxConcurrencyTasks
+      Events:
+        ScheduledEvent:
+          Type: Schedule
+          Properties:
+            Schedule: cron(0/1 * * * ? *)
+      Policies:
+      - Statement:
+        - Effect: Allow
+          Action:
+            - "logs:*"
+          Resource: "*"
+        - Effect: Allow
+          Action:
+            - events:PutEvents
+          Resource: "*"
+        - Effect: Allow
+          Action:
+          - "dynamodb:GetItem"
+          - "dynamodb:DeleteItem"
+          - "dynamodb:PutItem"
+          - "dynamodb:Scan"
+          - "dynamodb:Query"
+          - "dynamodb:UpdateItem"
+          - "dynamodb:BatchWriteItem"
+          - "dynamodb:BatchGetItem"
+          - "dynamodb:DescribeTable"
+          - "dynamodb:ConditionCheckItem"
+          - "lambda:InvokeFunction"
+          Resource: "*"
+        - Effect: Allow
+          Action:
+          - "sqs:GetQueueAttributes"
+          - "sqs:SendMessage"
+          - "sqs:ReceiveMessage"
+          - "sqs:DeleteMessage"
+          - "sqs:DeleteMessageBatch"
+          - "sqs:GetQueueUrl"
+          Resource: "*"
+
+  HandleTaskQueue:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: functions/handlers/task_queue
+      Environment:
+        Variables:
+          TASK_QUEUE: !GetAtt TaskQueue.QueueName
+      Policies:
+      - Statement:
+        - Effect: Allow
+          Action:
+          - "sqs:GetQueueAttributes"
+          - "sqs:SendMessage"
+          - "sqs:ReceiveMessage"
+          - "sqs:DeleteMessage"
+          - "sqs:DeleteMessageBatch"
+          - "sqs:GetQueueUrl"
+          Resource: "*"
+      Events:
+        stoptask:
+          Type: EventBridgeRule
+          Properties:
+            EventBusName: !Ref ProcessAITaskEventBus
+            Pattern:
+              source:
+                - "source.events"
+              detail-type:
+                - "lambda.event"
   #================ EVENT BUS =================================================
   StopProcessEventBus:
     Type: AWS::Events::EventBus
     Properties:
       Name: !Sub "${StagePara}-${ApplicationPara}-StopProcessEventBus"
-  # StopProcessEventBusDefaultRule:
-  #   Type: AWS::Events::Rule
-  #   Properties:
-  #     Description: "Default Rule for Any event"
-  #     State: ENABLED
-  #     EventBusName: !Ref StopProcessEventBus
-  #     EventPattern:
-  #       source:
-  #         - "source.events"
-  #       detail-type:
-  #         - "lambda.event"
-  #     Targets:
-  #       -
-  #         Arn: !GetAtt StopTaskStop.Arn
-  #         Id: "StopTaskProcess"
-  #         RoleArn: !GetAtt CallerServiceEventBusRole.Arn
+  
+  ProcessAITaskEventBus:
+    Type: AWS::Events::EventBus
+    Properties:
+      Name: !Sub "${StagePara}-${ApplicationPara}-ProcessAITaskEventBus"
 
   CallerServiceEventBus:
     Type: AWS::Events::EventBus
@@ -1237,6 +1296,12 @@ Outputs:
   StopProcessEventBusName:
     Description: "Name of EventBus"
     Value: !Ref StopProcessEventBus
+  ProcessAITaskEventBusArn:
+    Description: "Name of EventBus"
+    Value: !GetAtt ProcessAITaskEventBus.Arn
+  ProcessAITaskEventBusName:
+    Description: "Name of EventBus"
+    Value: !Ref ProcessAITaskEventBus
   # LayerARN:
   #   Description: "ARN of common code layer"
   #   Value: !GetAtt CommonCodeLayer.Arn

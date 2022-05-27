@@ -18,7 +18,7 @@ class GenerateTaskItem():
     FIELD_CREATE_TIME = "created_time"
     FIELD_PROCESS_TYPE = "process_type"
     FIELD_EXECUTEARN = 'ExecutionArn'
-
+    FIELD_WAITINGINQUEUE = 'waiting_in_queue'
     REQUEST_TYPE_ALL            = "all"
     REQUEST_TYPE_TASK_PROGRESS  = "task_progress"
 
@@ -33,7 +33,8 @@ class GenerateTaskItem():
         self.create_time        = convert_current_date_to_iso8601()
         self.updated_time       = convert_current_date_to_iso8601()
         self.process_type       = ""
-        self.executeArn = ""
+        self.executeArn         = ""
+        self.waitingInQueue    = True  
 
     def to_dict(self, request = REQUEST_TYPE_ALL):
         print(self.__dict__)
@@ -46,7 +47,8 @@ class GenerateTaskItem():
                 self.FIELD_NUMBER_FINISHED: self.number_finished,
                 self.FIELD_NUM_GEN_IMAGES: self.number_gen_images,
                 self.FIELD_PROJECT_ID: self.project_id,
-                self.FIELD_EXECUTEARN : self.executeArn
+                self.FIELD_EXECUTEARN : self.executeArn,
+                self.FIELD_WAITINGINQUEUE: self.waitingInQueue
             }
         else:
             dict_info = {
@@ -60,7 +62,8 @@ class GenerateTaskItem():
                 self.FIELD_CREATE_TIME: self.create_time,
                 self.FIELD_UPDATE_TIME: self.updated_time,
                 self.FIELD_PROCESS_TYPE: self.process_type,
-                self.FIELD_EXECUTEARN : self.executeArn
+                self.FIELD_EXECUTEARN : self.executeArn,
+                self.FIELD_WAITINGINQUEUE: self.waitingInQueue
             }
         return dict_info
 
@@ -77,6 +80,7 @@ class GenerateTaskItem():
             self.number_gen_images  = int(item_info.get(self.FIELD_NUM_GEN_IMAGES))
             self.project_id         = item_info.get(self.FIELD_PROJECT_ID)
             self.executeArn         = item_info.get(self.FIELD_EXECUTEARN)
+            self.waitingInQueue     = item_info.get(self.FIELD_WAITINGINQUEUE)
             return self
 
     @classmethod
@@ -143,6 +147,20 @@ class GenerateTaskModel():
             },
             ExpressionAttributeNames={
                 '#s': 'status',
+            }
+        )
+    def update_task_dequeue(self,identity_id, task_id):
+        self.table.update_item(
+            Key={
+                GenerateTaskItem.FIELD_IDENTITY_ID: identity_id,
+                GenerateTaskItem.FIELD_TASK_ID: task_id,
+            },
+            UpdateExpression="SET #e=:e ",
+            ExpressionAttributeValues={
+                ':e': False
+            },
+            ExpressionAttributeNames={
+                '#e': 'waiting_in_queue',
             }
         )
     def update_ExecutionArn(self,identity_id, task_id,executionArn):

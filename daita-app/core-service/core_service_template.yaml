@@ -39,6 +39,10 @@ Parameters:
     Type: String
   CallerServiceEventBusName:
     Type: String
+  ProcessAITaskEventBusName:
+    Type: String
+  ProcessAITaskEventBusArn:
+    Type: String
   ProjectSummary:
     Type: String
     Default: prj_sum_all
@@ -218,7 +222,7 @@ Resources:
       Role: !GetAtt LambdaExecutionRole.Arn
       Environment:
         Variables:
-          EVENT_BUS_NAME: !Ref CallerServiceEventBusName
+          EVENT_BUS_NAME: !Ref ProcessAITaskEventBusName
           LIMIT_PROCESSING_TIMES: !Ref LimitPreprocessTimesName
           LIMIT_AUGMENT_TIMES: !Ref LimitAugmentTimesName
           TABLE_PROJECT_SUM: !Ref ParaTableProjectSumName
