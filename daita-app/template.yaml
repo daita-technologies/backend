@@ -200,7 +200,8 @@ Resources:
         ParaIndexTaskProjectIDTaskID: !GetAtt DatabaseService.Outputs.IndexTaskProjectIDTaskIDName
         StopProcessEventBusArn: !GetAtt  AICallerService.Outputs.StopProcessEventBusArn
         StopProcessEventBusName: !GetAtt AICallerService.Outputs.StopProcessEventBusName
-
+        ProcessAITaskEventBusArn: !GetAtt  AICallerService.Outputs.ProcessAITaskEventBusArn
+        ProcessAITaskEventBusName: !GetAtt  AICallerService.Outputs.ProcessAITaskEventBusName
         ### for reference image para
         TableReferenceImageTasksName: !GetAtt DatabaseService.Outputs.TableReferenceImageTasksName
         TableReferenceImageInfoName: !GetAtt DatabaseService.Outputs.TableReferenceImageInfoName

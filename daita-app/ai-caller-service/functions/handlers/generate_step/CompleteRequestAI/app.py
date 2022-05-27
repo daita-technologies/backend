@@ -50,7 +50,7 @@ def request_update_proj(update_pro_info,list_file_s3,gen_id):
 @error_response
 def lambda_handler(event, context):
     info_update_s3 = event['info_update_s3']
-    
+
     def UpdateFunc(q):
         while True:
             info = q.get()
@@ -66,11 +66,7 @@ def lambda_handler(event, context):
             except Exception as e:
                 print(e)
             q.task_done()
-    
-    # que = queue.Queue()
-    # for i in range(10):
-    #     worker = threading.Thread(target=UpdateFunc, args=(que,),daemon=True)
-    #     worker.start()
+    item = generate_task_model.get_task_info(event['identity_id'] ,event['task_id'])
     for info in info_update_s3:
         request_update_proj(update_pro_info={
                         'identity_id': event['identity_id'],
@@ -78,10 +74,8 @@ def lambda_handler(event, context):
                         's3_key': event['project_prefix'],
                         'project_id': event['project_id'],
                         'project_name': event['project_name'],
-                        'process_type': 'AUGMENT' if 'AUG' in event['gen_id'] else 'PREPROCESS'
+                        'process_type': item.process_type
                     },list_file_s3= info, gen_id=event['gen_id'])
-    # que.join()
-    item = generate_task_model.get_task_info(event['identity_id'] ,event['task_id'])
     if item.status == 'CANCEL':
         sfn_client.stop_execution(executionArn=item.executeArn)
     return {
