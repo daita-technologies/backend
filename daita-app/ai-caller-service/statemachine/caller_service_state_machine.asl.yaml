@@ -16,8 +16,10 @@ States:
         ori2.$: $$
     Catch:
       - ErrorEquals:
+          - States.Timeout
+        Next: CatchErrorTaskDynamoDB
+      - ErrorEquals:
           - States.ALL
-          # - States.Timeout
         Next: CatchErrorTaskDynamoDB
         ResultPath: null
     Next: DownloadTask
@@ -44,8 +46,10 @@ States:
         body.$: $
     Catch:
       - ErrorEquals:
+          - States.Timeout
+        Next: CatchErrorTaskDynamoDB
+      - ErrorEquals:
           - States.ALL
-          # - States.Timeout
         Next: CatchErrorTaskDynamoDB
         ResultPath: null
     Next: GenerateTask
@@ -72,8 +76,10 @@ States:
         body.$: $
     Catch:
       - ErrorEquals:
+          - States.Timeout
+        Next: CatchErrorTaskDynamoDB
+      - ErrorEquals:
           - States.ALL
-          # - States.Timeout
         Next: CatchErrorTaskDynamoDB
         ResultPath: null
     Next: UploadTask
