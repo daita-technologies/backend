@@ -26,9 +26,10 @@ def get_running_task(table_name, db_resource, ls_tasks, identity_id, res_project
 
 def from_dynamodb_to_json(item):
     # print(f"Item to serialize: \n {item}")
-    for key, value in item.items():
-        if type(value) is Decimal:
-            item[key] = float(value)
+    for method, param in item.items():
+        for key, value in param.items():
+            if type(value) is Decimal:
+                param[key] = float(value)
 
     # print(f"Result after serialize: \n {serialize}")
     return item
@@ -128,7 +129,7 @@ def lambda_handler(event, context):
                     "ls_task": ls_tasks,
                     "groups": groups,
                     "reference_images": reference_info,
-                    "aug_parameters": aug_params
+                    "aug_parameters": from_dynamodb_to_json(aug_params)
                 }, 
             "error": False, 
             "success": True, 
@@ -144,7 +145,7 @@ def lambda_handler(event, context):
                     "ls_task": [],
                     "groups": None,
                     "reference_images": reference_info,
-                    "aug_parameters": aug_params
+                    "aug_parameters": from_dynamodb_to_json(aug_params)
                 },
             "error": False, 
             "success": True, 
