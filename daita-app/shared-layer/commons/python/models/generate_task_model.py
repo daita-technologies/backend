@@ -30,7 +30,7 @@ class GenerateTaskItem():
         self.number_finished    = 0
         self.number_gen_images  = 0
         self.project_id         = ""
-        self.create_time        = convert_current_date_to_iso8601()
+        self.created_time        = convert_current_date_to_iso8601()
         self.updated_time       = convert_current_date_to_iso8601()
         self.process_type       = ""
         self.executeArn         = ""
@@ -59,7 +59,7 @@ class GenerateTaskItem():
                 self.FIELD_NUMBER_FINISHED: self.number_finished,
                 self.FIELD_NUM_GEN_IMAGES: self.number_gen_images,
                 self.FIELD_PROJECT_ID: self.project_id,
-                self.FIELD_CREATE_TIME: self.create_time,
+                self.FIELD_CREATE_TIME: self.created_time,
                 self.FIELD_UPDATE_TIME: self.updated_time,
                 self.FIELD_PROCESS_TYPE: self.process_type,
                 self.FIELD_EXECUTEARN : self.executeArn,
@@ -81,6 +81,7 @@ class GenerateTaskItem():
             self.project_id         = item_info.get(self.FIELD_PROJECT_ID)
             self.executeArn         = item_info.get(self.FIELD_EXECUTEARN)
             self.waitingInQueue     = item_info.get(self.FIELD_WAITINGINQUEUE)
+            self.created_time       = item_info.get(self.FIELD_CREATE_TIME)
             return self
 
     @classmethod

@@ -75,6 +75,23 @@ paths:
         httpMethod: "POST"
         type: "aws_proxy"
         payloadFormatVersion: "2.0"
+
+  ###==============================
+  ### For project functions
+  /projects/apply_expert_mode_param:
+    post:
+      responses:
+        default:
+          description: "apply generate expert mode parameters"
+      x-amazon-apigateway-integration:
+        credentials:
+          Fn::GetAtt: [ApiGatewayCallLambdaRole, Arn]
+        uri:
+          Fn::Sub: arn:${AWS::Partition}:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${ApplyGenerateExpertParamFunction.Arn}/invocations
+        httpMethod: "POST"
+        type: "aws_proxy"
+        payloadFormatVersion: "2.0"  
+
   /projects/delete_images:
     post:
       responses:

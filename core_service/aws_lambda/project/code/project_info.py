@@ -4,6 +4,8 @@ import hashlib
 import hmac
 import base64
 import os
+from decimal import Decimal
+
 from boto3.dynamodb.conditions import Key, Attr
 from utils import convert_response, aws_get_identity_id, dydb_get_project_id, dydb_get_project_full
 
@@ -21,6 +23,16 @@ def get_running_task(table_name, db_resource, ls_tasks, identity_id, res_project
                             "process_type": item.get('process_type', task_type)
                         })
     return ls_tasks
+
+def from_dynamodb_to_json(item):
+    # print(f"Item to serialize: \n {item}")
+    for method, param in item.items():
+        for key, value in param.items():
+            if type(value) is Decimal:
+                param[key] = float(value)
+
+    # print(f"Result after serialize: \n {serialize}")
+    return item
 
 def lambda_handler(event, context):
     try:
@@ -55,6 +67,7 @@ def lambda_handler(event, context):
         gen_status = res_project.get("gen_status", "FINISH")  # default is finish, else GENERATING
         res_times_generated = int(res_project.get('times_generated', 0))
         reference_images = res_project.get("reference_images", {})
+        aug_params = res_project.get("aug_parameters", {})
         reference_info = {}
         for method, s3_path in reference_images.items():
             filename = s3_path.split("/")[-1]
@@ -115,7 +128,8 @@ def lambda_handler(event, context):
                     "gen_status": gen_status,
                     "ls_task": ls_tasks,
                     "groups": groups,
-                    "reference_images": reference_info
+                    "reference_images": reference_info,
+                    "aug_parameters": from_dynamodb_to_json(aug_params)
                 }, 
             "error": False, 
             "success": True, 
@@ -130,7 +144,8 @@ def lambda_handler(event, context):
                     "gen_status": gen_status,
                     "ls_task": [],
                     "groups": None,
-                    "reference_images": reference_info
+                    "reference_images": reference_info,
+                    "aug_parameters": from_dynamodb_to_json(aug_params)
                 },
             "error": False, 
             "success": True, 
