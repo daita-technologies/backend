@@ -6,6 +6,7 @@ from config import *
 from response import *
 from error_messages import *
 from identity_check import *
+from decimal import Decimal
 
 from system_parameter_store import SystemParameterStore
 from models.generate_task_model import GenerateTaskModel
@@ -38,11 +39,12 @@ class GenerateImageClass(LambdaBaseClass):
         self.process_type = body.get(KEY_NAME_PROCESS_TYPE, VALUE_TYPE_METHOD_PREPROCESS)
         self.reference_images = body.get(KEY_NAME_REFERENCE_IMAGES, {})
         self.aug_parameters  = body.get(KEY_NAME_AUG_PARAMS, {})
-        self.is_normalize_resolution = body.get(KEY_NAME_IS_RESOLUTION, False)
+        self.is_normalize_resolution = body.get(KEY_NAME_IS_RESOLUTION, False)        
 
         ### update value for ls_reference
         for method, s3_link in self.reference_images.items():
-            self.reference_images[method] = f"s3://{s3_link}"
+            if "s3://" not in s3_link:
+                self.reference_images[method] = f"s3://{s3_link}"
 
     def _check_input_value(self):
         if len(self.data_number)>0:
@@ -101,13 +103,19 @@ class GenerateImageClass(LambdaBaseClass):
 
         return times_generated, times_preprocess, s3_prefix
 
-    def _update_generate_times(self, identity_id, project_name, type_method, times_augment, times_preprocess, reference_images):
+    def _update_generate_times(self, identity_id, project_name, type_method, times_augment, times_preprocess,
+                                 reference_images, aug_params):
         if type_method == VALUE_TYPE_METHOD_PREPROCESS:
             times_preprocess += 1
         elif type_method == VALUE_TYPE_METHOD_AUGMENT:
             times_augment += 1
 
-        self.project_model.update_project_generate_times(identity_id, project_name, times_augment, times_preprocess, reference_images)
+        ### update float to Decimal
+        aug_params = json.loads(json.dumps(aug_params), parse_float=Decimal)
+
+        self.project_model.update_project_generate_times(identity_id, project_name, times_augment,
+                                                             times_preprocess, reference_images,
+                                                             aug_params)
 
         return times_preprocess, times_augment
 
@@ -166,7 +174,7 @@ class GenerateImageClass(LambdaBaseClass):
         ### update reference images for last running
         times_preprocess, times_augment = self._update_generate_times(identity_id, 
                                                             self.project_name, type_method, 
-                                                            times_augment, times_preprocess, self.reference_images)       
+                                                            times_augment, times_preprocess, self.reference_images, self.aug_parameters)       
 
         ### check if preprocess then reset in prj sumary
         if type_method == VALUE_TYPE_METHOD_PREPROCESS:

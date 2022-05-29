@@ -19,6 +19,7 @@ class ProjectItem():
     FIELD_REFERENCE_IMAGES      = KEY_NAME_REFERENCE_IMAGES
     FIELD_DATANUM_ORIGINAL      = VALUE_TYPE_DATA_ORIGINAL
     FIELD_DATANUM_PREPROCESS    = VALUE_TYPE_DATA_PREPROCESSED
+    FIELD_AUG_PARAMETERS        = KEY_NAME_AUG_PARAMS
 
     def __init__(self, dict_info) -> None:        
         print("start init")
@@ -74,7 +75,8 @@ class ProjectModel():
 
         return
 
-    def update_project_generate_times(self, identity_id, project_name, times_augment, times_preprocess, reference_images):
+    def update_project_generate_times(self, identity_id, project_name, times_augment, times_preprocess,
+                                     reference_images, aug_params):
         response = self.table.update_item(
             Key={
                 ProjectItem.FIELD_IDENTITY_ID: identity_id,
@@ -84,15 +86,38 @@ class ProjectModel():
                 '#P_T': ProjectItem.FIELD_TIMES_PREPRO,
                 '#A_T': ProjectItem.FIELD_TIMES_AUGMENT,
                 '#UP_DATE': ProjectItem.FIELD_UPDATE_DATE,
-                "#RE_IM": ProjectItem.FIELD_REFERENCE_IMAGES
+                "#RE_IM": ProjectItem.FIELD_REFERENCE_IMAGES,
+                "#AU_PA": ProjectItem.FIELD_AUG_PARAMETERS
             },
             ExpressionAttributeValues = {
                 ':vp_t': times_preprocess,
                 ':va_t': times_augment,
                 ':da': convert_current_date_to_iso8601(),   
-                ':re_im': reference_images             
+                ':re_im': reference_images,
+                ':au_pa': aug_params
             },
-            UpdateExpression = 'SET #P_T = :vp_t , #A_T = :va_t, #UP_DATE = :da, #RE_IM = :re_im'
+            UpdateExpression = 'SET #P_T = :vp_t , #A_T = :va_t, #AU_PA = :au_pa, #UP_DATE = :da, #RE_IM = :re_im'
+        )
+
+        return
+
+    def update_generate_expert_mode_param(self, identity_id, project_name, reference_images, aug_params):
+        response = self.table.update_item(
+            Key={
+                ProjectItem.FIELD_IDENTITY_ID: identity_id,
+                ProjectItem.FIELD_PROJECT_NAME: project_name,
+            },
+            ExpressionAttributeNames= {
+                '#UP_DATE': ProjectItem.FIELD_UPDATE_DATE,
+                "#RE_IM": ProjectItem.FIELD_REFERENCE_IMAGES,
+                "#AU_PA": ProjectItem.FIELD_AUG_PARAMETERS
+            },
+            ExpressionAttributeValues = {
+                ':da': convert_current_date_to_iso8601(),   
+                ':re_im': reference_images,
+                ':au_pa': aug_params
+            },
+            UpdateExpression = 'SET #AU_PA = :au_pa, #UP_DATE = :da, #RE_IM = :re_im'
         )
 
         return

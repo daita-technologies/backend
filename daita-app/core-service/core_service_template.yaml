@@ -253,6 +253,14 @@ Resources:
       Environment:
         Variables:
           EVENT_BUS_NAME: !Ref StopProcessEventBusName
+
+  ### For Project lambda function
+  ApplyGenerateExpertParamFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: functions/handlers/project/apply_param_expert_mode
+      Role: !GetAtt LambdaExecutionRole.Arn          
+
   DeleteImages:
     Type: AWS::Serverless::Function
     Properties:
@@ -263,6 +271,7 @@ Resources:
           TABLE_HEALTHCHECK_INFO: !Ref TableHealthCheckInfoName
           T_PROJECT_SUMMARY: !Ref ProjectSummary
           T_DATA_ORI: !Ref DataOrigin
+
   DeleteProject:
     Type: AWS::Serverless::Function
     Properties:
