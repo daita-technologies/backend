@@ -163,8 +163,10 @@ def download(
         zip_path = zip_dir.joinpath(zipfile_name)
         json_object = {}
 
+        files_ = set(workdir.glob("**/*")) - set(workdir.glob("**/*.json"))
+        image_files = [f for f in files_ if f.is_file()]
         with ZipFile(zip_path, 'w') as zip:
-            for file_ in workdir.glob("**/*.[!.json]*"):
+            for file_ in image_files:
                 with file_.with_suffix(".json").open() as rstr:
                     file_info = json.load(rstr)
                 type_method = file_info["type_method"]
@@ -189,13 +191,10 @@ def download(
             zip.write(filepath, json_filename)
         endtime_down_zip = time.time()
 
-
-
         # put to s3
         key_name = os.path.join(identity_id, project_id, "download", zipfile_name)
         put_zip_to_s3(str(zip_path), bucket_name, key_name)
         endtime_put_s3 = time.time()
-
 
         # delete data in EFS
         os.remove(zip_path)
