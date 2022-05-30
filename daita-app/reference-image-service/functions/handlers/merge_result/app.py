@@ -13,6 +13,7 @@ from system_parameter_store import SystemParameterStore
 from lambda_base_class import LambdaBaseClass
 from models.reference_image_info_model import ReferenceImageInfoModel
 from models.task_model import TaskModel
+from models.project_model import ProjectModel
 from typing import List
 
 
@@ -50,6 +51,7 @@ class MergeResultClass(LambdaBaseClass):
         self.s3 = boto3.client('s3')
         self.reference_info_model = ReferenceImageInfoModel(os.environ["TABLE_REFERENCE_IMAGE_INFO"])
         self.task_model = TaskModel(os.environ["TABLE_REFERENCE_IMAGE_TASK"])
+        self.project_model = ProjectModel(os.environ["TABLE_PROJECT"])
 
     @LambdaBaseClass.parse_body
     def parser(self, body):
@@ -59,6 +61,9 @@ class MergeResultClass(LambdaBaseClass):
         self.task_id = body["detail"]["task_id"]
         self.identity_id = body["detail"]["identity_id"]
         self.ls_method_id = body["detail"]["ls_method_id"]
+        self.project_name = body["detail"][KEY_NAME_PROJECT_NAME]
+        self.ls_method_choose = body["detail"][KEY_NAME_LS_METHOD_CHOOSE]
+
         self.s3_key_path = body["body"]["s3_key_path"]
         self.result_calculate = body["result_map"]
         self.bucket = body["body"]["bucket"]
@@ -159,6 +164,16 @@ class MergeResultClass(LambdaBaseClass):
 
         ### update task finish status
         self.task_model.update_status(self.task_id, self.identity_id, VALUE_TASK_FINISH)
+
+        ### update reference images to project table
+        if len(self.project_name)>0:
+            dict_ref_save = {}
+            for method in self.ls_method_choose:
+                if method in dict_reference.keys():
+                    dict_ref_save[method] = dict_reference[method]["s3_path"]
+            ## save dict_ref_save to project
+            self.project_model.update_project_reference_images(self.identity_id, self.project_name, self.ls_method_choose)
+
                 
         return generate_response(
             message="OK",

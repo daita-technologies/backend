@@ -233,6 +233,7 @@ Resources:
         TableReferenceImageTasksName: !GetAtt DatabaseService.Outputs.TableReferenceImageTasksName
         TableReferenceImageInfoName: !GetAtt DatabaseService.Outputs.TableReferenceImageInfoName
         TableDataOriginalName: !GetAtt DatabaseService.Outputs.TableDataOriginalName
+        TableProjectsName: !GetAtt DatabaseService.Outputs.TableProjectsName
         CommonCodeLayerName: !Ref CommonCodeLayer
         ApplicationPara: !Ref Application
         BatchsizeCalculateReferenceImage: !Ref BatchsizeCalculateReferenceImage

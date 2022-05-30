@@ -24,6 +24,8 @@ Parameters:
     Type: String
   ApplicationPara:
     Type: String
+  TableProjectsName:
+    Type: String
   
   ### System parameters
   BatchsizeCalculateReferenceImage:
@@ -39,6 +41,7 @@ Globals:
         TABLE_REFERENCE_IMAGE_TASK: !Ref TableReferenceImageTasksName
         TABLE_REFERENCE_IMAGE_INFO: !Ref TableReferenceImageInfoName
         TABLE_DATA_ORIGINAL: !Ref TableDataOriginalName   
+        TABLE_PROJECT: !Ref TableProjectsName
         BATCHSIZE_REF_IMG: !Ref BatchsizeCalculateReferenceImage     
 
 Resources:
@@ -122,7 +125,7 @@ Resources:
     Properties:
       PackageType: Image            
       Role: !Ref LambdaRole
-      MemorySize: 2048
+      MemorySize: 4096
       Architectures:
         - x86_64
     Metadata:

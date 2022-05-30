@@ -25,6 +25,8 @@ class TaskModel():
     ### field for reference image
     FIELD_LS_METHOD_ID = "ls_method_id"
     FIELD_EXECUTION_SM_ID = "execution_id"
+    FIELD_PROJECT_NAME = "project_name"
+    FIELD_LS_METHOD_FE_CHOOSE = "ls_method_choose"
 
     ### fields for download
     FIELD_DOWNLOAD_PRESIGN_URL = "presign_url"
@@ -284,7 +286,7 @@ class TaskModel():
 
         return response
 
-    def create_task_reference_image(self, identity_id, project_id, ls_method_id):
+    def create_task_reference_image(self, identity_id, project_id, project_name, ls_method_id, ls_method_client_choose):
         process_type = VALUE_PROCESS_TYPE_REFERENCE_IM
         task_id = create_task_id_w_created_time()
         dict_info = {
@@ -295,7 +297,9 @@ class TaskModel():
             self.FIELD_LS_METHOD_ID: ls_method_id,
             self.FIELD_CREATE_TIME: convert_current_date_to_iso8601(),
             self.FIELD_UPDATED_TIME: convert_current_date_to_iso8601(),
-            self.FIELD_PROCESS_TYPE: process_type
+            self.FIELD_PROCESS_TYPE: process_type,
+            self.FIELD_LS_METHOD_FE_CHOOSE: ls_method_client_choose,
+            self.FIELD_PROJECT_NAME: project_name
         }
         self.table.put_item(
             Item = dict_info

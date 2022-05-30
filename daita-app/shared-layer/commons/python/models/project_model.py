@@ -121,3 +121,25 @@ class ProjectModel():
         )
 
         return
+
+    def update_project_reference_images(self, identity_id, project_name, reference_images):
+        """
+        update project reference images after finish calculate reference images with ls_method choosen by client
+        """
+        response = self.table.update_item(
+            Key={
+                ProjectItem.FIELD_IDENTITY_ID: identity_id,
+                ProjectItem.FIELD_PROJECT_NAME: project_name,
+            },
+            ExpressionAttributeNames= {
+                '#UP_DATE': ProjectItem.FIELD_UPDATE_DATE,
+                "#RE_IM": ProjectItem.FIELD_REFERENCE_IMAGES,
+            },
+            ExpressionAttributeValues = {
+                ':da': convert_current_date_to_iso8601(),   
+                ':re_im': reference_images,
+            },
+            UpdateExpression = 'SET #RE_IM = :re_im, #UP_DATE = :da'
+        )
+
+        return

@@ -25,15 +25,17 @@ class ReferenceImageClass(LambdaBaseClass):
         self.logger.debug(f"body in main_parser: {body}")
 
         self.id_token = body[KEY_NAME_ID_TOKEN]
-        self.project_id = body[KEY_NAME_PROJECT_ID]     
+        self.project_id = body[KEY_NAME_PROJECT_ID]
+        self.project_name = body.get(KEY_NAME_PROJECT_NAME, "")     
         self.ls_method_id = LS_METHOD_ID_SUPPORT_REFERENCE_IMG
+        self.ls_method_client_choose = body.get(KEY_NAME_LS_METHOD_CHOOSE, {})
 
     def _check_input_value(self):        
         return
 
-    def _create_task(self, identity_id, project_id, ls_method_id):
+    def _create_task(self, identity_id, project_id, project_name, ls_method_id, ls_method_client_choose):
         # create task id
-        task_id, process_type = self.task_model.create_task_reference_image(identity_id, project_id, ls_method_id)
+        task_id, process_type = self.task_model.create_task_reference_image(identity_id, project_id, project_name, ls_method_id, ls_method_client_choose)
         return task_id, process_type 
       
     def _put_event_bus(self, detail_pass_para):        
@@ -61,14 +63,16 @@ class ReferenceImageClass(LambdaBaseClass):
         identity_id = self.get_identity(self.id_token)  
 
         ### create taskID and update to DB
-        task_id, process_type = self._create_task(identity_id, self.project_id, self.ls_method_id)
+        task_id, process_type = self._create_task(identity_id, self.project_id, self.project_name, self.ls_method_id, self.ls_method_client_choose)
 
         ### push event to eventbridge
         detail_pass_para = {
             KEY_NAME_IDENTITY_ID: identity_id,
             KEY_NAME_PROJECT_ID: self.project_id,            
             KEY_NAME_LS_METHOD_ID: self.ls_method_id,           
-            KEY_NAME_TASK_ID: task_id
+            KEY_NAME_TASK_ID: task_id,
+            KEY_NAME_PROJECT_NAME: self.project_name,
+            KEY_NAME_LS_METHOD_CHOOSE: self.ls_method_client_choose
         }
         event_id = self._put_event_bus(detail_pass_para) 
                 
