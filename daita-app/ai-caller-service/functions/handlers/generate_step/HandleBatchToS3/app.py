@@ -40,11 +40,11 @@ def split(uri):
         bucket = match.group(1)
         filename = match.group(2)
     return bucket, filename
-def UploadImage(output,project_prefix):
+def UploadImage(output,project_prefix,task_id):
     info = []
     for it_img  in output:
         bucket ,folder= split(project_prefix)
-        temp_namefile = os.path.basename(it_img)
+        temp_namefile =os.path.join(task_id,os.path.basename(it_img))
         s3_namefile = os.path.join(folder,temp_namefile)
         if not '.json' in it_img:
             info.append({'filename': s3_namefile,'size': os.path.getsize(it_img)})
@@ -76,7 +76,7 @@ def lambda_handler(event, context):
         print("OutputBatchDir: \n", outputBatchDir)
         print("outdir: \n", outdir)
         UpdateStaskCurrentImageToTaskDB(task_id= event['task_id'], identity_id=event['identity_id'] , output=outputBatchDir)
-        infoUploadS3 =  UploadImage(output=outdir,project_prefix=event['project_prefix'])
+        infoUploadS3 =  UploadImage(output=outdir,project_prefix=event['project_prefix'],task_id=event['task_id'])
     return {
         'response': event['response'],
         'gen_id': str(event['batch']['request_json']['codes']),

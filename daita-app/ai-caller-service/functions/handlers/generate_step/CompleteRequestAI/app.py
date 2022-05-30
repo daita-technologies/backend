@@ -22,7 +22,7 @@ def batcher(iterable, size):
     for first in iterator:
         yield list(chain([first], islice(iterator, size - 1)))
 
-def request_update_proj(update_pro_info,list_file_s3,gen_id):
+def request_update_proj(update_pro_info,list_file_s3,gen_id,task_id):
     batch_list_s3 = list(batcher(list_file_s3,20))
     for batch_file in batch_list_s3:
         print("[DEBUG] batch file {}".format(batch_file))
@@ -34,8 +34,10 @@ def request_update_proj(update_pro_info,list_file_s3,gen_id):
                 'ls_object_info':[]}    
         for info_file in batch_file:
             filename = os.path.basename(info_file['filename'])
+            if update_pro_info['process_type'] == 'PREPROCESS':
+                filename = task_id+'_'+ str(filename)
             info['ls_object_info'].append({
-                's3_key':os.path.join(update_pro_info['s3_key'],filename) ,
+                's3_key':os.path.join(update_pro_info['s3_key'],os.path.join(task_id,filename)) ,
                 'filename':filename,
                 'hash':'',
                 'size':info_file['size'],
@@ -50,22 +52,6 @@ def request_update_proj(update_pro_info,list_file_s3,gen_id):
 @error_response
 def lambda_handler(event, context):
     info_update_s3 = event['info_update_s3']
-
-    def UpdateFunc(q):
-        while True:
-            info = q.get()
-            try:
-                request_update_proj(update_pro_info={
-                        'identity_id': event['identity_id'],
-                        'id_token':event['id_token'],
-                        's3_key': event['project_prefix'],
-                        'project_id': event['project_id'],
-                        'project_name': event['project_name'],
-                        'process_type': 'AUGMENT' if 'AUG' in event['gen_id'] else 'PREPROCESS'
-                    },list_file_s3= info, gen_id=event['gen_id'])
-            except Exception as e:
-                print(e)
-            q.task_done()
     item = generate_task_model.get_task_info(event['identity_id'] ,event['task_id'])
     for info in info_update_s3:
         request_update_proj(update_pro_info={
@@ -75,7 +61,7 @@ def lambda_handler(event, context):
                         'project_id': event['project_id'],
                         'project_name': event['project_name'],
                         'process_type': item.process_type
-                    },list_file_s3= info, gen_id=event['gen_id'])
+                    },list_file_s3= info, gen_id=event['gen_id'],task_id=event['task_id'])
     if item.status == 'CANCEL':
         sfn_client.stop_execution(executionArn=item.executeArn)
     return {

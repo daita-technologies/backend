@@ -34,8 +34,8 @@ def process( identity_id, task_id):
     elif item.status != 'RUNNING':
             stop_execution(executeArn)
     # stop_execution(executeArn)
-    if not item.status in ['FINISH','ERROR','FINISH_ERROR']: 
-        generate_task_model.update_status(identity_id,task_id,'CANCEL')
+    # if not item.status in ['FINISH','ERROR','FINISH_ERROR']: 
+    generate_task_model.update_status(identity_id,task_id,'CANCEL')
 @error_response
 def lambda_handler(event, context):
     body = event['detail']
