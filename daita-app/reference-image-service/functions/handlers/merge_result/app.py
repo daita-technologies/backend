@@ -172,7 +172,7 @@ class MergeResultClass(LambdaBaseClass):
                 if method in dict_reference.keys():
                     dict_ref_save[method] = dict_reference[method]["s3_path"]
             ## save dict_ref_save to project
-            self.project_model.update_project_reference_images(self.identity_id, self.project_name, self.ls_method_choose)
+            self.project_model.update_project_reference_images(self.identity_id, self.project_name, dict_ref_save)
 
                 
         return generate_response(
