@@ -63,16 +63,26 @@ class S3Downloader:
             print(message)
             raise Exception(message)
 
-def read_image(image_path: str) -> np.ndarray:
+def calculate_resolution(image):
+    height, width, channels = image.shape
+    return width, height
+
+def read_image(image_path: str, max_width=4000, max_height=4000) -> np.ndarray:
     if "s3://" in image_path:  # image in S3 bucket
         image: np.ndarray = S3Downloader.read_image(image_path)
     else:  # image in local machine
         image = cv2.imread(image_path, cv2.IMREAD_COLOR)
         image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+
+    width, height = calculate_resolution(image)
+    print(f"resolution of image: {image_path} is (wxh) \n {(width, height)}")
+    if width>max_width or height>max_height:
+        return None
+    
     return np.ascontiguousarray(image)
 
 class Preprocessor:
-    def __init__(self, use_gpu: bool = False):
+    def __init__(self, use_gpu: bool = False, max_width=400, max_height=4000):
         """
         Apply random augmentations on batch of images.
 
@@ -81,7 +91,9 @@ class Preprocessor:
         use_gpu:
             Whether to perform augmentations on gpu or not. Default: False
         """
-        self.use_gpu: bool = use_gpu        
+        self.use_gpu: bool = use_gpu  
+        self.max_width = max_width
+        self.max_height = max_height      
 
     def get_reference_image_paths(self,
                                   data: List[Tuple[str, str]],
@@ -90,27 +102,38 @@ class Preprocessor:
         # Mapping from a preprocess_code to its corresponding reference image path
         reference_paths_dict: Dict[str, tuple] = {}
 
-        input_image_paths = [f's3://{x["s3_key"]}' for x in data]
-        print("Inputs s3_key_path: ", input_image_paths)
+        ### Read all input images beforehand and filter the oversize image
+        input_images: List[str] = []
+        overlimit_images: List[str] = []
+        input_images_path_update: List[str] = []
+        data_update = []
+        for sub_data in data:
+            if "s3://" not in sub_data["s3_key"]:
+                input_image_path = f's3://{sub_data["s3_key"]}'
+            else:
+                input_image_path = sub_data["s3_key"]
 
-        # Read all input images beforehand
-        input_images: List[str] = [
-            read_image(input_image_path)
-            for input_image_path in input_image_paths
-        ]
-        # Find reference image for each preprocessing code
+            value =  read_image(input_image_path, self.max_width, self.max_height)
+            if value is None:
+                overlimit_images.append(input_image_path)
+            else:
+                input_images.append(value)
+                input_images_path_update.append(input_image_path)
+                data_update.append(sub_data)
+
+        ### Find reference image for each preprocessing code
         for code in preprocess_codes:
             if CodeToPreprocess.get(code, None) is None:
                 continue
             preprocess_name: str = CodeToPreprocess[code]
             reference_paths_dict[code] = self.__find_reference_image_path(
                 input_images,
-                input_image_paths,
+                input_images_path_update,
                 preprocess_name
             )
         
         print("reference_paths_dict after calculate reference: ", reference_paths_dict)
-        return reference_paths_dict    
+        return reference_paths_dict, data_update, overlimit_images  
 
     def __find_reference_image_path(self,
                                     input_images: List[np.ndarray],

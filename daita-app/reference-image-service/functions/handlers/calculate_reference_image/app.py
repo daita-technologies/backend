@@ -63,8 +63,10 @@ class RICalculateClass(LambdaBaseClass):
         super().__init__()     
         self.client_events = boto3.client('events')    
         self.const = SystemParameterStore()  
-        self.s3 = boto3.client('s3')
-        self.preprocessor = Preprocessor()
+        self.s3 = boto3.client('s3')  
+        max_width = int(self.const.get_param(os.environ["MAX_WIDTH_RESOLUTION_IMG"]))
+        max_height = int(self.const.get_param(os.environ["MAX_HEIGHT_RESOLUTION_IMG"]))
+        self.preprocessor = Preprocessor(max_width=max_width, max_height=max_height)
 
     @LambdaBaseClass.parse_body
     def parser(self, body):
@@ -92,9 +94,9 @@ class RICalculateClass(LambdaBaseClass):
         print("data after get from index: ",data)
         
         ### calculate info of reference image
-        refer_dict = self.preprocessor.get_reference_image_paths(data, self.ls_method_id)
+        refer_dict, update_data, overlimit_image = self.preprocessor.get_reference_image_paths(data, self.ls_method_id)
         save_dict = {
-            "input_data": data,
+            "input_data": update_data,
             "reference": refer_dict
         }
 
@@ -107,10 +109,18 @@ class RICalculateClass(LambdaBaseClass):
             Bucket= self.bucket,
             Key= s3_key_path
         )         
+        s3_name_over = f"output/RI_{self.index}_overlimit_image.json"
+        s3_key_path_over = os.path.join(folder, s3_name_over)
+        self.s3.put_object(
+            Body=json.dumps(overlimit_image),
+            Bucket= self.bucket,
+            Key= s3_key_path_over
+        )  
                 
         return {
             self.KEY_NAME_INDEX: self.index,
-            "s3_name": s3_name
+            "s3_name": s3_name,
+            "s3_overlimit": s3_name_over
         }
 
        
