@@ -30,7 +30,7 @@ def lambda_handler(event, context):
             detail = body["detail"]
             item = generate_task_model.get_task_info(detail['identity_id'] ,detail['task_id'])
             print(item.status,item.waitingInQueue)
-            if item.status == 'FINISH' or item.status == 'CANCEL' or item.status == 'FINISH_ERROR':
+            if item.status == 'FINISH' or item.status == 'CANCEL' or item.status == 'FINISH_ERROR' or item.status == 'ERROR':
                 message.delete()
             if item.status != 'PENDING' or not item.waitingInQueue:
                 pushedMessage += 1

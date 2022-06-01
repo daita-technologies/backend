@@ -38,10 +38,7 @@ States:
     OutputPath: $
     Parameters:
       FunctionName: '${UpdateStatusTask}'
-      Payload:
-        identity_id.$: $$.Execution.Input.body.identity_id
-        task_id.$: $$.Execution.Input.body.task_id
-        status.$: $.status
+      Payload.$: $
     Retry:
       - ErrorEquals:
           - RetriableCallerServiceError
@@ -73,7 +70,6 @@ States:
             project_name.$: $$.Execution.Input.body.project_name
             project_prefix.$: $$.Execution.Input.body.project_prefix
             current_num_retries.$: $.Payload.current_num_retries
-            id_token.$: $$.Execution.Input.body.id_token
             max_retries.$: $.Payload.max_retries
             batch.$: $.Payload.batch
             response.$: $.Payload.response
@@ -108,11 +104,41 @@ States:
     Type: Task
     Resource: 'arn:aws:states:::lambda:invoke'
     InputPath: $
-    OutputPath: $.Payload
+    ResultSelector:
+      id_token.$: $$.Execution.Input.body.id_token
+      identity_id.$: $$.Execution.Input.body.identity_id
+      task_id.$: $$.Execution.Input.body.task_id
+      project_id.$: $$.Execution.Input.body.project_id
+      project_name.$: $$.Execution.Input.body.project_name
+      project_prefix.$: $$.Execution.Input.body.project_prefix
+      response.$: $.Payload.response
+      state.$: $.Payload.state
+      status.$: $.Payload.status
+      info_update_s3.$: $.Payload.info_update_s3
+      gen_id.$: $.Payload.gen_id
     Parameters:
       FunctionName: '${HandleMergeResultRequestAI}'
       Payload.$: $
     ResultPath: $
+    OutputPath: $
+    Next: CheckResponse
+  CheckResponse:
+    Type: Choice
+    Choices:
+      - Variable: $.response
+        StringEquals: OK
+        Next: HandleCompleteRequestAI
+      - Variable: $.response
+        StringEquals: NOT_OK
+        Next: ChoiceStageRequestAI
+  HandleCompleteRequestAI:
+    Type: Task
+    Resource: 'arn:aws:states:::lambda:invoke'
+    InputPath: $
+    OutputPath: $.Payload
+    Parameters:
+      FunctionName: '${HandleCompleteRequestAI}'
+      Payload.$: $
     Next: ChoiceStageRequestAI
   GenerateComplete:
     Type: Pass

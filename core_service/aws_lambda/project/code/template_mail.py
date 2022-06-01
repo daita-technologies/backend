@@ -55,13 +55,13 @@ def lambda_handler(event, context):
     username = claimsToken(authorization_header,'username')
     mail = getMail(username)
     template = "<p>Hi,</p><p>{} has invited you to explore DAITA's recently launched " \
-		"<a href=\"https://demo.daita.tech\"style=\"text-decoration:none;color:inherit;border-bottom: solid 2px\">data augmentation platform</a>.</p> " \
+		"<a href=\"https://app.daita.tech\"style=\"text-decoration:none;color:inherit;border-bottom: solid 2px\">data augmentation platform</a>.</p> " \
 		"<p>Building a platform that machine learning engineers and data scientists " \
 		"really love is truly hard. But that's our ultimate ambition!</p> <p>Thus, your feedback" \
 		" is greatly appreciated, as this first version will still be buggy and missing many features. Please send " \
 		"all your thoughts, concerns, feature requests, etc. to contact@daita.tech or simply reply to this e-mail. " \
 		"Please be assured that all your feedback will find its way into our product backlog.</p> <p>All our services" \
-		" are currently free of charge - so you can go wild! Try it now <a href=\"https://demo.daita.tech\"style=\"text-decoration:none;color:inherit;border-bottom: solid 2px\">here</a>.</p> <p>Cheers,</p> <p>The DAITA Team</p>".format(mail)
+		" are currently free of charge - so you can go wild! Try it now <a href=\"https://app.daita.tech\"style=\"text-decoration:none;color:inherit;border-bottom: solid 2px\">here</a>.</p> <p>Cheers,</p> <p>The DAITA Team</p>".format(mail)
     return generate_response(
             message= MessageGetTemapleMailSuccessFully,
             data={"content":template},

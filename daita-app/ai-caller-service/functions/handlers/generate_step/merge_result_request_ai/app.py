@@ -15,26 +15,17 @@ from boto3.dynamodb.conditions import Key, Attr
 @error_response
 def lambda_handler(event, context):
     result = {'state': '',
-                'response':'OK',
-                'info_update_s3':[]}
+                'response':'OK'}
     batches = event
     lenBatches =  len(batches)
-    # identity_id, task_id, gen_id ,project_id ,project_name , id_token,project_prefix= None, None, None,None , None, None,None
-    
-    # item = generate_task_model.get_task_info(event['identity_id'] ,event['task_id'])
-    # if item.status == 'CANCEL':
-    #     sfn_client.stop_execution(executionArn=item.executeArn)
     task_finish = 0
     for  batch in batches:
-        result['gen_id'] = batch['gen_id']
         if batch['response'] == 'OK':
             task_finish += 1
-            result['info_update_s3'].append(batch['info_upload_s3'])
-
     if task_finish == 0:
-        result['status'] = 'ERROR'
         result['response'] = 'NOT_OK'
         result['state'] = 'ERROR'
+        result['status'] = 'ERROR'
     elif task_finish == lenBatches:
         result['status'] = 'FINISH'
         result['state'] = 'FINISH'

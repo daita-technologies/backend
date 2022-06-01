@@ -60,7 +60,12 @@ Parameters:
     Type: String
   LambdaRoleARN:
     Type: String
-
+  TableDataAugmentName:
+    Type: String
+  TableDataOriginalName:
+    Type: String
+  TableDataPreprocessName:
+    Type: String
 Resources:
   LambdaExecutionRole:
     Type: AWS::IAM::Role
@@ -168,6 +173,13 @@ Resources:
       VisibilityTimeout: 0
       ContentBasedDeduplication: true
       QueueName: !Sub "${StagePara}-${ApplicationPara}-TaskQueue.fifo"
+  UpdateDatabaseRequestAI:
+    Type: AWS::SQS::Queue
+    Properties:
+      FifoQueue: true
+      VisibilityTimeout: 900
+      ContentBasedDeduplication: true
+      QueueName: !Sub "${StagePara}-${ApplicationPara}-UpdateDatabaseRequestAI.fifo"
   ####================ ROLES =====================================================
   ### add role to start state machine from eventbus
   CallerServiceEventBusRole:
@@ -239,6 +251,15 @@ Resources:
       Environment:
         Variables:
           TABLE_GENERATE_TASK: !Ref TableGenerateTaskName
+          TABLE_DATA_AUGMENT: !Ref TableDataAugmentName
+          TABLE_DATA_ORIGINAL: !Ref TableDataOriginalName
+          TABLE_DATA_PREPROCESS: !Ref TableDataPreprocessName   
+      Events:
+        SQSQueueEvent:
+          Type: SQS
+          Properties:
+            BatchSize: 10
+            Queue: !GetAtt UpdateDatabaseRequestAI.Arn
       Policies:
         - Statement:
           -
@@ -384,8 +405,15 @@ Resources:
       FileSystemConfigs:
         - Arn: !GetAtt EFSAccessPoint.Arn
           LocalMountPath: !Ref EFSStorageAI
+      Environment:
+        Variables:
+          QUEUE: !GetAtt UpdateDatabaseRequestAI.QueueName
       Policies:
       - Statement:
+        - Effect: Allow
+          Action:
+          - "sqs:*"
+          Resource: "*"
         - Sid: CloudWatchLogsPolicy
           Effect: Allow
           Action:

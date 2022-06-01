@@ -18,10 +18,9 @@ task_model = TaskModel(os.environ["TABLE_GENERATE_TASK"],None)
 
 @error_response
 def lambda_handler(event, context):
-    item = generate_task_model.get_task_info(event['identity_id'] ,event['task_id'])
-    if item.status != 'CANCEL':
-        task_model.update_status(event['task_id'], event['identity_id'], event['status'])
-    if event['status'] == 'FINISH' or item.status == 'CANCEL':
+    task_model.update_status(event['task_id'], event['identity_id'], event['status'])
+    print(event)
+    if event['status'] == 'FINISH':
         folder = os.environ['ROOTEFS'] + os.environ['EFSPATH'] +'/'+ event['task_id'] +'/'
         if os.path.exists(folder):
             shutil.rmtree(folder)

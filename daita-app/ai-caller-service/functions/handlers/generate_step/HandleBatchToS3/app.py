@@ -19,7 +19,8 @@ from pathlib import Path
 task_model = TaskModel(os.environ["TABLE_GENERATE_TASK"],None)
 generate_task_model = GenerateTaskModel(os.environ["TABLE_GENERATE_TASK"])
 
-
+sqsClient = boto3.client('sqs',REGION)
+sqsResourse = boto3.resource('sqs',REGION)
 s3 = boto3.client('s3')
 def is_img(img):
     return not os.path.splitext(img)[1] in ['.json']
@@ -40,11 +41,11 @@ def split(uri):
         bucket = match.group(1)
         filename = match.group(2)
     return bucket, filename
-def UploadImage(output,project_prefix):
+def UploadImage(output,project_prefix,task_id):
     info = []
     for it_img  in output:
         bucket ,folder= split(project_prefix)
-        temp_namefile = os.path.basename(it_img)
+        temp_namefile =os.path.join(task_id,os.path.basename(it_img))
         s3_namefile = os.path.join(folder,temp_namefile)
         if not '.json' in it_img:
             info.append({'filename': s3_namefile,'size': os.path.getsize(it_img)})
@@ -67,19 +68,26 @@ def UpdateStaskCurrentImageToTaskDB(task_id,identity_id,output):
 @error_response
 def lambda_handler(event, context):
     print(event)
+    Queue = sqsResourse.get_queue_by_name(QueueName=os.environ['QUEUE'])
     infoUploadS3 = []
-    item = generate_task_model.get_task_info(event['identity_id'] ,event['task_id'])
-    if event['response'] == 'OK' and item.status != 'CANCEL':
+    # item = generate_task_model.get_task_info(event['identity_id'] ,event['task_id'])
+    if event['response'] == 'OK' :
         outputBatchDir = '/'+  '/'.join(event['batch']['request_json']['output_folder'].split('/')[2:])
         outdir = glob.glob(outputBatchDir+'/*')
-
         print("OutputBatchDir: \n", outputBatchDir)
         print("outdir: \n", outdir)
-        UpdateStaskCurrentImageToTaskDB(task_id= event['task_id'], identity_id=event['identity_id'] , output=outputBatchDir)
-        infoUploadS3 =  UploadImage(output=outdir,project_prefix=event['project_prefix'])
+        # UpdateStaskCurrentImageToTaskDB(task_id= event['task_id'], identity_id=event['identity_id'] , output=outputBatchDir)
+        infoUploadS3 =  UploadImage(output=outdir,project_prefix=event['project_prefix'],task_id=event['task_id'])
+        message = event
+        message['info_upload_s3'] = infoUploadS3
+        message['gen_id'] = str(event['batch']['request_json']['codes'])
+        Queue.send_message(
+                            MessageBody=json.dumps(message),
+                            MessageGroupId="Update-Database",
+                            DelaySeconds=0,
+                        )
     return {
         'response': event['response'],
         'gen_id': str(event['batch']['request_json']['codes']),
         'output':event['batch']['request_json']['output_folder'],
-        'info_upload_s3': infoUploadS3,
     }
