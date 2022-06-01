@@ -66,6 +66,8 @@ KEY_NAME_METHOD_ID          = "method_id"
 KEY_NAME_IS_RESOLUTION      = "is_normalize_resolution"
 KEY_NAME_AUG_PARAMS         = "aug_parameters"
 
+KEY_NAME_LS_METHOD_CHOOSE   = "ls_method_client_choose"  # for save result of reference image to database project table
+
 KEY_NAME_RES_AUMENTATION    = "augmentation"
 KEY_NAME_RES_PREPROCESSING  = "preprocessing"
 

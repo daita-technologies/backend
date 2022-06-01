@@ -175,7 +175,11 @@ class GenerateImageClass(LambdaBaseClass):
         ### update reference images for last running
         times_preprocess, times_augment = self._update_generate_times(identity_id, 
                                                             self.project_name, type_method, 
-                                                            times_augment, times_preprocess, self.reference_images, self.aug_parameters)       
+                                                            times_augment, times_preprocess, self.reference_images, self.aug_parameters) 
+
+        ### update data number in case auto split for augmentation
+        if type_method == VALUE_TYPE_METHOD_AUGMENT:
+            self.project_model.update_project_info(identity_id, self.project_name, self.data_type, self.data_number)      
 
         ### check if preprocess then reset in prj sumary
         if type_method == VALUE_TYPE_METHOD_PREPROCESS:

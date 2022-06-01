@@ -24,9 +24,15 @@ Parameters:
     Type: String
   ApplicationPara:
     Type: String
+  TableProjectsName:
+    Type: String
   
   ### System parameters
   BatchsizeCalculateReferenceImage:
+    Type: String
+  MaxWidthResolutionImage: 
+    Type: String
+  MaxHeightResolutionImage: 
     Type: String
 
 Globals:
@@ -39,7 +45,10 @@ Globals:
         TABLE_REFERENCE_IMAGE_TASK: !Ref TableReferenceImageTasksName
         TABLE_REFERENCE_IMAGE_INFO: !Ref TableReferenceImageInfoName
         TABLE_DATA_ORIGINAL: !Ref TableDataOriginalName   
-        BATCHSIZE_REF_IMG: !Ref BatchsizeCalculateReferenceImage     
+        TABLE_PROJECT: !Ref TableProjectsName
+        BATCHSIZE_REF_IMG: !Ref BatchsizeCalculateReferenceImage
+        MAX_WIDTH_RESOLUTION_IMG: !Ref MaxWidthResolutionImage
+        MAX_HEIGHT_RESOLUTION_IMG: !Ref MaxHeightResolutionImage     
 
 Resources:
   #================ ROLES =====================================================  
@@ -122,7 +131,7 @@ Resources:
     Properties:
       PackageType: Image            
       Role: !Ref LambdaRole
-      MemorySize: 2048
+      MemorySize: 3072
       Architectures:
         - x86_64
     Metadata:
