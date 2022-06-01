@@ -13,6 +13,7 @@ from models.generate_task_model import GenerateTaskModel
 from models.project_model import ProjectModel, ProjectItem
 from models.project_sum_model import ProjectSumModel
 from lambda_base_class import LambdaBaseClass
+from boto3.dynamodb.conditions import Key, Attr
 
 
 class GenerateImageClass(LambdaBaseClass):
@@ -180,6 +181,20 @@ class GenerateImageClass(LambdaBaseClass):
         if type_method == VALUE_TYPE_METHOD_PREPROCESS:
             self.project_sum_model.reset_prj_sum_preprocess(project_id = self.project_id, 
                                                             type_data=VALUE_TYPE_DATA_PREPROCESSED)
+
+            ##delete image in preprocess table
+            db_resource = boto3.resource('dynamodb',REGION)
+            preprocessTBL = db_resource.Table(os.environ['TABLE_PREPROCESS'])
+            queryResponse = preprocessTBL.query(
+            KeyConditionExpression=Key('project_id').eq(self.project_id)
+            )
+            print(f"The number of files in preproces table {len(queryResponse['Items'])}")
+            with preprocessTBL.batch_writer() as batch:
+                for each in queryResponse['Items']:
+                    preprocessTBL.delete_item(Key={
+                        'project_id': each['project_id'],
+                        'filename':each['filename']
+                    })
 
         ### create taskID and update to DB
         task_id = self._create_task(identity_id, self.project_id, type_method)

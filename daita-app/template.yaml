@@ -146,6 +146,9 @@ Resources:
         S3BucketNamePara: !Ref S3BucketName
         TableGenerateTaskName: !GetAtt DatabaseService.Outputs.TableGenerateTaskName
         LambdaRoleARN: !GetAtt GeneralLambdaExecutionRole.Arn
+        TableDataAugmentName: !GetAtt DatabaseService.Outputs.TableDataAugmentName
+        TableDataOriginalName: !GetAtt DatabaseService.Outputs.TableDataOriginalName
+        TableDataPreprocessName: !GetAtt DatabaseService.Outputs.TableDataPreprocessName
 
   DataFlowService:
     Type: AWS::Serverless::Application
@@ -206,6 +209,8 @@ Resources:
         TableReferenceImageTasksName: !GetAtt DatabaseService.Outputs.TableReferenceImageTasksName
         TableReferenceImageInfoName: !GetAtt DatabaseService.Outputs.TableReferenceImageInfoName
         ReferenceImageEventBusName: !GetAtt ReferenceImageService.Outputs.ReferenceImageEventBusName
+        ####### Data Preprocess Table
+        TableDataPreprocessName: !GetAtt DatabaseService.Outputs.TableDataPreprocessName
 
 
   HealthCheckService:

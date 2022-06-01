@@ -261,7 +261,24 @@ class TaskModel():
                 )
         
         return response
+    def update_number_files(self, task_id, identity_id, num_finish):
+        response = self.table.update_item(
+                    Key = {
+                            self.FIELD_TASK_ID: task_id,
+                            self.FIELD_IDENTITY_ID: identity_id
+                        },
+                    UpdateExpression = "SET #num_finished=:num_finished, #updated_time=:updated_time",
+                    ExpressionAttributeValues = {
+                        ':num_finished': num_finish,
+                        ':updated_time': convert_current_date_to_iso8601()
+                    },
+                    ExpressionAttributeNames = {
+                                                '#updated_time': self.FIELD_UPDATED_TIME,
+                                                '#num_finished': 'number_finished'
+                                            }
+                )
 
+        return response
 
     def update_generate_progress(self, task_id, identity_id, num_finish, status):
         response = self.table.update_item(

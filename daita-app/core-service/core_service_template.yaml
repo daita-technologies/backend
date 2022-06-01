@@ -106,7 +106,8 @@ Parameters:
     Type: String
   StopProcessEventBusName:
     Type: String
-
+  TableDataPreprocessName:
+    Type: String
 Resources:
   #================ ROLES =====================================================
 
@@ -226,7 +227,7 @@ Resources:
           LIMIT_PROCESSING_TIMES: !Ref LimitPreprocessTimesName
           LIMIT_AUGMENT_TIMES: !Ref LimitAugmentTimesName
           TABLE_PROJECT_SUM: !Ref ParaTableProjectSumName
-
+          TABLE_PREPROCESS: !Ref TableDataPreprocessName
   TaskProgressFunction:
     Type: AWS::Serverless::Function
     Properties:
