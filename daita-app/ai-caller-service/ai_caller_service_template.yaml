@@ -54,6 +54,9 @@ Parameters:
     Type: String
   TableGenerateTaskName:
     Type: String
+  TableProjectSumAll:
+    Type: String
+    Default: prj_sum_all
   LambdaRoleARN:
     Type: String
   LambdaRoleARN:
@@ -253,7 +256,8 @@ Resources:
           TABLE_GENERATE_TASK: !Ref TableGenerateTaskName
           TABLE_DATA_AUGMENT: !Ref TableDataAugmentName
           TABLE_DATA_ORIGINAL: !Ref TableDataOriginalName
-          TABLE_DATA_PREPROCESS: !Ref TableDataPreprocessName   
+          TABLE_DATA_PREPROCESS: !Ref TableDataPreprocessName
+          T_PROJECT_SUMMARY: !Ref TableProjectSumAll
       Events:
         SQSQueueEvent:
           Type: SQS
@@ -898,6 +902,9 @@ Resources:
           EVENT_BUS_NAME: !Ref CallerServiceEventBus
           TABLE_GENERATE_TASK: !Ref TableGenerateTaskName
           MAX_CONCURRENCY_TASKS : !Ref MaxConcurrencyTasks
+          TABLE_DATA_AUGMENT: !Ref TableDataAugmentName
+          TABLE_DATA_PREPROCESS: !Ref TableDataPreprocessName
+          T_PROJECT_SUMMARY: !Ref TableProjectSumAll 
       Events:
         ScheduledEvent:
           Type: Schedule
