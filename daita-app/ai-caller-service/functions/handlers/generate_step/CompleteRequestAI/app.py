@@ -57,8 +57,63 @@ def lambda_handler(event, context):
         body =  json.loads(record['body'])
         info_upload_s3 = body['info_upload_s3']
         item = generate_task_model.get_task_info(body['identity_id'] ,body['task_id'])
-        
-        request_update_proj(update_pro_info={
+        db_resource = boto3.resource('dynamodb',REGION)
+        if item.status == 'CANCEL':
+            if item.process_type == 'AUGMENT':
+                tableDataGen = db_resource.Table(os.environ['TABLE_DATA_AUGMENT'])
+            else:
+                tableDataGen = db_resource.Table(os.environ['TABLE_DATA_PREPROCESS'])
+
+            queryResponse = tableDataGen.query(
+                KeyConditionExpression=Key('project_id').eq(body['project_id']),
+                FilterExpression=Attr('s3_key').contains(body['task_id'])
+                    )
+            print(f"The number files will be deleted {len(queryResponse['Items'])}")
+            total_size = 0 
+            total_file = len(queryResponse['Items'])
+            task_model.update_number_files(task_id = body['task_id'], identity_id = body['identity_id'],num_finish = 0)
+            if len(queryResponse['Items']) > 0:
+                with tableDataGen.batch_writer() as batch:
+                    for each in queryResponse['Items']:
+                        tableDataGen.delete_item(Key={
+                            'project_id': each['project_id'],
+                            'filename':each['filename']
+                        })
+                        total_size += each['size']
+            
+                # Update Table T_PROJECT_SUMMARY 
+                
+                prj_sum_all = db_resource.Table(os.environ['T_PROJECT_SUMMARY'])
+                responsePrjSumAll = prj_sum_all.get_item( Key = {
+                        "project_id":body['project_id'] ,
+                        "type":  item.process_type
+                    })
+
+                print(responsePrjSumAll['Item'])
+                
+                if not 'Item' in responsePrjSumAll:
+                    return {}
+
+                itemResponseProjSumAll = responsePrjSumAll['Item']
+
+                prj_sum_all.update_item(Key = {
+                        'project_id': body['project_id'],
+                        'type': item.process_type
+                    },
+                    ExpressionAttributeNames = {
+                        '#SI': 'total_size',
+                        '#COU': 'count',  
+                    },
+                    ExpressionAttributeValues = {
+                        ':si': itemResponseProjSumAll['total_size'] - total_size,
+                        ':cou': itemResponseProjSumAll['count'] -total_file 
+                    },
+                    UpdateExpression='SET #SI = :si, #COU = :cou' 
+                )
+            
+
+            return {}
+        resq = request_update_proj(update_pro_info={
                         'identity_id': body['identity_id'],
                         'id_token':body['id_token'],
                         's3_key': body['project_prefix'],
@@ -66,8 +121,7 @@ def lambda_handler(event, context):
                         'project_name': body['project_name'],
                         'process_type': item.process_type
                     },list_file_s3= info_upload_s3, gen_id=body['gen_id'],task_id=body['task_id'])
-        db_resource = boto3.resource('dynamodb',REGION)
-    
+        print(resq)
         if item.process_type == 'AUGMENT':
             table = db_resource.Table(os.environ['TABLE_DATA_AUGMENT'])
         elif item.process_type == 'PREPROCESS':
