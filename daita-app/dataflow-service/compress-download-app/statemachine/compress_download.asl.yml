@@ -25,6 +25,7 @@ States:
     Parameters:
       file_chunk.$: $$.Map.Item.Value
       workdir.$: $.taskresult.workdir
+    MaxConcurrency: 30
     Iterator:
       StartAt: DownloadFilesFunction
       States:
