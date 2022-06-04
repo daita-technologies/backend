@@ -100,7 +100,7 @@ class TaskModel():
             if count>len(items):
                 next_token = items[-1]
             elif count == len(items) and last_key and count>0:
-                next_token = items[-1]
+                next_token = items[-1]            
                 
         print(f"ls_items: \n {ls_items} \n next_token: {next_token}")
         
@@ -118,9 +118,11 @@ class TaskModel():
             
             
             while do_continue: 
-                ls_page_token.append(do_continue)
-                _, do_continue = self._paginate_query_w_option(key_condition_exp, filter_exp, limit_size, projection_str, attr_name, attr_value,
+                temp = do_continue.copy()                
+                ls_items, do_continue = self._paginate_query_w_option(key_condition_exp, filter_exp, limit_size, projection_str, attr_name, attr_value,
                                                 ex_start_key=do_continue, index_table=index_table, text_print="response from query in WHILE LOOP") 
+                if len(ls_items)>0:
+                    ls_page_token.append(temp)
                                                 
             return (return_ls_items, ls_page_token)
         else:
