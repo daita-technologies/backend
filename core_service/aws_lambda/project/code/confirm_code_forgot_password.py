@@ -4,6 +4,7 @@ import boto3
 import json
 from config import *
 from error import *
+from custom_mail import *
 from response import generate_response, error_response
 
 
@@ -29,19 +30,26 @@ def lambda_handler(event, context):
         confirm_code = body["confirm_code"]
     except Exception as exc:
         raise Exception(MessageUnmarshalInputJson) from exc
+    
+    try :
+        DeleteConfirmCode({
+            'region':REGION,
+            'user':username,
+            'code':confirm_code
+        })
+    except Exception as e:
+        raise Exception(e)
 
     if not re.match(PASSWORD_REGEX, password):
+        AddInsertConfirmCode(info={'user':username,'confirm_code':confirm_code})
         raise Exception(MessageInvalidPassword)
-
+    
     try:
-        # TODO: check logic to raise some exception from response body
-        response = cog_provider_client.confirm_forgot_password(
-            Username=username,
-            Password=password,
-            ConfirmationCode=confirm_code,
-            ClientId=CLIENTPOOLID
-        )
+        response = cog_provider_client.admin_set_user_password(UserPoolId=USERPOOLID,Username=username,Password=password,Permanent=True)
+        print(response)
     except Exception as exc:
+        print(exc)
+        AddInsertConfirmCode(info={'user':username,'confirm_code':confirm_code})
         raise Exception(MessageForgotPasswordConfirmcodeFailed) from exc
 
     return generate_response(

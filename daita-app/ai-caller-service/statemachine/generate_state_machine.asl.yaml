@@ -30,18 +30,30 @@ States:
       - Variable: $.state
         StringEquals: ERROR
         Next: UpdateStatusTask
+  is_waiting_message_in_flight:
+    Type: Choice
+    Choices:
+      - Variable: $.is_retry
+        BooleanEquals: true
+        Next: UpdateStatusTask
+      - Variable: $.is_retry
+        BooleanEquals: false
+        Next: GenerateComplete
   UpdateStatusTask:
     Type: Task
     Resource: 'arn:aws:states:::lambda:invoke'
-    Next: GenerateComplete
+    Next: is_waiting_message_in_flight
     InputPath: $
-    OutputPath: $
+    OutputPath: $.Payload
     Parameters:
       FunctionName: '${UpdateStatusTask}'
       Payload:
         identity_id.$: $$.Execution.Input.body.identity_id
         task_id.$: $$.Execution.Input.body.task_id
         status.$: $.status
+        retry_waiting_message_in_flight.$: $.retry_waiting_message_in_flight
+        current_retry.$: $.current_retry
+        is_retry.$: $.is_retry
     Retry:
       - ErrorEquals:
           - RetriableCallerServiceError

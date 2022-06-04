@@ -8,6 +8,7 @@ import json
 from config import *
 from error import *
 from verify_captcha import *
+from custom_mail import *
 from response import generate_response, error_response
 
 
@@ -17,7 +18,18 @@ RESPONSE_HEADER = {
     "Access-Control-Allow-Credentials": "true",
 	"Access-Control-Allow-Methods": "GET, HEAD, OPTIONS, POST, PUT",
 }
+def getMail(user):
+    response = cog_provider_client.list_users(
+        UserPoolId=USERPOOLID
+    )
+    # info_user =  list(filter(lambda x : x['Username'] == user,response['Users']))
 
+    for _ , data in enumerate(response['Users']):
+        if data['Username'] == user:
+            for  info in data['Attributes']:
+                if info['Name'] == 'email':
+                    return info['Value']
+    return None
 
 @error_response
 def lambda_handler(event, context):
@@ -53,23 +65,13 @@ def lambda_handler(event, context):
             message= MessageUserVerifyConfirmCode,
             headers=RESPONSE_HEADER
         )
-    try:
-        response = cog_provider_client.forgot_password(
-            ClientId=CLIENTPOOLID,
-            Username=username
-        )
-    except cog_provider_client.exceptions.UserNotFoundException as e:
-        print(e)
-        return generate_response(
-        message=MessageForgotPasswordUsernotExist,
-        headers=RESPONSE_HEADER
-    )
-    except Exception as e:
-        print(e)
-        return generate_response(
-            message= MessageForgotPasswordFailed,
-            headers=RESPONSE_HEADER
-        )
+    mail = getMail(username)
+    AddTriggerCustomMail({
+        'region':REGION,
+        'user':username,
+        'mail':mail,
+        'subject':'Your email confirmation code'
+    })
 
     return generate_response(
         message=MessageForgotPasswordSuccessfully,

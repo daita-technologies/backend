@@ -1,3 +1,4 @@
+from re import S
 import boto3
 from boto3.dynamodb.conditions import Key, Attr
 from config import *
@@ -19,6 +20,7 @@ class GenerateTaskItem():
     FIELD_PROCESS_TYPE = "process_type"
     FIELD_EXECUTEARN = 'ExecutionArn'
     FIELD_WAITINGINQUEUE = 'waiting_in_queue'
+    FIELD_MESSAGEINFLIGHT = 'messages_in_flight'
     REQUEST_TYPE_ALL            = "all"
     REQUEST_TYPE_TASK_PROGRESS  = "task_progress"
 
@@ -34,7 +36,8 @@ class GenerateTaskItem():
         self.updated_time       = convert_current_date_to_iso8601()
         self.process_type       = ""
         self.executeArn         = ""
-        self.waitingInQueue    = True  
+        self.waitingInQueue    = True 
+        self.messages_in_flight = 0
 
     def to_dict(self, request = REQUEST_TYPE_ALL):
         print(self.__dict__)
@@ -48,7 +51,8 @@ class GenerateTaskItem():
                 self.FIELD_NUM_GEN_IMAGES: self.number_gen_images,
                 self.FIELD_PROJECT_ID: self.project_id,
                 self.FIELD_EXECUTEARN : self.executeArn,
-                self.FIELD_WAITINGINQUEUE: self.waitingInQueue
+                self.FIELD_WAITINGINQUEUE: self.waitingInQueue,
+                self.FIELD_MESSAGEINFLIGHT : self.messages_in_flight
             }
         else:
             dict_info = {
@@ -63,7 +67,8 @@ class GenerateTaskItem():
                 self.FIELD_UPDATE_TIME: self.updated_time,
                 self.FIELD_PROCESS_TYPE: self.process_type,
                 self.FIELD_EXECUTEARN : self.executeArn,
-                self.FIELD_WAITINGINQUEUE: self.waitingInQueue
+                self.FIELD_WAITINGINQUEUE: self.waitingInQueue,
+                self.FIELD_MESSAGEINFLIGHT : self.messages_in_flight
             }
         return dict_info
 
@@ -82,6 +87,7 @@ class GenerateTaskItem():
             self.executeArn         = item_info.get(self.FIELD_EXECUTEARN)
             self.waitingInQueue     = item_info.get(self.FIELD_WAITINGINQUEUE)
             self.created_time       = item_info.get(self.FIELD_CREATE_TIME)
+            self.messages_in_flight = int(item_info.get(self.FIELD_MESSAGEINFLIGHT))
             return self
 
     @classmethod
@@ -163,6 +169,35 @@ class GenerateTaskModel():
             ExpressionAttributeNames={
                 '#e': 'waiting_in_queue',
             }
+        )
+    def update_messages_in_flight(self,identity_id, task_id,messages_in_flight):
+        self.table.update_item(
+            Key={
+                GenerateTaskItem.FIELD_IDENTITY_ID: identity_id,
+                GenerateTaskItem.FIELD_TASK_ID: task_id,
+            },
+             ExpressionAttributeValues={
+                ':m': messages_in_flight
+            },
+            ExpressionAttributeNames={
+                '#m': 'messages_in_flight',
+            },
+            UpdateExpression="ADD #m :m",
+            ReturnValues="UPDATED_NEW"
+        )
+    def init_messages_in_flight(self,identity_id, task_id):
+        self.table.update_item(
+            Key={
+                GenerateTaskItem.FIELD_IDENTITY_ID: identity_id,
+                GenerateTaskItem.FIELD_TASK_ID: task_id,
+            },
+             ExpressionAttributeValues={
+                ':m': 0
+            },
+            ExpressionAttributeNames={
+                '#m': 'messages_in_flight',
+            },
+            UpdateExpression="SET #m = :m",
         )
     def update_ExecutionArn(self,identity_id, task_id,executionArn):
         self.table.update_item(

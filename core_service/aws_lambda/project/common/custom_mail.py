@@ -67,7 +67,10 @@ def DeleteConfirmCode(info):
     modelTrigger.delete_item({
         'user':info['user']
                     })
-
+def AddInsertConfirmCode(info):
+    modelTrigger = TriggerCustomMailcode(REGION=info['region'])
+    modelTrigger.create_item({'user':info['user'],'code':info['confirm_code']})
+    
 def ResendCodeConfirm(info):
     modelTrigger = TriggerCustomMailcode(REGION=info['region'])
 

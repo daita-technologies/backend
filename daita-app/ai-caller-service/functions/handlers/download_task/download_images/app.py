@@ -38,4 +38,5 @@ def lambda_handler(event, context):
     resultS3 = s3.get_object(Bucket=bucket, Key=filename)
     data = json.loads(resultS3["Body"].read().decode())
     download(data['uri'],data['folder'])
+    s3.delete_object(Bucket=bucket,Key=filename)
     return {}

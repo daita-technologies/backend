@@ -109,6 +109,7 @@ def downloadS3ToEFS(data):
     result = data
     result['download_task'] = s3Resp
     result['download_images'] = download_images
+    result['images'] = len(result['images'])
     return result
 
 

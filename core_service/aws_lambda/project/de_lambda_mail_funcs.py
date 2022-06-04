@@ -7,7 +7,7 @@ CODE_DIR = PROJECT_DIR.joinpath("code")
 def deploy_lambda_send_mail(general_info, lambda_service):
     ls_lambda_val = []   
     
-    #login
+    #reference-email
     lambda_uri, lambda_version = lambda_service.deploy_lambda_function(f'reference-email',
                                           [ CODE_DIR.joinpath("invite_friend.py"),
                                             CODE_DIR.joinpath("utils.py"),
