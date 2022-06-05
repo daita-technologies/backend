@@ -90,6 +90,7 @@ States:
             batch.$: $.Payload.batch
             response.$: $.Payload.response
             is_retry.$: $.Payload.is_retry
+            augment_codes.$: $.Payload.augment_codes
           Parameters:
             FunctionName: '${WorkerRequestAI}'
             Payload.$: $
