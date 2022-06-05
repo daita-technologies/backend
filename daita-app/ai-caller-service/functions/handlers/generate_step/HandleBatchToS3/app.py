@@ -86,6 +86,7 @@ def lambda_handler(event, context):
                             MessageGroupId="Update-Database",
                             DelaySeconds=0,
                         )
+        generate_task_model.update_messages_in_flight(event['identity_id'], event['task_id'],len(infoUploadS3))
     return {
         'response': event['response'],
         'gen_id': str(event['batch']['request_json']['codes']),

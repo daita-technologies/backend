@@ -272,6 +272,7 @@ Resources:
           TABLE_HEALTHCHECK_INFO: !Ref TableHealthCheckInfoName
           T_PROJECT_SUMMARY: !Ref ProjectSummary
           T_DATA_ORI: !Ref DataOrigin
+          T_PROJECT: !Ref TableProject
 
   DeleteProject:
     Type: AWS::Serverless::Function

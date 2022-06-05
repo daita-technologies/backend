@@ -22,7 +22,37 @@ def delete_image_healthycheck_info(db_resource,project_id,healthcheck_id):
                                     'healthcheck_id': healthcheck_id
                                 }
                             )    
-
+def delete_reference_images(db_resource,identity_id,project_id,deletedfilename):
+    print(f'Log Debug: {deletedfilename}')
+    table_project = db_resource.Table(os.environ['T_PROJECT'])
+    queryResponse = table_project.query(
+        KeyConditionExpression=Key('identity_id').eq(identity_id),
+        FilterExpression=Attr('project_id').eq(project_id)
+    )
+    with table_project.batch_writer() as batch:
+        for each in queryResponse['Items']:
+            reference_images = each['reference_images']
+            new_reference_image = {}
+            for k , v in reference_images.items():
+                if not deletedfilename in v :
+                    new_reference_image[k] = v
+            
+            resp = table_project.update_item(
+                                    Key={
+                                        'project_name': each['project_name'],
+                                        'identity_id': identity_id ,
+                                    },
+                                    ExpressionAttributeNames= {
+                                        '#r': 'reference_images',
+                                    },
+                                    ExpressionAttributeValues = {
+                                        ':r':  new_reference_image
+                                    },
+                                    UpdateExpression = 'SET #r = :r' 
+                                )
+            print(resp)
+            
+    
 def lambda_handler(event, context):
     try:
         print(event['body'])
@@ -72,6 +102,7 @@ def lambda_handler(event, context):
     db_resource = boto3.resource('dynamodb')
     try:
         table_sum_all = db_resource.Table(os.environ['T_PROJECT_SUMMARY'])
+
         for key, value in dict_request.items():
             
             project_id = value['project_id']
@@ -83,13 +114,19 @@ def lambda_handler(event, context):
                     'project_id': project_id,
                     'filename': request['filename']
                 })
-                print(item)
+                try:
+                    delete_reference_images(db_resource=db_resource,identity_id=identity_id,project_id=project_id,deletedfilename=request['filename'])
+                except Exception as e:
+                    print(e)
                 if ('healthcheck_id' in item['Item']) and (not item['Item']['healthcheck_id'] is None or  isinstance(item['Item']['healthcheck_id'],str)):
                     delete_image_healthycheck_info(db_resource=db_resource,project_id=project_id,healthcheck_id=item['Item']['healthcheck_id'])
+                
                 table.delete_item(Key={
                     'project_id': project_id,
                     'filename': request['filename']
                 })
+                # check reference image 
+
 
             # if we delete in original, we also delete in preprocess
             if key == "ORIGINAL":

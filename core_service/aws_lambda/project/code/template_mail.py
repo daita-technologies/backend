@@ -59,7 +59,7 @@ def lambda_handler(event, context):
 		"<p>Building a platform that machine learning engineers and data scientists " \
 		"really love is truly hard. But that's our ultimate ambition!</p> <p>Thus, your feedback" \
 		" is greatly appreciated, as this first version will still be buggy and missing many features. Please send " \
-		"all your thoughts, concerns, feature requests, etc. to contact@daita.tech or simply reply to this e-mail. " \
+		"all your thoughts, concerns, feature requests, etc. to <a href=\"mailto:contact@daita.tech\"\>contact@daita.tech</a> or simply reply to this e-mail. " \
 		"Please be assured that all your feedback will find its way into our product backlog.</p> <p>All our services" \
 		" are currently free of charge - so you can go wild! Try it now <a href=\"https://app.daita.tech\"style=\"text-decoration:none;color:inherit;border-bottom: solid 2px\">here</a>.</p> <p>Cheers,</p> <p>The DAITA Team</p>".format(mail)
     return generate_response(

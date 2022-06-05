@@ -12,8 +12,11 @@ from identity_check import *
 from ec2 import EC2Model, startEc2
 from queue_request_AI import assignTaskToEc2
 from models.task_model import TaskModel
+from models.generate_task_model import GenerateTaskModel
+
 from s3_utils import *
 task_model = TaskModel(os.environ["TABLE_GENERATE_TASK"],None)
+generate_task_model = GenerateTaskModel(os.environ["TABLE_GENERATE_TASK"])
 
 ec2Model = EC2Model()
 s3 = boto3.client('s3')
@@ -27,12 +30,6 @@ def split(uri):
         bucket = match.group(1)
         filename = match.group(2)
     return bucket, filename
-
-# def download(uri,folder):
-#     bucket, filename =  split(uri)
-#     basename = os.path.basename(filename)
-#     new_image = os.path.join(folder,basename)
-#     s3.download_file(bucket,filename,new_image)
 
 """
     download_task:
@@ -72,7 +69,7 @@ def lambda_handler(event, context):
     # taskModel.create_item(identity_id=data['identity_id'],task_id=data['task_id'],project_id=data['project_id']
     #                                        ,num_gens=data['num_aug_per_imgs'] ,process_type=data['type_method'],IP='',EC2_ID='')
     ### update num_gens for task
-    task_model.update_attribute(data['task_id'], data['identity_id'], [[TaskModel.FIELD_NUM_GENS_IMAGE, len(data["images"])]])
+    task_model.update_attribute(data['task_id'], data['identity_id'], [[TaskModel.FIELD_NUM_GENS_IMAGE, data["images"]]])
     task_model.update_generate_progress(task_id = data['task_id'], identity_id = data['identity_id'], num_finish = 0, status = 'PREPARING_HARDWARE')
         
     list_request_ai = assignTaskToEc2(ec2Instances=ec2FreeInstnaces, data=downloadTask,
@@ -88,6 +85,8 @@ def lambda_handler(event, context):
                                         identity_id=data['identity_id'],
                                         num_finish=0, status='RUNNING')
     print(list_request_ai)
+    s3.delete_object(Bucket=bucket, Key=filename)
+    generate_task_model.init_messages_in_flight(identity_id=data['identity_id'], task_id=data['task_id'], )
     return {
         'state': 'Request_AI',
         'list_request_ai':list_request_ai,
