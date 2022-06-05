@@ -40,17 +40,19 @@ def convert_method_name(dict_method, ls_method_id_str):
     """
     convert generation method id to method string name
     """
-    ls_method_id_str = ls_method_id_str.replace(']', '').replace('[', '').replace("'", "")
-    if len(ls_method_id_str) == 0:
-        return ""
+    print("ls_method_id_str: ", ls_method_id_str)
+    if type(ls_method_id_str) is str:
+        ls_method_id_str = ls_method_id_str.replace(']', '').replace('[', '').replace("'", "")
+        if len(ls_method_id_str) == 0:
+            return ""
 
-    ls_method_id = ls_method_id_str.split(",")
+        ls_method_id = ls_method_id_str.split(",")
+    else:
+        ls_method_id = ls_method_id_str
+
     # print("ls_methof_id: ", ls_method_id)
-    str_final = ""
-    for method_id in ls_method_id:
-        # print(f"method_id: {method_id.strip()}, method_name: {dict_method[method_id.strip()]}")
-        str_final += f'{dict_method.get(method_id.strip(), "")}, '
-    # print("string final: ", str_final)
+    ls_method_id_convert = [dict_method.get(x.strip(), "") for x in ls_method_id]
+    str_final = ",".join(ls_method_id_convert)
 
     return str_final
 
