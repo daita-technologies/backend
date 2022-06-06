@@ -82,7 +82,7 @@ def lambda_handler(event, context):
         message['info_upload_s3'] = infoUploadS3
 
         if event.get("augment_codes", None) is not None:
-            message['gen_id'] = event.get("augment_codes")
+            message['gen_id'] = str(event.get("augment_codes"))
         else:
             message['gen_id'] = str(event['batch']['request_json']['codes'])
             
