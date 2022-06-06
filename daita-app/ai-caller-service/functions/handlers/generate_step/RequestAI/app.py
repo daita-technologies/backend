@@ -89,7 +89,7 @@ def lambda_handler(event, context):
 
         ### use augment_codes for gen_id method for all images in batch
         json_data = output.json()
-        result["augment_codes"] = json_data["augment_codes"]
+        result["augment_codes"] = json_data.get("augment_codes", None)
 
         print("Output from AI request: \n", output.text)
 
