@@ -172,6 +172,7 @@ Resources:
         VPCEndpointForS3: !Ref VPCEndpointForS3
         VPCEndpointForDynamoDB: !Ref VPCEndpointForDynamoDB
         SESIdentityName: noreply@daita.tech
+        CommonCodeLayerName: !Ref CommonCodeLayerName
 
 
 

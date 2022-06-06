@@ -10,11 +10,17 @@ EFS_ROOT = Path(os.getenv("EFSMountPath"))
 
 
 def lambda_handler(event, context):
-    file_chunk = event["file_chunk"]
+    file_chunk_index = event["file_chunk"]
     workdir = event["workdir"]
+    bucket = event["bucket"]
+    s3_key_path = event ["s3_key_path"]
 
-    files = []
-    for file_info in file_chunk:
+    ### read data from s3 and get data with index        
+    resultS3 = s3_client.get_object(Bucket=bucket, Key=s3_key_path)
+    ls_data = json.loads(resultS3["Body"].read().decode())
+    data = ls_data[file_chunk_index]
+
+    for file_info in data:
         s3_key = file_info["s3_key"]
         type_method = file_info["type_method"]
         filename = os.path.basename(s3_key)

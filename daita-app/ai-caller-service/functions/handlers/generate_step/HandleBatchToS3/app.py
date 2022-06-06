@@ -80,7 +80,12 @@ def lambda_handler(event, context):
         infoUploadS3 =  UploadImage(output=outdir,project_prefix=event['project_prefix'],task_id=event['task_id'])
         message = event
         message['info_upload_s3'] = infoUploadS3
-        message['gen_id'] = str(event['batch']['request_json']['codes'])
+
+        if event.get("augment_codes", None) is not None:
+            message['gen_id'] = str(event.get("augment_codes"))
+        else:
+            message['gen_id'] = str(event['batch']['request_json']['codes'])
+            
         Queue.send_message(
                             MessageBody=json.dumps(message),
                             MessageGroupId="Update-Database",

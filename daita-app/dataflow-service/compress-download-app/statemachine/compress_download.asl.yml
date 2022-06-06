@@ -11,6 +11,8 @@ States:
     ResultSelector:
       file_chunks.$: $.Payload.file_chunks
       workdir.$: $.Payload.workdir
+      bucket.$: $.Payload.bucket
+      s3_key_path.$: $.Payload.s3_key_path
     ResultPath: $.taskresult
     Catch:
       - ErrorEquals:
@@ -25,6 +27,8 @@ States:
     Parameters:
       file_chunk.$: $$.Map.Item.Value
       workdir.$: $.taskresult.workdir
+      bucket.$: $.taskresult.bucket
+      s3_key_path.$: $.taskresult.s3_key_path
     MaxConcurrency: 30
     Iterator:
       StartAt: DownloadFilesFunction

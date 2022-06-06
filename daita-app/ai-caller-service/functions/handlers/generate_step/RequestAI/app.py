@@ -86,6 +86,11 @@ def lambda_handler(event, context):
             batch['host'] =  f"http://{ip_public_current}:8000/{batch['type']}"
             print(batch['host'])
         output = requests.post(batch['host'],json=batch['request_json'])
+
+        ### use augment_codes for gen_id method for all images in batch
+        json_data = output.json()
+        result["augment_codes"] = json_data.get("augment_codes", None)
+
         print("Output from AI request: \n", output.text)
 
         if output.status_code != http.HTTPStatus.OK:
@@ -94,6 +99,7 @@ def lambda_handler(event, context):
         print("---------REQUEST AI exception-------\n", e)
         result['response'] = 'NOT_OK'
         result['is_retry'] = True
+        result["augment_codes"] = None
         if result['current_num_retries'] > result['max_retries']:
             result['is_retry'] = False
             print("-----Delete message with exception from AI request")
