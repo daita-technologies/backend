@@ -64,8 +64,8 @@ def AddTriggerCustomMail(info):
         info["subject"],
         info["mail"],
         """
-        <p>Your confirmation code is {}.
-        </p><p>Best,</p>
+        <p>Your confirmation code is {}.</p>
+        <p>Best,</p>
         <p>The DAITA Team</p>
         <p>---</p>
         <p>In case you encounter any issues or questions, please contact us at <a href = "mailto: contact@daita.tech">contact@daita.tech</a>.</p>
@@ -103,8 +103,8 @@ def ResendCodeConfirm(info):
         info["subject"],
         info["mail"],
         """
-        <p>Your confirmation code is {}.
-        </p><p>Best,</p>
+        <p>Your confirmation code is {}.</p>
+        <p>Best,</p>
         <p>The DAITA Team</p>
         <p>---</p>
         <p>In case you encounter any issues or questions, please contact us at <a href = "mailto: contact@daita.tech">contact@daita.tech</a>.</p>
