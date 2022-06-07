@@ -198,19 +198,14 @@ class AbstractPoint(object):
 
         # but validate if it's self-consistent if we're asked to do that
         if validate_encoding and (
-            y & 1
-            and data[:1] != b"\x07"
-            or (not y & 1)
-            and data[:1] != b"\x06"
+            y & 1 and data[:1] != b"\x07" or (not y & 1) and data[:1] != b"\x06"
         ):
             raise MalformedPointError("Inconsistent hybrid point encoding")
 
         return x, y
 
     @classmethod
-    def from_bytes(
-        cls, curve, data, validate_encoding=True, valid_encodings=None
-    ):
+    def from_bytes(cls, curve, data, validate_encoding=True, valid_encodings=None):
         """
         Initialise the object from byte encoding of a point.
 
@@ -242,24 +237,19 @@ class AbstractPoint(object):
         :rtype: tuple(int, int)
         """
         if not valid_encodings:
-            valid_encodings = set(
-                ["uncompressed", "compressed", "hybrid", "raw"]
-            )
+            valid_encodings = set(["uncompressed", "compressed", "hybrid", "raw"])
         if not all(
             i in set(("uncompressed", "compressed", "hybrid", "raw"))
             for i in valid_encodings
         ):
             raise ValueError(
-                "Only uncompressed, compressed, hybrid or raw encoding "
-                "supported."
+                "Only uncompressed, compressed, hybrid or raw encoding " "supported."
             )
         data = normalise_bytes(data)
         key_len = len(data)
         raw_encoding_length = 2 * orderlen(curve.p())
         if key_len == raw_encoding_length and "raw" in valid_encodings:
-            coord_x, coord_y = cls._from_raw_encoding(
-                data, raw_encoding_length
-            )
+            coord_x, coord_y = cls._from_raw_encoding(data, raw_encoding_length)
         elif key_len == raw_encoding_length + 1 and (
             "hybrid" in valid_encodings or "uncompressed" in valid_encodings
         ):
@@ -268,16 +258,11 @@ class AbstractPoint(object):
                     data, raw_encoding_length, validate_encoding
                 )
             elif data[:1] == b"\x04" and "uncompressed" in valid_encodings:
-                coord_x, coord_y = cls._from_raw_encoding(
-                    data[1:], raw_encoding_length
-                )
+                coord_x, coord_y = cls._from_raw_encoding(data[1:], raw_encoding_length)
             else:
-                raise MalformedPointError(
-                    "Invalid X9.62 encoding of the public point"
-                )
+                raise MalformedPointError("Invalid X9.62 encoding of the public point")
         elif (
-            key_len == raw_encoding_length // 2 + 1
-            and "compressed" in valid_encodings
+            key_len == raw_encoding_length // 2 + 1 and "compressed" in valid_encodings
         ):
             coord_x, coord_y = cls._from_compressed(data, curve)
         else:
@@ -512,7 +497,7 @@ class PointJacobi(AbstractPoint):
             return x
         p = self.__curve.p()
         z = numbertheory.inverse_mod(z, p)
-        return x * z ** 2 % p
+        return x * z**2 % p
 
     def y(self):
         """
@@ -528,7 +513,7 @@ class PointJacobi(AbstractPoint):
             return y
         p = self.__curve.p()
         z = numbertheory.inverse_mod(z, p)
-        return y * z ** 3 % p
+        return y * z**3 % p
 
     def scale(self):
         """
@@ -647,7 +632,7 @@ class PointJacobi(AbstractPoint):
         if not H and not r:
             return self._double_with_z_1(X1, Y1, p, self.__curve.a())
         V = X1 * I
-        X3 = (r ** 2 - J - 2 * V) % p
+        X3 = (r**2 - J - 2 * V) % p
         Y3 = (r * (V - X3) - 2 * Y1 * J) % p
         Z3 = 2 * H % p
         return X3, Y3, Z3
@@ -928,7 +913,7 @@ class PointJacobi(AbstractPoint):
 
 class Point(AbstractPoint):
     """A point on an elliptic curve. Altering x and y is forbidden,
-     but they can be read by the x() and y() methods."""
+    but they can be read by the x() and y() methods."""
 
     def __init__(self, curve, x, y, order=None):
         """curve, x, y, order; order (optional) is the order of this point."""
@@ -1035,8 +1020,7 @@ class Point(AbstractPoint):
         p = self.__curve.p()
 
         l = (
-            (other.__y - self.__y)
-            * numbertheory.inverse_mod(other.__x - self.__x, p)
+            (other.__y - self.__y) * numbertheory.inverse_mod(other.__x - self.__x, p)
         ) % p
 
         x3 = (l * l - self.__x - other.__x) % p
@@ -1102,8 +1086,7 @@ class Point(AbstractPoint):
         a = self.__curve.a()
 
         l = (
-            (3 * self.__x * self.__x + a)
-            * numbertheory.inverse_mod(2 * self.__y, p)
+            (3 * self.__x * self.__x + a) * numbertheory.inverse_mod(2 * self.__y, p)
         ) % p
 
         x3 = (l * l - 2 * self.__x) % p

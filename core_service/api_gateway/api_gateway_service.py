@@ -1,4 +1,3 @@
-
 from botocore.exceptions import ClientError
 import logging
 import json
@@ -6,11 +5,13 @@ import time
 
 logger = logging.getLogger(__name__)
 
+
 class ApiGatewayToService:
     """
     Encapsulates Amazon API Gateway functions that are used to create a REST API that
     integrates with another AWS service.
     """
+
     def __init__(self, apig_client):
         """
         :param apig_client: A Boto3 API Gateway client.
@@ -37,7 +38,7 @@ class ApiGatewayToService:
         except Exception as e:
             try:
                 result = self.apig_client.create_rest_api(name=api_name)
-                self.api_id = result['id']
+                self.api_id = result["id"]
                 logger.info("Created REST API %s with ID %s.", api_name, self.api_id)
             except ClientError:
                 logger.exception("Couldn't create REST API %s.", api_name)
@@ -46,7 +47,9 @@ class ApiGatewayToService:
         try:
             result = self.apig_client.get_resources(restApiId=self.api_id, limit=200)
             self.resources = result
-            self.root_id = next(item for item in result['items'] if item['path'] == '/')['id']
+            self.root_id = next(
+                item for item in result["items"] if item["path"] == "/"
+            )["id"]
         except ClientError:
             logger.exception("Couldn't get resources for API %s.", self.api_id)
             raise
@@ -64,27 +67,40 @@ class ApiGatewayToService:
         :param resource_path: The path of the new resource, relative to the parent.
         :return: The ID of the new resource.
         """
-        
+
         # check if resource exist
-        for item in list(self.resources['items']):
-            if item.get('pathPart', '') == resource_path and item['parentId']==parent_id:
-                return item['id']
+        for item in list(self.resources["items"]):
+            if (
+                item.get("pathPart", "") == resource_path
+                and item["parentId"] == parent_id
+            ):
+                return item["id"]
 
         # if not, create new one
         try:
             result = self.apig_client.create_resource(
-                restApiId=self.api_id, parentId=parent_id, pathPart=resource_path)
-            resource_id = result['id']
+                restApiId=self.api_id, parentId=parent_id, pathPart=resource_path
+            )
+            resource_id = result["id"]
             logger.info("Created resource %s.", resource_path)
         except ClientError:
-            logger.exception("Couldn't create resource %s/%s.", parent_id, resource_path)
+            logger.exception(
+                "Couldn't create resource %s/%s.", parent_id, resource_path
+            )
             raise
         else:
             return resource_id
 
     def add_integration_method(
-            self, resource_id, rest_method, service_uri, lambda_version,
-            service_method, role_arn, mapping_template):
+        self,
+        resource_id,
+        rest_method,
+        service_uri,
+        lambda_version,
+        service_method,
+        role_arn,
+        mapping_template,
+    ):
         """
         Adds an integration method to a REST API. An integration method is a REST
         resource, such as '/users', and an HTTP verb, such as GET. The integration
@@ -110,63 +126,75 @@ class ApiGatewayToService:
                 restApiId=self.api_id,
                 resourceId=resource_id,
                 httpMethod=rest_method,
-                authorizationType='NONE')
+                authorizationType="NONE",
+            )
             self.apig_client.put_method_response(
                 restApiId=self.api_id,
                 resourceId=resource_id,
                 httpMethod=rest_method,
-                statusCode='200',
-                responseModels={'application/json': 'Empty'})
+                statusCode="200",
+                responseModels={"application/json": "Empty"},
+            )
             logger.info("Created %s method for resource %s.", rest_method, resource_id)
         except ClientError as err:
-            if err.response['Error']['Code'] == 'ConflictException' and err.response['Error']['Message'] == 'Method already exists for this resource':
+            if (
+                err.response["Error"]["Code"] == "ConflictException"
+                and err.response["Error"]["Message"]
+                == "Method already exists for this resource"
+            ):
                 # method already exist, so we will update, not create new
                 is_exist = True
                 print(f"Medthod {resource_id} already exists")
 
         if is_exist:
-            #delete old integration
+            # delete old integration
             try:
                 response = self.apig_client.delete_integration(
                     restApiId=self.api_id,
                     resourceId=resource_id,
-                    httpMethod=rest_method
+                    httpMethod=rest_method,
                 )
             except ClientError as err:
                 raise err
 
         response = None
         times_try = 0
-        while times_try<5 and response is None:
+        while times_try < 5 and response is None:
             try:
-                uri = f'arn:aws:apigateway:{self.apig_client.meta.region_name}:lambda:path/{lambda_version}/functions/{service_uri}/invocations'
+                uri = f"arn:aws:apigateway:{self.apig_client.meta.region_name}:lambda:path/{lambda_version}/functions/{service_uri}/invocations"
                 response = self.apig_client.put_integration(
                     restApiId=self.api_id,
                     resourceId=resource_id,
                     httpMethod=rest_method,
-                    type='AWS_PROXY',
+                    type="AWS_PROXY",
                     integrationHttpMethod=service_method,
                     credentials=role_arn,
                     # requestTemplates={'application/json': json.dumps(mapping_template)},
-                    uri=uri)
+                    uri=uri,
+                )
                 self.apig_client.put_integration_response(
                     restApiId=self.api_id,
                     resourceId=resource_id,
                     httpMethod=rest_method,
-                    statusCode='200',
-                    responseTemplates={'application/json': ''})
+                    statusCode="200",
+                    responseTemplates={"application/json": ""},
+                )
                 logger.info(
-                    "Created integration for resource %s to service URI %s.", resource_id,
-                    uri)
+                    "Created integration for resource %s to service URI %s.",
+                    resource_id,
+                    uri,
+                )
             except ClientError:
                 print(
                     "Couldn't create integration for resource %s to service URI %s.",
-                    resource_id, uri)
+                    resource_id,
+                    uri,
+                )
                 times_try += 1
                 time.sleep(2)
-        
+
         if response is None:
-            raise Exception('Could not integrate lambda function to API')
+            raise Exception("Could not integrate lambda function to API")
 
     def add_integration_cors(self, resource_id):
         try:
@@ -174,52 +202,46 @@ class ApiGatewayToService:
                 restApiId=self.api_id,
                 resourceId=resource_id,
                 httpMethod="OPTIONS",
-                authorizationType='NONE')
+                authorizationType="NONE",
+            )
 
             self.apig_client.put_integration(
                 restApiId=self.api_id,
                 resourceId=resource_id,
-                httpMethod='OPTIONS',
-                type='MOCK',
-                requestTemplates={
-                    'application/json': '{"statusCode": 200}'
-                }
+                httpMethod="OPTIONS",
+                type="MOCK",
+                requestTemplates={"application/json": '{"statusCode": 200}'},
             )
 
             # Set the put method response of the OPTIONS method
             self.apig_client.put_method_response(
                 restApiId=self.api_id,
                 resourceId=resource_id,
-                httpMethod='OPTIONS',
-                statusCode='200',
+                httpMethod="OPTIONS",
+                statusCode="200",
                 responseParameters={
-                    'method.response.header.Access-Control-Allow-Headers': False,
-                    'method.response.header.Access-Control-Allow-Origin': False,
-                    'method.response.header.Access-Control-Allow-Methods': False
+                    "method.response.header.Access-Control-Allow-Headers": False,
+                    "method.response.header.Access-Control-Allow-Origin": False,
+                    "method.response.header.Access-Control-Allow-Methods": False,
                 },
-                responseModels={
-                    'application/json': 'Empty'
-                }
+                responseModels={"application/json": "Empty"},
             )
 
             # Set the put integration response of the OPTIONS method
             self.apig_client.put_integration_response(
                 restApiId=self.api_id,
                 resourceId=resource_id,
-                httpMethod='OPTIONS',
-                statusCode='200',
+                httpMethod="OPTIONS",
+                statusCode="200",
                 responseParameters={
-                    'method.response.header.Access-Control-Allow-Headers': '\'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token\'',
-                    'method.response.header.Access-Control-Allow-Methods': '\'POST,OPTIONS\'',
-                    'method.response.header.Access-Control-Allow-Origin': '\'*\''
+                    "method.response.header.Access-Control-Allow-Headers": "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token'",
+                    "method.response.header.Access-Control-Allow-Methods": "'POST,OPTIONS'",
+                    "method.response.header.Access-Control-Allow-Origin": "'*'",
                 },
-                responseTemplates={
-                    'application/json': ''
-                }
+                responseTemplates={"application/json": ""},
             )
         except Exception as e:
-            a=1
-
+            a = 1
 
     def deploy_api(self, stage_name):
         """
@@ -231,7 +253,8 @@ class ApiGatewayToService:
         """
         try:
             self.apig_client.create_deployment(
-                restApiId=self.api_id, stageName=stage_name)
+                restApiId=self.api_id, stageName=stage_name
+            )
             self.stage = stage_name
             logger.info("Deployed stage %s.", stage_name)
         except ClientError:
@@ -240,7 +263,6 @@ class ApiGatewayToService:
         else:
             return self.api_url()
 
-
     def api_url(self, resource=None):
         """
         Builds the REST API URL from its parts.
@@ -248,10 +270,12 @@ class ApiGatewayToService:
         :param resource: The resource path to append to the base URL.
         :return: The REST URL to the specified resource.
         """
-        url = (f'https://{self.api_id}.execute-api.{self.apig_client.meta.region_name}'
-               f'.amazonaws.com/{self.stage}')
+        url = (
+            f"https://{self.api_id}.execute-api.{self.apig_client.meta.region_name}"
+            f".amazonaws.com/{self.stage}"
+        )
         if resource is not None:
-            url = f'{url}/{resource}'
+            url = f"{url}/{resource}"
         return url
 
     def get_rest_api_id(self, api_name):
@@ -265,19 +289,20 @@ class ApiGatewayToService:
         """
         try:
             rest_api = None
-            paginator = self.apig_client.get_paginator('get_rest_apis')
+            paginator = self.apig_client.get_paginator("get_rest_apis")
             for page in paginator.paginate():
                 rest_api = next(
-                    (item for item in page['items'] if item['name'] == api_name), None)
+                    (item for item in page["items"] if item["name"] == api_name), None
+                )
                 if rest_api is not None:
                     break
-            self.api_id = rest_api['id']
-            logger.info("Found ID %s for API %s.", rest_api['id'], api_name)
+            self.api_id = rest_api["id"]
+            logger.info("Found ID %s for API %s.", rest_api["id"], api_name)
         except ClientError:
             logger.exception("Couldn't find ID for API %s.", api_name)
             raise
         else:
-            return rest_api['id']
+            return rest_api["id"]
 
     def delete_rest_api(self):
         """
@@ -290,5 +315,3 @@ class ApiGatewayToService:
         except ClientError:
             logger.exception("Couldn't delete REST API %s.", self.api_id)
             raise
-
-

@@ -28,9 +28,7 @@ from .ecdh import (
 from .keys import SigningKey, VerifyingKey
 
 
-@pytest.mark.parametrize(
-    "vcurve", curves, ids=[curve.name for curve in curves]
-)
+@pytest.mark.parametrize("vcurve", curves, ids=[curve.name for curve in curves])
 def test_ecdh_each(vcurve):
     ecdh1 = ECDH(curve=vcurve)
     ecdh2 = ECDH(curve=vcurve)
@@ -133,9 +131,7 @@ def test_ecdh_invalid_shared_secret_curve():
     ecdh1 = ECDH(curve=NIST256p)
     ecdh1.generate_private_key()
 
-    ecdh1.load_received_public_key(
-        SigningKey.generate(NIST256p).get_verifying_key()
-    )
+    ecdh1.load_received_public_key(SigningKey.generate(NIST256p).get_verifying_key())
 
     ecdh1.private_key.privkey.secret_multiplier = ecdh1.private_key.curve.order
 
@@ -356,14 +352,11 @@ def run_openssl(cmd):
 
 
 OPENSSL_SUPPORTED_CURVES = set(
-    c.split(":")[0].strip()
-    for c in run_openssl("ecparam -list_curves").split("\n")
+    c.split(":")[0].strip() for c in run_openssl("ecparam -list_curves").split("\n")
 )
 
 
-@pytest.mark.parametrize(
-    "vcurve", curves, ids=[curve.name for curve in curves]
-)
+@pytest.mark.parametrize("vcurve", curves, ids=[curve.name for curve in curves])
 def test_ecdh_with_openssl(vcurve):
     assert vcurve.openssl_name
 
@@ -380,12 +373,8 @@ def test_ecdh_with_openssl(vcurve):
     if os.path.isdir("t"):  # pragma: no branch
         shutil.rmtree("t")
     os.mkdir("t")
-    run_openssl(
-        "ecparam -name %s -genkey -out t/privkey1.pem" % vcurve.openssl_name
-    )
-    run_openssl(
-        "ecparam -name %s -genkey -out t/privkey2.pem" % vcurve.openssl_name
-    )
+    run_openssl("ecparam -name %s -genkey -out t/privkey1.pem" % vcurve.openssl_name)
+    run_openssl("ecparam -name %s -genkey -out t/privkey2.pem" % vcurve.openssl_name)
     run_openssl("ec -in t/privkey1.pem -pubout -out t/pubkey1.pem")
 
     ecdh1 = ECDH(curve=vcurve)

@@ -162,9 +162,7 @@ class _DSAPrivateKey(dsa.DSAPrivateKey):
     def public_key(self) -> dsa.DSAPublicKey:
         dsa_cdata = self._backend._lib.DSAparams_dup(self._dsa_cdata)
         self._backend.openssl_assert(dsa_cdata != self._backend._ffi.NULL)
-        dsa_cdata = self._backend._ffi.gc(
-            dsa_cdata, self._backend._lib.DSA_free
-        )
+        dsa_cdata = self._backend._ffi.gc(dsa_cdata, self._backend._lib.DSA_free)
         pub_key = self._backend._ffi.new("BIGNUM **")
         self._backend._lib.DSA_get0_key(
             self._dsa_cdata, pub_key, self._backend._ffi.NULL
@@ -181,9 +179,7 @@ class _DSAPrivateKey(dsa.DSAPrivateKey):
     def parameters(self) -> dsa.DSAParameters:
         dsa_cdata = self._backend._lib.DSAparams_dup(self._dsa_cdata)
         self._backend.openssl_assert(dsa_cdata != self._backend._ffi.NULL)
-        dsa_cdata = self._backend._ffi.gc(
-            dsa_cdata, self._backend._lib.DSA_free
-        )
+        dsa_cdata = self._backend._ffi.gc(dsa_cdata, self._backend._lib.DSA_free)
         return _DSAParameters(self._backend, dsa_cdata)
 
     def private_bytes(
@@ -263,9 +259,7 @@ class _DSAPublicKey(dsa.DSAPublicKey):
 
     def parameters(self) -> dsa.DSAParameters:
         dsa_cdata = self._backend._lib.DSAparams_dup(self._dsa_cdata)
-        dsa_cdata = self._backend._ffi.gc(
-            dsa_cdata, self._backend._lib.DSA_free
-        )
+        dsa_cdata = self._backend._ffi.gc(dsa_cdata, self._backend._lib.DSA_free)
         return _DSAParameters(self._backend, dsa_cdata)
 
     def public_bytes(

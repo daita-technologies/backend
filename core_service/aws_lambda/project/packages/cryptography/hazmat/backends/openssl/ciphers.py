@@ -16,7 +16,7 @@ from cryptography.hazmat.primitives.ciphers import modes
 class _CipherContext(object):
     _ENCRYPT = 1
     _DECRYPT = 0
-    _MAX_CHUNK_SIZE = 2 ** 30 - 1
+    _MAX_CHUNK_SIZE = 2**30 - 1
 
     def __init__(self, backend, cipher, mode, operation):
         self._backend = backend
@@ -31,9 +31,7 @@ class _CipherContext(object):
             self._block_size_bytes = 1
 
         ctx = self._backend._lib.EVP_CIPHER_CTX_new()
-        ctx = self._backend._ffi.gc(
-            ctx, self._backend._lib.EVP_CIPHER_CTX_free
-        )
+        ctx = self._backend._ffi.gc(ctx, self._backend._lib.EVP_CIPHER_CTX_free)
 
         registry = self._backend._cipher_registry
         try:
@@ -41,9 +39,7 @@ class _CipherContext(object):
         except KeyError:
             raise UnsupportedAlgorithm(
                 "cipher {} in {} mode is not supported "
-                "by this backend.".format(
-                    cipher.name, mode.name if mode else mode
-                ),
+                "by this backend.".format(cipher.name, mode.name if mode else mode),
                 _Reasons.UNSUPPORTED_CIPHER,
             )
 
@@ -59,9 +55,7 @@ class _CipherContext(object):
             raise UnsupportedAlgorithm(msg, _Reasons.UNSUPPORTED_CIPHER)
 
         if isinstance(mode, modes.ModeWithInitializationVector):
-            iv_nonce = self._backend._ffi.from_buffer(
-                mode.initialization_vector
-            )
+            iv_nonce = self._backend._ffi.from_buffer(mode.initialization_vector)
         elif isinstance(mode, modes.ModeWithTweak):
             iv_nonce = self._backend._ffi.from_buffer(mode.tweak)
         elif isinstance(mode, modes.ModeWithNonce):
@@ -81,9 +75,7 @@ class _CipherContext(object):
         )
         self._backend.openssl_assert(res != 0)
         # set the key length to handle variable key ciphers
-        res = self._backend._lib.EVP_CIPHER_CTX_set_key_length(
-            ctx, len(cipher.key)
-        )
+        res = self._backend._lib.EVP_CIPHER_CTX_set_key_length(ctx, len(cipher.key))
         self._backend.openssl_assert(res != 0)
         if isinstance(mode, modes.GCM):
             res = self._backend._lib.EVP_CIPHER_CTX_ctrl(
@@ -185,9 +177,7 @@ class _CipherContext(object):
             and isinstance(self._mode, modes.ModeWithAuthenticationTag)
             and self.tag is None
         ):
-            raise ValueError(
-                "Authentication tag must be provided when decrypting."
-            )
+            raise ValueError("Authentication tag must be provided when decrypting.")
 
         buf = self._backend._ffi.new("unsigned char[]", self._block_size_bytes)
         outlen = self._backend._ffi.new("int *")
@@ -223,13 +213,8 @@ class _CipherContext(object):
                 "the block length."
             )
 
-        if (
-            isinstance(self._mode, modes.GCM)
-            and self._operation == self._ENCRYPT
-        ):
-            tag_buf = self._backend._ffi.new(
-                "unsigned char[]", self._block_size_bytes
-            )
+        if isinstance(self._mode, modes.GCM) and self._operation == self._ENCRYPT:
+            tag_buf = self._backend._ffi.new("unsigned char[]", self._block_size_bytes)
             res = self._backend._lib.EVP_CIPHER_CTX_ctrl(
                 self._ctx,
                 self._backend._lib.EVP_CTRL_AEAD_GET_TAG,

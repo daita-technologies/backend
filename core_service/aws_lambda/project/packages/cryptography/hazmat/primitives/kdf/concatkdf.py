@@ -24,11 +24,9 @@ def _common_args_checks(
     length: int,
     otherinfo: typing.Optional[bytes],
 ) -> None:
-    max_length = algorithm.digest_size * (2 ** 32 - 1)
+    max_length = algorithm.digest_size * (2**32 - 1)
     if length > max_length:
-        raise ValueError(
-            "Cannot derive keys larger than {} bits.".format(max_length)
-        )
+        raise ValueError("Cannot derive keys larger than {} bits.".format(max_length))
     if otherinfo is not None:
         utils._check_bytes("otherinfo", otherinfo)
 
@@ -102,9 +100,7 @@ class ConcatKDFHMAC(KeyDerivationFunction):
         self._otherinfo: bytes = otherinfo if otherinfo is not None else b""
 
         if algorithm.block_size is None:
-            raise TypeError(
-                "{} is unsupported for ConcatKDF".format(algorithm.name)
-            )
+            raise TypeError("{} is unsupported for ConcatKDF".format(algorithm.name))
 
         if salt is None:
             salt = b"\x00" * algorithm.block_size

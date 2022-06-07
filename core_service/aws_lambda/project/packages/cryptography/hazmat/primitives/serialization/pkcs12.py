@@ -91,12 +91,10 @@ class PKCS12KeyAndCertificates:
         if cert is not None and not isinstance(cert, PKCS12Certificate):
             raise TypeError("cert must be a PKCS12Certificate object or None")
         if not all(
-            isinstance(add_cert, PKCS12Certificate)
-            for add_cert in additional_certs
+            isinstance(add_cert, PKCS12Certificate) for add_cert in additional_certs
         ):
             raise TypeError(
-                "all values in additional_certs must be PKCS12Certificate"
-                " objects"
+                "all values in additional_certs must be PKCS12Certificate" " objects"
             )
         self._key = key
         self._cert = cert
@@ -131,9 +129,7 @@ class PKCS12KeyAndCertificates:
         return hash((self.key, self.cert, tuple(self.additional_certs)))
 
     def __repr__(self) -> str:
-        fmt = (
-            "<PKCS12KeyAndCertificates(key={}, cert={}, additional_certs={})>"
-        )
+        fmt = "<PKCS12KeyAndCertificates(key={}, cert={}, additional_certs={})>"
         return fmt.format(self.key, self.cert, self.additional_certs)
 
 
@@ -176,9 +172,7 @@ def serialize_key_and_certificates(
             ec.EllipticCurvePrivateKey,
         ),
     ):
-        raise TypeError(
-            "Key must be RSA, DSA, or EllipticCurve private key or None."
-        )
+        raise TypeError("Key must be RSA, DSA, or EllipticCurve private key or None.")
     if cert is not None and not isinstance(cert, x509.Certificate):
         raise TypeError("cert must be a certificate or None")
 
@@ -187,12 +181,9 @@ def serialize_key_and_certificates(
         if not all(isinstance(val, x509.Certificate) for val in cas):
             raise TypeError("all values in cas must be certificates")
 
-    if not isinstance(
-        encryption_algorithm, serialization.KeySerializationEncryption
-    ):
+    if not isinstance(encryption_algorithm, serialization.KeySerializationEncryption):
         raise TypeError(
-            "Key encryption algorithm must be a "
-            "KeySerializationEncryption instance"
+            "Key encryption algorithm must be a " "KeySerializationEncryption instance"
         )
 
     if key is None and cert is None and not cas:

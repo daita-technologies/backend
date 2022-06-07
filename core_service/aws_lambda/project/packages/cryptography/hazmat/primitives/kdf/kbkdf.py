@@ -208,9 +208,9 @@ class KBKDFCMAC(KeyDerivationFunction):
         fixed: typing.Optional[bytes],
         backend: typing.Any = None,
     ):
-        if not issubclass(
-            algorithm, ciphers.BlockCipherAlgorithm
-        ) or not issubclass(algorithm, ciphers.CipherAlgorithm):
+        if not issubclass(algorithm, ciphers.BlockCipherAlgorithm) or not issubclass(
+            algorithm, ciphers.CipherAlgorithm
+        ):
             raise UnsupportedAlgorithm(
                 "Algorithm supplied is not a supported cipher algorithm.",
                 _Reasons.UNSUPPORTED_CIPHER,

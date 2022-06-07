@@ -88,7 +88,7 @@ def test_square_root_mod_prime_for_2():
 
 
 def test_square_root_mod_prime_for_small_prime():
-    root = square_root_mod_prime(98 ** 2 % 101, 101)
+    root = square_root_mod_prime(98**2 % 101, 101)
     assert root * root % 101 == 9
 
 
@@ -112,11 +112,9 @@ def test_square_root_mod_prime_for_p_congruent_5_large_d():
 def st_two_nums_rel_prime(draw):
     # 521-bit is the biggest curve we operate on, use 1024 for a bit
     # of breathing space
-    mod = draw(st.integers(min_value=2, max_value=2 ** 1024))
+    mod = draw(st.integers(min_value=2, max_value=2**1024))
     num = draw(
-        st.integers(min_value=1, max_value=mod - 1).filter(
-            lambda x: gcd(x, mod) == 1
-        )
+        st.integers(min_value=1, max_value=mod - 1).filter(lambda x: gcd(x, mod) == 1)
     )
     return num, mod
 
@@ -126,15 +124,14 @@ def st_primes(draw, *args, **kwargs):
     if "min_value" not in kwargs:  # pragma: no branch
         kwargs["min_value"] = 1
     prime = draw(
-        st.sampled_from(smallprimes)
-        | st.integers(*args, **kwargs).filter(is_prime)
+        st.sampled_from(smallprimes) | st.integers(*args, **kwargs).filter(is_prime)
     )
     return prime
 
 
 @st.composite
 def st_num_square_prime(draw):
-    prime = draw(st_primes(max_value=2 ** 1024))
+    prime = draw(st_primes(max_value=2**1024))
     num = draw(st.integers(min_value=0, max_value=1 + prime // 2))
     sq = num * num % prime
     return sq, prime
@@ -145,13 +142,9 @@ def st_comp_with_com_fac(draw):
     """
     Strategy that returns lists of numbers, all having a common factor.
     """
-    primes = draw(
-        st.lists(st_primes(max_value=2 ** 512), min_size=1, max_size=10)
-    )
+    primes = draw(st.lists(st_primes(max_value=2**512), min_size=1, max_size=10))
     # select random prime(s) that will make the common factor of composites
-    com_fac_primes = draw(
-        st.lists(st.sampled_from(primes), min_size=1, max_size=20)
-    )
+    com_fac_primes = draw(st.lists(st.sampled_from(primes), min_size=1, max_size=20))
     com_fac = reduce(operator.mul, com_fac_primes, 1)
 
     # select at most 20 lists (returned numbers),
@@ -176,9 +169,7 @@ def st_comp_no_com_fac(draw):
     Strategy that returns lists of numbers that don't have a common factor.
     """
     primes = draw(
-        st.lists(
-            st_primes(max_value=2 ** 512), min_size=2, max_size=10, unique=True
-        )
+        st.lists(st_primes(max_value=2**512), min_size=2, max_size=10, unique=True)
     )
     # first select the primes that will create the uncommon factor
     # between returned numbers
@@ -246,21 +237,21 @@ class TestIsPrime(unittest.TestCase):
 
     def test_medium_prime_1(self):
         # nextPrime[2^256]
-        assert is_prime(2 ** 256 + 0x129)
+        assert is_prime(2**256 + 0x129)
 
     def test_medium_prime_2(self):
         # nextPrime(2^256+0x129)
-        assert is_prime(2 ** 256 + 0x12D)
+        assert is_prime(2**256 + 0x12D)
 
     def test_medium_trivial_composite(self):
-        assert not is_prime(2 ** 256 + 0x130)
+        assert not is_prime(2**256 + 0x130)
 
     def test_medium_non_trivial_composite(self):
-        assert not is_prime(2 ** 256 + 0x12F)
+        assert not is_prime(2**256 + 0x12F)
 
     def test_large_prime(self):
         # nextPrime[2^2048]
-        assert is_prime(2 ** 2048 + 0x3D5)
+        assert is_prime(2**2048 + 0x3D5)
 
 
 class TestNumbertheory(unittest.TestCase):
@@ -297,7 +288,7 @@ class TestNumbertheory(unittest.TestCase):
 
     @given(
         st.lists(
-            st.integers(min_value=1, max_value=2 ** 8192),
+            st.integers(min_value=1, max_value=2**8192),
             min_size=1,
             max_size=20,
         )
@@ -315,7 +306,7 @@ class TestNumbertheory(unittest.TestCase):
 
     @given(
         st.lists(
-            st.integers(min_value=1, max_value=2 ** 8192),
+            st.integers(min_value=1, max_value=2**8192),
             min_size=1,
             max_size=20,
         )
@@ -340,9 +331,9 @@ class TestNumbertheory(unittest.TestCase):
         assert calc * calc % prime == square
 
     @settings(**HYP_SETTINGS)
-    @given(st.integers(min_value=1, max_value=10 ** 12))
+    @given(st.integers(min_value=1, max_value=10**12))
     @example(265399 * 1526929)
-    @example(373297 ** 2 * 553991)
+    @example(373297**2 * 553991)
     def test_factorization(self, num):
         factors = factorization(num)
         mult = 1

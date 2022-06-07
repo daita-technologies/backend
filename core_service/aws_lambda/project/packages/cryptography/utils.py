@@ -68,9 +68,7 @@ def register_interface(iface: abc.ABCMeta) -> "_RegisterDecoratorType":
 
 
 def int_to_bytes(integer: int, length: typing.Optional[int] = None) -> bytes:
-    return integer.to_bytes(
-        length or (integer.bit_length() + 7) // 8 or 1, "big"
-    )
+    return integer.to_bytes(length or (integer.bit_length() + 7) // 8 or 1, "big")
 
 
 class InterfaceNotImplemented(Exception):

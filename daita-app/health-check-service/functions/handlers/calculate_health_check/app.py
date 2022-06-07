@@ -14,17 +14,17 @@ from registry import HEALTHCHECK
 from healthcheck_utils import read_image
 
 
-class SystemParameterStore():
-
+class SystemParameterStore:
     def __init__(self) -> None:
-        self.ssm = boto3.client('ssm', 'us-east-2')
+        self.ssm = boto3.client("ssm", "us-east-2")
 
     def get_param(self, name):
-        return self.ssm.get_parameter(Name=name,WithDecryption=False)['Parameter']['Value']
+        return self.ssm.get_parameter(Name=name, WithDecryption=False)["Parameter"][
+            "Value"
+        ]
 
 
 class LambdaBaseClass(object):
-
     def __init__(self) -> None:
         self.logger = logging.getLogger(self.__class__.__name__)
         self.logger.setLevel(os.environ["LOGGING"])
@@ -35,10 +35,10 @@ class LambdaBaseClass(object):
     @classmethod
     def parse_body(cls, func):
         def parser(object, event):
-            if type(event['body']) is str:
-                body = json.loads(event['body'])
+            if type(event["body"]) is str:
+                body = json.loads(event["body"])
             else:
-                body = event['body']
+                body = event["body"]
 
             object.logger.info("Body: {}".format(body))
             try:
@@ -55,10 +55,12 @@ class LambdaBaseClass(object):
         pass
         return
 
+
 RESPONSE_HEADER = {
     "access-control-allow-origin": "*",
-	"access-control-allow-headers": "Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token,X-Amz-User-Agent"
+    "access-control-allow-headers": "Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token,X-Amz-User-Agent",
 }
+
 
 def generate_response(
     message: str,
@@ -67,16 +69,12 @@ def generate_response(
     data: dict = {},
     cookie: str = "",
     error: bool = False,
-    is_in_stepfunction: bool = False
-    ):
+    is_in_stepfunction: bool = False,
+):
 
     headers.update(RESPONSE_HEADER)
 
-    body = {
-        "message": message,
-        "data": data,
-        "error": error
-    }
+    body = {"message": message, "data": data, "error": error}
 
     if is_in_stepfunction:
         return {
@@ -88,8 +86,9 @@ def generate_response(
             "statusCode": status_code,
             "headers": headers,
             "body": json.dumps(body),
-            "isBase64Encoded": False
+            "isBase64Encoded": False,
         }
+
 
 def error_response(lambda_handler):
     def exception_handler(*args, **kwargs):
@@ -100,14 +99,16 @@ def error_response(lambda_handler):
             print(traceback.format_exc())
             messageRaw = str(repr(exc))
 
-            return(
-                generate_response(
-                    message= messageRaw.replace("Exception('", "").replace("')", "").replace("Exception(\"", "").replace("\")", ""),
-                    error=True
-                )
+            return generate_response(
+                message=messageRaw.replace("Exception('", "")
+                .replace("')", "")
+                .replace('Exception("', "")
+                .replace('")', ""),
+                error=True,
             )
 
     return exception_handler
+
 
 class CalculateHealthCClass(LambdaBaseClass):
 
@@ -117,7 +118,7 @@ class CalculateHealthCClass(LambdaBaseClass):
 
     def __init__(self) -> None:
         super().__init__()
-        self.client_events = boto3.client('events')
+        self.client_events = boto3.client("events")
         self.const = SystemParameterStore()
 
     @LambdaBaseClass.parse_body
@@ -194,7 +195,9 @@ class CalculateHealthCClass(LambdaBaseClass):
         try:
             print("Checking signal to noise of R, G, B channel: ", end="")
             start = time.time()
-            snr_R, snr_G, snr_B = HEALTHCHECK["signal_to_noise"](image, image_path=image_path)
+            snr_R, snr_G, snr_B = HEALTHCHECK["signal_to_noise"](
+                image, image_path=image_path
+            )
             result["signal_to_noise_red_channel"] = snr_R
             result["signal_to_noise_green_channel"] = snr_G
             result["signal_to_noise_blue_channel"] = snr_B
@@ -261,7 +264,9 @@ class CalculateHealthCClass(LambdaBaseClass):
         try:
             print("Checking height, width and aspect ratio: ", end="")
             start = time.time()
-            height, width, aspect_ratio = HEALTHCHECK["height_width_aspect_ratio"](image, image_path=image_path)
+            height, width, aspect_ratio = HEALTHCHECK["height_width_aspect_ratio"](
+                image, image_path=image_path
+            )
             result["height"] = height
             result["width"] = width
             result["aspect_ratio"] = aspect_ratio
@@ -276,9 +281,15 @@ class CalculateHealthCClass(LambdaBaseClass):
         try:
             print("Checking mean of each R, G, B channel: ", end="")
             start = time.time()
-            mean_red_channel = HEALTHCHECK["mean_red_channel"](image, image_path=image_path)
-            mean_green_channel = HEALTHCHECK["mean_green_channel"](image, image_path=image_path)
-            mean_blue_channel = HEALTHCHECK["mean_blue_channel"](image, image_path=image_path)
+            mean_red_channel = HEALTHCHECK["mean_red_channel"](
+                image, image_path=image_path
+            )
+            mean_green_channel = HEALTHCHECK["mean_green_channel"](
+                image, image_path=image_path
+            )
+            mean_blue_channel = HEALTHCHECK["mean_blue_channel"](
+                image, image_path=image_path
+            )
             result["mean_red_channel"] = mean_red_channel
             result["mean_green_channel"] = mean_green_channel
             result["mean_blue_channel"] = mean_blue_channel
@@ -318,10 +329,10 @@ class CalculateHealthCClass(LambdaBaseClass):
         return {
             self.KEY_NAME_PROJECT_ID: self.project_id,
             self.KEY_DATA_TABLE_NAME: self.data_table_name,
-            "healthcheck": result
+            "healthcheck": result,
         }
+
 
 def lambda_handler(event, context):
 
     return CalculateHealthCClass().handle(event, context)
-

@@ -120,9 +120,7 @@ class TestParameterEncoding(unittest.TestCase):
             "AgEB"
         )
 
-        self.assertEqual(
-            encoded, bytes(base64.b64decode(compressed_base_point))
-        )
+        self.assertEqual(encoded, bytes(base64.b64decode(compressed_base_point)))
 
     def test_decoding_explicit_from_openssl(self):
         # generated with openssl 1.1.1k using
@@ -210,9 +208,7 @@ class TestParameterEncoding(unittest.TestCase):
         self.assertIn("Unexpected data after OID", str(e.exception))
 
     def test_decode_malformed_explicit_garbage_after_ECParam(self):
-        bad_der = bytes(
-            base64.b64decode(self.base64_params)
-        ) + der.encode_integer(1)
+        bad_der = bytes(base64.b64decode(self.base64_params)) + der.encode_integer(1)
 
         with self.assertRaises(der.UnexpectedDER) as e:
             Curve.from_der(bad_der)
@@ -231,20 +227,14 @@ class TestParameterEncoding(unittest.TestCase):
         curve_p = NIST256p.curve.p()
         bad_der = der.encode_sequence(
             der.encode_integer(1),
-            der.encode_sequence(
-                der.encode_oid(1, 2, 3), der.encode_integer(curve_p)
-            ),
+            der.encode_sequence(der.encode_oid(1, 2, 3), der.encode_integer(curve_p)),
             der.encode_sequence(
                 der.encode_octet_string(
                     number_to_string(NIST256p.curve.a() % curve_p, curve_p)
                 ),
-                der.encode_octet_string(
-                    number_to_string(NIST256p.curve.b(), curve_p)
-                ),
+                der.encode_octet_string(number_to_string(NIST256p.curve.b(), curve_p)),
             ),
-            der.encode_octet_string(
-                NIST256p.generator.to_bytes("uncompressed")
-            ),
+            der.encode_octet_string(NIST256p.generator.to_bytes("uncompressed")),
             der.encode_integer(NIST256p.generator.order()),
         )
 
@@ -266,13 +256,9 @@ class TestParameterEncoding(unittest.TestCase):
                 der.encode_octet_string(
                     number_to_string(NIST256p.curve.a() % curve_p, curve_p)
                 ),
-                der.encode_octet_string(
-                    number_to_string(NIST256p.curve.b(), curve_p)
-                ),
+                der.encode_octet_string(number_to_string(NIST256p.curve.b(), curve_p)),
             ),
-            der.encode_octet_string(
-                NIST256p.generator.to_bytes("uncompressed")
-            ),
+            der.encode_octet_string(NIST256p.generator.to_bytes("uncompressed")),
             der.encode_integer(NIST256p.generator.order()),
         )
 

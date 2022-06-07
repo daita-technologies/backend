@@ -15,8 +15,8 @@ from lambda_base_class import LambdaBaseClass
 DECOMPRESS_TASK_TABLE = os.getenv("DecompressTaskTable")
 PROJECTS_TABLE = os.getenv("ProjectsTable")
 
-stepfunctions = boto3.client('stepfunctions')
-db = boto3.resource('dynamodb')
+stepfunctions = boto3.client("stepfunctions")
+db = boto3.resource("dynamodb")
 task_table = db.Table(DECOMPRESS_TASK_TABLE)
 projects_table = db.Table(PROJECTS_TABLE)
 
@@ -31,9 +31,9 @@ class CreateDecompressClass(LambdaBaseClass):
 
         self.file_url = body["file_url"]
         self.id_token = body["id_token"]
-        self.project_id = body['project_id']
-        self.project_name = body['project_name']
-        self.type_method = body.get('type_method', 'ORIGINAL')
+        self.project_id = body["project_id"]
+        self.project_name = body["project_name"]
+        self.type_method = body.get("type_method", "ORIGINAL")
 
     def handle(self, event, context):
         ### parse body
@@ -52,16 +52,13 @@ class CreateDecompressClass(LambdaBaseClass):
                 TaskModel.FIELD_CREATE_TIME: convert_current_date_to_iso8601(),
                 TaskModel.FIELD_UPDATED_TIME: convert_current_date_to_iso8601(),
                 TaskModel.FIELD_PROJECT_ID: self.project_id,
-                TaskModel.FIELD_PROCESS_TYPE: VALUE_PROCESS_TYPE_UPLOAD
+                TaskModel.FIELD_PROCESS_TYPE: VALUE_PROCESS_TYPE_UPLOAD,
             }
         )
 
         response = projects_table.get_item(
-            Key={
-                "identity_id": identity_id,
-                "project_name": self.project_name
-            },
-            ProjectionExpression="s3_prefix"
+            Key={"identity_id": identity_id, "project_name": self.project_name},
+            ProjectionExpression="s3_prefix",
         )
         print(response)
         s3_prefix = response["Item"].get("s3_prefix")
@@ -74,21 +71,21 @@ class CreateDecompressClass(LambdaBaseClass):
             "project_name": self.project_name,
             "type_method": self.type_method,
             "s3_prefix": s3_prefix,
-            "identity_id": identity_id
+            "identity_id": identity_id,
         }
         response = stepfunctions.start_execution(
             stateMachineArn=os.getenv("DecompressFileStateMachineArn"),
-            input=json.dumps(stepfunction_input)
+            input=json.dumps(stepfunction_input),
         )
 
         return generate_response(
-                message="OK",
-                status_code=HTTPStatus.OK,
-                data= {
-                    "task_id": task_id,
-                    "file_url": self.file_url,
-                },
-            )
+            message="OK",
+            status_code=HTTPStatus.OK,
+            data={
+                "task_id": task_id,
+                "file_url": self.file_url,
+            },
+        )
 
 
 @error_response

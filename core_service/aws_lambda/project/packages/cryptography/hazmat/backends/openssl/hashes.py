@@ -15,9 +15,7 @@ class _HashContext(hashes.HashContext):
 
         if ctx is None:
             ctx = self._backend._lib.EVP_MD_CTX_new()
-            ctx = self._backend._ffi.gc(
-                ctx, self._backend._lib.EVP_MD_CTX_free
-            )
+            ctx = self._backend._ffi.gc(ctx, self._backend._lib.EVP_MD_CTX_free)
             evp_md = self._backend._evp_md_from_algorithm(algorithm)
             if evp_md == self._backend._ffi.NULL:
                 raise UnsupportedAlgorithm(
@@ -48,9 +46,7 @@ class _HashContext(hashes.HashContext):
 
     def update(self, data: bytes) -> None:
         data_ptr = self._backend._ffi.from_buffer(data)
-        res = self._backend._lib.EVP_DigestUpdate(
-            self._ctx, data_ptr, len(data)
-        )
+        res = self._backend._lib.EVP_DigestUpdate(self._ctx, data_ptr, len(data))
         self._backend.openssl_assert(res != 0)
 
     def finalize(self) -> bytes:
@@ -64,15 +60,11 @@ class _HashContext(hashes.HashContext):
             outlen = self._backend._ffi.new("unsigned int *")
             res = self._backend._lib.EVP_DigestFinal_ex(self._ctx, buf, outlen)
             self._backend.openssl_assert(res != 0)
-            self._backend.openssl_assert(
-                outlen[0] == self.algorithm.digest_size
-            )
+            self._backend.openssl_assert(outlen[0] == self.algorithm.digest_size)
             return self._backend._ffi.buffer(buf)[: outlen[0]]
 
     def _finalize_xof(self) -> bytes:
-        buf = self._backend._ffi.new(
-            "unsigned char[]", self.algorithm.digest_size
-        )
+        buf = self._backend._ffi.new("unsigned char[]", self.algorithm.digest_size)
         res = self._backend._lib.EVP_DigestFinalXOF(
             self._ctx, buf, self.algorithm.digest_size
         )

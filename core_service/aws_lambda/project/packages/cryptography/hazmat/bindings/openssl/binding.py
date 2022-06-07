@@ -56,9 +56,7 @@ def _errors_with_text(errors):
         err_text_reason = ffi.string(buf)
 
         errors_with_text.append(
-            _OpenSSLErrorWithText(
-                err.code, err.lib, err.reason, err_text_reason
-            )
+            _OpenSSLErrorWithText(err.code, err.lib, err.reason, err_text_reason)
         )
 
     return errors_with_text
@@ -120,13 +118,9 @@ class Binding(object):
         # This function enables FIPS mode for OpenSSL 3.0.0 on installs that
         # have the FIPS provider installed properly.
         _openssl_assert(self.lib, self.lib.CRYPTOGRAPHY_OPENSSL_300_OR_GREATER)
-        self._base_provider = self.lib.OSSL_PROVIDER_load(
-            self.ffi.NULL, b"base"
-        )
+        self._base_provider = self.lib.OSSL_PROVIDER_load(self.ffi.NULL, b"base")
         _openssl_assert(self.lib, self._base_provider != self.ffi.NULL)
-        self.lib._fips_provider = self.lib.OSSL_PROVIDER_load(
-            self.ffi.NULL, b"fips"
-        )
+        self.lib._fips_provider = self.lib.OSSL_PROVIDER_load(self.ffi.NULL, b"fips")
         _openssl_assert(self.lib, self.lib._fips_provider != self.ffi.NULL)
 
         res = self.lib.EVP_default_properties_enable_fips(self.ffi.NULL, 1)
@@ -164,15 +158,11 @@ class Binding(object):
                     cls._legacy_provider = cls.lib.OSSL_PROVIDER_load(
                         cls.ffi.NULL, b"legacy"
                     )
-                    _openssl_assert(
-                        cls.lib, cls._legacy_provider != cls.ffi.NULL
-                    )
+                    _openssl_assert(cls.lib, cls._legacy_provider != cls.ffi.NULL)
                     cls._default_provider = cls.lib.OSSL_PROVIDER_load(
                         cls.ffi.NULL, b"default"
                     )
-                    _openssl_assert(
-                        cls.lib, cls._default_provider != cls.ffi.NULL
-                    )
+                    _openssl_assert(cls.lib, cls._default_provider != cls.ffi.NULL)
 
     @classmethod
     def init_static_locks(cls):

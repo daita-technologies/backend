@@ -40,7 +40,6 @@ if sys.version_info < (3, 0):  # pragma: no branch
             """Removes all whitespace from passed in string"""
             return re.sub(r"\s+", "", text, flags=re.UNICODE)
 
-
 else:
     if sys.version_info < (3, 4):  # pragma: no branch
         # on python 3.3 hmac.hmac.update() accepts only bytes, on newer

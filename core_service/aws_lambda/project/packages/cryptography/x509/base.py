@@ -525,16 +525,12 @@ CertificateSigningRequest.register(rust_x509.CertificateSigningRequest)
 
 
 # Backend argument preserved for API compatibility, but ignored.
-def load_pem_x509_certificate(
-    data: bytes, backend: typing.Any = None
-) -> Certificate:
+def load_pem_x509_certificate(data: bytes, backend: typing.Any = None) -> Certificate:
     return rust_x509.load_pem_x509_certificate(data)
 
 
 # Backend argument preserved for API compatibility, but ignored.
-def load_der_x509_certificate(
-    data: bytes, backend: typing.Any = None
-) -> Certificate:
+def load_der_x509_certificate(data: bytes, backend: typing.Any = None) -> Certificate:
     return rust_x509.load_der_x509_certificate(data)
 
 
@@ -753,9 +749,7 @@ class CertificateBuilder(object):
         # ASN.1 integers are always signed, so most significant bit must be
         # zero.
         if number.bit_length() >= 160:  # As defined in RFC 5280
-            raise ValueError(
-                "The serial number should not be more than 159 " "bits."
-            )
+            raise ValueError("The serial number should not be more than 159 " "bits.")
         return CertificateBuilder(
             self._issuer_name,
             self._subject_name,
@@ -766,9 +760,7 @@ class CertificateBuilder(object):
             self._extensions,
         )
 
-    def not_valid_before(
-        self, time: datetime.datetime
-    ) -> "CertificateBuilder":
+    def not_valid_before(self, time: datetime.datetime) -> "CertificateBuilder":
         """
         Sets the certificate activation time.
         """
@@ -779,13 +771,11 @@ class CertificateBuilder(object):
         time = _convert_to_naive_utc_time(time)
         if time < _EARLIEST_UTC_TIME:
             raise ValueError(
-                "The not valid before date must be on or after"
-                " 1950 January 1)."
+                "The not valid before date must be on or after" " 1950 January 1)."
             )
         if self._not_valid_after is not None and time > self._not_valid_after:
             raise ValueError(
-                "The not valid before date must be before the not valid after "
-                "date."
+                "The not valid before date must be before the not valid after " "date."
             )
         return CertificateBuilder(
             self._issuer_name,
@@ -808,16 +798,11 @@ class CertificateBuilder(object):
         time = _convert_to_naive_utc_time(time)
         if time < _EARLIEST_UTC_TIME:
             raise ValueError(
-                "The not valid after date must be on or after"
-                " 1950 January 1."
+                "The not valid after date must be on or after" " 1950 January 1."
             )
-        if (
-            self._not_valid_before is not None
-            and time < self._not_valid_before
-        ):
+        if self._not_valid_before is not None and time < self._not_valid_before:
             raise ValueError(
-                "The not valid after date must be after the not valid before "
-                "date."
+                "The not valid after date must be after the not valid before " "date."
             )
         return CertificateBuilder(
             self._issuer_name,
@@ -899,9 +884,7 @@ class CertificateRevocationListBuilder(object):
         self._extensions = extensions
         self._revoked_certificates = revoked_certificates
 
-    def issuer_name(
-        self, issuer_name: Name
-    ) -> "CertificateRevocationListBuilder":
+    def issuer_name(self, issuer_name: Name) -> "CertificateRevocationListBuilder":
         if not isinstance(issuer_name, Name):
             raise TypeError("Expecting x509.Name object.")
         if self._issuer_name is not None:
@@ -951,9 +934,7 @@ class CertificateRevocationListBuilder(object):
                 "The last update date must be on or after" " 1950 January 1."
             )
         if self._last_update is not None and next_update < self._last_update:
-            raise ValueError(
-                "The next update date must be after the last update date."
-            )
+            raise ValueError("The next update date must be after the last update date.")
         return CertificateRevocationListBuilder(
             self._issuer_name,
             self._last_update,
@@ -1038,16 +1019,12 @@ class RevokedCertificateBuilder(object):
         # ASN.1 integers are always signed, so most significant bit must be
         # zero.
         if number.bit_length() >= 160:  # As defined in RFC 5280
-            raise ValueError(
-                "The serial number should not be more than 159 " "bits."
-            )
+            raise ValueError("The serial number should not be more than 159 " "bits.")
         return RevokedCertificateBuilder(
             number, self._revocation_date, self._extensions
         )
 
-    def revocation_date(
-        self, time: datetime.datetime
-    ) -> "RevokedCertificateBuilder":
+    def revocation_date(self, time: datetime.datetime) -> "RevokedCertificateBuilder":
         if not isinstance(time, datetime.datetime):
             raise TypeError("Expecting datetime object.")
         if self._revocation_date is not None:
@@ -1057,9 +1034,7 @@ class RevokedCertificateBuilder(object):
             raise ValueError(
                 "The revocation date must be on or after" " 1950 January 1."
             )
-        return RevokedCertificateBuilder(
-            self._serial_number, time, self._extensions
-        )
+        return RevokedCertificateBuilder(self._serial_number, time, self._extensions)
 
     def add_extension(
         self, extval: ExtensionType, critical: bool
@@ -1079,9 +1054,7 @@ class RevokedCertificateBuilder(object):
         if self._serial_number is None:
             raise ValueError("A revoked certificate must have a serial number")
         if self._revocation_date is None:
-            raise ValueError(
-                "A revoked certificate must have a revocation date"
-            )
+            raise ValueError("A revoked certificate must have a revocation date")
         return _RawRevokedCertificate(
             self._serial_number,
             self._revocation_date,

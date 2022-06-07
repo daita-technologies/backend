@@ -38,9 +38,7 @@ example_data = b"some data to sign"
 """Since the data is hashed for processing, really any string will do."""
 
 
-hash_and_size = [
-    (name, hashlib.new(name).digest_size) for name in algorithms_available
-]
+hash_and_size = [(name, hashlib.new(name).digest_size) for name in algorithms_available]
 """Pairs of hash names and their output sizes.
 Needed for pairing with curves as we don't support hashes
 bigger than order sizes of curves."""
@@ -57,9 +55,7 @@ for curve in sorted(curves, key=lambda x: x.baselen):
         for name, size in sorted(hash_and_size, key=lambda x: x[1])
         if 0 < size <= curve.baselen
     ]:
-        sk = SigningKey.generate(
-            curve, hashfunc=partial(hashlib.new, hash_alg)
-        )
+        sk = SigningKey.generate(curve, hashfunc=partial(hashlib.new, hash_alg))
 
         keys_and_sigs.append(
             (
@@ -76,9 +72,7 @@ for curve in sorted(curves, key=lambda x: x.baselen):
     [pytest.param(vk, sig, id=name) for name, vk, sig in keys_and_sigs],
 )
 def test_signatures(verifying_key, signature):
-    assert verifying_key.verify(
-        signature, example_data, sigdecode=sigdecode_der
-    )
+    assert verifying_key.verify(signature, example_data, sigdecode=sigdecode_der)
 
 
 @st.composite
@@ -119,9 +113,7 @@ def st_fuzzed_sig(draw, keys_and_sigs):
     insert_data = draw(st.binary(max_size=256))
 
     sig = sig[:insert_pos] + insert_data + sig[insert_pos:]
-    note(
-        "Inserted at position {0} bytes: {1!r}".format(insert_pos, insert_data)
-    )
+    note("Inserted at position {0} bytes: {1!r}".format(insert_pos, insert_data))
 
     sig = bytes(sig)
     # make sure that there was performed at least one mutation on the data
@@ -226,7 +218,7 @@ def st_der_bit_string(draw, *args, **kwargs):
     if data:
         unused = draw(st.integers(min_value=0, max_value=7))
         data = bytearray(data)
-        data[-1] &= -(2 ** unused)
+        data[-1] &= -(2**unused)
         data = bytes(data)
     else:
         unused = 0
@@ -257,10 +249,8 @@ def st_der_oid(draw):
     if first < 2:
         second = draw(st.integers(min_value=0, max_value=39))
     else:
-        second = draw(st.integers(min_value=0, max_value=2 ** 512))
-    rest = draw(
-        st.lists(st.integers(min_value=0, max_value=2 ** 512), max_size=50)
-    )
+        second = draw(st.integers(min_value=0, max_value=2**512))
+    rest = draw(st.lists(st.integers(min_value=0, max_value=2**512), max_size=50))
     return encode_oid(first, second, *rest)
 
 
@@ -274,18 +264,16 @@ def st_der():
     """
     return st.recursive(
         st.just(b"")
-        | st_der_integer(max_value=2 ** 4096)
-        | st_der_bit_string(max_size=1024 ** 2)
-        | st_der_octet_string(max_size=1024 ** 2)
+        | st_der_integer(max_value=2**4096)
+        | st_der_bit_string(max_size=1024**2)
+        | st_der_octet_string(max_size=1024**2)
         | st_der_null()
         | st_der_oid(),
         lambda children: st.builds(
             lambda x: encode_octet_string(x), st.one_of(children)
         )
         | st.builds(lambda x: encode_bitstring(x, 0), st.one_of(children))
-        | st.builds(
-            lambda x: encode_sequence(*x), st.lists(children, max_size=200)
-        )
+        | st.builds(lambda x: encode_sequence(*x), st.lists(children, max_size=200))
         | st.builds(
             lambda tag, x: encode_constructed(tag, x),
             st.integers(min_value=0, max_value=0x3F),
@@ -306,10 +294,8 @@ def test_random_der_as_signature(params, der):
 
 
 @settings(**params)
-@given(st.sampled_from(keys_and_sigs), st.binary(max_size=1024 ** 2))
-@example(
-    keys_and_sigs[0], encode_sequence(encode_integer(0), encode_integer(0))
-)
+@given(st.sampled_from(keys_and_sigs), st.binary(max_size=1024**2))
+@example(keys_and_sigs[0], encode_sequence(encode_integer(0), encode_integer(0)))
 @example(
     keys_and_sigs[0],
     encode_sequence(encode_integer(1), encode_integer(1)) + b"\x00",

@@ -136,9 +136,7 @@ class TestEncodeBitstring(unittest.TestCase):
             der = encode_bitstring(b"\x00\xff")
 
         self.assertEqual(len(warns), 1)
-        self.assertIn(
-            "unused= needs to be specified", warns[0].message.args[0]
-        )
+        self.assertIn("unused= needs to be specified", warns[0].message.args[0])
 
         self.assertEqual(der, b"\x03\x02\x00\xff")
 
@@ -195,9 +193,7 @@ class TestRemoveBitstring(unittest.TestCase):
             bits, rest = remove_bitstring(b"\x03\x02\x00\xff")
 
         self.assertEqual(len(warns), 1)
-        self.assertIn(
-            "expect_unused= needs to be specified", warns[0].message.args[0]
-        )
+        self.assertIn("expect_unused= needs to be specified", warns[0].message.args[0])
 
         self.assertEqual(bits, b"\x00\xff")
         self.assertEqual(rest, b"")
@@ -281,9 +277,7 @@ class TestEncodeOid(unittest.TestCase):
         self.assertEqual(hexlify(NIST224p.encoded_oid), b("06052b81040021"))
 
     def test_nist256p_oid(self):
-        self.assertEqual(
-            hexlify(NIST256p.encoded_oid), b"06082a8648ce3d030107"
-        )
+        self.assertEqual(hexlify(NIST256p.encoded_oid), b"06082a8648ce3d030107")
 
     def test_large_second_subid(self):
         # from X.690, section 8.19.5
@@ -448,7 +442,7 @@ class TestRemoveSequence(unittest.TestCase):
 
 
 @st.composite
-def st_oid(draw, max_value=2 ** 512, max_size=50):
+def st_oid(draw, max_value=2**512, max_size=50):
     """
     Hypothesis strategy that returns valid OBJECT IDENTIFIERs as tuples
 
@@ -461,9 +455,7 @@ def st_oid(draw, max_value=2 ** 512, max_size=50):
     else:
         second = draw(st.integers(min_value=0, max_value=max_value))
     rest = draw(
-        st.lists(
-            st.integers(min_value=0, max_value=max_value), max_size=max_size
-        )
+        st.lists(st.integers(min_value=0, max_value=max_value), max_size=max_size)
     )
     return (first, second) + tuple(rest)
 

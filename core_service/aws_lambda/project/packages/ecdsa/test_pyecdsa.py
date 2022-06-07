@@ -156,9 +156,7 @@ class ECDSA(unittest.TestCase):
         self.assertEqual(secexp1, secexp2)
         priv1 = SigningKey.from_secret_exponent(secexp1, curve)
         priv2 = SigningKey.from_secret_exponent(secexp2, curve)
-        self.assertEqual(
-            hexlify(priv1.to_string()), hexlify(priv2.to_string())
-        )
+        self.assertEqual(hexlify(priv1.to_string()), hexlify(priv2.to_string()))
         self.assertEqual(priv1.to_pem(), priv2.to_pem())
         pub1 = priv1.get_verifying_key()
         pub2 = priv2.get_verifying_key()
@@ -327,9 +325,7 @@ class ECDSA(unittest.TestCase):
         pem = pub1.to_pem()
         self.assertEqual(type(pem), binary_type)
         self.assertTrue(pem.startswith(b("-----BEGIN PUBLIC KEY-----")), pem)
-        self.assertTrue(
-            pem.strip().endswith(b("-----END PUBLIC KEY-----")), pem
-        )
+        self.assertTrue(pem.strip().endswith(b("-----END PUBLIC KEY-----")), pem)
         pub2 = VerifyingKey.from_pem(pem)
         self.assertTruePubkeysEqual(pub1, pub2)
 
@@ -362,9 +358,7 @@ class ECDSA(unittest.TestCase):
 
     def test_vk_from_der_garbage_after_curve_oid(self):
         type_oid_der = encoded_oid_ecPublicKey
-        curve_oid_der = der.encode_oid(*(1, 2, 840, 10045, 3, 1, 1)) + b(
-            "garbage"
-        )
+        curve_oid_der = der.encode_oid(*(1, 2, 840, 10045, 3, 1, 1)) + b("garbage")
         enc_type_der = der.encode_sequence(type_oid_der, curve_oid_der)
         point_der = der.encode_bitstring(b"\x00\xff", None)
         to_decode = der.encode_sequence(enc_type_der, point_der)
@@ -491,9 +485,7 @@ class ECDSA(unittest.TestCase):
         privkey_der = der.encode_octet_string(b("\x00\xff"))
         curve_oid_der = der.encode_oid(*(1, 2, 3))
         const_der = der.encode_constructed(1, curve_oid_der)
-        to_decode = der.encode_sequence(
-            ver_der, privkey_der, const_der, curve_oid_der
-        )
+        to_decode = der.encode_sequence(ver_der, privkey_der, const_der, curve_oid_der)
 
         with self.assertRaises(der.UnexpectedDER):
             SigningKey.from_der(to_decode)
@@ -503,9 +495,7 @@ class ECDSA(unittest.TestCase):
         privkey_der = der.encode_octet_string(b("\x00\xff"))
         curve_oid_der = der.encode_oid(*(1, 2, 3)) + b("garbage")
         const_der = der.encode_constructed(0, curve_oid_der)
-        to_decode = der.encode_sequence(
-            ver_der, privkey_der, const_der, curve_oid_der
-        )
+        to_decode = der.encode_sequence(ver_der, privkey_der, const_der, curve_oid_der)
 
         with self.assertRaises(der.UnexpectedDER):
             SigningKey.from_der(to_decode)
@@ -515,9 +505,7 @@ class ECDSA(unittest.TestCase):
         privkey_der = der.encode_octet_string(b("\x00\xff"))
         curve_oid_der = der.encode_oid(*(1, 2, 840, 10045, 3, 1, 1))
         const_der = der.encode_constructed(0, curve_oid_der)
-        to_decode = der.encode_sequence(
-            ver_der, privkey_der, const_der, curve_oid_der
-        )
+        to_decode = der.encode_sequence(ver_der, privkey_der, const_der, curve_oid_der)
 
         sk = SigningKey.from_der(to_decode)
         self.assertEqual(sk.privkey.secret_multiplier, 255)
@@ -633,9 +621,7 @@ class ECDSA(unittest.TestCase):
         signature = sk.sign(data)
 
         # Recover verifying keys
-        recovered_vks = VerifyingKey.from_public_key_recovery(
-            signature, data, curve
-        )
+        recovered_vks = VerifyingKey.from_public_key_recovery(signature, data, curve)
 
         # Test if each pk is valid
         for recovered_vk in recovered_vks:
@@ -644,9 +630,7 @@ class ECDSA(unittest.TestCase):
 
             # Test if properties are equal
             self.assertEqual(vk.curve, recovered_vk.curve)
-            self.assertEqual(
-                vk.default_hashfunc, recovered_vk.default_hashfunc
-            )
+            self.assertEqual(vk.default_hashfunc, recovered_vk.default_hashfunc)
 
         # Test if original vk is the list of recovered keys
         self.assertIn(
@@ -884,9 +868,7 @@ def test_VerifyingKey_decode_with_small_values(val, even):
 params = []
 for curve in curves:
     for enc in ["raw", "uncompressed", "compressed", "hybrid"]:
-        params.append(
-            pytest.param(curve, enc, id="{0}-{1}".format(curve.name, enc))
-        )
+        params.append(pytest.param(curve, enc, id="{0}-{1}".format(curve.name, enc)))
 
 
 @pytest.mark.parametrize("curve,encoding", params)
@@ -919,8 +901,7 @@ class OpenSSL(unittest.TestCase):
     # openssl ec -in privkey.pem -pubout -outform DER -out pubkey.der
 
     OPENSSL_SUPPORTED_CURVES = set(
-        c.split(":")[0].strip()
-        for c in run_openssl("ecparam -list_curves").split("\n")
+        c.split(":")[0].strip() for c in run_openssl("ecparam -list_curves").split("\n")
     )
 
     def get_openssl_messagedigest_arg(self, hash_name):
@@ -1091,12 +1072,9 @@ class OpenSSL(unittest.TestCase):
         data = b("data")
         with open("t/data.txt", "wb") as e:
             e.write(data)
+        run_openssl("dgst %s -sign t/privkey.pem -out t/data.sig t/data.txt" % mdarg)
         run_openssl(
-            "dgst %s -sign t/privkey.pem -out t/data.sig t/data.txt" % mdarg
-        )
-        run_openssl(
-            "dgst %s -verify t/pubkey.pem -signature t/data.sig t/data.txt"
-            % mdarg
+            "dgst %s -verify t/pubkey.pem -signature t/data.sig t/data.txt" % mdarg
         )
         with open("t/pubkey.pem", "rb") as e:
             pubkey_pem = e.read()
@@ -1116,9 +1094,7 @@ class OpenSSL(unittest.TestCase):
             fp = e.read()
         sk = SigningKey.from_pem(fp)  # 1
         sig = sk.sign(data, hashfunc=partial(hashlib.new, hash_name))
-        self.assertTrue(
-            vk.verify(sig, data, hashfunc=partial(hashlib.new, hash_name))
-        )
+        self.assertTrue(vk.verify(sig, data, hashfunc=partial(hashlib.new, hash_name)))
 
         run_openssl(
             "pkcs8 -topk8 -nocrypt "
@@ -1311,54 +1287,43 @@ class OpenSSL(unittest.TestCase):
 
         with open("t/privkey.pem", "wb") as e:
             e.write(sk.to_pem())  # 2
+        run_openssl("dgst %s -sign t/privkey.pem -out t/data.sig2 t/data.txt" % mdarg)
         run_openssl(
-            "dgst %s -sign t/privkey.pem -out t/data.sig2 t/data.txt" % mdarg
-        )
-        run_openssl(
-            "dgst %s -verify t/pubkey.pem -signature t/data.sig2 t/data.txt"
-            % mdarg
+            "dgst %s -verify t/pubkey.pem -signature t/data.sig2 t/data.txt" % mdarg
         )
 
         with open("t/privkey-explicit.pem", "wb") as e:
             e.write(sk.to_pem(curve_parameters_encoding="explicit"))
         run_openssl(
-            "dgst %s -sign t/privkey-explicit.pem -out t/data.sig2 t/data.txt"
-            % mdarg
+            "dgst %s -sign t/privkey-explicit.pem -out t/data.sig2 t/data.txt" % mdarg
         )
         run_openssl(
-            "dgst %s -verify t/pubkey.pem -signature t/data.sig2 t/data.txt"
-            % mdarg
+            "dgst %s -verify t/pubkey.pem -signature t/data.sig2 t/data.txt" % mdarg
         )
 
         with open("t/privkey-p8.pem", "wb") as e:
             e.write(sk.to_pem(format="pkcs8"))
         run_openssl(
-            "dgst %s -sign t/privkey-p8.pem -out t/data.sig3 t/data.txt"
-            % mdarg
+            "dgst %s -sign t/privkey-p8.pem -out t/data.sig3 t/data.txt" % mdarg
         )
         run_openssl(
-            "dgst %s -verify t/pubkey.pem -signature t/data.sig3 t/data.txt"
-            % mdarg
+            "dgst %s -verify t/pubkey.pem -signature t/data.sig3 t/data.txt" % mdarg
         )
 
         with open("t/privkey-p8-explicit.pem", "wb") as e:
-            e.write(
-                sk.to_pem(format="pkcs8", curve_parameters_encoding="explicit")
-            )
+            e.write(sk.to_pem(format="pkcs8", curve_parameters_encoding="explicit"))
         run_openssl(
             "dgst %s -sign t/privkey-p8-explicit.pem -out t/data.sig3 t/data.txt"
             % mdarg
         )
         run_openssl(
-            "dgst %s -verify t/pubkey.pem -signature t/data.sig3 t/data.txt"
-            % mdarg
+            "dgst %s -verify t/pubkey.pem -signature t/data.sig3 t/data.txt" % mdarg
         )
 
 
 class TooSmallCurve(unittest.TestCase):
     OPENSSL_SUPPORTED_CURVES = set(
-        c.split(":")[0].strip()
-        for c in run_openssl("ecparam -list_curves").split("\n")
+        c.split(":")[0].strip() for c in run_openssl("ecparam -list_curves").split("\n")
     )
 
     @pytest.mark.skipif(
@@ -1470,13 +1435,13 @@ class Util(unittest.TestCase):
         for i in range(1000):
             seed = "seed-%d" % i
             for order in (
-                2 ** 8 - 2,
-                2 ** 8 - 1,
-                2 ** 8,
-                2 ** 8 + 1,
-                2 ** 8 + 2,
-                2 ** 16 - 1,
-                2 ** 16 + 1,
+                2**8 - 2,
+                2**8 - 1,
+                2**8,
+                2**8 + 1,
+                2**8 + 2,
+                2**16 - 1,
+                2**16 + 1,
             ):
                 n = tta(seed, order)
                 self.assertTrue(1 <= n < order, (1, n, order))
@@ -1488,7 +1453,7 @@ class Util(unittest.TestCase):
 
     def test_trytryagain_single(self):
         tta = util.randrange_from_seed__trytryagain
-        order = 2 ** 8 - 2
+        order = 2**8 - 2
         seed = b"text"
         n = tta(seed, order)
         # known issue: https://github.com/warner/python-ecdsa/issues/221
@@ -1497,24 +1462,24 @@ class Util(unittest.TestCase):
         else:
             self.assertEqual(n, 18)
 
-    @given(st.integers(min_value=0, max_value=10 ** 200))
+    @given(st.integers(min_value=0, max_value=10**200))
     def test_randrange(self, i):
         # util.randrange does not provide long-term stability: we might
         # change the algorithm in the future.
         entropy = util.PRNG("seed-%d" % i)
         for order in (
-            2 ** 8 - 2,
-            2 ** 8 - 1,
-            2 ** 8,
-            2 ** 16 - 1,
-            2 ** 16 + 1,
+            2**8 - 2,
+            2**8 - 1,
+            2**8,
+            2**16 - 1,
+            2**16 + 1,
         ):
             # that oddball 2**16+1 takes half our runtime
             n = util.randrange(order, entropy=entropy)
             self.assertTrue(1 <= n < order, (1, n, order))
 
     def OFF_test_prove_uniformity(self):  # pragma: no cover
-        order = 2 ** 8 - 2
+        order = 2**8 - 2
         counts = dict([(i, 0) for i in range(1, order)])
         assert 0 not in counts
         assert order not in counts
@@ -1614,9 +1579,7 @@ class RFC6979(unittest.TestCase):
             ),
             secexp=int("09A4D6792295A7F730FC3F2B49CBC0F62E862272F", 16),
             hsh=unhexlify(
-                b(
-                    "AF2BDBE1AA9B6EC1E2ADE1D694F41FC71A831D0268E9891562113D8A62ADD1BF"
-                )
+                b("AF2BDBE1AA9B6EC1E2ADE1D694F41FC71A831D0268E9891562113D8A62ADD1BF")
             ),
             hash_func=sha256,
             expected=int("23AF4074C90A02B3FE61D286D5C87F425E6BDD81B", 16),
@@ -1628,9 +1591,7 @@ class RFC6979(unittest.TestCase):
             secexp=int("6FAB034934E4C0FC9AE67F5B5659A9D7D1FEFD187EE09FD4", 16),
             hsh=sha1(b("sample")).digest(),
             hash_func=sha1,
-            expected=int(
-                "37D7CA00D2C7B0E5E412AC03BD44BA837FDD5B28CD3B0021", 16
-            ),
+            expected=int("37D7CA00D2C7B0E5E412AC03BD44BA837FDD5B28CD3B0021", 16),
         )
 
     def test_3(self):
@@ -1639,9 +1600,7 @@ class RFC6979(unittest.TestCase):
             secexp=int("6FAB034934E4C0FC9AE67F5B5659A9D7D1FEFD187EE09FD4", 16),
             hsh=sha256(b("sample")).digest(),
             hash_func=sha256,
-            expected=int(
-                "32B1B6D7D42A05CB449065727A84804FB1A3E34D8F261496", 16
-            ),
+            expected=int("32B1B6D7D42A05CB449065727A84804FB1A3E34D8F261496", 16),
         )
 
     def test_4(self):
@@ -1650,9 +1609,7 @@ class RFC6979(unittest.TestCase):
             secexp=int("6FAB034934E4C0FC9AE67F5B5659A9D7D1FEFD187EE09FD4", 16),
             hsh=sha512(b("sample")).digest(),
             hash_func=sha512,
-            expected=int(
-                "A2AC7AB055E4F20692D49209544C203A7D1F2C0BFBC75DB1", 16
-            ),
+            expected=int("A2AC7AB055E4F20692D49209544C203A7D1F2C0BFBC75DB1", 16),
         )
 
     def test_5(self):
@@ -1661,9 +1618,7 @@ class RFC6979(unittest.TestCase):
             secexp=int("6FAB034934E4C0FC9AE67F5B5659A9D7D1FEFD187EE09FD4", 16),
             hsh=sha1(b("test")).digest(),
             hash_func=sha1,
-            expected=int(
-                "D9CF9C3D3297D3260773A1DA7418DB5537AB8DD93DE7FA25", 16
-            ),
+            expected=int("D9CF9C3D3297D3260773A1DA7418DB5537AB8DD93DE7FA25", 16),
         )
 
     def test_6(self):
@@ -1672,9 +1627,7 @@ class RFC6979(unittest.TestCase):
             secexp=int("6FAB034934E4C0FC9AE67F5B5659A9D7D1FEFD187EE09FD4", 16),
             hsh=sha256(b("test")).digest(),
             hash_func=sha256,
-            expected=int(
-                "5C4CE89CF56D9E7C77C8585339B006B97B5F0680B4306C6C", 16
-            ),
+            expected=int("5C4CE89CF56D9E7C77C8585339B006B97B5F0680B4306C6C", 16),
         )
 
     def test_7(self):
@@ -1683,9 +1636,7 @@ class RFC6979(unittest.TestCase):
             secexp=int("6FAB034934E4C0FC9AE67F5B5659A9D7D1FEFD187EE09FD4", 16),
             hsh=sha512(b("test")).digest(),
             hash_func=sha512,
-            expected=int(
-                "0758753A5254759C7CFBAD2E2D9B0792EEE44136C9480527", 16
-            ),
+            expected=int("0758753A5254759C7CFBAD2E2D9B0792EEE44136C9480527", 16),
         )
 
     def test_8(self):
@@ -1742,10 +1693,7 @@ class ECDH(unittest.TestCase):
         self.assertEqual(Point(curve, x_qA, y_qA), qA)
         self.assertEqual(Point(curve, x_qB, y_qB), qB)
         self.assertTrue(
-            (dA * qB)
-            == (dA * dB * generator)
-            == (dB * dA * generator)
-            == (dB * qA)
+            (dA * qB) == (dA * dB * generator) == (dB * dA * generator) == (dB * qA)
         )
         self.assertEqual(Point(curve, x_Z, y_Z), Z)
 
@@ -1757,30 +1705,14 @@ class RFC6932(ECDH):
         self._do(
             curve=curve_brainpoolp224r1,
             generator=BRAINPOOLP224r1.generator,
-            dA=int(
-                "7C4B7A2C8A4BAD1FBB7D79CC0955DB7C6A4660CA64CC4778159B495E", 16
-            ),
-            x_qA=int(
-                "B104A67A6F6E85E14EC1825E1539E8ECDBBF584922367DD88C6BDCF2", 16
-            ),
-            y_qA=int(
-                "46D782E7FDB5F60CD8404301AC5949C58EDB26BC68BA07695B750A94", 16
-            ),
-            dB=int(
-                "63976D4AAE6CD0F6DD18DEFEF55D96569D0507C03E74D6486FFA28FB", 16
-            ),
-            x_qB=int(
-                "2A97089A9296147B71B21A4B574E1278245B536F14D8C2B9D07A874E", 16
-            ),
-            y_qB=int(
-                "9B900D7C77A709A797276B8CA1BA61BB95B546FC29F862E44D59D25B", 16
-            ),
-            x_Z=int(
-                "312DFD98783F9FB77B9704945A73BEB6DCCBE3B65D0F967DCAB574EB", 16
-            ),
-            y_Z=int(
-                "6F800811D64114B1C48C621AB3357CF93F496E4238696A2A012B3C98", 16
-            ),
+            dA=int("7C4B7A2C8A4BAD1FBB7D79CC0955DB7C6A4660CA64CC4778159B495E", 16),
+            x_qA=int("B104A67A6F6E85E14EC1825E1539E8ECDBBF584922367DD88C6BDCF2", 16),
+            y_qA=int("46D782E7FDB5F60CD8404301AC5949C58EDB26BC68BA07695B750A94", 16),
+            dB=int("63976D4AAE6CD0F6DD18DEFEF55D96569D0507C03E74D6486FFA28FB", 16),
+            x_qB=int("2A97089A9296147B71B21A4B574E1278245B536F14D8C2B9D07A874E", 16),
+            y_qB=int("9B900D7C77A709A797276B8CA1BA61BB95B546FC29F862E44D59D25B", 16),
+            x_Z=int("312DFD98783F9FB77B9704945A73BEB6DCCBE3B65D0F967DCAB574EB", 16),
+            y_Z=int("6F800811D64114B1C48C621AB3357CF93F496E4238696A2A012B3C98", 16),
         )
 
     def test_brainpoolP256r1(self):
@@ -1788,43 +1720,35 @@ class RFC6932(ECDH):
             curve=curve_brainpoolp256r1,
             generator=BRAINPOOLP256r1.generator,
             dA=int(
-                "041EB8B1E2BC681BCE8E39963B2E9FC415B05283313DD1A8BCC055F11AE"
-                "49699",
+                "041EB8B1E2BC681BCE8E39963B2E9FC415B05283313DD1A8BCC055F11AE" "49699",
                 16,
             ),
             x_qA=int(
-                "78028496B5ECAAB3C8B6C12E45DB1E02C9E4D26B4113BC4F015F60C5C"
-                "CC0D206",
+                "78028496B5ECAAB3C8B6C12E45DB1E02C9E4D26B4113BC4F015F60C5C" "CC0D206",
                 16,
             ),
             y_qA=int(
-                "A2AE1762A3831C1D20F03F8D1E3C0C39AFE6F09B4D44BBE80CD100987"
-                "B05F92B",
+                "A2AE1762A3831C1D20F03F8D1E3C0C39AFE6F09B4D44BBE80CD100987" "B05F92B",
                 16,
             ),
             dB=int(
-                "06F5240EACDB9837BC96D48274C8AA834B6C87BA9CC3EEDD81F99A16B8D"
-                "804D3",
+                "06F5240EACDB9837BC96D48274C8AA834B6C87BA9CC3EEDD81F99A16B8D" "804D3",
                 16,
             ),
             x_qB=int(
-                "8E07E219BA588916C5B06AA30A2F464C2F2ACFC1610A3BE2FB240B635"
-                "341F0DB",
+                "8E07E219BA588916C5B06AA30A2F464C2F2ACFC1610A3BE2FB240B635" "341F0DB",
                 16,
             ),
             y_qB=int(
-                "148EA1D7D1E7E54B9555B6C9AC90629C18B63BEE5D7AA6949EBBF47B2"
-                "4FDE40D",
+                "148EA1D7D1E7E54B9555B6C9AC90629C18B63BEE5D7AA6949EBBF47B2" "4FDE40D",
                 16,
             ),
             x_Z=int(
-                "05E940915549E9F6A4A75693716E37466ABA79B4BF2919877A16DD2CC2"
-                "E23708",
+                "05E940915549E9F6A4A75693716E37466ABA79B4BF2919877A16DD2CC2" "E23708",
                 16,
             ),
             y_Z=int(
-                "6BC23B6702BC5A019438CEEA107DAAD8B94232FFBBC350F3B137628FE6"
-                "FD134C",
+                "6BC23B6702BC5A019438CEEA107DAAD8B94232FFBBC350F3B137628FE6" "FD134C",
                 16,
             ),
         )
@@ -1938,43 +1862,35 @@ class RFC7027(ECDH):
             curve=curve_brainpoolp256r1,
             generator=BRAINPOOLP256r1.generator,
             dA=int(
-                "81DB1EE100150FF2EA338D708271BE38300CB54241D79950F77B0630398"
-                "04F1D",
+                "81DB1EE100150FF2EA338D708271BE38300CB54241D79950F77B0630398" "04F1D",
                 16,
             ),
             x_qA=int(
-                "44106E913F92BC02A1705D9953A8414DB95E1AAA49E81D9E85F929A8E"
-                "3100BE5",
+                "44106E913F92BC02A1705D9953A8414DB95E1AAA49E81D9E85F929A8E" "3100BE5",
                 16,
             ),
             y_qA=int(
-                "8AB4846F11CACCB73CE49CBDD120F5A900A69FD32C272223F789EF10E"
-                "B089BDC",
+                "8AB4846F11CACCB73CE49CBDD120F5A900A69FD32C272223F789EF10E" "B089BDC",
                 16,
             ),
             dB=int(
-                "55E40BC41E37E3E2AD25C3C6654511FFA8474A91A0032087593852D3E7D"
-                "76BD3",
+                "55E40BC41E37E3E2AD25C3C6654511FFA8474A91A0032087593852D3E7D" "76BD3",
                 16,
             ),
             x_qB=int(
-                "8D2D688C6CF93E1160AD04CC4429117DC2C41825E1E9FCA0ADDD34E6F"
-                "1B39F7B",
+                "8D2D688C6CF93E1160AD04CC4429117DC2C41825E1E9FCA0ADDD34E6F" "1B39F7B",
                 16,
             ),
             y_qB=int(
-                "990C57520812BE512641E47034832106BC7D3E8DD0E4C7F1136D70065"
-                "47CEC6A",
+                "990C57520812BE512641E47034832106BC7D3E8DD0E4C7F1136D70065" "47CEC6A",
                 16,
             ),
             x_Z=int(
-                "89AFC39D41D3B327814B80940B042590F96556EC91E6AE7939BCE31F3A"
-                "18BF2B",
+                "89AFC39D41D3B327814B80940B042590F96556EC91E6AE7939BCE31F3A" "18BF2B",
                 16,
             ),
             y_Z=int(
-                "49C27868F4ECA2179BFD7D59B1E3BF34C1DBDE61AE12931648F43E5963"
-                "2504DE",
+                "49C27868F4ECA2179BFD7D59B1E3BF34C1DBDE61AE12931648F43E5963" "2504DE",
                 16,
             ),
         )

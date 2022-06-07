@@ -17,8 +17,8 @@ def get_current_time() -> str:
     return datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
 
 
-def read_image(image_path: str, is_from_s3 = False) -> np.ndarray:
-    if is_from_s3:  
+def read_image(image_path: str, is_from_s3=False) -> np.ndarray:
+    if is_from_s3:
         # image in S3 bucket
         if "s3://" not in image_path:
             image_path = "s3://" + image_path
@@ -32,7 +32,8 @@ def read_image(image_path: str, is_from_s3 = False) -> np.ndarray:
 def save_image(image_path: str, image: np.ndarray) -> None:
     image = cv2.cvtColor(image, cv2.COLOR_RGB2BGR)
     cv2.imwrite(image_path, image)
-    
+
+
 def calculate_contrast_score(image: np.ndarray) -> float:
     """
     https://en.wikipedia.org/wiki/Contrast_(vision)#Michelson_contrast
@@ -106,7 +107,9 @@ class S3:
             bucket, file_name = S3.split_s3_path(uri)
             s3_response_object = S3.s3.get_object(Bucket=bucket, Key=file_name)
 
-            array: np.ndarray = np.frombuffer(s3_response_object["Body"].read(), np.uint8)
+            array: np.ndarray = np.frombuffer(
+                s3_response_object["Body"].read(), np.uint8
+            )
             image = cv2.imdecode(array, cv2.IMREAD_COLOR)
             image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
             return image

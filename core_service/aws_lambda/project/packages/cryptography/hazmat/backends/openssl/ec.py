@@ -70,9 +70,7 @@ def _mark_asn1_named_ec_curve(backend, ec_cdata):
     deserialization easier.
     """
 
-    backend._lib.EC_KEY_set_asn1_flag(
-        ec_cdata, backend._lib.OPENSSL_EC_NAMED_CURVE
-    )
+    backend._lib.EC_KEY_set_asn1_flag(ec_cdata, backend._lib.OPENSSL_EC_NAMED_CURVE)
 
 
 def _sn_to_elliptic_curve(backend, sn):
@@ -145,9 +143,7 @@ class _ECDSAVerificationContext(AsymmetricVerificationContext):
 
     def verify(self) -> None:
         digest = self._digest.finalize()
-        _ecdsa_sig_verify(
-            self._backend, self._public_key, self._signature, digest
-        )
+        _ecdsa_sig_verify(self._backend, self._public_key, self._signature, digest)
 
 
 class _EllipticCurvePrivateKey(ec.EllipticCurvePrivateKey):
@@ -192,9 +188,7 @@ class _EllipticCurvePrivateKey(ec.EllipticCurvePrivateKey):
             )
 
         if peer_public_key.curve.name != self.curve.name:
-            raise ValueError(
-                "peer_public_key and self are not on the same curve"
-            )
+            raise ValueError("peer_public_key and self are not on the same curve")
 
         return _evp_pkey_derive(self._backend, self._evp_pkey, peer_public_key)
 
@@ -285,9 +279,7 @@ class _EllipticCurvePublicKey(ec.EllipticCurvePublicKey):
         )
 
     def public_numbers(self) -> ec.EllipticCurvePublicNumbers:
-        get_func, group = self._backend._ec_key_determine_group_get_func(
-            self._ec_key
-        )
+        get_func, group = self._backend._ec_key_determine_group_get_func(self._ec_key)
         point = self._backend._lib.EC_KEY_get0_public_key(self._ec_key)
         self._backend.openssl_assert(point != self._backend._ffi.NULL)
 

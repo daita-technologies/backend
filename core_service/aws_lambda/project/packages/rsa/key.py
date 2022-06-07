@@ -432,7 +432,9 @@ class PrivateKey(AbstractKey):
         """Returns the key as tuple for pickling."""
         return self.n, self.e, self.d, self.p, self.q, self.exp1, self.exp2, self.coef
 
-    def __setstate__(self, state: typing.Tuple[int, int, int, int, int, int, int, int]) -> None:
+    def __setstate__(
+        self, state: typing.Tuple[int, int, int, int, int, int, int, int]
+    ) -> None:
         """Sets the key from tuple."""
         self.n, self.e, self.d, self.p, self.q, self.exp1, self.exp2, self.coef = state
         AbstractKey.__init__(self, self.n, self.e)
@@ -459,7 +461,9 @@ class PrivateKey(AbstractKey):
         return not (self == other)
 
     def __hash__(self) -> int:
-        return hash((self.n, self.e, self.d, self.p, self.q, self.exp1, self.exp2, self.coef))
+        return hash(
+            (self.n, self.e, self.d, self.p, self.q, self.exp1, self.exp2, self.coef)
+        )
 
     def blinded_decrypt(self, encrypted: int) -> int:
         """Decrypts the message using blinding to prevent side-channel attacks.
@@ -704,7 +708,9 @@ def find_p_q(
     return max(p, q), min(p, q)
 
 
-def calculate_keys_custom_exponent(p: int, q: int, exponent: int) -> typing.Tuple[int, int]:
+def calculate_keys_custom_exponent(
+    p: int, q: int, exponent: int
+) -> typing.Tuple[int, int]:
     """Calculates an encryption and a decryption key given p, q and an exponent,
     and returns them as a tuple (e, d)
 
@@ -732,7 +738,8 @@ def calculate_keys_custom_exponent(p: int, q: int, exponent: int) -> typing.Tupl
 
     if (exponent * d) % phi_n != 1:
         raise ValueError(
-            "e (%d) and d (%d) are not mult. inv. modulo " "phi_n (%d)" % (exponent, d, phi_n)
+            "e (%d) and d (%d) are not mult. inv. modulo "
+            "phi_n (%d)" % (exponent, d, phi_n)
         )
 
     return exponent, d

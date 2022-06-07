@@ -19,7 +19,7 @@ EFS_ROOT = os.getenv("EFSMountPath")
 TableDataFlowTaskName = os.getenv("TableDataFlowTaskName")
 TableMethodsName = os.getenv("TableMethodsName")
 bucket_name = os.getenv("S3BucketName")
-s3 = boto3.client('s3')
+s3 = boto3.client("s3")
 VALUE_TASK_FINISH = "FINISH"
 
 # config for uploading zipfile to s3
@@ -28,7 +28,7 @@ MULTIPART_CONCURRENCY = 2
 MAX_RETRY_COUNT = 3
 
 
-log = logging.getLogger('s3_uploader')
+log = logging.getLogger("s3_uploader")
 
 
 def convert_current_date_to_iso8601():
@@ -42,7 +42,9 @@ def convert_method_name(dict_method, ls_method_id_str):
     """
     print("ls_method_id_str: ", ls_method_id_str)
     if type(ls_method_id_str) is str:
-        ls_method_id_str = ls_method_id_str.replace(']', '').replace('[', '').replace("'", "")
+        ls_method_id_str = (
+            ls_method_id_str.replace("]", "").replace("[", "").replace("'", "")
+        )
         if len(ls_method_id_str) == 0:
             return ""
 
@@ -56,26 +58,26 @@ def convert_method_name(dict_method, ls_method_id_str):
 
     return str_final
 
+
 def upload_progress_db(status, identity_id, task_id, presign_url, s3_key):
     db_resource = boto3.resource("dynamodb")
     table = db_resource.Table(TableDataFlowTaskName)
     response = table.update_item(
-                    Key={
-                        'identity_id': identity_id,
-                        'task_id': task_id,
-                    },
-                    ExpressionAttributeNames= {
-                        '#ST': "status"
-                    },
-                    ExpressionAttributeValues = {
-                        ':da': convert_current_date_to_iso8601(),
-                        ":ke": s3_key,
-                        ":ur": presign_url,
-                        ":st": status
-                    },
-                    UpdateExpression = 'SET s3_key = :ke, presign_url = :ur, #ST = :st, updated_date = :da'
-                )
+        Key={
+            "identity_id": identity_id,
+            "task_id": task_id,
+        },
+        ExpressionAttributeNames={"#ST": "status"},
+        ExpressionAttributeValues={
+            ":da": convert_current_date_to_iso8601(),
+            ":ke": s3_key,
+            ":ur": presign_url,
+            ":st": status,
+        },
+        UpdateExpression="SET s3_key = :ke, presign_url = :ur, #ST = :st, updated_date = :da",
+    )
     return
+
 
 def put_zip_to_s3(filepath, bucket_name, key_name, metadata=None):
     """
@@ -92,17 +94,25 @@ def put_zip_to_s3(filepath, bucket_name, key_name, metadata=None):
         log.error("object_path is null!")
         raise Exception("S3 object must be set!")
 
-    GB = 1024 ** 3
-    mp_threshold = MULTIPART_THRESHOLD*GB
+    GB = 1024**3
+    mp_threshold = MULTIPART_THRESHOLD * GB
     concurrency = MULTIPART_CONCURRENCY
-    transfer_config = TransferConfig(multipart_threshold=mp_threshold, use_threads=True, max_concurrency=concurrency)
+    transfer_config = TransferConfig(
+        multipart_threshold=mp_threshold, use_threads=True, max_concurrency=concurrency
+    )
 
     login_attempt = False
     retry = MAX_RETRY_COUNT
 
     while retry > 0:
         try:
-            s3.upload_file(filepath, bucket_name, key_name, Config=transfer_config, ExtraArgs=metadata)
+            s3.upload_file(
+                filepath,
+                bucket_name,
+                key_name,
+                Config=transfer_config,
+                ExtraArgs=metadata,
+            )
 
             log.info("File [" + filepath + "] uploaded successfully")
             retry = 0
@@ -110,20 +120,20 @@ def put_zip_to_s3(filepath, bucket_name, key_name, metadata=None):
         except ClientError as e:
             log.error("Failed to upload object!")
             log.exception(e)
-            if e.response['Error']['Code'] == 'ExpiredToken':
-                log.warning('Login token expired')
+            if e.response["Error"]["Code"] == "ExpiredToken":
+                log.warning("Login token expired")
                 retry -= 1
                 log.debug("retry = " + str(retry))
             else:
                 log.error("Unhandled error code:")
-                log.debug(e.response['Error']['Code'])
+                log.debug(e.response["Error"]["Code"])
                 raise Exception("Error")
 
         except boto3.exceptions.S3UploadFailedError as e:
             log.error("Failed to upload object!")
             log.exception(e)
-            if 'ExpiredToken' in str(e):
-                log.warning('Login token expired')
+            if "ExpiredToken" in str(e):
+                log.warning("Login token expired")
                 log.info("Handling...")
                 retry -= 1
                 log.debug("retry = " + str(retry))
@@ -139,11 +149,8 @@ def put_zip_to_s3(filepath, bucket_name, key_name, metadata=None):
             log.exception(e)
             raise Exception("Error")
 
-def download(
-    down_type,
-    project_name,
-    workdir,
-    identity_id):
+
+def download(down_type, project_name, workdir, identity_id):
     try:
         db_resource = boto3.resource("dynamodb")
 
@@ -167,7 +174,7 @@ def download(
 
         files_ = set(workdir.glob("**/*")) - set(workdir.glob("**/*.json"))
         image_files = [f for f in files_ if f.is_file()]
-        with ZipFile(zip_path, 'w') as zip:
+        with ZipFile(zip_path, "w") as zip:
             for file_ in image_files:
                 with file_.with_suffix(".json").open() as rstr:
                     file_info = json.load(rstr)
@@ -178,15 +185,17 @@ def download(
                     "name": file_info["filename"],
                     "typeOfImage": file_info["type_method"],
                     "class": file_info.get("classtype", ""),
-                    "methodToCreate": convert_method_name(dict_method, file_info.get("gen_id", "")),
+                    "methodToCreate": convert_method_name(
+                        dict_method, file_info.get("gen_id", "")
+                    ),
                     "size": int(file_info.get("size", 0)),
-                    "nameOfProject": project_name
+                    "nameOfProject": project_name,
                 }
 
             # write this object to json file
             json_filename = f"{project_name}_{down_type}_{str(int(time.time()))}.json"
             filepath = workdir.joinpath(json_filename)
-            with filepath.open('w') as wstr:
+            with filepath.open("w") as wstr:
                 json.dump(json_object, wstr)
 
             # write to zip file
@@ -203,19 +212,18 @@ def download(
         shutil.rmtree(workdir)
 
         # get presign url for this zip file:
-        s3_conf = boto3.client('s3', config=Config(signature_version='s3v4'))
+        s3_conf = boto3.client("s3", config=Config(signature_version="s3v4"))
         url = s3_conf.generate_presigned_url(
-            ClientMethod='get_object',
-            Params={
-                'Bucket': bucket_name,
-                'Key': key_name
-            },
-            ExpiresIn=1*60*60
+            ClientMethod="get_object",
+            Params={"Bucket": bucket_name, "Key": key_name},
+            ExpiresIn=1 * 60 * 60,
         )
 
-        print(f"Processing time of down_zip: {endtime_down_zip-starttime}  puts3: {endtime_put_s3-endtime_down_zip}")
+        print(
+            f"Processing time of down_zip: {endtime_down_zip-starttime}  puts3: {endtime_put_s3-endtime_down_zip}"
+        )
 
-        return  url, key_name
+        return url, key_name
     except Exception as e:
         print("error")
         print(e)

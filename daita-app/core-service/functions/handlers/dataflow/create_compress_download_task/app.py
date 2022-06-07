@@ -16,11 +16,10 @@ from models.task_model import TaskModel
 task_table = TaskModel(os.environ["TableDataFlowTaskName"], None)
 COMPRESS_DOWNLOAD_STATEMACHINE = os.getenv("CompressDownloadStateMachineArn")
 
-stepfunctions = boto3.client('stepfunctions')
+stepfunctions = boto3.client("stepfunctions")
 
 
 class CreateCompressDownloadClass(LambdaBaseClass):
-
     def __init__(self) -> None:
         super().__init__()
 
@@ -30,8 +29,8 @@ class CreateCompressDownloadClass(LambdaBaseClass):
 
         self.id_token = body["id_token"]
         self.down_type = body["down_type"]
-        self.project_id = body['project_id']
-        self.project_name = body['project_name']
+        self.project_id = body["project_id"]
+        self.project_name = body["project_name"]
 
     def handle(self, event, context):
         ### parse body
@@ -51,8 +50,8 @@ class CreateCompressDownloadClass(LambdaBaseClass):
                 ("updated_at", convert_current_date_to_iso8601()),
                 ("project_id", self.project_id),
                 ("project_name", self.project_name),
-                (KEY_NAME_PROCESS_TYPE, VALUE_PROCESS_TYPE_DOWNLOAD)
-            ]
+                (KEY_NAME_PROCESS_TYPE, VALUE_PROCESS_TYPE_DOWNLOAD),
+            ],
         )
 
         stepfunction_input = {
@@ -65,16 +64,16 @@ class CreateCompressDownloadClass(LambdaBaseClass):
         }
         response = stepfunctions.start_execution(
             stateMachineArn=COMPRESS_DOWNLOAD_STATEMACHINE,
-            input=json.dumps(stepfunction_input)
+            input=json.dumps(stepfunction_input),
         )
 
         return generate_response(
-                message="OK",
-                status_code=HTTPStatus.OK,
-                data= {
-                    "task_id": task_id,
-                },
-            )
+            message="OK",
+            status_code=HTTPStatus.OK,
+            data={
+                "task_id": task_id,
+            },
+        )
 
 
 @error_response

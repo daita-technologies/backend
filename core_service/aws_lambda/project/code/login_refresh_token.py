@@ -13,18 +13,17 @@ from utils import create_secret_hash, aws_get_identity_id
 
 
 logger = logging.getLogger(__name__)
-cog_provider_client = boto3.client('cognito-idp')
-cog_identity_client = boto3.client('cognito-identity')
+cog_provider_client = boto3.client("cognito-idp")
+cog_identity_client = boto3.client("cognito-identity")
 ACCESS_TOKEN_EXPIRATION = 24 * 60 * 60
 RESPONSE_HEADER = {
     "Access-Control-Allow-Credentials": "true",
-	"Access-Control-Allow-Methods": "GET, HEAD, OPTIONS, POST, PUT",
+    "Access-Control-Allow-Methods": "GET, HEAD, OPTIONS, POST, PUT",
 }
 ##################################################################################################################
 def getDisplayName(username):
     response = cog_provider_client.admin_get_user(
-        UserPoolId=USERPOOLID,
-        Username=username
+        UserPoolId=USERPOOLID, Username=username
     )
     user_attributes = {}
     for att in response["UserAttributes"]:
@@ -33,23 +32,24 @@ def getDisplayName(username):
     name = ""
     if "name" in user_attributes:
         name = user_attributes["name"]
-    elif "given_name" in user_attributes or \
-        "family_name" in user_attributes:
+    elif "given_name" in user_attributes or "family_name" in user_attributes:
         name = f"{user_attributes.pop('given_name', '')} {user_attributes.pop('family_name', '')}"
     else:
         name = user_attributes["email"]
 
     return name
+
+
 ###################################################################################################################
 @error_response
 def lambda_handler(event, context):
-    '''
+    """
     https://docs.aws.amazon.com/lambda/latest/dg/gettingstarted-concepts.html#gettingstarted-concepts-event
     https://docs.aws.amazon.com/lambda/latest/dg/python-context.html
-    '''
+    """
     # get params REFRESH_TOKEN passed by FE in event body
     try:
-        body = json.loads(event['body'])
+        body = json.loads(event["body"])
         username = body["username"]
         refresh_token = body["refresh_token"]
     except Exception as exc:
@@ -58,27 +58,27 @@ def lambda_handler(event, context):
     try:
         # init Cognito InitiateAuth
         authenticated = cog_provider_client.initiate_auth(
-                AuthFlow="REFRESH_TOKEN_AUTH",
-                AuthParameters={
-                    "REFRESH_TOKEN": refresh_token,
-                    "USERNAME":username,
-                },
-                ClientId=CLIENTPOOLID,
-            )
+            AuthFlow="REFRESH_TOKEN_AUTH",
+            AuthParameters={
+                "REFRESH_TOKEN": refresh_token,
+                "USERNAME": username,
+            },
+            ClientId=CLIENTPOOLID,
+        )
 
         id_token = authenticated["AuthenticationResult"]["IdToken"]
         IdentityId = aws_get_identity_id(id_token)
 
         # call Cognito getCredentialsForIdentity
         identity = cog_identity_client.get_credentials_for_identity(
-                IdentityId=IdentityId,
-                Logins={
-                   f'cognito-idp.{cog_identity_client.meta.region_name}.amazonaws.com/{os.environ["USER_POOL_ID"]}': id_token
-                }
-            )
+            IdentityId=IdentityId,
+            Logins={
+                f'cognito-idp.{cog_identity_client.meta.region_name}.amazonaws.com/{os.environ["USER_POOL_ID"]}': id_token
+            },
+        )
     except Exception as exc:
         raise Exception(MessageRefreshTokenError) from exc
-    if 'github' in username or 'google' in username:
+    if "github" in username or "google" in username:
         name = getDisplayName(username)
     else:
         name = username
@@ -89,11 +89,16 @@ def lambda_handler(event, context):
         "session_key": identity["Credentials"]["SessionToken"],
         "token": authenticated["AuthenticationResult"]["AccessToken"],
         "identity_id": identity["IdentityId"],
-        "credential_token_expires_in": (identity["Credentials"]["Expiration"].timestamp())*1000, # expire time in seconds
+        "credential_token_expires_in": (
+            identity["Credentials"]["Expiration"].timestamp()
+        )
+        * 1000,  # expire time in seconds
         "id_token": id_token,
-        "token_expires_in":float(int((datetime.now().timestamp() + ACCESS_TOKEN_EXPIRATION)*1000)),
-        "username": username, 
-        "name": name
+        "token_expires_in": float(
+            int((datetime.now().timestamp() + ACCESS_TOKEN_EXPIRATION) * 1000)
+        ),
+        "username": username,
+        "name": name,
     }
 
     # return response

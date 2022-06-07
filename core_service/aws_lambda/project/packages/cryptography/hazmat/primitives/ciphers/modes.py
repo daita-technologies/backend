@@ -79,9 +79,7 @@ def _check_iv_length(self, algorithm):
 
 def _check_nonce_length(nonce: bytes, name: str, algorithm) -> None:
     if len(nonce) * 8 != algorithm.block_size:
-        raise ValueError(
-            "Invalid nonce size ({}) for {}.".format(len(nonce), name)
-        )
+        raise ValueError("Invalid nonce size ({}) for {}.".format(len(nonce), name))
 
 
 def _check_iv_and_key_length(self, algorithm):
@@ -192,8 +190,8 @@ class CTR(Mode, ModeWithNonce):
 
 class GCM(Mode, ModeWithInitializationVector, ModeWithAuthenticationTag):
     name = "GCM"
-    _MAX_ENCRYPTED_BYTES = (2 ** 39 - 256) // 8
-    _MAX_AAD_BYTES = (2 ** 64) // 8
+    _MAX_ENCRYPTED_BYTES = (2**39 - 256) // 8
+    _MAX_AAD_BYTES = (2**64) // 8
 
     def __init__(
         self,

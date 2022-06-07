@@ -13,12 +13,9 @@ def lambda_handler(event, context):
     response = requests.post(
         url=f"{GITHUB_LOGIN_URL}/{OAUTH_TOKEN_URL}",
         headers={
-            'Content-Type': 'application/x-www-form-urlencoded',
-            'Accept': 'application/json'
+            "Content-Type": "application/x-www-form-urlencoded",
+            "Accept": "application/json",
         },
         data=event["body"],
     )
-    return {
-        "body": json.dumps(response.json()),
-        "isBase64Encoded": False
-    }
+    return {"body": json.dumps(response.json()), "isBase64Encoded": False}

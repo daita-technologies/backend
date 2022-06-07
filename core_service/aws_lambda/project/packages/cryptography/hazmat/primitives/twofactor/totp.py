@@ -24,9 +24,7 @@ class TOTP(object):
         enforce_key_length: bool = True,
     ):
         self._time_step = time_step
-        self._hotp = HOTP(
-            key, length, algorithm, enforce_key_length=enforce_key_length
-        )
+        self._hotp = HOTP(key, length, algorithm, enforce_key_length=enforce_key_length)
 
     def generate(self, time: typing.Union[int, float]) -> bytes:
         counter = int(time / self._time_step)

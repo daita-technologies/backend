@@ -24,6 +24,7 @@ def get_index_of_median_value(array: Union[List[float], np.ndarray]) -> int:
     index: int = np.argsort(array)[len(array) // 2]
     return index
 
+
 def get_index_of_sorted(array: Union[List[float], np.ndarray]) -> int:
     """
     Find index base on the sorted og singnal ratios
@@ -35,29 +36,33 @@ def get_index_of_sorted(array: Union[List[float], np.ndarray]) -> int:
     idx: int = idxs_sorted[0]
     return idx
 
+
 DICT_POSTPROCESS_METHOD = {
     "median": get_index_of_median_value,
-    "sorted": get_index_of_sorted
+    "sorted": get_index_of_sorted,
 }
 
+
 class MergeResultClass(LambdaBaseClass):
-    
+
     KEY_DATA_TABLE_NAME = "data_table_name"
 
-    def __init__(self) -> None:   
-        super().__init__()     
-        self.client_events = boto3.client('events')    
-        self.const = SystemParameterStore() 
-        self.s3 = boto3.client('s3')
-        self.reference_info_model = ReferenceImageInfoModel(os.environ["TABLE_REFERENCE_IMAGE_INFO"])
+    def __init__(self) -> None:
+        super().__init__()
+        self.client_events = boto3.client("events")
+        self.const = SystemParameterStore()
+        self.s3 = boto3.client("s3")
+        self.reference_info_model = ReferenceImageInfoModel(
+            os.environ["TABLE_REFERENCE_IMAGE_INFO"]
+        )
         self.task_model = TaskModel(os.environ["TABLE_REFERENCE_IMAGE_TASK"])
         self.project_model = ProjectModel(os.environ["TABLE_PROJECT"])
 
     @LambdaBaseClass.parse_body
     def parser(self, body):
-        
+
         self.logger.debug(f"body in main_parser: {body}")
-        self.project_id = body["detail"]["project_id"]  
+        self.project_id = body["detail"]["project_id"]
         self.task_id = body["detail"]["task_id"]
         self.identity_id = body["detail"]["identity_id"]
         self.ls_method_id = body["detail"]["ls_method_id"]
@@ -72,10 +77,10 @@ class MergeResultClass(LambdaBaseClass):
         pass
 
     def handle(self, event, context):
-        
+
         ### parse body
-        self.parser(event)   
-        
+        self.parser(event)
+
         ### get folder
         folder = "/".join(self.s3_key_path.split("/")[:-1])
         print("folder: ", folder)
@@ -89,11 +94,11 @@ class MergeResultClass(LambdaBaseClass):
         print(ls_data)
 
         ### merge all data into a single array
-        '''
+        """
         data = []
         reference:
             code: [value]            
-        '''
+        """
         ls_input = []
         dict_reference = {}
         for method_id in self.ls_method_id:
@@ -101,10 +106,9 @@ class MergeResultClass(LambdaBaseClass):
                 "ls_value": [],
                 "method_postprocess": "",
                 "index_choose": -1,
-                "s3_path": ""
+                "s3_path": "",
             }
 
-        
         """
         ls_data format:
         {
@@ -146,7 +150,7 @@ class MergeResultClass(LambdaBaseClass):
                     dict_reference[item]["method_postprocess"] = value[1]
                 else:
                     continue
-        
+
         print("ls_input fetch data: ", ls_input)
         print("dict reference fetch data: ", dict_reference)
 
@@ -160,30 +164,29 @@ class MergeResultClass(LambdaBaseClass):
         print("dict reference after choose index: ", dict_reference)
 
         ### update to DB info with project_id and method_id
-        self.reference_info_model.create_reference_info(self.project_id, dict_reference, task_id=self.task_id)
+        self.reference_info_model.create_reference_info(
+            self.project_id, dict_reference, task_id=self.task_id
+        )
 
         ### update task finish status
         self.task_model.update_status(self.task_id, self.identity_id, VALUE_TASK_FINISH)
 
         ### update reference images to project table
-        if len(self.project_name)>0:
+        if len(self.project_name) > 0:
             dict_ref_save = {}
             for method in self.ls_method_choose:
                 if method in dict_reference.keys():
                     dict_ref_save[method] = dict_reference[method]["s3_path"]
             ## save dict_ref_save to project
-            self.project_model.update_project_reference_images(self.identity_id, self.project_name, dict_ref_save)
+            self.project_model.update_project_reference_images(
+                self.identity_id, self.project_name, dict_ref_save
+            )
 
-                
         return generate_response(
-            message="OK",
-            status_code=HTTPStatus.OK,
-            data={},
-            is_in_stepfunction=True
+            message="OK", status_code=HTTPStatus.OK, data={}, is_in_stepfunction=True
         )
-       
+
+
 def lambda_handler(event, context):
 
     return MergeResultClass().handle(event, context)
-
-    

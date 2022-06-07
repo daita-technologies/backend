@@ -44,9 +44,7 @@ _ALLOWED_HASHES = (
 
 def _verify_algorithm(algorithm):
     if not isinstance(algorithm, _ALLOWED_HASHES):
-        raise ValueError(
-            "Algorithm must be SHA1, SHA224, SHA256, SHA384, or SHA512"
-        )
+        raise ValueError("Algorithm must be SHA1, SHA224, SHA256, SHA384, or SHA512")
 
 
 class OCSPCertStatus(utils.Enum):
@@ -75,9 +73,7 @@ class _SingleResponse(object):
         _verify_algorithm(algorithm)
         if not isinstance(this_update, datetime.datetime):
             raise TypeError("this_update must be a datetime object")
-        if next_update is not None and not isinstance(
-            next_update, datetime.datetime
-        ):
+        if next_update is not None and not isinstance(next_update, datetime.datetime):
             raise TypeError("next_update must be a datetime object or None")
 
         self._cert = cert
@@ -87,9 +83,7 @@ class _SingleResponse(object):
         self._next_update = next_update
 
         if not isinstance(cert_status, OCSPCertStatus):
-            raise TypeError(
-                "cert_status must be an item from the OCSPCertStatus enum"
-            )
+            raise TypeError("cert_status must be an item from the OCSPCertStatus enum")
         if cert_status is not OCSPCertStatus.REVOKED:
             if revocation_time is not None:
                 raise ValueError(
@@ -108,8 +102,7 @@ class _SingleResponse(object):
             revocation_time = _convert_to_naive_utc_time(revocation_time)
             if revocation_time < _EARLIEST_UTC_TIME:
                 raise ValueError(
-                    "The revocation_time must be on or after"
-                    " 1950 January 1."
+                    "The revocation_time must be on or after" " 1950 January 1."
                 )
 
             if revocation_reason is not None and not isinstance(
@@ -303,9 +296,7 @@ class OCSPRequestBuilder(object):
     def __init__(
         self,
         request: typing.Optional[
-            typing.Tuple[
-                x509.Certificate, x509.Certificate, hashes.HashAlgorithm
-            ]
+            typing.Tuple[x509.Certificate, x509.Certificate, hashes.HashAlgorithm]
         ] = None,
         extensions: typing.List[x509.Extension[x509.ExtensionType]] = [],
     ) -> None:
@@ -338,9 +329,7 @@ class OCSPRequestBuilder(object):
         extension = x509.Extension(extval.oid, critical, extval)
         _reject_duplicate_extension(extension, self._extensions)
 
-        return OCSPRequestBuilder(
-            self._request, self._extensions + [extension]
-        )
+        return OCSPRequestBuilder(self._request, self._extensions + [extension])
 
     def build(self) -> OCSPRequest:
         if self._request is None:
@@ -403,9 +392,7 @@ class OCSPResponseBuilder(object):
         if not isinstance(responder_cert, x509.Certificate):
             raise TypeError("responder_cert must be a Certificate")
         if not isinstance(encoding, OCSPResponderEncoding):
-            raise TypeError(
-                "encoding must be an element from OCSPResponderEncoding"
-            )
+            raise TypeError("encoding must be an element from OCSPResponderEncoding")
 
         return OCSPResponseBuilder(
             self._response,
@@ -462,13 +449,9 @@ class OCSPResponseBuilder(object):
         )
 
     @classmethod
-    def build_unsuccessful(
-        cls, response_status: OCSPResponseStatus
-    ) -> OCSPResponse:
+    def build_unsuccessful(cls, response_status: OCSPResponseStatus) -> OCSPResponse:
         if not isinstance(response_status, OCSPResponseStatus):
-            raise TypeError(
-                "response_status must be an item from OCSPResponseStatus"
-            )
+            raise TypeError("response_status must be an item from OCSPResponseStatus")
         if response_status is OCSPResponseStatus.SUCCESSFUL:
             raise ValueError("response_status cannot be SUCCESSFUL")
 

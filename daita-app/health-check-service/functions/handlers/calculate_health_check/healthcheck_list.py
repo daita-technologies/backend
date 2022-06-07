@@ -16,7 +16,9 @@ from healthcheck_utils import (
 
 
 @register_healthcheck(name="signal_to_noise")
-def check_signal_to_noise_RGB(image: np.ndarray, **kwargs) -> Tuple[float, float, float]:
+def check_signal_to_noise_RGB(
+    image: np.ndarray, **kwargs
+) -> Tuple[float, float, float]:
     R, G, B = cv2.split(image)
     snr_R: float = calculate_signal_to_noise(R)
     snr_G: float = calculate_signal_to_noise(G)
@@ -47,7 +49,9 @@ def check_file_size(image: np.ndarray, **kwargs) -> int:
     image_path: str = kwargs["image_path"]
     if "s3://" in image_path:  # path is an S3 URI
         bucket, key_name = S3.split_s3_path(image_path)
-        file_size_in_bytes: int = boto3.resource('s3').Bucket(bucket).Object(key_name).content_length
+        file_size_in_bytes: int = (
+            boto3.resource("s3").Bucket(bucket).Object(key_name).content_length
+        )
     else:  # local path
         file_size_in_bytes = os.path.getsize(image_path)
 

@@ -8,7 +8,7 @@ import boto3
 from PIL import Image
 
 
-MAX_IMAGE_SIZE_IN_BYTES = 5*1024*1024
+MAX_IMAGE_SIZE_IN_BYTES = 5 * 1024 * 1024
 MAX_IMAGE_HEIGHT = 4000
 MAX_IMAGE_WIDTH = 4000
 
@@ -16,9 +16,9 @@ EFS_MOUNT_POINT = os.getenv("EFSMountPath")
 BUCKET = os.getenv("S3BucketName")
 
 efs_mount_point = Path(EFS_MOUNT_POINT)
-s3_client = boto3.client('s3')
+s3_client = boto3.client("s3")
 
-table_data_org = boto3.resource('dynamodb').Table("data_original")
+table_data_org = boto3.resource("dynamodb").Table("data_original")
 
 
 def validate_image(file_path: str):
@@ -28,8 +28,7 @@ def validate_image(file_path: str):
     # validate max resolution
     with Image.open(file_path) as image:
         width, height = image.size
-        if width > MAX_IMAGE_WIDTH or \
-            height > MAX_IMAGE_HEIGHT:
+        if width > MAX_IMAGE_WIDTH or height > MAX_IMAGE_HEIGHT:
             return False
     return True
 
@@ -66,26 +65,28 @@ def lambda_handler(event, context):
         ### check data exist in DB
         response = table_data_org.get_item(
             Key={
-                'project_id': project_id,
-                'filename': filename,
+                "project_id": project_id,
+                "filename": filename,
             },
-            ProjectionExpression= 'size'
+            ProjectionExpression="size",
         )
-        if response.get('Item', None) is None:
+        if response.get("Item", None) is None:
             size_old = 0
         else:
-            size_old = int(response['Item']['size'])
+            size_old = int(response["Item"]["size"])
 
         # generate ls_object_info
-        ls_object_info.append({
-            "filename": filename,
-            "gen_id": "",
-            "hash": get_file_md5_hash(file_path),
-            "is_ori": True,
-            "s3_key": os.path.join(BUCKET, object_name),
-            "size": file_size,
-            "size_old": size_old
-        })
+        ls_object_info.append(
+            {
+                "filename": filename,
+                "gen_id": "",
+                "hash": get_file_md5_hash(file_path),
+                "is_ori": True,
+                "s3_key": os.path.join(BUCKET, object_name),
+                "size": file_size,
+                "size_old": size_old,
+            }
+        )
 
     payload = {
         "id_token": id_token,
@@ -96,7 +97,4 @@ def lambda_handler(event, context):
     }
 
     print("succeed")
-    return {
-        "body": json.dumps(payload),
-        "file_chunk": file_chunk
-    }
+    return {"body": json.dumps(payload), "file_chunk": file_chunk}

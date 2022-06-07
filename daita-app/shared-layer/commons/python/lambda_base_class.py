@@ -3,23 +3,23 @@ import os
 from identity_check import *
 import json
 
+
 class LambdaBaseClass(object):
-    
     def __init__(self) -> None:
         self.logger = logging.getLogger(self.__class__.__name__)
         self.logger.setLevel(os.environ["LOGGING"])
 
-    def handle(self, event, context):        
+    def handle(self, event, context):
         raise NotImplementedError
 
     @classmethod
     def parse_body(cls, func):
         def parser(object, event):
-            if type(event['body']) is str:
-                body = json.loads(event['body'])
+            if type(event["body"]) is str:
+                body = json.loads(event["body"])
             else:
-                body = event['body']
-                
+                body = event["body"]
+
             object.logger.info("Body: {}".format(body))
             try:
                 print("Before call func")
@@ -27,11 +27,11 @@ class LambdaBaseClass(object):
             except Exception as e:
                 raise Exception(MESS_INVALID_JSON_INPUT) from e
             object._check_input_value()
-            return 
-        
-        return parser 
+            return
 
-    def _check_input_value(self):        
+        return parser
+
+    def _check_input_value(self):
         pass
         return
 

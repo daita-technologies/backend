@@ -190,9 +190,7 @@ class TestVerifyingKeyFromDer(unittest.TestCase):
             "-----END PUBLIC KEY-----"
         )
         with self.assertRaises(UnexpectedDER):
-            VerifyingKey.from_pem(
-                pub_key_str, valid_curve_encodings=["named_curve"]
-            )
+            VerifyingKey.from_pem(pub_key_str, valid_curve_encodings=["named_curve"])
 
     def test_load_key_with_disabled_format(self):
         with self.assertRaises(MalformedPointError) as e:
@@ -344,9 +342,7 @@ class TestSigningKey(unittest.TestCase):
         )
 
         with self.assertRaises(UnexpectedDER):
-            SigningKey.from_pem(
-                prv_key_str, valid_curve_encodings=["named_curve"]
-            )
+            SigningKey.from_pem(prv_key_str, valid_curve_encodings=["named_curve"])
 
     def test_equality_on_signing_keys(self):
         sk = SigningKey.from_secret_exponent(
@@ -402,7 +398,9 @@ class TestTrivialCurve(unittest.TestCase):
         cls.toy_curve = Curve("toy_p8", curve, gen, (1, 2, 0))
 
         cls.sk = SigningKey.from_secret_exponent(
-            140, cls.toy_curve, hashfunc=hashlib.sha1,
+            140,
+            cls.toy_curve,
+            hashfunc=hashlib.sha1,
         )
 
     def test_generator_sanity(self):
@@ -514,12 +512,8 @@ for modifier, fun in [
             )
 
 
-@pytest.mark.parametrize(
-    "signature,decoder,mod_apply,fun,vrf_mthd,vrf_data", verifiers
-)
-def test_VerifyingKey_verify(
-    signature, decoder, mod_apply, fun, vrf_mthd, vrf_data
-):
+@pytest.mark.parametrize("signature,decoder,mod_apply,fun,vrf_mthd,vrf_data", verifiers)
+def test_VerifyingKey_verify(signature, decoder, mod_apply, fun, vrf_mthd, vrf_data):
     sig = mod_apply(signature)
 
     assert vrf_mthd(sig, fun(vrf_data), sigdecode=decoder)
@@ -527,8 +521,7 @@ def test_VerifyingKey_verify(
 
 # test SigningKey.from_string()
 prv_key_bytes = (
-    b"^\xc8B\x0b\xd6\xef\x92R\xa9B\xe9\x89\x04<\xa2"
-    b"\x9fV\x1f\xa5%w\x0e\xb1\xc5"
+    b"^\xc8B\x0b\xd6\xef\x92R\xa9B\xe9\x89\x04<\xa2" b"\x9fV\x1f\xa5%w\x0e\xb1\xc5"
 )
 assert len(prv_key_bytes) == 24
 converters = []
@@ -580,9 +573,7 @@ extra_entropy = b"\x0a\x0b\x0c\x0d\x0e\x0f\x10\x11"
 
 @pytest.mark.parametrize("convert", converters)
 def test_SigningKey_sign_deterministic(convert):
-    sig = sk.sign_deterministic(
-        convert(data), extra_entropy=convert(extra_entropy)
-    )
+    sig = sk.sign_deterministic(convert(data), extra_entropy=convert(extra_entropy))
 
     vk.verify(sig, data)
 
@@ -621,7 +612,10 @@ def test_SigningKey_with_unlikely_value():
 def test_SigningKey_with_custom_curve_old_point():
     generator = generator_brainpoolp160r1
     generator = Point(
-        generator.curve(), generator.x(), generator.y(), generator.order(),
+        generator.curve(),
+        generator.x(),
+        generator.y(),
+        generator.order(),
     )
 
     curve = Curve(

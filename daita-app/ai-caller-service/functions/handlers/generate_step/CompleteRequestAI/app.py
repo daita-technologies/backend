@@ -16,123 +16,144 @@ from identity_check import *
 from boto3.dynamodb.conditions import Key, Attr
 from models.generate_task_model import GenerateTaskModel
 from models.task_model import TaskModel
-task_model = TaskModel(os.environ["TABLE_GENERATE_TASK"],None)
+
+task_model = TaskModel(os.environ["TABLE_GENERATE_TASK"], None)
 generate_task_model = GenerateTaskModel(os.environ["TABLE_GENERATE_TASK"])
+
+
 def batcher(iterable, size):
     iterator = iter(iterable)
     for first in iterator:
         yield list(chain([first], islice(iterator, size - 1)))
 
-def request_update_proj(update_pro_info,list_file_s3,gen_id,task_id):
-    batch_list_s3 = list(batcher(list_file_s3,20))
+
+def request_update_proj(update_pro_info, list_file_s3, gen_id, task_id):
+    batch_list_s3 = list(batcher(list_file_s3, 20))
     for batch_file in batch_list_s3:
         print("[DEBUG] batch file {}".format(batch_file))
-        info = {'identity_id':update_pro_info['identity_id'], 
-                'id_token':update_pro_info['id_token'] ,
-                'project_id':update_pro_info['project_id'],
-                'project_name':update_pro_info['project_name'],
-                'type_method': update_pro_info['process_type'],
-                'ls_object_info':[]}    
+        info = {
+            "identity_id": update_pro_info["identity_id"],
+            "id_token": update_pro_info["id_token"],
+            "project_id": update_pro_info["project_id"],
+            "project_name": update_pro_info["project_name"],
+            "type_method": update_pro_info["process_type"],
+            "ls_object_info": [],
+        }
         for info_file in batch_file:
-            filename = os.path.basename(info_file['filename'])
-            info['ls_object_info'].append({
-                's3_key':os.path.join(update_pro_info['s3_key'],os.path.join(task_id,filename)) ,
-                'filename':filename,
-                'hash':'',
-                'size':info_file['size'],
-                'is_ori':False,
-                'gen_id' :gen_id 
-            })     
+            filename = os.path.basename(info_file["filename"])
+            info["ls_object_info"].append(
+                {
+                    "s3_key": os.path.join(
+                        update_pro_info["s3_key"], os.path.join(task_id, filename)
+                    ),
+                    "filename": filename,
+                    "hash": "",
+                    "size": info_file["size"],
+                    "is_ori": False,
+                    "gen_id": gen_id,
+                }
+            )
         print("[DEBUG] Log Request Update Upload : {}\n".format(info))
-        update_project_output = requests.post('https://nzvw2zvu3d.execute-api.us-east-2.amazonaws.com/staging/projects/upload_update',json=info)
-    
+        update_project_output = requests.post(
+            "https://nzvw2zvu3d.execute-api.us-east-2.amazonaws.com/staging/projects/upload_update",
+            json=info,
+        )
+
         print("[DEBUG] Request Update Upload: {}\n".format(update_project_output.text))
 
 
 @error_response
 def lambda_handler(event, context):
     print(event)
-    for record in event['Records']:
+    for record in event["Records"]:
         print(record)
-        body =  json.loads(record['body'])
-        info_upload_s3 = body['info_upload_s3']
-        item = generate_task_model.get_task_info(body['identity_id'] ,body['task_id'])
-        db_resource = boto3.resource('dynamodb',REGION)
-        if item.status == 'CANCEL':
-            if item.process_type == 'AUGMENT':
-                tableDataGen = db_resource.Table(os.environ['TABLE_DATA_AUGMENT'])
+        body = json.loads(record["body"])
+        info_upload_s3 = body["info_upload_s3"]
+        item = generate_task_model.get_task_info(body["identity_id"], body["task_id"])
+        db_resource = boto3.resource("dynamodb", REGION)
+        if item.status == "CANCEL":
+            if item.process_type == "AUGMENT":
+                tableDataGen = db_resource.Table(os.environ["TABLE_DATA_AUGMENT"])
             else:
-                tableDataGen = db_resource.Table(os.environ['TABLE_DATA_PREPROCESS'])
+                tableDataGen = db_resource.Table(os.environ["TABLE_DATA_PREPROCESS"])
 
             queryResponse = tableDataGen.query(
-                KeyConditionExpression=Key('project_id').eq(body['project_id']),
-                FilterExpression=Attr('s3_key').contains(body['task_id'])
-                    )
+                KeyConditionExpression=Key("project_id").eq(body["project_id"]),
+                FilterExpression=Attr("s3_key").contains(body["task_id"]),
+            )
             print(f"The number files will be deleted {len(queryResponse['Items'])}")
-            total_size = 0 
-            total_file = len(queryResponse['Items'])
-            task_model.update_number_files(task_id = body['task_id'], identity_id = body['identity_id'],num_finish = 0)
-            if len(queryResponse['Items']) > 0:
+            total_size = 0
+            total_file = len(queryResponse["Items"])
+            task_model.update_number_files(
+                task_id=body["task_id"], identity_id=body["identity_id"], num_finish=0
+            )
+            if len(queryResponse["Items"]) > 0:
                 with tableDataGen.batch_writer() as batch:
-                    for each in queryResponse['Items']:
-                        tableDataGen.delete_item(Key={
-                            'project_id': each['project_id'],
-                            'filename':each['filename']
-                        })
-                        total_size += each['size']
-            
-                # Update Table T_PROJECT_SUMMARY 
-                
-                prj_sum_all = db_resource.Table(os.environ['T_PROJECT_SUMMARY'])
-                responsePrjSumAll = prj_sum_all.get_item( Key = {
-                        "project_id":body['project_id'] ,
-                        "type":  item.process_type
-                    })
+                    for each in queryResponse["Items"]:
+                        tableDataGen.delete_item(
+                            Key={
+                                "project_id": each["project_id"],
+                                "filename": each["filename"],
+                            }
+                        )
+                        total_size += each["size"]
 
-                print(responsePrjSumAll['Item'])
-                
-                if not 'Item' in responsePrjSumAll:
+                # Update Table T_PROJECT_SUMMARY
+
+                prj_sum_all = db_resource.Table(os.environ["T_PROJECT_SUMMARY"])
+                responsePrjSumAll = prj_sum_all.get_item(
+                    Key={"project_id": body["project_id"], "type": item.process_type}
+                )
+
+                print(responsePrjSumAll["Item"])
+
+                if not "Item" in responsePrjSumAll:
                     return {}
 
-                itemResponseProjSumAll = responsePrjSumAll['Item']
+                itemResponseProjSumAll = responsePrjSumAll["Item"]
 
-                prj_sum_all.update_item(Key = {
-                        'project_id': body['project_id'],
-                        'type': item.process_type
+                prj_sum_all.update_item(
+                    Key={"project_id": body["project_id"], "type": item.process_type},
+                    ExpressionAttributeNames={
+                        "#SI": "total_size",
+                        "#COU": "count",
                     },
-                    ExpressionAttributeNames = {
-                        '#SI': 'total_size',
-                        '#COU': 'count',  
+                    ExpressionAttributeValues={
+                        ":si": itemResponseProjSumAll["total_size"] - total_size,
+                        ":cou": itemResponseProjSumAll["count"] - total_file,
                     },
-                    ExpressionAttributeValues = {
-                        ':si': itemResponseProjSumAll['total_size'] - total_size,
-                        ':cou': itemResponseProjSumAll['count'] -total_file 
-                    },
-                    UpdateExpression='SET #SI = :si, #COU = :cou' 
+                    UpdateExpression="SET #SI = :si, #COU = :cou",
                 )
-            
 
             return {}
-        resq = request_update_proj(update_pro_info={
-                        'identity_id': body['identity_id'],
-                        'id_token':body['id_token'],
-                        's3_key': body['project_prefix'],
-                        'project_id': body['project_id'],
-                        'project_name': body['project_name'],
-                        'process_type': item.process_type
-                    },list_file_s3= info_upload_s3, gen_id=body['gen_id'],task_id=body['task_id'])
+        resq = request_update_proj(
+            update_pro_info={
+                "identity_id": body["identity_id"],
+                "id_token": body["id_token"],
+                "s3_key": body["project_prefix"],
+                "project_id": body["project_id"],
+                "project_name": body["project_name"],
+                "process_type": item.process_type,
+            },
+            list_file_s3=info_upload_s3,
+            gen_id=body["gen_id"],
+            task_id=body["task_id"],
+        )
         print(resq)
-        if item.process_type == 'AUGMENT':
-            table = db_resource.Table(os.environ['TABLE_DATA_AUGMENT'])
-        elif item.process_type == 'PREPROCESS':
-            table = db_resource.Table(os.environ['TABLE_DATA_PREPROCESS'])
-        
+        if item.process_type == "AUGMENT":
+            table = db_resource.Table(os.environ["TABLE_DATA_AUGMENT"])
+        elif item.process_type == "PREPROCESS":
+            table = db_resource.Table(os.environ["TABLE_DATA_PREPROCESS"])
+
         queryResponse = table.query(
-            KeyConditionExpression=Key('project_id').eq(body['project_id']),
-             FilterExpression=Attr('s3_key').contains(body['task_id'])
-            )
+            KeyConditionExpression=Key("project_id").eq(body["project_id"]),
+            FilterExpression=Attr("s3_key").contains(body["task_id"]),
+        )
         print(queryResponse)
-        task_model.update_number_files(task_id = body['task_id'], identity_id = body['identity_id'],
-         num_finish = len(queryResponse['Items']))
+        task_model.update_number_files(
+            task_id=body["task_id"],
+            identity_id=body["identity_id"],
+            num_finish=len(queryResponse["Items"]),
+        )
 
     return {}

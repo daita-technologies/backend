@@ -144,9 +144,7 @@ class _DHPrivateKey(dh.DHPrivateKey):
         # to EVP_PKEY_derive_set_peer
         self._exchange_assert(res == 1)
         keylen = self._backend._ffi.new("size_t *")
-        res = self._backend._lib.EVP_PKEY_derive(
-            ctx, self._backend._ffi.NULL, keylen
-        )
+        res = self._backend._lib.EVP_PKEY_derive(ctx, self._backend._ffi.NULL, keylen)
         # Invalid kex errors here in OpenSSL < 3
         self._exchange_assert(res == 1)
         self._backend.openssl_assert(keylen[0] > 0)
@@ -173,9 +171,7 @@ class _DHPrivateKey(dh.DHPrivateKey):
     def public_key(self) -> dh.DHPublicKey:
         dh_cdata = _dh_params_dup(self._dh_cdata, self._backend)
         pub_key = self._backend._ffi.new("BIGNUM **")
-        self._backend._lib.DH_get0_key(
-            self._dh_cdata, pub_key, self._backend._ffi.NULL
-        )
+        self._backend._lib.DH_get0_key(self._dh_cdata, pub_key, self._backend._ffi.NULL)
         self._backend.openssl_assert(pub_key[0] != self._backend._ffi.NULL)
         pub_key_dup = self._backend._lib.BN_dup(pub_key[0])
         self._backend.openssl_assert(pub_key_dup != self._backend._ffi.NULL)
@@ -197,9 +193,7 @@ class _DHPrivateKey(dh.DHPrivateKey):
         encryption_algorithm: serialization.KeySerializationEncryption,
     ) -> bytes:
         if format is not serialization.PrivateFormat.PKCS8:
-            raise ValueError(
-                "DH private keys support only PKCS8 serialization"
-            )
+            raise ValueError("DH private keys support only PKCS8 serialization")
         if not self._backend._lib.Cryptography_HAS_EVP_PKEY_DHX:
             q = self._backend._ffi.new("BIGNUM **")
             self._backend._lib.DH_get0_pqg(
@@ -247,9 +241,7 @@ class _DHPublicKey(dh.DHPublicKey):
         else:
             q_val = self._backend._bn_to_int(q[0])
         pub_key = self._backend._ffi.new("BIGNUM **")
-        self._backend._lib.DH_get0_key(
-            self._dh_cdata, pub_key, self._backend._ffi.NULL
-        )
+        self._backend._lib.DH_get0_key(self._dh_cdata, pub_key, self._backend._ffi.NULL)
         self._backend.openssl_assert(pub_key[0] != self._backend._ffi.NULL)
         return dh.DHPublicNumbers(
             parameter_numbers=dh.DHParameterNumbers(
@@ -270,8 +262,7 @@ class _DHPublicKey(dh.DHPublicKey):
     ) -> bytes:
         if format is not serialization.PublicFormat.SubjectPublicKeyInfo:
             raise ValueError(
-                "DH public keys support only "
-                "SubjectPublicKeyInfo serialization"
+                "DH public keys support only " "SubjectPublicKeyInfo serialization"
             )
 
         if not self._backend._lib.Cryptography_HAS_EVP_PKEY_DHX:

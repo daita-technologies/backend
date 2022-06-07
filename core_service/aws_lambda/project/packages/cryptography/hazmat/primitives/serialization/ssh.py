@@ -46,7 +46,7 @@ _ECDSA_NISTP384 = b"ecdsa-sha2-nistp384"
 _ECDSA_NISTP521 = b"ecdsa-sha2-nistp521"
 _CERT_SUFFIX = b"-cert-v01@openssh.com"
 
-_SSH_PUBKEY_RC = re.compile(br"\A(\S+)[ \t]+(\S+)")
+_SSH_PUBKEY_RC = re.compile(rb"\A(\S+)[ \t]+(\S+)")
 _SK_MAGIC = b"openssh-key-v1\0"
 _SK_START = b"-----BEGIN OPENSSH PRIVATE KEY-----"
 _SK_END = b"-----END OPENSSH PRIVATE KEY-----"
@@ -83,9 +83,7 @@ def _ecdsa_key_type(public_key):
     """Return SSH key_type and curve_name for private key."""
     curve = public_key.curve
     if curve.name not in _ECDSA_KEY_TYPE:
-        raise ValueError(
-            "Unsupported curve for ssh private key: %r" % curve.name
-        )
+        raise ValueError("Unsupported curve for ssh private key: %r" % curve.name)
     return _ECDSA_KEY_TYPE[curve.name]
 
 
@@ -373,9 +371,7 @@ class _SSHFormatECDSA(object):
 
     def encode_public(self, public_key, f_pub):
         """Write ECDSA public key"""
-        point = public_key.public_bytes(
-            Encoding.X962, PublicFormat.UncompressedPoint
-        )
+        point = public_key.public_bytes(Encoding.X962, PublicFormat.UncompressedPoint)
         f_pub.put_sshstr(self.ssh_curve_name)
         f_pub.put_sshstr(point)
 
@@ -406,9 +402,7 @@ class _SSHFormatEd25519(object):
     def load_public(self, key_type, data):
         """Make Ed25519 public key from data."""
         (point,), data = self.get_public(data)
-        public_key = ed25519.Ed25519PublicKey.from_public_bytes(
-            point.tobytes()
-        )
+        public_key = ed25519.Ed25519PublicKey.from_public_bytes(point.tobytes())
         return public_key, data
 
     def load_private(self, data, pubfields):
@@ -425,9 +419,7 @@ class _SSHFormatEd25519(object):
 
     def encode_public(self, public_key, f_pub):
         """Write Ed25519 public key"""
-        raw_public_key = public_key.public_bytes(
-            Encoding.Raw, PublicFormat.Raw
-        )
+        raw_public_key = public_key.public_bytes(Encoding.Raw, PublicFormat.Raw)
         f_pub.put_sshstr(raw_public_key)
 
     def encode_private(self, private_key, f_priv):
@@ -436,9 +428,7 @@ class _SSHFormatEd25519(object):
         raw_private_key = private_key.private_bytes(
             Encoding.Raw, PrivateFormat.Raw, NoEncryption()
         )
-        raw_public_key = public_key.public_bytes(
-            Encoding.Raw, PublicFormat.Raw
-        )
+        raw_public_key = public_key.public_bytes(Encoding.Raw, PublicFormat.Raw)
         f_keypair = _FragList([raw_private_key, raw_public_key])
 
         self.encode_public(public_key, f_priv)

@@ -9,7 +9,9 @@ ENDPOINTCAPTCHAVERIFY = "https://www.google.com/recaptcha/api/siteverify"
 # Change these if used with GitHub Enterprise (see below)
 GITHUB_API_URL = "https://api.github.com"
 GITHUB_LOGIN_URL = "https://github.com"
-WEBHOOK="https://hooks.slack.com/services/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"
-CHANNELWEBHOOK="#user-feedback"
-AWS_ACC_ID ='366577564432'
-STS_ARN = 'arn:aws:iam::366577564432:role/stscognito'
+WEBHOOK = (
+    "https://hooks.slack.com/services/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"
+)
+CHANNELWEBHOOK = "#user-feedback"
+AWS_ACC_ID = "366577564432"
+STS_ARN = "arn:aws:iam::366577564432:role/stscognito"

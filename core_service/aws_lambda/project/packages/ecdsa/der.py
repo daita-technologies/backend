@@ -87,7 +87,7 @@ def encode_bitstring(s, unused=_sentry):
             if not s:
                 raise ValueError("unused is non-zero but s is empty")
             last = str_idx_as_int(s, -1)
-            if last & (2 ** unused - 1):
+            if last & (2**unused - 1):
                 raise ValueError("unused bits must be zeros in DER")
         encoded_unused = int2byte(unused)
         len_extra = 1
@@ -167,9 +167,7 @@ def remove_octet_string(string):
 
 def remove_object(string):
     if not string:
-        raise UnexpectedDER(
-            "Empty string does not encode an object identifier"
-        )
+        raise UnexpectedDER("Empty string does not encode an object identifier")
     if string[:1] != b"\x06":
         n = str_idx_as_int(string, 0)
         raise UnexpectedDER("wanted type 'object' (0x06), got 0x%02x" % n)
@@ -200,9 +198,7 @@ def remove_object(string):
 
 def remove_integer(string):
     if not string:
-        raise UnexpectedDER(
-            "Empty string is an invalid encoding of an integer"
-        )
+        raise UnexpectedDER("Empty string is an invalid encoding of an integer")
     if string[:1] != b"\x02":
         n = str_idx_as_int(string, 0)
         raise UnexpectedDER("wanted type 'integer' (0x02), got 0x%02x" % n)
@@ -223,8 +219,7 @@ def remove_integer(string):
         smsb = str_idx_as_int(numberbytes, 1)
         if smsb < 0x80:
             raise UnexpectedDER(
-                "Invalid encoding of integer, unnecessary "
-                "zero padding bytes"
+                "Invalid encoding of integer, unnecessary " "zero padding bytes"
             )
     return int(binascii.hexlify(numberbytes), 16), rest
 
@@ -324,8 +319,7 @@ def remove_bitstring(string, expect_unused=_sentry):
         raise UnexpectedDER("Empty string does not encode a bitstring")
     if expect_unused is _sentry:
         warnings.warn(
-            "Legacy call convention used, expect_unused= needs to be"
-            " specified",
+            "Legacy call convention used, expect_unused= needs to be" " specified",
             DeprecationWarning,
         )
     num = str_idx_as_int(string, 0)
@@ -348,7 +342,7 @@ def remove_bitstring(string, expect_unused=_sentry):
                 raise UnexpectedDER("Invalid encoding of empty bit string")
             last = str_idx_as_int(body, -1)
             # verify that all the unused bits are set to zero (DER requirement)
-            if last & (2 ** unused - 1):
+            if last & (2**unused - 1):
                 raise UnexpectedDER("Non zero padding bits in bit string")
         if expect_unused is None:
             body = (body, unused)
@@ -390,11 +384,7 @@ def unpem(pem):
         pem = pem.encode()
 
     d = b("").join(
-        [
-            l.strip()
-            for l in pem.split(b("\n"))
-            if l and not l.startswith(b("-----"))
-        ]
+        [l.strip() for l in pem.split(b("\n")) if l and not l.startswith(b("-----"))]
     )
     return base64.b64decode(d)
 

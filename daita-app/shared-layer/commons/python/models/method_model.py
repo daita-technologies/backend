@@ -3,14 +3,15 @@ from boto3.dynamodb.conditions import Key, Attr
 from config import *
 from typing import List
 
-class MethodItem():
-    
-    FIELD_METHOD_ID     = "method_id"
-    FIELD_METHOD_NAME   = "method_name"
 
-    def __init__(self) -> None:   
+class MethodItem:
+
+    FIELD_METHOD_ID = "method_id"
+    FIELD_METHOD_NAME = "method_name"
+
+    def __init__(self) -> None:
         self.method_id = ""
-        self.method_name = ""  
+        self.method_name = ""
         self.item_db = None
 
     @classmethod
@@ -21,19 +22,18 @@ class MethodItem():
             object = cls()
             object.item_db = item_info
 
-            object.method_id          = item_info.get(object.FIELD_METHOD_ID)
-            object.method_name        = item_info.get(object.FIELD_METHOD_NAME)       
+            object.method_id = item_info.get(object.FIELD_METHOD_ID)
+            object.method_name = item_info.get(object.FIELD_METHOD_NAME)
 
             return object
 
 
-class MethodModel():
+class MethodModel:
     def __init__(self, table_name) -> None:
-        self.table = boto3.resource('dynamodb').Table(table_name) 
+        self.table = boto3.resource("dynamodb").Table(table_name)
 
-    def get_all_methods(self) -> List[MethodItem]:        
-        response = self.table.scan()              
-        items = response['Items']      
+    def get_all_methods(self) -> List[MethodItem]:
+        response = self.table.scan()
+        items = response["Items"]
 
         return [MethodItem.from_db_item(item) for item in items]
-        

@@ -22,17 +22,13 @@ def load_pem_private_key(
     return ossl.load_pem_private_key(data, password)
 
 
-def load_pem_public_key(
-    data: bytes, backend: typing.Any = None
-) -> PUBLIC_KEY_TYPES:
+def load_pem_public_key(data: bytes, backend: typing.Any = None) -> PUBLIC_KEY_TYPES:
     from cryptography.hazmat.backends.openssl.backend import backend as ossl
 
     return ossl.load_pem_public_key(data)
 
 
-def load_pem_parameters(
-    data: bytes, backend: typing.Any = None
-) -> "dh.DHParameters":
+def load_pem_parameters(data: bytes, backend: typing.Any = None) -> "dh.DHParameters":
     from cryptography.hazmat.backends.openssl.backend import backend as ossl
 
     return ossl.load_pem_parameters(data)
@@ -48,17 +44,13 @@ def load_der_private_key(
     return ossl.load_der_private_key(data, password)
 
 
-def load_der_public_key(
-    data: bytes, backend: typing.Any = None
-) -> PUBLIC_KEY_TYPES:
+def load_der_public_key(data: bytes, backend: typing.Any = None) -> PUBLIC_KEY_TYPES:
     from cryptography.hazmat.backends.openssl.backend import backend as ossl
 
     return ossl.load_der_public_key(data)
 
 
-def load_der_parameters(
-    data: bytes, backend: typing.Any = None
-) -> "dh.DHParameters":
+def load_der_parameters(data: bytes, backend: typing.Any = None) -> "dh.DHParameters":
     from cryptography.hazmat.backends.openssl.backend import backend as ossl
 
     return ossl.load_der_parameters(data)

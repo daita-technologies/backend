@@ -395,7 +395,9 @@ def find_signature_hash(signature: bytes, pub_key: key.PublicKey) -> str:
     return _find_method_hash(clearsig)
 
 
-def yield_fixedblocks(infile: typing.BinaryIO, blocksize: int) -> typing.Iterator[bytes]:
+def yield_fixedblocks(
+    infile: typing.BinaryIO, blocksize: int
+) -> typing.Iterator[bytes]:
     """Generator, yields each block of ``blocksize`` bytes in the input file.
 
     :param infile: file to read and separate in blocks.
@@ -416,7 +418,9 @@ def yield_fixedblocks(infile: typing.BinaryIO, blocksize: int) -> typing.Iterato
             break
 
 
-def compute_hash(message: typing.Union[bytes, typing.BinaryIO], method_name: str) -> bytes:
+def compute_hash(
+    message: typing.Union[bytes, typing.BinaryIO], method_name: str
+) -> bytes:
     """Returns the message digest.
 
     :param message: the signed message. Can be an 8-bit string or a file-like

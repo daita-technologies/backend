@@ -12,9 +12,7 @@ from cryptography.hazmat.primitives import constant_time, hashes
 
 
 class _HMACContext(hashes.HashContext):
-    def __init__(
-        self, backend, key: bytes, algorithm: hashes.HashAlgorithm, ctx=None
-    ):
+    def __init__(self, backend, key: bytes, algorithm: hashes.HashAlgorithm, ctx=None):
         self._algorithm = algorithm
         self._backend = backend
 
@@ -25,9 +23,7 @@ class _HMACContext(hashes.HashContext):
             evp_md = self._backend._evp_md_from_algorithm(algorithm)
             if evp_md == self._backend._ffi.NULL:
                 raise UnsupportedAlgorithm(
-                    "{} is not a supported hash on this backend".format(
-                        algorithm.name
-                    ),
+                    "{} is not a supported hash on this backend".format(algorithm.name),
                     _Reasons.UNSUPPORTED_HASH,
                 )
             key_ptr = self._backend._ffi.from_buffer(key)
@@ -46,14 +42,10 @@ class _HMACContext(hashes.HashContext):
     def copy(self) -> "_HMACContext":
         copied_ctx = self._backend._lib.HMAC_CTX_new()
         self._backend.openssl_assert(copied_ctx != self._backend._ffi.NULL)
-        copied_ctx = self._backend._ffi.gc(
-            copied_ctx, self._backend._lib.HMAC_CTX_free
-        )
+        copied_ctx = self._backend._ffi.gc(copied_ctx, self._backend._lib.HMAC_CTX_free)
         res = self._backend._lib.HMAC_CTX_copy(copied_ctx, self._ctx)
         self._backend.openssl_assert(res != 0)
-        return _HMACContext(
-            self._backend, self._key, self.algorithm, ctx=copied_ctx
-        )
+        return _HMACContext(self._backend, self._key, self.algorithm, ctx=copied_ctx)
 
     def update(self, data: bytes) -> None:
         data_ptr = self._backend._ffi.from_buffer(data)

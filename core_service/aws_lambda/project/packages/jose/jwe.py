@@ -11,7 +11,15 @@ from .exceptions import JWEError, JWEParseError
 from .utils import base64url_decode, base64url_encode, ensure_binary
 
 
-def encrypt(plaintext, key, encryption=ALGORITHMS.A256GCM, algorithm=ALGORITHMS.DIR, zip=None, cty=None, kid=None):
+def encrypt(
+    plaintext,
+    key,
+    encryption=ALGORITHMS.A256GCM,
+    algorithm=ALGORITHMS.DIR,
+    zip=None,
+    cty=None,
+    kid=None,
+):
     """Encrypts plaintext and returns a JWE cmpact serialization string.
 
     Args:
@@ -51,9 +59,13 @@ def encrypt(plaintext, key, encryption=ALGORITHMS.A256GCM, algorithm=ALGORITHMS.
     encoded_header = _encoded_header(algorithm, encryption, zip, cty, kid)
 
     plaintext = _compress(zip, plaintext)
-    enc_cek, iv, cipher_text, auth_tag = _encrypt_and_auth(key, algorithm, encryption, zip, plaintext, encoded_header)
+    enc_cek, iv, cipher_text, auth_tag = _encrypt_and_auth(
+        key, algorithm, encryption, zip, plaintext, encoded_header
+    )
 
-    jwe_string = _jwe_compact_serialize(encoded_header, enc_cek, iv, cipher_text, auth_tag)
+    jwe_string = _jwe_compact_serialize(
+        encoded_header, enc_cek, iv, cipher_text, auth_tag
+    )
     return jwe_string
 
 
@@ -76,7 +88,14 @@ def decrypt(jwe_str, key):
         >>> jwe.decrypt(jwe_string, 'asecret128bitkey')
         'Hello, World!'
     """
-    header, encoded_header, encrypted_key, iv, cipher_text, auth_tag = _jwe_compact_deserialize(jwe_str)
+    (
+        header,
+        encoded_header,
+        encrypted_key,
+        iv,
+        cipher_text,
+        auth_tag,
+    ) = _jwe_compact_deserialize(jwe_str)
 
     # Verify that the implementation understands and can process all
     # fields that it is required to support, whether required by this
@@ -228,7 +247,11 @@ def _decrypt_and_auth(cek_bytes, enc, cipher_text, iv, aad, auth_tag):
     # and validating the JWE
     # Authentication Tag in the manner specified for the algorithm,
     if enc in ALGORITHMS.HMAC_AUTH_TAG:
-        encryption_key, mac_key, key_len = _get_encryption_key_mac_key_and_key_length_from_cek(cek_bytes, enc)
+        (
+            encryption_key,
+            mac_key,
+            key_len,
+        ) = _get_encryption_key_mac_key_and_key_length_from_cek(cek_bytes, enc)
         auth_tag_check = _auth_tag(cipher_text, iv, aad, mac_key, key_len)
     elif enc in ALGORITHMS.GCM:
         encryption_key = jwk.construct(cek_bytes, enc)
@@ -270,9 +293,13 @@ def _jwe_compact_deserialize(jwe_bytes):
     # whitespace, or other additional characters have been used.
     jwe_bytes = ensure_binary(jwe_bytes)
     try:
-        header_segment, encrypted_key_segment, iv_segment, cipher_text_segment, auth_tag_segment = jwe_bytes.split(
-            b".", 4
-        )
+        (
+            header_segment,
+            encrypted_key_segment,
+            iv_segment,
+            cipher_text_segment,
+            auth_tag_segment,
+        ) = jwe_bytes.split(b".", 4)
         header_data = base64url_decode(header_segment)
     except ValueError:
         raise JWEParseError("Not enough segments")
@@ -384,7 +411,11 @@ def _encrypt_and_auth(key, alg, enc, zip, plaintext, aad):
         raise JWEError(f"alg {alg} is not implemented")
 
     if enc in ALGORITHMS.HMAC_AUTH_TAG:
-        encryption_key, mac_key, key_len = _get_encryption_key_mac_key_and_key_length_from_cek(cek_bytes, enc)
+        (
+            encryption_key,
+            mac_key,
+            key_len,
+        ) = _get_encryption_key_mac_key_and_key_length_from_cek(cek_bytes, enc)
         iv, ciphertext, tag = encryption_key.encrypt(plaintext, aad)
         auth_tag = _auth_tag(ciphertext, iv, aad, mac_key, key_len)
     elif enc in ALGORITHMS.GCM:

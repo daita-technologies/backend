@@ -19,30 +19,26 @@ def lambda_handler(event, context):
         task_id = event["task_id"]
 
     except Exception as e:
-        return convert_response({"error": True, 
-                "success": False, 
-                "message": repr(e), 
-                "data": None})
+        return convert_response(
+            {"error": True, "success": False, "message": repr(e), "data": None}
+        )
 
     try:
-        db_resource = boto3.resource('dynamodb')
-        table = db_resource.Table(os.environ['T_EC2_TASK'])
-        
+        db_resource = boto3.resource("dynamodb")
+        table = db_resource.Table(os.environ["T_EC2_TASK"])
+
         table.delete_item(
-                Key = {
-                    "ec2_id": ec2_id,
-                    "task_id": task_id,
-                }
-            )
-            
+            Key={
+                "ec2_id": ec2_id,
+                "task_id": task_id,
+            }
+        )
+
     except Exception as e:
-        return convert_response({"error": True, 
-                "success": False, 
-                "message": repr(e), 
-                "data": None})
-   
-    return convert_response({'data': None, 
-                            "error": False, 
-                            "success": True, 
-                            "message": None}
-                        )
+        return convert_response(
+            {"error": True, "success": False, "message": repr(e), "data": None}
+        )
+
+    return convert_response(
+        {"data": None, "error": False, "success": True, "message": None}
+    )

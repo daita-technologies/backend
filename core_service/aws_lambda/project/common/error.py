@@ -19,11 +19,17 @@ MessageRefreshTokenSuccessfully = "Refreshing the token was successful"
 MessageForgotPasswordFailed = "Forgot password failed"
 MessageForgotPasswordUsernotExist = "Username does not exist"
 MessageForgotPasswordSuccessfully = "Email for password recovery successfully sent"
-MessageForgotPasswordConfirmcodeSuccessfully = "Confirmation code for password recovery was successful"
-MessageForgotPasswordConfirmcodeFailed = "Confirmation code for password recovery failed"
+MessageForgotPasswordConfirmcodeSuccessfully = (
+    "Confirmation code for password recovery was successful"
+)
+MessageForgotPasswordConfirmcodeFailed = (
+    "Confirmation code for password recovery failed"
+)
 MessageCannotRegisterMoreUser = "We cannot register more users currently"
 MessageTokenInvalid = "Token is invalid"
-MessageGetTemapleMailSuccessFully = "Template for friend invitation received successfully"
+MessageGetTemapleMailSuccessFully = (
+    "Template for friend invitation received successfully"
+)
 MessageErrorDeleteUserSignUp = "Error deleting user"
 MessageCaptchaFailed = "Captcha token verification failed"
 MessageSendFeedbackFailed = "Send feeback failed"
@@ -31,6 +37,6 @@ MessageSendFeedbackSuccessfully = "send feedback successfully"
 MessageLoginMailNotExist = "Email does not exist"
 MessageAnotherUserIsLoginBefore = "You are already logged in on another device"
 MessageErrorUserdoesnotlogin = "Current user did not login to the application!"
-MessageLogoutSuccessfully = "User log out successfully" 
+MessageLogoutSuccessfully = "User log out successfully"
 MessageErrorCredential = "Failed get Credential"
 MessageSuccessfullyCredential = "Successful get Credential"

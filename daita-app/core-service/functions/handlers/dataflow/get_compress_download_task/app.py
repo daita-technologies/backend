@@ -28,10 +28,7 @@ class GetCompressDownloadClass(LambdaBaseClass):
 
         identity_id = self.get_identity(self.id_token)
         response = task_table.table.get_item(
-            Key={
-                "identity_id": identity_id,
-                "task_id": self.task_id
-            },
+            Key={"identity_id": identity_id, "task_id": self.task_id},
         )
 
         task = response.get("Item", None)
@@ -42,10 +39,10 @@ class GetCompressDownloadClass(LambdaBaseClass):
         task.pop("identity_id", None)
         print("Task return: ", task)
         return generate_response(
-                message="OK",
-                status_code=HTTPStatus.OK,
-                data=task,
-            )
+            message="OK",
+            status_code=HTTPStatus.OK,
+            data=task,
+        )
 
 
 @error_response

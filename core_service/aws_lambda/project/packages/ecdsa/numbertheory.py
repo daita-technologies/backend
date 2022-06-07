@@ -60,9 +60,7 @@ def modular_exp(base, exponent, modulus):  # pragma: no cover
         DeprecationWarning,
     )
     if exponent < 0:
-        raise NegativeExponentError(
-            "Negative exponents (%d) not allowed" % exponent
-        )
+        raise NegativeExponentError("Negative exponents (%d) not allowed" % exponent)
     return pow(base, exponent, modulus)
 
 
@@ -231,7 +229,6 @@ if GMPY2:  # pragma: no branch
             return 0
         return powmod(a, -1, m)
 
-
 elif GMPY:  # pragma: no branch
 
     def inverse_mod(a, m):
@@ -253,7 +250,6 @@ elif GMPY:  # pragma: no branch
 
         return lm % m
 
-
 elif sys.version_info >= (3, 8):  # pragma: no branch
 
     def inverse_mod(a, m):
@@ -261,7 +257,6 @@ elif sys.version_info >= (3, 8):  # pragma: no branch
         if a == 0:  # pragma: no branch
             return 0
         return pow(a, -1, m)
-
 
 else:  # pragma: no branch
 

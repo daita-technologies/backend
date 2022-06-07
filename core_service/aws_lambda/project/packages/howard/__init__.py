@@ -6,11 +6,11 @@ from typing import TypeVar, Union, Type
 from enum import EnumMeta
 
 
-T = TypeVar('T')
+T = TypeVar("T")
 
 
 class HowardError(TypeError):
-    """ Used when howard cant correctly parse because the types dont match """
+    """Used when howard cant correctly parse because the types dont match"""
 
 
 def from_dict(d: dict, t: Type[T], ignore_extras: bool = True) -> T:
@@ -52,7 +52,7 @@ def to_dict(obj: T, public_only=False) -> dict:
     {'name': 'Howard', 'age': 24}
     """
     if not dataclasses.is_dataclass(obj):
-        raise HowardError('Argument must be a dataclass')
+        raise HowardError("Argument must be a dataclass")
 
     return _convert_from(obj, public=public_only)
 
@@ -66,22 +66,26 @@ def _convert_to(obj, t, ignore_extras=True):
             if f.name in obj:
                 # get value
                 value = obj[f.name]
-                decoder = f.metadata.get('howard', {}).get('decoder')
+                decoder = f.metadata.get("howard", {}).get("decoder")
                 if decoder:
                     kwargs[f.name] = decoder(value)
                 else:
-                    kwargs[f.name] = _convert_to(value, f.type, ignore_extras=ignore_extras)
+                    kwargs[f.name] = _convert_to(
+                        value, f.type, ignore_extras=ignore_extras
+                    )
 
         if not ignore_extras:
             extras = set(obj.keys()) - set(kwargs.keys())
             if extras:
                 raise HowardError(
-                    f'Found unexpected keys {extras} when converting to {t}'
+                    f"Found unexpected keys {extras} when converting to {t}"
                 )
         return t(**kwargs)
 
     elif t == dict:
-        return _convert_to(obj, typing.Dict[typing.Any, typing.Any], ignore_extras=ignore_extras)
+        return _convert_to(
+            obj, typing.Dict[typing.Any, typing.Any], ignore_extras=ignore_extras
+        )
     elif t == list:
         return _convert_to(obj, typing.List[typing.Any], ignore_extras=ignore_extras)
     elif typing.get_origin(t):  # A typing "mask" type, i.e List/Dict
@@ -98,12 +102,16 @@ def _convert_to(obj, t, ignore_extras=True):
                     return _convert_to(obj, arg, ignore_extras=ignore_extras)
                 except HowardError:
                     continue
-            raise HowardError(f'{obj} could not be converted to any type in: '
-                            f'{", ".join(f"{a}" for a in args)}')
+            raise HowardError(
+                f"{obj} could not be converted to any type in: "
+                f'{", ".join(f"{a}" for a in args)}'
+            )
 
         if real_type == typing.Literal:
             if obj not in args:
-                raise HowardError(f'Invalid value "{obj}". Must be one of: {", ".join(args)}')
+                raise HowardError(
+                    f'Invalid value "{obj}". Must be one of: {", ".join(args)}'
+                )
             return obj
 
         # validate
@@ -111,20 +119,18 @@ def _convert_to(obj, t, ignore_extras=True):
             raise HowardError(f'Object "{obj}" not of expected type {real_type}')
 
         if real_type == list:
-            return [
-                _convert_to(i, args[0], ignore_extras=ignore_extras)
-                for i in obj
-            ]
+            return [_convert_to(i, args[0], ignore_extras=ignore_extras) for i in obj]
         elif real_type == dict:
             return {
-                _convert_to(k, args[0], ignore_extras=ignore_extras):
-                    _convert_to(v, args[1], ignore_extras=ignore_extras)
+                _convert_to(k, args[0], ignore_extras=ignore_extras): _convert_to(
+                    v, args[1], ignore_extras=ignore_extras
+                )
                 for k, v in obj.items()
             }
         else:
             raise HowardError(
-                'Type {real_type} currently not supported by howard. '
-                'Consider making a PR.'
+                "Type {real_type} currently not supported by howard. "
+                "Consider making a PR."
             )
     elif isinstance(t, typing._TypedDictMeta):
         # is a TypedDict
@@ -139,12 +145,14 @@ def _convert_to(obj, t, ignore_extras=True):
         if not ignore_extras:
             for key in obj:
                 if key not in hints:
-                    raise HowardError(f'Found unexpected key {key} when converting to {t}')
+                    raise HowardError(
+                        f"Found unexpected key {key} when converting to {t}"
+                    )
         return result
 
     elif isinstance(t, EnumMeta):
         return t(obj)
-    elif hasattr(t, '__supertype__'):
+    elif hasattr(t, "__supertype__"):
         # is a Vanity type, such as `A = NewType('A', str)`
         return _convert_to(obj, t.__supertype__, ignore_extras=ignore_extras)
     elif t in (int, str, bool, float):
@@ -163,18 +171,18 @@ def _convert_to(obj, t, ignore_extras=True):
             except TypeError:
                 continue
 
-        raise HowardError(f'Unsupported type {t}')
+        raise HowardError(f"Unsupported type {t}")
 
 
 def _convert_from(obj, public=False):
     if dataclasses.is_dataclass(obj):
         d = {}
         for f in dataclasses.fields(obj):
-            if f.name.startswith('_') and public:
+            if f.name.startswith("_") and public:
                 continue  # these attributes dont make it into the dict
-            if f.metadata.get('internal', False):
+            if f.metadata.get("internal", False):
                 continue  # these attributes are marked as internal
-            encoder = f.metadata.get('howard', {}).get('encoder')
+            encoder = f.metadata.get("howard", {}).get("encoder")
             if encoder:
                 d[f.name] = encoder(getattr(obj, f.name))
             else:
@@ -193,4 +201,4 @@ def _convert_from(obj, public=False):
     elif type(obj) is datetime:
         return obj.isoformat()
     else:
-        raise HowardError(f'Unsupported type {type(obj)}')
+        raise HowardError(f"Unsupported type {type(obj)}")

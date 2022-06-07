@@ -88,9 +88,7 @@ class Signature(object):
         x = r
 
         # Compute the curve point with x as x-coordinate
-        alpha = (
-            pow(x, 3, curve.p()) + (curve.a() * x) + curve.b()
-        ) % curve.p()
+        alpha = (pow(x, 3, curve.p()) + (curve.a() * x) + curve.b()) % curve.p()
         beta = numbertheory.square_root_mod_prime(alpha, curve.p())
         y = beta if beta % 2 == 0 else curve.p() - beta
 
@@ -127,9 +125,7 @@ class Public_key(object):
         n = generator.order()
         p = self.curve.p()
         if not (0 <= point.x() < p) or not (0 <= point.y() < p):
-            raise InvalidPointError(
-                "The public point has x or y out of range."
-            )
+            raise InvalidPointError("The public point has x or y out of range.")
         if verify and not self.curve.contains_point(point.x(), point.y()):
             raise InvalidPointError("Point does not lay on the curve")
         if not n:
@@ -240,8 +236,7 @@ class Private_key(object):
         if r == 0:
             raise RSZeroError("amazingly unlucky random number r")
         s = (
-            numbertheory.inverse_mod(k, n)
-            * (hash + (self.secret_multiplier * r) % n)
+            numbertheory.inverse_mod(k, n) * (hash + (self.secret_multiplier * r) % n)
         ) % n
         if s == 0:
             raise RSZeroError("amazingly unlucky random number s")
@@ -275,7 +270,7 @@ def string_to_int(s):
 
 def digest_integer(m):
     """Convert an integer into a string of bytes, compute
-     its SHA-1 hash, and convert the result to an integer."""
+    its SHA-1 hash, and convert the result to an integer."""
     #
     # I don't expect this function to be used much. I wrote
     # it in order to be able to duplicate the examples
@@ -300,8 +295,7 @@ def point_is_valid(generator, x, y):
         return False
     if (
         curve.cofactor() != 1
-        and not n * ellipticcurve.PointJacobi(curve, x, y, 1)
-        == ellipticcurve.INFINITY
+        and not n * ellipticcurve.PointJacobi(curve, x, y, 1) == ellipticcurve.INFINITY
     ):
         return False
     return True
@@ -360,13 +354,16 @@ _p = int(remove_whitespace("FFFFFFFF FFFFFFFF FFFFFFFF FFFFFFFF 7FFFFFFF"), 16)
 # _a = -3
 _b = int(remove_whitespace("1C97BEFC 54BD7A8B 65ACF89F 81D4D4AD C565FA45"), 16)
 _Gx = int(
-    remove_whitespace("4A96B568 8EF57328 46646989 68C38BB9 13CBFC82"), 16,
+    remove_whitespace("4A96B568 8EF57328 46646989 68C38BB9 13CBFC82"),
+    16,
 )
 _Gy = int(
-    remove_whitespace("23A62855 3168947D 59DCC912 04235137 7AC5FB32"), 16,
+    remove_whitespace("23A62855 3168947D 59DCC912 04235137 7AC5FB32"),
+    16,
 )
 _r = int(
-    remove_whitespace("01 00000000 00000000 0001F4C8 F927AED3 CA752257"), 16,
+    remove_whitespace("01 00000000 00000000 0001F4C8 F927AED3 CA752257"),
+    16,
 )
 _h = 1
 curve_160r1 = ellipticcurve.CurveFp(_p, -3, _b, _h)
@@ -403,9 +400,7 @@ _Gy = int(
 )
 
 curve_192 = ellipticcurve.CurveFp(_p, -3, _b, 1)
-generator_192 = ellipticcurve.PointJacobi(
-    curve_192, _Gx, _Gy, 1, _r, generator=True
-)
+generator_192 = ellipticcurve.PointJacobi(curve_192, _Gx, _Gy, 1, _r, generator=True)
 
 
 # NIST Curve P-224:
@@ -451,9 +446,7 @@ _Gy = int(
 )
 
 curve_224 = ellipticcurve.CurveFp(_p, -3, _b, 1)
-generator_224 = ellipticcurve.PointJacobi(
-    curve_224, _Gx, _Gy, 1, _r, generator=True
-)
+generator_224 = ellipticcurve.PointJacobi(curve_224, _Gx, _Gy, 1, _r, generator=True)
 
 # NIST Curve P-256:
 _p = int(
@@ -498,9 +491,7 @@ _Gy = int(
 )
 
 curve_256 = ellipticcurve.CurveFp(_p, -3, _b, 1)
-generator_256 = ellipticcurve.PointJacobi(
-    curve_256, _Gx, _Gy, 1, _r, generator=True
-)
+generator_256 = ellipticcurve.PointJacobi(curve_256, _Gx, _Gy, 1, _r, generator=True)
 
 # NIST Curve P-384:
 _p = int(
@@ -549,9 +540,7 @@ _Gy = int(
 )
 
 curve_384 = ellipticcurve.CurveFp(_p, -3, _b, 1)
-generator_384 = ellipticcurve.PointJacobi(
-    curve_384, _Gx, _Gy, 1, _r, generator=True
-)
+generator_384 = ellipticcurve.PointJacobi(curve_384, _Gx, _Gy, 1, _r, generator=True)
 
 # NIST Curve P-521:
 _p = int(
@@ -600,9 +589,7 @@ _Gy = int(
 )
 
 curve_521 = ellipticcurve.CurveFp(_p, -3, _b, 1)
-generator_521 = ellipticcurve.PointJacobi(
-    curve_521, _Gx, _Gy, 1, _r, generator=True
-)
+generator_521 = ellipticcurve.PointJacobi(curve_521, _Gx, _Gy, 1, _r, generator=True)
 
 # Certicom secp256-k1
 _a = 0x0000000000000000000000000000000000000000000000000000000000000000

@@ -193,9 +193,7 @@ class Backend(BackendInterface):
 
     def _is_fips_enabled(self):
         if self._lib.Cryptography_HAS_300_FIPS:
-            mode = self._lib.EVP_default_properties_is_fips_enabled(
-                self._ffi.NULL
-            )
+            mode = self._lib.EVP_default_properties_is_fips_enabled(self._ffi.NULL)
         else:
             mode = getattr(self._lib, "FIPS_mode", lambda: 0)()
 
@@ -284,9 +282,9 @@ class Backend(BackendInterface):
 
     def _evp_md_from_algorithm(self, algorithm):
         if algorithm.name == "blake2b" or algorithm.name == "blake2s":
-            alg = "{}{}".format(
-                algorithm.name, algorithm.digest_size * 8
-            ).encode("ascii")
+            alg = "{}{}".format(algorithm.name, algorithm.digest_size * 8).encode(
+                "ascii"
+            )
         else:
             alg = algorithm.name.encode("ascii")
 
@@ -326,8 +324,7 @@ class Backend(BackendInterface):
             # FIPS mode requires AES or TripleDES, but only CBC/ECB allowed
             # in TripleDES mode.
             if not isinstance(cipher, self._fips_ciphers) or (
-                isinstance(cipher, TripleDES)
-                and not isinstance(mode, (CBC, ECB))
+                isinstance(cipher, TripleDES) and not isinstance(mode, (CBC, ECB))
             ):
                 return False
 
@@ -341,9 +338,7 @@ class Backend(BackendInterface):
     def register_cipher_adapter(self, cipher_cls, mode_cls, adapter):
         if (cipher_cls, mode_cls) in self._cipher_registry:
             raise ValueError(
-                "Duplicate registration for: {} {}.".format(
-                    cipher_cls, mode_cls
-                )
+                "Duplicate registration for: {} {}.".format(cipher_cls, mode_cls)
             )
         self._cipher_registry[cipher_cls, mode_cls] = adapter
 
@@ -364,9 +359,7 @@ class Backend(BackendInterface):
             self.register_cipher_adapter(
                 TripleDES, mode_cls, GetCipherByName("des-ede3-{mode.name}")
             )
-        self.register_cipher_adapter(
-            TripleDES, ECB, GetCipherByName("des-ede3")
-        )
+        self.register_cipher_adapter(TripleDES, ECB, GetCipherByName("des-ede3"))
         for mode_cls in [CBC, CFB, OFB, ECB]:
             self.register_cipher_adapter(
                 Blowfish, mode_cls, GetCipherByName("bf-{mode.name}")
@@ -387,9 +380,7 @@ class Backend(BackendInterface):
         self.register_cipher_adapter(ARC4, type(None), GetCipherByName("rc4"))
         # We don't actually support RC2, this is just used by some tests.
         self.register_cipher_adapter(_RC2, type(None), GetCipherByName("rc2"))
-        self.register_cipher_adapter(
-            ChaCha20, type(None), GetCipherByName("chacha20")
-        )
+        self.register_cipher_adapter(ChaCha20, type(None), GetCipherByName("chacha20"))
         self.register_cipher_adapter(AES, XTS, _get_xts_cipher)
         for mode_cls in [ECB, CBC, OFB, CFB, CTR]:
             self.register_cipher_adapter(
@@ -405,9 +396,7 @@ class Backend(BackendInterface):
     def pbkdf2_hmac_supported(self, algorithm):
         return self.hmac_supported(algorithm)
 
-    def derive_pbkdf2_hmac(
-        self, algorithm, length, salt, iterations, key_material
-    ):
+    def derive_pbkdf2_hmac(self, algorithm, length, salt, iterations, key_material):
         buf = self._ffi.new("unsigned char[]", length)
         evp_md = self._evp_md_non_null_from_algorithm(algorithm)
         key_material_ptr = self._ffi.from_buffer(key_material)
@@ -469,22 +458,14 @@ class Backend(BackendInterface):
         bn = self._int_to_bn(public_exponent)
         bn = self._ffi.gc(bn, self._lib.BN_free)
 
-        res = self._lib.RSA_generate_key_ex(
-            rsa_cdata, key_size, bn, self._ffi.NULL
-        )
+        res = self._lib.RSA_generate_key_ex(rsa_cdata, key_size, bn, self._ffi.NULL)
         self.openssl_assert(res == 1)
         evp_pkey = self._rsa_cdata_to_evp_pkey(rsa_cdata)
 
-        return _RSAPrivateKey(
-            self, rsa_cdata, evp_pkey, self._rsa_skip_check_key
-        )
+        return _RSAPrivateKey(self, rsa_cdata, evp_pkey, self._rsa_skip_check_key)
 
     def generate_rsa_parameters_supported(self, public_exponent, key_size):
-        return (
-            public_exponent >= 3
-            and public_exponent & 1 != 0
-            and key_size >= 512
-        )
+        return public_exponent >= 3 and public_exponent & 1 != 0 and key_size >= 512
 
     def load_rsa_private_numbers(self, numbers):
         rsa._check_private_key_components(
@@ -516,9 +497,7 @@ class Backend(BackendInterface):
         self.openssl_assert(res == 1)
         evp_pkey = self._rsa_cdata_to_evp_pkey(rsa_cdata)
 
-        return _RSAPrivateKey(
-            self, rsa_cdata, evp_pkey, self._rsa_skip_check_key
-        )
+        return _RSAPrivateKey(self, rsa_cdata, evp_pkey, self._rsa_skip_check_key)
 
     def load_rsa_public_numbers(self, numbers):
         rsa._check_public_key_components(numbers.e, numbers.n)
@@ -592,9 +571,7 @@ class Backend(BackendInterface):
             rsa_cdata = self._lib.EVP_PKEY_get1_RSA(evp_pkey)
             self.openssl_assert(rsa_cdata != self._ffi.NULL)
             rsa_cdata = self._ffi.gc(rsa_cdata, self._lib.RSA_free)
-            return _RSAPrivateKey(
-                self, rsa_cdata, evp_pkey, self._rsa_skip_check_key
-            )
+            return _RSAPrivateKey(self, rsa_cdata, evp_pkey, self._rsa_skip_check_key)
         elif key_type == self._lib.EVP_PKEY_DSA:
             dsa_cdata = self._lib.EVP_PKEY_get1_DSA(evp_pkey)
             self.openssl_assert(dsa_cdata != self._ffi.NULL)
@@ -688,9 +665,7 @@ class Backend(BackendInterface):
             return True
         elif isinstance(padding, PSS) and isinstance(padding._mgf, MGF1):
             # SHA1 is permissible in MGF1 in FIPS
-            if self._fips_enabled and isinstance(
-                padding._mgf._algorithm, hashes.SHA1
-            ):
+            if self._fips_enabled and isinstance(padding._mgf._algorithm, hashes.SHA1):
                 return True
             else:
                 return self.hash_supported(padding._mgf._algorithm)
@@ -708,9 +683,7 @@ class Backend(BackendInterface):
 
     def generate_dsa_parameters(self, key_size):
         if key_size not in (1024, 2048, 3072, 4096):
-            raise ValueError(
-                "Key size must be 1024, 2048, 3072, or 4096 bits."
-            )
+            raise ValueError("Key size must be 1024, 2048, 3072, or 4096 bits.")
 
         ctx = self._lib.DSA_new()
         self.openssl_assert(ctx != self._ffi.NULL)
@@ -812,9 +785,7 @@ class Backend(BackendInterface):
         return True
 
     def cmac_algorithm_supported(self, algorithm):
-        return self.cipher_supported(
-            algorithm, CBC(b"\x00" * algorithm.block_size)
-        )
+        return self.cipher_supported(algorithm, CBC(b"\x00" * algorithm.block_size))
 
     def create_cmac_ctx(self, algorithm):
         return _CMACContext(self, algorithm)
@@ -893,9 +864,7 @@ class Backend(BackendInterface):
 
             key = self._ffi.gc(key, self._lib.EVP_PKEY_free)
             if password is not None:
-                raise TypeError(
-                    "Password was given but private key is not encrypted."
-                )
+                raise TypeError("Password was given but private key is not encrypted.")
 
             return key
         else:
@@ -915,9 +884,7 @@ class Backend(BackendInterface):
             self._consume_errors()
             res = self._lib.BIO_reset(mem_bio.bio)
             self.openssl_assert(res == 1)
-            rsa_cdata = self._lib.d2i_RSAPublicKey_bio(
-                mem_bio.bio, self._ffi.NULL
-            )
+            rsa_cdata = self._lib.d2i_RSAPublicKey_bio(mem_bio.bio, self._ffi.NULL)
             if rsa_cdata != self._ffi.NULL:
                 rsa_cdata = self._ffi.gc(rsa_cdata, self._lib.RSA_free)
                 evp_pkey = self._rsa_cdata_to_evp_pkey(rsa_cdata)
@@ -967,9 +934,7 @@ class Backend(BackendInterface):
         x509_req = self._ffi.gc(x509_req, self._lib.X509_REQ_free)
         return x509_req
 
-    def _ossl2csr(
-        self, x509_req: typing.Any
-    ) -> x509.CertificateSigningRequest:
+    def _ossl2csr(self, x509_req: typing.Any) -> x509.CertificateSigningRequest:
         bio = self._create_mem_bio_gc()
         res = self._lib.i2d_X509_REQ_bio(bio, x509_req)
         self.openssl_assert(res == 1)
@@ -983,9 +948,7 @@ class Backend(BackendInterface):
         x509_crl = self._ffi.gc(x509_crl, self._lib.X509_CRL_free)
         return x509_crl
 
-    def _ossl2crl(
-        self, x509_crl: typing.Any
-    ) -> x509.CertificateRevocationList:
+    def _ossl2crl(self, x509_crl: typing.Any) -> x509.CertificateRevocationList:
         bio = self._create_mem_bio_gc()
         res = self._lib.i2d_X509_CRL_bio(bio, x509_crl)
         self.openssl_assert(res == 1)
@@ -1015,9 +978,7 @@ class Backend(BackendInterface):
 
         return True
 
-    def _csr_is_signature_valid(
-        self, csr: x509.CertificateSigningRequest
-    ) -> bool:
+    def _csr_is_signature_valid(self, csr: x509.CertificateSigningRequest) -> bool:
         x509_req = self._csr2ossl(csr)
         pkey = self._lib.X509_REQ_get_pubkey(x509_req)
         self.openssl_assert(pkey != self._ffi.NULL)
@@ -1077,13 +1038,9 @@ class Backend(BackendInterface):
         evp_pkey = self._ffi.gc(evp_pkey, self._lib.EVP_PKEY_free)
 
         if password is not None and userdata.called == 0:
-            raise TypeError(
-                "Password was given but private key is not encrypted."
-            )
+            raise TypeError("Password was given but private key is not encrypted.")
 
-        assert (
-            password is not None and userdata.called == 1
-        ) or password is None
+        assert (password is not None and userdata.called == 1) or password is None
 
         return convert_func(evp_pkey)
 
@@ -1150,9 +1107,7 @@ class Backend(BackendInterface):
             self._lib.EC_GROUP_free(group)
             return True
 
-    def elliptic_curve_signature_algorithm_supported(
-        self, signature_algorithm, curve
-    ):
+    def elliptic_curve_signature_algorithm_supported(self, signature_algorithm, curve):
         # We only support ECDSA right now.
         if not isinstance(signature_algorithm, ec.ECDSA):
             return False
@@ -1276,14 +1231,10 @@ class Backend(BackendInterface):
         return self._ffi.gc(ec_cdata, self._lib.EC_KEY_free)
 
     def elliptic_curve_exchange_algorithm_supported(self, algorithm, curve):
-        if self._fips_enabled and not isinstance(
-            curve, self._fips_ecdh_curves
-        ):
+        if self._fips_enabled and not isinstance(curve, self._fips_ecdh_curves):
             return False
 
-        return self.elliptic_curve_supported(curve) and isinstance(
-            algorithm, ec.ECDH
-        )
+        return self.elliptic_curve_supported(curve) and isinstance(algorithm, ec.ECDH)
 
     def _ec_cdata_to_evp_pkey(self, ec_cdata):
         evp_pkey = self._create_evp_pkey_gc()
@@ -1354,9 +1305,7 @@ class Backend(BackendInterface):
         """
 
         if x < 0 or y < 0:
-            raise ValueError(
-                "Invalid EC key. Both x and y must be non-negative."
-            )
+            raise ValueError("Invalid EC key. Both x and y must be non-negative.")
 
         x = self._ffi.gc(self._int_to_bn(x), self._lib.BN_free)
         y = self._ffi.gc(self._int_to_bn(y), self._lib.BN_free)
@@ -1374,23 +1323,18 @@ class Backend(BackendInterface):
         if not isinstance(encoding, serialization.Encoding):
             raise TypeError("encoding must be an item from the Encoding enum")
         if not isinstance(format, serialization.PrivateFormat):
-            raise TypeError(
-                "format must be an item from the PrivateFormat enum"
-            )
+            raise TypeError("format must be an item from the PrivateFormat enum")
         if not isinstance(
             encryption_algorithm, serialization.KeySerializationEncryption
         ):
             raise TypeError(
-                "Encryption algorithm must be a KeySerializationEncryption "
-                "instance"
+                "Encryption algorithm must be a KeySerializationEncryption " "instance"
             )
 
         # validate password
         if isinstance(encryption_algorithm, serialization.NoEncryption):
             password = b""
-        elif isinstance(
-            encryption_algorithm, serialization.BestAvailableEncryption
-        ):
+        elif isinstance(encryption_algorithm, serialization.BestAvailableEncryption):
             password = encryption_algorithm.password
             if len(password) > 1023:
                 raise ValueError(
@@ -1408,9 +1352,7 @@ class Backend(BackendInterface):
                 write_bio = self._lib.i2d_PKCS8PrivateKey_bio
             else:
                 raise ValueError("Unsupported encoding for PKCS8")
-            return self._private_key_bytes_via_bio(
-                write_bio, evp_pkey, password
-            )
+            return self._private_key_bytes_via_bio(write_bio, evp_pkey, password)
 
         # TraditionalOpenSSL + PEM/DER
         if format is serialization.PrivateFormat.TraditionalOpenSSL:
@@ -1431,12 +1373,8 @@ class Backend(BackendInterface):
                 elif key_type == self._lib.EVP_PKEY_EC:
                     write_bio = self._lib.PEM_write_bio_ECPrivateKey
                 else:
-                    raise ValueError(
-                        "Unsupported key type for TraditionalOpenSSL"
-                    )
-                return self._private_key_bytes_via_bio(
-                    write_bio, cdata, password
-                )
+                    raise ValueError("Unsupported key type for TraditionalOpenSSL")
+                return self._private_key_bytes_via_bio(write_bio, cdata, password)
 
             if encoding is serialization.Encoding.DER:
                 if password:
@@ -1451,9 +1389,7 @@ class Backend(BackendInterface):
                 elif key_type == self._lib.EVP_PKEY_DSA:
                     write_bio = self._lib.i2d_DSAPrivateKey_bio
                 else:
-                    raise ValueError(
-                        "Unsupported key type for TraditionalOpenSSL"
-                    )
+                    raise ValueError("Unsupported key type for TraditionalOpenSSL")
                 return self._bio_func_output(write_bio, cdata)
 
             raise ValueError("Unsupported encoding for TraditionalOpenSSL")
@@ -1464,8 +1400,7 @@ class Backend(BackendInterface):
                 return ssh.serialize_ssh_private_key(key, password)
 
             raise ValueError(
-                "OpenSSH private key format can only be used"
-                " with PEM encoding"
+                "OpenSSH private key format can only be used" " with PEM encoding"
             )
 
         # Anything that key-specific code was supposed to handle earlier,
@@ -1499,9 +1434,7 @@ class Backend(BackendInterface):
         if not isinstance(encoding, serialization.Encoding):
             raise TypeError("encoding must be an item from the Encoding enum")
         if not isinstance(format, serialization.PublicFormat):
-            raise TypeError(
-                "format must be an item from the PublicFormat enum"
-            )
+            raise TypeError("format must be an item from the PublicFormat enum")
 
         # SubjectPublicKeyInfo + PEM/DER
         if format is serialization.PublicFormat.SubjectPublicKeyInfo:
@@ -1535,9 +1468,7 @@ class Backend(BackendInterface):
             if encoding is serialization.Encoding.OpenSSH:
                 return ssh.serialize_ssh_public_key(key)
 
-            raise ValueError(
-                "OpenSSH format must be used with OpenSSH encoding"
-            )
+            raise ValueError("OpenSSH format must be used with OpenSSH encoding")
 
         # Anything that key-specific code was supposed to handle earlier,
         # like Raw, CompressedPoint, UncompressedPoint
@@ -1574,9 +1505,7 @@ class Backend(BackendInterface):
     def generate_dh_parameters(self, generator, key_size):
         if key_size < dh._MIN_MODULUS_SIZE:
             raise ValueError(
-                "DH key_size must be at least {} bits".format(
-                    dh._MIN_MODULUS_SIZE
-                )
+                "DH key_size must be at least {} bits".format(dh._MIN_MODULUS_SIZE)
             )
 
         if generator not in (2, 5):
@@ -1739,9 +1668,7 @@ class Backend(BackendInterface):
         evp_pkey = self._create_evp_pkey_gc()
         res = self._lib.EVP_PKEY_set_type(evp_pkey, self._lib.NID_X25519)
         self.openssl_assert(res == 1)
-        res = self._lib.EVP_PKEY_set1_tls_encodedpoint(
-            evp_pkey, data, len(data)
-        )
+        res = self._lib.EVP_PKEY_set1_tls_encodedpoint(evp_pkey, data, len(data))
         self.openssl_assert(res == 1)
         return _X25519PublicKey(self, evp_pkey)
 
@@ -1931,7 +1858,7 @@ class Backend(BackendInterface):
             errors = self._consume_errors_with_text()
             # memory required formula explained here:
             # https://blog.filippo.io/the-scrypt-parameters/
-            min_memory = 128 * n * r // (1024 ** 2)
+            min_memory = 128 * n * r // (1024**2)
             raise MemoryError(
                 "Not enough memory to derive key. These parameters require"
                 " {} MB of memory.".format(min_memory),
@@ -2066,9 +1993,7 @@ class Backend(BackendInterface):
                 maybe_name = self._lib.X509_alias_get0(x509, self._ffi.NULL)
                 if maybe_name != self._ffi.NULL:
                     addl_name = self._ffi.string(maybe_name)
-                additional_certificates.append(
-                    PKCS12Certificate(addl_cert, addl_name)
-                )
+                additional_certificates.append(PKCS12Certificate(addl_cert, addl_name))
 
         return PKCS12KeyAndCertificates(key, cert, additional_certificates)
 
@@ -2084,9 +2009,7 @@ class Backend(BackendInterface):
             nid_key = -1
             pkcs12_iter = 0
             mac_iter = 0
-        elif isinstance(
-            encryption_algorithm, serialization.BestAvailableEncryption
-        ):
+        elif isinstance(encryption_algorithm, serialization.BestAvailableEncryption):
             # PKCS12 encryption is hopeless trash and can never be fixed.
             # This is the least terrible option.
             nid_cert = self._lib.NID_pbe_WithSHA1And3_Key_TripleDES_CBC
@@ -2270,9 +2193,7 @@ class Backend(BackendInterface):
         bio_out = self._create_mem_bio_gc()
         if encoding is serialization.Encoding.SMIME:
             # This finalizes the structure
-            res = self._lib.SMIME_write_PKCS7(
-                bio_out, p7, bio.bio, final_flags
-            )
+            res = self._lib.SMIME_write_PKCS7(bio_out, p7, bio.bio, final_flags)
         elif encoding is serialization.Encoding.PEM:
             res = self._lib.PKCS7_final(p7, bio.bio, final_flags)
             self.openssl_assert(res == 1)

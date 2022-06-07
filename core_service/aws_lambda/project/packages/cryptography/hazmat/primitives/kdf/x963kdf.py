@@ -27,11 +27,9 @@ class X963KDF(KeyDerivationFunction):
         sharedinfo: typing.Optional[bytes],
         backend: typing.Any = None,
     ):
-        max_len = algorithm.digest_size * (2 ** 32 - 1)
+        max_len = algorithm.digest_size * (2**32 - 1)
         if length > max_len:
-            raise ValueError(
-                "Cannot derive keys larger than {} bits.".format(max_len)
-            )
+            raise ValueError("Cannot derive keys larger than {} bits.".format(max_len))
         if sharedinfo is not None:
             utils._check_bytes("sharedinfo", sharedinfo)
 

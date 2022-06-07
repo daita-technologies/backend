@@ -30,9 +30,7 @@ class _Poly1305Context(object):
         )
         ctx = self._backend._lib.EVP_MD_CTX_new()
         self._backend.openssl_assert(ctx != self._backend._ffi.NULL)
-        self._ctx = self._backend._ffi.gc(
-            ctx, self._backend._lib.EVP_MD_CTX_free
-        )
+        self._ctx = self._backend._ffi.gc(ctx, self._backend._lib.EVP_MD_CTX_free)
         res = self._backend._lib.EVP_DigestSignInit(
             self._ctx,
             self._backend._ffi.NULL,
@@ -44,9 +42,7 @@ class _Poly1305Context(object):
 
     def update(self, data):
         data_ptr = self._backend._ffi.from_buffer(data)
-        res = self._backend._lib.EVP_DigestSignUpdate(
-            self._ctx, data_ptr, len(data)
-        )
+        res = self._backend._lib.EVP_DigestSignUpdate(self._ctx, data_ptr, len(data))
         self._backend.openssl_assert(res != 0)
 
     def finalize(self):

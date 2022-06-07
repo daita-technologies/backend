@@ -6,7 +6,7 @@
 #
 from sys import version_info
 
-__all__ = ['callable']
+__all__ = ["callable"]
 
 
 if (2, 7) < version_info[:2] < (3, 2):

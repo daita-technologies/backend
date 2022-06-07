@@ -88,22 +88,15 @@ class NameAttribute(object):
         _validate=True,
     ) -> None:
         if not isinstance(oid, ObjectIdentifier):
-            raise TypeError(
-                "oid argument must be an ObjectIdentifier instance."
-            )
+            raise TypeError("oid argument must be an ObjectIdentifier instance.")
 
         if not isinstance(value, str):
             raise TypeError("value argument must be a str.")
 
-        if (
-            oid == NameOID.COUNTRY_NAME
-            or oid == NameOID.JURISDICTION_COUNTRY_NAME
-        ):
+        if oid == NameOID.COUNTRY_NAME or oid == NameOID.JURISDICTION_COUNTRY_NAME:
             c_len = len(value.encode("utf8"))
             if c_len != 2 and _validate is True:
-                raise ValueError(
-                    "Country name must be a 2 character country code"
-                )
+                raise ValueError("Country name must be a 2 character country code")
             elif c_len != 2:
                 warnings.warn(
                     "Country names should be two characters, but the "
@@ -152,9 +145,7 @@ class NameAttribute(object):
         Use short attribute name if available, otherwise fall back to OID
         dotted string.
         """
-        attr_name = (
-            attr_name_overrides.get(self.oid) if attr_name_overrides else None
-        )
+        attr_name = attr_name_overrides.get(self.oid) if attr_name_overrides else None
         if attr_name is None:
             attr_name = self.rfc4514_attribute_name
 
@@ -206,8 +197,7 @@ class RelativeDistinguishedName(object):
         used in certificates.
         """
         return "+".join(
-            attr.rfc4514_string(attr_name_overrides)
-            for attr in self._attributes
+            attr.rfc4514_string(attr_name_overrides) for attr in self._attributes
         )
 
     def __eq__(self, other: object) -> bool:
@@ -238,9 +228,7 @@ class Name(object):
         ...
 
     @typing.overload
-    def __init__(
-        self, attributes: typing.Iterable[RelativeDistinguishedName]
-    ) -> None:
+    def __init__(self, attributes: typing.Iterable[RelativeDistinguishedName]) -> None:
         ...
 
     def __init__(

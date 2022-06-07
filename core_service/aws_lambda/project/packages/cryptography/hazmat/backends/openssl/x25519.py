@@ -32,9 +32,7 @@ class _X25519PublicKey(X25519PublicKey):
                 encoding is not serialization.Encoding.Raw
                 or format is not serialization.PublicFormat.Raw
             ):
-                raise ValueError(
-                    "When using Raw both encoding and format must be Raw"
-                )
+                raise ValueError("When using Raw both encoding and format must be Raw")
 
             return self._raw_public_bytes()
 
@@ -44,14 +42,10 @@ class _X25519PublicKey(X25519PublicKey):
 
     def _raw_public_bytes(self) -> bytes:
         ucharpp = self._backend._ffi.new("unsigned char **")
-        res = self._backend._lib.EVP_PKEY_get1_tls_encodedpoint(
-            self._evp_pkey, ucharpp
-        )
+        res = self._backend._lib.EVP_PKEY_get1_tls_encodedpoint(self._evp_pkey, ucharpp)
         self._backend.openssl_assert(res == 32)
         self._backend.openssl_assert(ucharpp[0] != self._backend._ffi.NULL)
-        data = self._backend._ffi.gc(
-            ucharpp[0], self._backend._lib.OPENSSL_free
-        )
+        data = self._backend._ffi.gc(ucharpp[0], self._backend._lib.OPENSSL_free)
         return self._backend._ffi.buffer(data, res)[:]
 
 
@@ -64,13 +58,9 @@ class _X25519PrivateKey(X25519PrivateKey):
         bio = self._backend._create_mem_bio_gc()
         res = self._backend._lib.i2d_PUBKEY_bio(bio, self._evp_pkey)
         self._backend.openssl_assert(res == 1)
-        evp_pkey = self._backend._lib.d2i_PUBKEY_bio(
-            bio, self._backend._ffi.NULL
-        )
+        evp_pkey = self._backend._lib.d2i_PUBKEY_bio(bio, self._backend._ffi.NULL)
         self._backend.openssl_assert(evp_pkey != self._backend._ffi.NULL)
-        evp_pkey = self._backend._ffi.gc(
-            evp_pkey, self._backend._lib.EVP_PKEY_free
-        )
+        evp_pkey = self._backend._ffi.gc(evp_pkey, self._backend._lib.EVP_PKEY_free)
         return _X25519PublicKey(self._backend, evp_pkey)
 
     def exchange(self, peer_public_key: X25519PublicKey) -> bytes:
@@ -92,9 +82,7 @@ class _X25519PrivateKey(X25519PrivateKey):
             if (
                 format is not serialization.PrivateFormat.Raw
                 or encoding is not serialization.Encoding.Raw
-                or not isinstance(
-                    encryption_algorithm, serialization.NoEncryption
-                )
+                or not isinstance(encryption_algorithm, serialization.NoEncryption)
             ):
                 raise ValueError(
                     "When using Raw both encoding and format must be Raw "

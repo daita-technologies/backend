@@ -13,7 +13,7 @@ if version_info[:2] <= (2, 5):
             a, c = string.split(sep, 1)
 
         except ValueError:
-            a, b, c = string, '', ''
+            a, b, c = string, "", ""
 
         else:
             b = sep

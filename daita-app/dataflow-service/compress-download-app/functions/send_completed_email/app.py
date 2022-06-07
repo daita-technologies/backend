@@ -4,57 +4,52 @@ import base64
 import boto3
 
 
-client = boto3.client('ses')
+client = boto3.client("ses")
 
 
 def get_email(id_token):
     header, payload, signature = id_token.split(".")
-    user_info = json.loads(base64.b64decode(payload + "="*10)) #add missing padding
+    user_info = json.loads(base64.b64decode(payload + "=" * 10))  # add missing padding
     return user_info["email"]
 
 
 def lambda_handler(event, context):
     email = get_email(event["id_token"])
     print("send mail")
-    #TODO: change href to something for meaningful
-    message = '''
+    # TODO: change href to something for meaningful
+    message = """
         <p>Dear User,</p>
         <p>Your download link has been created. Please log into DAITA Platform and go to <a href='https://dev.daita.tech/task-list'>My Task</a> to download your files.</p>
         <p>Best,</p>
         <p>The DAITA Team</p>
         <p>---</p>
         <p>In case you encounter any issues or questions, please contact us at <a href = "mailto: contact@daita.tech">contact@daita.tech</a>.</p>
-        '''
+        """
     response = client.send_email(
         Destination={
-            'ToAddresses':[
-                email
-            ],
+            "ToAddresses": [email],
         },
         Message={
-            'Subject':{
-                    'Charset':'UTF-8',
-                    'Data':"You're files are ready for download"
+            "Subject": {
+                "Charset": "UTF-8",
+                "Data": "You're files are ready for download",
             },
-            'Body':{
-                'Html':{
-                    'Charset':'UTF-8',
-                    'Data': message,
-
+            "Body": {
+                "Html": {
+                    "Charset": "UTF-8",
+                    "Data": message,
                 },
-                'Text':{
-                    'Charset':'UTF-8',
-                    'Data':"You're files is ready for download"
-                }
-
+                "Text": {
+                    "Charset": "UTF-8",
+                    "Data": "You're files is ready for download",
+                },
             },
         },
         Source="DAITA Team <noreply@daita.tech>",
-
     )
     return {
         "error": False,
-        "success":True,
-        "message": "Email sent! Message ID: {}".format(response['MessageId']),
-        "data": None
+        "success": True,
+        "message": "Email sent! Message ID: {}".format(response["MessageId"]),
+        "data": None,
     }

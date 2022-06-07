@@ -200,11 +200,7 @@ class TestJacobi(unittest.TestCase):
         self.assertEqual(dbl, mlpl)
 
     @settings(max_examples=10)
-    @given(
-        st.integers(
-            min_value=0, max_value=int(generator_brainpoolp160r1.order())
-        )
-    )
+    @given(st.integers(min_value=0, max_value=int(generator_brainpoolp160r1.order())))
     def test_multiplications(self, mul):
         pj = PointJacobi.from_affine(generator_brainpoolp160r1)
         pw = pj.to_affine() * mul
@@ -215,11 +211,7 @@ class TestJacobi(unittest.TestCase):
         self.assertEqual(pj, pw)
 
     @settings(max_examples=10)
-    @given(
-        st.integers(
-            min_value=0, max_value=int(generator_brainpoolp160r1.order())
-        )
-    )
+    @given(st.integers(min_value=0, max_value=int(generator_brainpoolp160r1.order())))
     @example(0)
     @example(int(generator_brainpoolp160r1.order()))
     def test_precompute(self, mul):
@@ -234,12 +226,8 @@ class TestJacobi(unittest.TestCase):
 
     @settings(max_examples=10)
     @given(
-        st.integers(
-            min_value=1, max_value=int(generator_brainpoolp160r1.order())
-        ),
-        st.integers(
-            min_value=1, max_value=int(generator_brainpoolp160r1.order())
-        ),
+        st.integers(min_value=1, max_value=int(generator_brainpoolp160r1.order())),
+        st.integers(min_value=1, max_value=int(generator_brainpoolp160r1.order())),
     )
     @example(3, 3)
     def test_add_scaled_points(self, a_mul, b_mul):
@@ -253,12 +241,8 @@ class TestJacobi(unittest.TestCase):
 
     @settings(max_examples=10)
     @given(
-        st.integers(
-            min_value=1, max_value=int(generator_brainpoolp160r1.order())
-        ),
-        st.integers(
-            min_value=1, max_value=int(generator_brainpoolp160r1.order())
-        ),
+        st.integers(min_value=1, max_value=int(generator_brainpoolp160r1.order())),
+        st.integers(min_value=1, max_value=int(generator_brainpoolp160r1.order())),
         st.integers(min_value=1, max_value=int(curve_brainpoolp160r1.p() - 1)),
     )
     def test_add_one_scaled_point(self, a_mul, b_mul, new_z):
@@ -285,12 +269,8 @@ class TestJacobi(unittest.TestCase):
 
     @settings(max_examples=10)
     @given(
-        st.integers(
-            min_value=1, max_value=int(generator_brainpoolp160r1.order())
-        ),
-        st.integers(
-            min_value=1, max_value=int(generator_brainpoolp160r1.order())
-        ),
+        st.integers(min_value=1, max_value=int(generator_brainpoolp160r1.order())),
+        st.integers(min_value=1, max_value=int(generator_brainpoolp160r1.order())),
         st.integers(min_value=1, max_value=int(curve_brainpoolp160r1.p() - 1)),
     )
     @example(1, 1, 1)
@@ -333,14 +313,14 @@ class TestJacobi(unittest.TestCase):
         z1 = 13
         x = PointJacobi(
             curve_brainpoolp160r1,
-            a.x() * z1 ** 2 % p,
-            a.y() * z1 ** 3 % p,
+            a.x() * z1**2 % p,
+            a.y() * z1**3 % p,
             z1,
         )
         y = PointJacobi(
             curve_brainpoolp160r1,
-            a.x() * z1 ** 2 % p,
-            a.y() * z1 ** 3 % p,
+            a.x() * z1**2 % p,
+            a.y() * z1**3 % p,
             z1,
         )
 
@@ -350,16 +330,10 @@ class TestJacobi(unittest.TestCase):
 
     @settings(max_examples=14)
     @given(
-        st.integers(
-            min_value=1, max_value=int(generator_brainpoolp160r1.order())
-        ),
-        st.integers(
-            min_value=1, max_value=int(generator_brainpoolp160r1.order())
-        ),
+        st.integers(min_value=1, max_value=int(generator_brainpoolp160r1.order())),
+        st.integers(min_value=1, max_value=int(generator_brainpoolp160r1.order())),
         st.lists(
-            st.integers(
-                min_value=1, max_value=int(curve_brainpoolp160r1.p() - 1)
-            ),
+            st.integers(min_value=1, max_value=int(curve_brainpoolp160r1.p() - 1)),
             min_size=2,
             max_size=2,
             unique=True,
@@ -407,15 +381,15 @@ class TestJacobi(unittest.TestCase):
         z1 = 13
         x = PointJacobi(
             curve_brainpoolp160r1,
-            a.x() * z1 ** 2 % p,
-            a.y() * z1 ** 3 % p,
+            a.x() * z1**2 % p,
+            a.y() * z1**3 % p,
             z1,
         )
         z2 = 29
         y = PointJacobi(
             curve_brainpoolp160r1,
-            a.x() * z2 ** 2 % p,
-            a.y() * z2 ** 3 % p,
+            a.x() * z2**2 % p,
+            a.y() * z2**3 % p,
             z2,
         )
 
@@ -456,12 +430,8 @@ class TestJacobi(unittest.TestCase):
         b = PointJacobi.from_affine(j_g * 255, True)
 
         self.assertEqual(j_g * 256, j_g + b)
-        self.assertEqual(
-            j_g * (0xFF00 + 255 * 0xF0F0), j_g * 0xFF00 + b * 0xF0F0
-        )
-        self.assertEqual(
-            j_g * (0xFF00 + 255 * 0xF0F0), j_g.mul_add(0xFF00, b, 0xF0F0)
-        )
+        self.assertEqual(j_g * (0xFF00 + 255 * 0xF0F0), j_g * 0xFF00 + b * 0xF0F0)
+        self.assertEqual(j_g * (0xFF00 + 255 * 0xF0F0), j_g.mul_add(0xFF00, b, 0xF0F0))
 
     def test_mul_add_to_mul(self):
         j_g = PointJacobi.from_affine(generator_256)
@@ -502,12 +472,8 @@ class TestJacobi(unittest.TestCase):
         b = PointJacobi.from_affine(j_g * 255)
 
         self.assertEqual(j_g * 256, j_g + b)
-        self.assertEqual(
-            j_g * (0xFF00 + 255 * 0xF0F0), j_g * 0xFF00 + b * 0xF0F0
-        )
-        self.assertEqual(
-            j_g * (0xFF00 + 255 * 0xF0F0), j_g.mul_add(0xFF00, b, 0xF0F0)
-        )
+        self.assertEqual(j_g * (0xFF00 + 255 * 0xF0F0), j_g * 0xFF00 + b * 0xF0F0)
+        self.assertEqual(j_g * (0xFF00 + 255 * 0xF0F0), j_g.mul_add(0xFF00, b, 0xF0F0))
 
     def test_mul_add_with_infinity_as_result(self):
         j_g = PointJacobi.from_affine(generator_256)

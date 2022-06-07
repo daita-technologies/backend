@@ -143,9 +143,7 @@ class UniformResourceIdentifier(GeneralName):
         return self._value
 
     @classmethod
-    def _init_without_validation(
-        cls, value: str
-    ) -> "UniformResourceIdentifier":
+    def _init_without_validation(cls, value: str) -> "UniformResourceIdentifier":
         instance = cls.__new__(cls)
         instance._value = value
         return instance
@@ -244,14 +242,10 @@ class IPAddress(GeneralName):
         return self._value
 
     def _packed(self) -> bytes:
-        if isinstance(
-            self.value, (ipaddress.IPv4Address, ipaddress.IPv6Address)
-        ):
+        if isinstance(self.value, (ipaddress.IPv4Address, ipaddress.IPv6Address)):
             return self.value.packed
         else:
-            return (
-                self.value.network_address.packed + self.value.netmask.packed
-            )
+            return self.value.network_address.packed + self.value.netmask.packed
 
     def __repr__(self) -> str:
         return "<IPAddress(value={})>".format(self.value)
@@ -288,9 +282,7 @@ class OtherName(GeneralName):
         return self._value
 
     def __repr__(self) -> str:
-        return "<OtherName(type_id={}, value={!r})>".format(
-            self.type_id, self.value
-        )
+        return "<OtherName(type_id={}, value={!r})>".format(self.type_id, self.value)
 
     def __eq__(self, other: object) -> bool:
         if not isinstance(other, OtherName):

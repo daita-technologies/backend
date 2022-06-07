@@ -111,9 +111,7 @@ def _enc_dec_rsa_pkey_ctx(
     buf_size = backend._lib.EVP_PKEY_size(key._evp_pkey)
     backend.openssl_assert(buf_size > 0)
     if isinstance(padding, OAEP) and backend._lib.Cryptography_HAS_RSA_OAEP_MD:
-        mgf1_md = backend._evp_md_non_null_from_algorithm(
-            padding._mgf._algorithm
-        )
+        mgf1_md = backend._evp_md_non_null_from_algorithm(padding._mgf._algorithm)
         res = backend._lib.EVP_PKEY_CTX_set_rsa_mgf1_md(pkey_ctx, mgf1_md)
         backend.openssl_assert(res > 0)
         oaep_md = backend._evp_md_non_null_from_algorithm(padding._algorithm)
@@ -220,9 +218,7 @@ def _rsa_sig_setup(backend, padding, algorithm, key, init_func):
     if res <= 0:
         backend._consume_errors()
         raise UnsupportedAlgorithm(
-            "{} is not supported for the RSA signature operation.".format(
-                padding.name
-            ),
+            "{} is not supported for the RSA signature operation.".format(padding.name),
             _Reasons.UNSUPPORTED_PADDING,
         )
     if isinstance(padding, PSS):
@@ -231,9 +227,7 @@ def _rsa_sig_setup(backend, padding, algorithm, key, init_func):
         )
         backend.openssl_assert(res > 0)
 
-        mgf1_md = backend._evp_md_non_null_from_algorithm(
-            padding._mgf._algorithm
-        )
+        mgf1_md = backend._evp_md_non_null_from_algorithm(padding._mgf._algorithm)
         res = backend._lib.EVP_PKEY_CTX_set_rsa_mgf1_md(pkey_ctx, mgf1_md)
         backend.openssl_assert(res > 0)
 
@@ -455,9 +449,7 @@ class _RSAPrivateKey(RSAPrivateKey):
         self._backend._lib.RSA_get0_factors(self._rsa_cdata, p, q)
         self._backend.openssl_assert(p[0] != self._backend._ffi.NULL)
         self._backend.openssl_assert(q[0] != self._backend._ffi.NULL)
-        self._backend._lib.RSA_get0_crt_params(
-            self._rsa_cdata, dmp1, dmq1, iqmp
-        )
+        self._backend._lib.RSA_get0_crt_params(self._rsa_cdata, dmp1, dmq1, iqmp)
         self._backend.openssl_assert(dmp1[0] != self._backend._ffi.NULL)
         self._backend.openssl_assert(dmq1[0] != self._backend._ffi.NULL)
         self._backend.openssl_assert(iqmp[0] != self._backend._ffi.NULL)
@@ -539,9 +531,7 @@ class _RSAPublicKey(RSAPublicKey):
     def public_numbers(self) -> RSAPublicNumbers:
         n = self._backend._ffi.new("BIGNUM **")
         e = self._backend._ffi.new("BIGNUM **")
-        self._backend._lib.RSA_get0_key(
-            self._rsa_cdata, n, e, self._backend._ffi.NULL
-        )
+        self._backend._lib.RSA_get0_key(self._rsa_cdata, n, e, self._backend._ffi.NULL)
         self._backend.openssl_assert(n[0] != self._backend._ffi.NULL)
         self._backend.openssl_assert(e[0] != self._backend._ffi.NULL)
         return RSAPublicNumbers(
@@ -568,9 +558,7 @@ class _RSAPublicKey(RSAPublicKey):
         data, algorithm = _calculate_digest_and_algorithm(
             self._backend, data, algorithm
         )
-        return _rsa_sig_verify(
-            self._backend, padding, algorithm, self, signature, data
-        )
+        return _rsa_sig_verify(self._backend, padding, algorithm, self, signature, data)
 
     def recover_data_from_signature(
         self,
@@ -579,6 +567,4 @@ class _RSAPublicKey(RSAPublicKey):
         algorithm: typing.Optional[hashes.HashAlgorithm],
     ) -> bytes:
         _check_not_prehashed(algorithm)
-        return _rsa_sig_recover(
-            self._backend, padding, algorithm, self, signature
-        )
+        return _rsa_sig_recover(self._backend, padding, algorithm, self, signature)

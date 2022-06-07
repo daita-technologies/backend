@@ -18,12 +18,12 @@ from django.contrib import admin
 from django.urls import path
 from rest_framework import routers
 from app.views import *
+
 # router = routers.SimpleRouter()
 # router.register(r'posts',PostDetailUpdateApiView,basename='Posts')
 # router.register(r'posts',PostListCreateAPIView,basename='Posts')
 urlpatterns = [
-    url(r'^admin/',admin.site.urls),
-    url(r'^v1/api/request_ai',AI_service_request),
-    url(r'^v1/api/check_healthy',AI_service_check_healthy)
+    url(r"^admin/", admin.site.urls),
+    url(r"^v1/api/request_ai", AI_service_request),
+    url(r"^v1/api/check_healthy", AI_service_check_healthy),
 ]
-

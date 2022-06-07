@@ -32,9 +32,7 @@ class _Ed448PublicKey(Ed448PublicKey):
                 encoding is not serialization.Encoding.Raw
                 or format is not serialization.PublicFormat.Raw
             ):
-                raise ValueError(
-                    "When using Raw both encoding and format must be Raw"
-                )
+                raise ValueError("When using Raw both encoding and format must be Raw")
 
             return self._raw_public_bytes()
 
@@ -126,9 +124,7 @@ class _Ed448PrivateKey(Ed448PrivateKey):
             if (
                 format is not serialization.PrivateFormat.Raw
                 or encoding is not serialization.Encoding.Raw
-                or not isinstance(
-                    encryption_algorithm, serialization.NoEncryption
-                )
+                or not isinstance(encryption_algorithm, serialization.NoEncryption)
             ):
                 raise ValueError(
                     "When using Raw both encoding and format must be Raw "

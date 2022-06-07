@@ -32,6 +32,7 @@ def calculate_signal_to_noise(image: np.ndarray, axis=None, ddof=0) -> float:
     signal_to_noise: np.ndarray = np.where(std == 0, 0, mean / std)
     return float(signal_to_noise)
 
+
 def get_index_of_median_value(array: Union[List[float], np.ndarray]) -> int:
     """
     Find index of the median value in a list or 1-D arry
