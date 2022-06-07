@@ -17,7 +17,14 @@ def lambda_handler(event, context):
     email = get_email(event["id_token"])
     print("send mail")
     #TODO: change href to something for meaningful
-    message = f"<p>Dear User,</p><p>Your download link has been created. Please log into DAITA Platform and go to <a href='https://dev.daita.tech/task-list'>My Task</a> to download your files. <p>Best,</p> <p>The DAITA Team</p>"
+    message = '''
+        <p>Dear User,</p>
+        <p>Your download link has been created. Please log into DAITA Platform and go to <a href='https://dev.daita.tech/task-list'>My Task</a> to download your files.</p>
+        <p>Best,</p>
+        <p>The DAITA Team</p>
+        <p>---</p>
+        <p>In case you encounter any issues or questions, please contact us at <a href = "mailto: contact@daita.tech">contact@daita.tech</a>.</p>
+        '''
     response = client.send_email(
         Destination={
             'ToAddresses':[
