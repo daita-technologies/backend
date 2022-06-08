@@ -17,14 +17,27 @@ States:
         IntervalSeconds: 1
         MaxAttempts: 2
         BackoffRate: 1
+      - ErrorEquals:
+          - Lambda.TooManyRequestsException
+          - Lambda.ServiceException
+        IntervalSeconds: 3
+        MaxAttempts: 7
+        BackoffRate: 2
   BranchesDownloadImage:
     Type: Parallel
+    Retry:
+      - ErrorEquals:
+          - Lambda.TooManyRequestsException
+          - Lambda.ServiceException
+        IntervalSeconds: 3
+        MaxAttempts: 7
+        BackoffRate: 2
     Branches:
       - StartAt: DownloadImages
         States:
           DownloadImages:
             Type: Map
-            MaxConcurrency: 10
+            MaxConcurrency: 15
             End: true
             InputPath: $
             ItemsPath: $.download_images
@@ -40,6 +53,13 @@ States:
                   Parameters:
                     FunctionName: '${HandleDownloadImages}'
                     Payload.$: $
+                  Retry:
+                    - ErrorEquals:
+                        - Lambda.TooManyRequestsException
+                        - Lambda.ServiceException
+                      IntervalSeconds: 3
+                      MaxAttempts: 7
+                      BackoffRate: 2
                   End: true
       - StartAt: MergeDownloadImages
         States:
@@ -52,6 +72,13 @@ States:
             Parameters:
               FunctionName: '${HandleMergeResultDownloadImages}'
               Payload.$: $
+            Retry:
+              - ErrorEquals:
+                  - Lambda.TooManyRequestsException
+                  - Lambda.ServiceException
+                IntervalSeconds: 3
+                MaxAttempts: 7
+                BackoffRate: 2
     ResultPath: $
     Next: GetResult
   GetResult:
@@ -62,6 +89,13 @@ States:
     Parameters:
       FunctionName: '${HandleGetResultDownloadTask}'
       Payload.$: $
+    Retry:
+      - ErrorEquals:
+          - Lambda.TooManyRequestsException
+          - Lambda.ServiceException
+        IntervalSeconds: 3
+        MaxAttempts: 7
+        BackoffRate: 2
   DownloadComplete:
     Type: Pass
     Comment: Used for result aggregation

@@ -19,9 +19,13 @@ def lambda_handler(event, context):
     batches = event
     lenBatches =  len(batches)
     task_finish = 0
+    message_in_flight = 0
     for  batch in batches:
+        if not 'response' in batch:
+            continue 
         if batch['response'] == 'OK':
             task_finish += 1
+            message_in_flight += batch['message_in_flight']
     if task_finish == 0:
         result['response'] = 'NOT_OK'
         result['state'] = 'ERROR'
@@ -35,4 +39,5 @@ def lambda_handler(event, context):
     result['retry_waiting_message_in_flight'] = 10
     result['current_retry'] = 1
     result['is_retry'] = True
+    result['message_in_flight'] = message_in_flight
     return result
