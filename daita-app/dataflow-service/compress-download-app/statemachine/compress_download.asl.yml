@@ -13,6 +13,7 @@ States:
       workdir.$: $.Payload.workdir
       bucket.$: $.Payload.bucket
       s3_key_path.$: $.Payload.s3_key_path
+      nrof_files.$: $.Payload.nrof_files
     ResultPath: $.taskresult
     Catch:
       - ErrorEquals:
@@ -46,7 +47,31 @@ States:
         - States.ALL
         Next: SetTaskStatusError
         ResultPath: null
-    Next: StartECSCompressDownloadTask
+    Next: CompressProcessChoice
+
+  CompressProcessChoice:
+    Type: Choice
+    Choices:
+      - Variable: $.taskresult.nrof_files
+        NumericLessThanEquals: 100
+        Next: CompressFunction
+      - Variable: $.taskresult.nrof_files
+        NumericGreaterThan: 100
+        Next: StartECSCompressDownloadTask
+
+  CompressFunction:
+    Type: Task
+    Resource: arn:aws:states:::lambda:invoke
+    Parameters:
+      FunctionName: ${CompressFunction}
+      Payload.$: $
+    ResultPath: null
+    Catch:
+      - ErrorEquals:
+        - States.ALL
+        Next: SetTaskStatusError
+        ResultPath: null
+    Next: SendCompletedMailFunction
 
   StartECSCompressDownloadTask:
     Type: Task
