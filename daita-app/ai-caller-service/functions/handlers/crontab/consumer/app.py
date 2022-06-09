@@ -25,11 +25,11 @@ def lambda_handler(event, context):
     while True:
         if time.time() - timeout_start >= 45:
             break
+        maxPushedMessage = int(os.environ.get('MAX_CONCURRENCY_TASKS','3'))
         queueSQS = sqsResourse.get_queue_by_name(QueueName=os.environ['TASK_QUEUE'])
         QueueResp = queueSQS.receive_messages(VisibilityTimeout=10,
-            WaitTimeSeconds=0,MaxNumberOfMessages=10)
+            WaitTimeSeconds=0,MaxNumberOfMessages=maxPushedMessage)
         pushedMessage = 0 
-        maxPushedMessage = int(os.environ.get('MAX_CONCURRENCY_TASKS','2'))
         for index ,message in enumerate(QueueResp) :
             body = json.loads(message.body)
             detail = body["detail"]

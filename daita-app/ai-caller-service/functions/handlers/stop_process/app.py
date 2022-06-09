@@ -27,12 +27,15 @@ def stop_children_execution(execArn):
 def process( identity_id, task_id):
     item = generate_task_model.get_task_info(identity_id,task_id)
     executeArn = item.executeArn
+    if len(executeArn) == 0:
+        return
     stop_parent_execution(execARN=executeArn)
     stop_children_execution(execArn=executeArn)
-    generate_task_model.update_status(identity_id,task_id,'CANCEL')
+
 @error_response
 def lambda_handler(event, context):
     body = event['detail']
+    generate_task_model.update_status(body['identity_id'],body['task_id'],'CANCEL')
     process(identity_id=body['identity_id'],task_id=body['task_id'])
     print("STOP")
     return {}

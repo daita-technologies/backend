@@ -14,9 +14,7 @@ from response import *
 from utils import *
 from identity_check import *
 from consts import ConstTbl
-from models.task_model import TaskModel
 
-task_model = TaskModel(os.environ["TABLE_GENERATE_TASK"],None)
 def batcher(iterable, size):
     iterator = iter(iterable)
     for first in iterator:
@@ -119,6 +117,5 @@ def lambda_handler(event, context):
 
     print("body in event: ", body)
     data = body['data']
-    task_model.update_generate_progress(task_id = data['task_id'], identity_id = data['identity_id'], num_finish = 0, status = 'PREPARING_DATA')
     result = downloadS3ToEFS(data)
     return  result

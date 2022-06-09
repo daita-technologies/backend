@@ -14,6 +14,7 @@ from models.project_model import ProjectModel, ProjectItem
 from models.project_sum_model import ProjectSumModel
 from lambda_base_class import LambdaBaseClass
 from boto3.dynamodb.conditions import Key, Attr
+from botocore.exceptions import ClientError
 
 
 class GenerateImageClass(LambdaBaseClass):
@@ -222,9 +223,33 @@ class GenerateImageClass(LambdaBaseClass):
             KEY_NAME_AUG_PARAMS: self.aug_parameters
         }
         event_id = self._put_event_bus(detail_pass_para) 
-                
+        message = "OK"
+        sqsClient = boto3.client('sqs',REGION)
+        
+        def getQueue(queue_name_env):
+            try:
+                response = sqsClient.get_queue_url(QueueName=queue_name_env)
+            except ClientError as e:
+                print(e)
+                raise e
+            return response['QueueUrl']
+        def countTaskInQueue(queue_id):
+            response = sqsClient.get_queue_attributes(
+                                    QueueUrl=getQueue(queue_id),
+                                    AttributeNames=[
+                                        'ApproximateNumberOfMessages'
+                                    ]
+                                )
+            num_task_in_queue = response['Attributes']['ApproximateNumberOfMessages']
+            print(f"QueueID:  {queue_id} has len: {num_task_in_queue}")
+            return int(num_task_in_queue)        
+        QueueResq = countTaskInQueue(os.environ['QUEUE'])
+        print(QueueResq)
+        if QueueResq > int(os.environ['MAX_CONCURRENCY_TASK']):
+            message = "The system is limited, Please waiting."
+
         return generate_response(
-            message="OK",
+            message=message,
             status_code=HTTPStatus.OK,
             data={
                 KEY_NAME_TASK_ID: task_id,

@@ -36,19 +36,10 @@ States:
       - Variable: $.state
         StringEquals: ERROR
         Next: UpdateStatusTask
-  is_waiting_message_in_flight:
-    Type: Choice
-    Choices:
-      - Variable: $.is_retry
-        BooleanEquals: true
-        Next: UpdateStatusTask
-      - Variable: $.is_retry
-        BooleanEquals: false
-        Next: GenerateComplete
   UpdateStatusTask:
     Type: Task
     Resource: 'arn:aws:states:::lambda:invoke'
-    Next: is_waiting_message_in_flight
+    Next: GenerateComplete
     InputPath: $
     OutputPath: $.Payload
     Parameters:
@@ -57,10 +48,6 @@ States:
         identity_id.$: $$.Execution.Input.body.identity_id
         task_id.$: $$.Execution.Input.body.task_id
         status.$: $.status
-        retry_waiting_message_in_flight.$: $.retry_waiting_message_in_flight
-        current_retry.$: $.current_retry
-        is_retry.$: $.is_retry
-        message_in_flight.$: $.message_in_flight
     Retry:
       - ErrorEquals:
           - RetriableCallerServiceError
@@ -129,6 +116,24 @@ States:
           Parameters:
             FunctionName: '${HandlerUploadBatchToS3}'
             Payload.$: $
+          Retry:
+            - ErrorEquals:
+                - Lambda.TooManyRequestsException
+                - Lambda.ServiceException
+              IntervalSeconds: 3
+              MaxAttempts: 7
+              BackoffRate: 2
+          Next: CompleteRequestAI
+        CompleteRequestAI:
+          Type: Task
+          Resource: 'arn:aws:states:::lambda:invoke'
+          InputPath: $
+          OutputPath: $
+          Parameters:
+            FunctionName: '${HandleCompleteRequestAI}'
+            Payload.$: $
+          ResultSelector:
+            response.$: $.Payload.response
           Retry:
             - ErrorEquals:
                 - Lambda.TooManyRequestsException
