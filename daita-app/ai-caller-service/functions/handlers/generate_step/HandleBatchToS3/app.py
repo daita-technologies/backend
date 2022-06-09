@@ -19,8 +19,6 @@ from pathlib import Path
 task_model = TaskModel(os.environ["TABLE_GENERATE_TASK"],None)
 generate_task_model = GenerateTaskModel(os.environ["TABLE_GENERATE_TASK"])
 
-sqsClient = boto3.client('sqs',REGION)
-sqsResourse = boto3.resource('sqs',REGION)
 s3 = boto3.client('s3')
 def is_img(img):
     return not os.path.splitext(img)[1] in ['.json']
@@ -56,48 +54,24 @@ def UploadImage(output,project_prefix,task_id):
             print(json.loads('it_img'))
     return info
 
-def UpdateStaskCurrentImageToTaskDB(task_id,identity_id,output):
-    outputPath = Path(output)
-    parrentFolder = outputPath.parent
-    subfolders= [f.path for f in os.scandir(parrentFolder) if f.is_dir()]
-    print("list subfolder: \n", subfolders)
-    total_file = 0
-    for folder in subfolders:
-        total_file += get_number_files(folder)
-
-    task_model.update_generate_progress(task_id = task_id, identity_id = identity_id, num_finish = total_file, status = "RUNNING")
-
 
 @error_response
 def lambda_handler(event, context):
     print(event)
-    Queue = sqsResourse.get_queue_by_name(QueueName=os.environ['QUEUE'])
     infoUploadS3 = []
-    # item = generate_task_model.get_task_info(event['identity_id'] ,event['task_id'])
+    result = event
+    
+    result['info_upload_s3']= infoUploadS3
+    
+    if event.get("augment_codes", None) is not None:
+        result['gen_id'] = str(event.get("augment_codes"))
+    else:
+        result['gen_id'] = str(event['batch']['request_json']['codes'])
+    
     if event['response'] == 'OK' :
-        outputBatchDir = '/'+  '/'.join(event['batch']['request_json']['output_folder'].split('/')[2:])
-        # outdir = glob.glob(outputBatchDir+'/*')
-        # UpdateStaskCurrentImageToTaskDB(task_id= event['task_id'], identity_id=event['identity_id'] , output=outputBatchDir)
         if 'output_images' in event:
             output = list(map(lambda x : x.replace('/efs',''),event['output_images']))
             infoUploadS3 =  UploadImage(output=output,project_prefix=event['project_prefix'],task_id=event['task_id'])
-        message = event
-        message['info_upload_s3'] = infoUploadS3
-
-        if event.get("augment_codes", None) is not None:
-            message['gen_id'] = str(event.get("augment_codes"))
-        else:
-            message['gen_id'] = str(event['batch']['request_json']['codes'])
-            
-        Queue.send_message(
-                            MessageBody=json.dumps(message),
-                            MessageGroupId="Update-Database",
-                            DelaySeconds=0,
-                        )
-        # generate_task_model.update_messages_in_flight(event['identity_id'], event['task_id'],len(infoUploadS3))
-    return {
-        'response': event['response'],
-        'gen_id': str(event['batch']['request_json']['codes']),
-        'output':event['batch']['request_json']['output_folder'],
-        'message_in_flight':len(infoUploadS3),
-    }
+        result['info_upload_s3'] = infoUploadS3
+        
+    return result

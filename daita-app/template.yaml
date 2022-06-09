@@ -20,7 +20,9 @@ Parameters:
   S3BucketName:
     Type: String
     Default: daita-client-data
-
+  MaxConcurrencyTasks:
+    Type: String
+    Default: 3
 Resources:
   #=============== SYSTEM PARAMETER CONFIGURATON ==============================
   LimitPreprocessTimes:
@@ -157,12 +159,13 @@ Resources:
         SubnetIDsPara: !Ref SubnetIDs
         SecurityGroupIdsPara: !Ref SecurityGroupIds
         S3BucketNamePara: !Ref S3BucketName
+        MaxConcurrencyTasks: !Ref MaxConcurrencyTasks
         TableGenerateTaskName: !GetAtt DatabaseService.Outputs.TableGenerateTaskName
         LambdaRoleARN: !GetAtt GeneralLambdaExecutionRole.Arn
         TableDataAugmentName: !GetAtt DatabaseService.Outputs.TableDataAugmentName
         TableDataOriginalName: !GetAtt DatabaseService.Outputs.TableDataOriginalName
         TableDataPreprocessName: !GetAtt DatabaseService.Outputs.TableDataPreprocessName
-
+        MaxConcurrencyTasks: !Ref MaxConcurrencyTasks
   DataFlowService:
     Type: AWS::Serverless::Application
     Properties:
@@ -224,8 +227,8 @@ Resources:
         ReferenceImageEventBusName: !GetAtt ReferenceImageService.Outputs.ReferenceImageEventBusName
         ####### Data Preprocess Table
         TableDataPreprocessName: !GetAtt DatabaseService.Outputs.TableDataPreprocessName
-
-
+        MaxConcurrencyTasks: !Ref MaxConcurrencyTasks
+        TaskQueueName: !GetAtt AICallerService.Outputs.TaskQueueName
   HealthCheckService:
     Type: AWS::Serverless::Application
     Properties:

@@ -77,7 +77,8 @@ Parameters:
     Type: String
   TableReferenceImageInfoName:
     Type: String
-
+  MaxConcurrencyTasks:
+    Type: String
   CommonCodeLayerName:
     Type: String
   LimitPreprocessTimesName:
@@ -107,6 +108,8 @@ Parameters:
   StopProcessEventBusName:
     Type: String
   TableDataPreprocessName:
+    Type: String
+  TaskQueueName:
     Type: String
 Resources:
   #================ ROLES =====================================================
@@ -146,6 +149,14 @@ Resources:
           Action:
           - "sts:AssumeRole"
       Policies:
+        - PolicyName: 'SQS'
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - 'sqs:*'
+                Resource: '*'
         - PolicyName: 'SecretsManagerParameterAccess'
           PolicyDocument:
             Version: '2012-10-17'
@@ -228,6 +239,8 @@ Resources:
           LIMIT_AUGMENT_TIMES: !Ref LimitAugmentTimesName
           TABLE_PROJECT_SUM: !Ref ParaTableProjectSumName
           TABLE_PREPROCESS: !Ref TableDataPreprocessName
+          MAX_CONCURRENCY_TASK: !Ref MaxConcurrencyTasks
+          QUEUE : !Ref TaskQueueName
   TaskProgressFunction:
     Type: AWS::Serverless::Function
     Properties:
