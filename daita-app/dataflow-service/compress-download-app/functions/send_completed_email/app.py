@@ -44,7 +44,7 @@ def lambda_handler(event, context):
                 },
                 'Text':{
                     'Charset':'UTF-8',
-                    'Data':"You're files is ready for download"
+                    'Data':"Your files is ready for download"
                 }
 
             },
