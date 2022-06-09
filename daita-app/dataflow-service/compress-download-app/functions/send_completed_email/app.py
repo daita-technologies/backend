@@ -19,7 +19,7 @@ def lambda_handler(event, context):
     #TODO: change href to something for meaningful
     message = '''
         <p>Dear User,</p>
-        <p>Your download link has been created. Please log into DAITA Platform and go to <a href='https://dev.daita.tech/task-list'>My Task</a> to download your files.</p>
+        <p>Your download link has been created. Please log into DAITA Platform and go to <a href='https://app.daita.tech/task-list'>My Tasks</a> to download your files.</p>
         <p>Best,</p>
         <p>The DAITA Team</p>
         <p>---</p>
@@ -34,7 +34,7 @@ def lambda_handler(event, context):
         Message={
             'Subject':{
                     'Charset':'UTF-8',
-                    'Data':"You're files are ready for download"
+                    'Data':"Your files are ready for download"
             },
             'Body':{
                 'Html':{
@@ -44,7 +44,7 @@ def lambda_handler(event, context):
                 },
                 'Text':{
                     'Charset':'UTF-8',
-                    'Data':"You're files is ready for download"
+                    'Data':"Your files are ready for download"
                 }
 
             },
