@@ -23,7 +23,7 @@ def lambda_handler(event, context):
     if event['status'] == 'ERROR':
         event['is_retry'] = False
         return event
-    if item.messages_in_flight == item.number_finished:
+    if event['message_in_flight'] == item.number_finished:
         task_model.update_status(event['task_id'], event['identity_id'], event['status'])
         if event['status'] == 'FINISH':
             folder = os.environ['ROOTEFS'] + os.environ['EFSPATH'] +'/'+ event['task_id'] +'/'

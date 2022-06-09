@@ -18,6 +18,12 @@ States:
         IntervalSeconds: 1
         MaxAttempts: 2
         BackoffRate: 1
+      - ErrorEquals:
+          - Lambda.TooManyRequestsException
+          - Lambda.ServiceException
+        IntervalSeconds: 3
+        MaxAttempts: 7
+        BackoffRate: 2
   ChoiceStageRequestAI:
     Type: Choice
     Choices:
@@ -54,6 +60,7 @@ States:
         retry_waiting_message_in_flight.$: $.retry_waiting_message_in_flight
         current_retry.$: $.current_retry
         is_retry.$: $.is_retry
+        message_in_flight.$: $.message_in_flight
     Retry:
       - ErrorEquals:
           - RetriableCallerServiceError
@@ -91,9 +98,17 @@ States:
             response.$: $.Payload.response
             is_retry.$: $.Payload.is_retry
             augment_codes.$: $.Payload.augment_codes
+            output_images.$: $.Payload.output_images
           Parameters:
             FunctionName: '${WorkerRequestAI}'
             Payload.$: $
+          Retry:
+            - ErrorEquals:
+                - Lambda.TooManyRequestsException
+                - Lambda.ServiceException
+              IntervalSeconds: 3
+              MaxAttempts: 7
+              BackoffRate: 2
           ResultPath: $
           OutputPath: $
           Next: IsCheckRetry
@@ -114,6 +129,13 @@ States:
           Parameters:
             FunctionName: '${HandlerUploadBatchToS3}'
             Payload.$: $
+          Retry:
+            - ErrorEquals:
+                - Lambda.TooManyRequestsException
+                - Lambda.ServiceException
+              IntervalSeconds: 3
+              MaxAttempts: 7
+              BackoffRate: 2
           End: true
     ResultPath: $
     Next: MergeResultRequestAI

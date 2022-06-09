@@ -44,6 +44,7 @@ def split(uri):
 def UploadImage(output,project_prefix,task_id):
     info = []
     for it_img  in output:
+        print(it_img)
         bucket ,folder= split(project_prefix)
         temp_namefile =os.path.join(task_id,os.path.basename(it_img))
         s3_namefile = os.path.join(folder,temp_namefile)
@@ -51,6 +52,8 @@ def UploadImage(output,project_prefix,task_id):
             info.append({'filename': s3_namefile,'size': os.path.getsize(it_img)})
             with open(it_img,'rb') as f :
                 s3.put_object(Bucket=bucket,Key=s3_namefile,Body=f)
+        else:
+            print(json.loads('it_img'))
     return info
 
 def UpdateStaskCurrentImageToTaskDB(task_id,identity_id,output):
@@ -73,11 +76,11 @@ def lambda_handler(event, context):
     # item = generate_task_model.get_task_info(event['identity_id'] ,event['task_id'])
     if event['response'] == 'OK' :
         outputBatchDir = '/'+  '/'.join(event['batch']['request_json']['output_folder'].split('/')[2:])
-        outdir = glob.glob(outputBatchDir+'/*')
-        print("OutputBatchDir: \n", outputBatchDir)
-        print("outdir: \n", outdir)
+        # outdir = glob.glob(outputBatchDir+'/*')
         # UpdateStaskCurrentImageToTaskDB(task_id= event['task_id'], identity_id=event['identity_id'] , output=outputBatchDir)
-        infoUploadS3 =  UploadImage(output=outdir,project_prefix=event['project_prefix'],task_id=event['task_id'])
+        if 'output_images' in event:
+            output = list(map(lambda x : x.replace('/efs',''),event['output_images']))
+            infoUploadS3 =  UploadImage(output=output,project_prefix=event['project_prefix'],task_id=event['task_id'])
         message = event
         message['info_upload_s3'] = infoUploadS3
 
@@ -91,9 +94,10 @@ def lambda_handler(event, context):
                             MessageGroupId="Update-Database",
                             DelaySeconds=0,
                         )
-        generate_task_model.update_messages_in_flight(event['identity_id'], event['task_id'],len(infoUploadS3))
+        # generate_task_model.update_messages_in_flight(event['identity_id'], event['task_id'],len(infoUploadS3))
     return {
         'response': event['response'],
         'gen_id': str(event['batch']['request_json']['codes']),
         'output':event['batch']['request_json']['output_folder'],
+        'message_in_flight':len(infoUploadS3),
     }
