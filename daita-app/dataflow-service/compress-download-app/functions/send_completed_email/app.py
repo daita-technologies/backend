@@ -23,7 +23,7 @@ def lambda_handler(event, context):
         <p>Best,</p>
         <p>The DAITA Team</p>
         <p>---</p>
-        <p>In case you encounter any issues or questions, please contact us at <a href = "mailto: contact@daita.tech">contact@daita.tech</a>.</p>
+        <p><i>In case you encounter any issues or questions, please contact us at <a href = "mailto: contact@daita.tech">contact@daita.tech</a>.</i></p>
         '''
     response = client.send_email(
         Destination={
