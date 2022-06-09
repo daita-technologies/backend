@@ -3,6 +3,7 @@ import http
 import queue
 import time
 import json
+import glob
 import boto3
 import random
 import requests
@@ -66,6 +67,7 @@ def lambda_handler(event, context):
         bucket , filename =  split(batch['request_json']['images_paths'])
         resultS3 =  s3.get_object(Bucket=bucket, Key=filename)
         batch['request_json']['images_paths'] = json.loads(resultS3["Body"].read().decode())
+    ######################################################
     item = generate_task_model.get_task_info(result['identity_id'] ,result['task_id'])
     if item.status == 'CANCEL':
         result['response'] = 'NOT_OK'
@@ -76,6 +78,7 @@ def lambda_handler(event, context):
     print(f"--Count current message in queue: {batch['queue']} is {countTaskInQueue(batch['queue'])}")
     
     print("request AI body: \n", batch['request_json'])
+    result['output_images'] = []
     try :
         instance = ec2_resource.Instance(batch['ec2_id'])
         instance.load()
@@ -90,11 +93,11 @@ def lambda_handler(event, context):
         ### use augment_codes for gen_id method for all images in batch
         json_data = output.json()
         result["augment_codes"] = json_data.get("augment_codes", None)
-
         print("Output from AI request: \n", output.text)
 
         if output.status_code != http.HTTPStatus.OK:
             raise Exception("Not OK")
+        result['output_images'] = json_data['images_paths']
     except Exception as e:
         print("---------REQUEST AI exception-------\n", e)
         result['response'] = 'NOT_OK'

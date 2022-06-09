@@ -81,7 +81,6 @@ def lambda_handler(event, context):
                         })
                         total_size += each['size']
             
-                # Update Table T_PROJECT_SUMMARY 
                 
                 prj_sum_all = db_resource.Table(os.environ['T_PROJECT_SUMMARY'])
                 responsePrjSumAll = prj_sum_all.get_item( Key = {
@@ -121,7 +120,6 @@ def lambda_handler(event, context):
                         'project_name': body['project_name'],
                         'process_type': item.process_type
                     },list_file_s3= info_upload_s3, gen_id=body['gen_id'],task_id=body['task_id'])
-        print(resq)
         if item.process_type == 'AUGMENT':
             table = db_resource.Table(os.environ['TABLE_DATA_AUGMENT'])
         elif item.process_type == 'PREPROCESS':
@@ -131,7 +129,6 @@ def lambda_handler(event, context):
             KeyConditionExpression=Key('project_id').eq(body['project_id']),
              FilterExpression=Attr('s3_key').contains(body['task_id'])
             )
-        print(queryResponse)
         task_model.update_number_files(task_id = body['task_id'], identity_id = body['identity_id'],
          num_finish = len(queryResponse['Items']))
 
