@@ -27,6 +27,7 @@ def lambda_handler(event, context):
         message_email_text = event["message_email_text"]
         subject = event["subject"]
     except Exception as e:
+        print(e)
         return convert_response(
             {"error": True, "success": False, "message": repr(e), "data": None}
         )
