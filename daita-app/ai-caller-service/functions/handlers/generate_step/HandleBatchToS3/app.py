@@ -18,10 +18,12 @@ from pathlib import Path
 
 task_model = TaskModel(os.environ["TABLE_GENERATE_TASK"],None)
 generate_task_model = GenerateTaskModel(os.environ["TABLE_GENERATE_TASK"])
+ROOT_EFS = os.environ["ROOTEFS"]
 
 s3 = boto3.client('s3')
 def is_img(img):
     return not os.path.splitext(img)[1] in ['.json']
+
 def get_number_files(output_dir):
     img_list = []
     for r,_,f in os.walk(output_dir):
@@ -29,6 +31,9 @@ def get_number_files(output_dir):
             img_list.append(os.path.join(r,file))
     img_list = list(filter(is_img,img_list))
     return len(img_list)
+
+
+
 def split(uri):
     if not 's3' in uri[:2]:
         temp = uri.split('/')
@@ -54,7 +59,6 @@ def UploadImage(output,project_prefix,task_id):
             print(json.loads('it_img'))
     return info
 
-
 @error_response
 def lambda_handler(event, context):
     print(event)
@@ -67,11 +71,20 @@ def lambda_handler(event, context):
         result['gen_id'] = str(event.get("augment_codes"))
     else:
         result['gen_id'] = str(event['batch']['request_json']['codes'])
+
+    result["num_finish"] = -1
     
     if event['response'] == 'OK' :
         if 'output_images' in event:
-            output = list(map(lambda x : x.replace('/efs',''),event['output_images']))
+            output = list(map(lambda x : x.replace(ROOT_EFS,''),event['output_images']))
             infoUploadS3 =  UploadImage(output=output,project_prefix=event['project_prefix'],task_id=event['task_id'])
+
+            output_folder = event["batch"]['request_json']['output_folder'].replace(ROOT_EFS, '')
+            ls_split = output_folder.split(os.sep)
+            path_check_finish = "/".join(ls_split[0:-1])
+            result["num_finish"] = get_number_files(path_check_finish)
+            print("num_finish: ", result["num_finish"])
+
         result['info_upload_s3'] = infoUploadS3
         
     return result

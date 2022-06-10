@@ -20,6 +20,7 @@ Globals:
         TABLE_NAME: global-table
         LOGGING: !Ref minimumLogLevel
         TABLE_GENERATE_TASK: !Ref TableGenerateTaskName
+        ROOTEFS: !Ref ROOTEFS
     Layers:
         - !Ref CommonCodeLayerName
 

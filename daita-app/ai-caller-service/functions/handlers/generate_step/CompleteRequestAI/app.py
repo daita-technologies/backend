@@ -70,13 +70,20 @@ def lambda_handler(event, context):
     elif item.process_type == 'PREPROCESS':
         table = db_resource.Table(os.environ['TABLE_DATA_PREPROCESS'])
     
-    queryResponse = table.query(
-        KeyConditionExpression=Key('project_id').eq(body['project_id']),
-            FilterExpression=Attr('s3_key').contains(body['task_id'])
-        )
-    
-    task_model.update_number_files(task_id = body['task_id'], identity_id = body['identity_id'],
-        num_finish = len(queryResponse['Items']))
+    # queryResponse = table.query(
+    #     KeyConditionExpression=Key('project_id').eq(body['project_id']),
+    #         FilterExpression=Attr('s3_key').contains(body['task_id']),
+    #         Limit=1000
+    #     )
+
+    # print("output of querry: \n", queryResponse)
+    # print(f"number items of query: {len(queryResponse['Items'])}")    
+    num_finish = event.get("num_finish", -1)
+    if num_finish<0:
+        pass
+    else:    
+        task_model.update_number_files(task_id = body['task_id'], identity_id = body['identity_id'],
+                                        num_finish = num_finish)
 
     return {
         'response':body['response']
