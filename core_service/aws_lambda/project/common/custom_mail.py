@@ -5,7 +5,7 @@ from boto3 import resource
 from boto3.dynamodb.conditions import Key
 
 
-def invoke_sendmail_cognito_service(subject, destination_email, message_email):
+def invoke_sendmail_cognito_service(subject, destination_email, message_email, message_email_text):
     client = boto3.client("lambda")
     payload_json = None
     try:
@@ -17,6 +17,7 @@ def invoke_sendmail_cognito_service(subject, destination_email, message_email):
                     "subject": subject,
                     "destination_email": destination_email,
                     "message_email": message_email,
+                    "message_email_text": message_email_text
                 }
             ),
         )
@@ -72,6 +73,15 @@ def AddTriggerCustomMail(info):
         """.format(
             confirmCode
         ),
+        """
+        Your confirmation code is {}.
+        Best,
+        The DAITA Team
+        ---
+        In case you encounter any issues or questions, please contact us at contact@daita.tech.
+        """.format(
+            confirmCode
+        )
     )
 
 
@@ -87,7 +97,8 @@ def DeleteConfirmCode(info):
 
 def AddInsertConfirmCode(info):
     modelTrigger = TriggerCustomMailcode(REGION=info["region"])
-    modelTrigger.create_item({"user": info["user"], "code": info["confirm_code"]})
+    modelTrigger.create_item(
+        {"user": info["user"], "code": info["confirm_code"]})
 
 
 def ResendCodeConfirm(info):
@@ -111,4 +122,13 @@ def ResendCodeConfirm(info):
         """.format(
             confirmCode
         ),
+        """
+        Your confirmation code is {}.
+        Best,
+        The DAITA Team
+        ---
+        In case you encounter any issues or questions, please contact us at contact@daita.tech.
+        """.format(
+            confirmCode
+        )
     )
