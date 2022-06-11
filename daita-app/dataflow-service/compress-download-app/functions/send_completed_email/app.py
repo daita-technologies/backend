@@ -18,7 +18,7 @@ def lambda_handler(event, context):
     print("send mail")
     message = """
         <p>Dear User,</p>
-        <p>Your download link has been created. Please log into DAITA Platform and go to <a href='https://app.daita.tech/task-list'>My Tasks</a> to download your files.</p>
+        <p>Your download link has been created. Please log into DAITA Platform and go to <a href='https://app.daita.tech/my-tasks'>My Tasks</a> to download your files.</p>
         <p>Best,</p>
         <p>The DAITA Team</p>
         <p>---</p>
@@ -26,7 +26,7 @@ def lambda_handler(event, context):
         """
     message_email_text = """
         Dear User,
-        Your download link has been created. Please log into DAITA Platform and go to https://app.daita.tech/task-list to download your files.
+        Your download link has been created. Please log into DAITA Platform and go to https://app.daita.tech/my-tasks to download your files.
         Best,
         The DAITA Team
         ---
