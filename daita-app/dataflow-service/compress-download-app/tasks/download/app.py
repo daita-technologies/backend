@@ -144,7 +144,7 @@ def download(
     project_name,
     workdir,
     identity_id,
-    project_id):
+    project_id, task_id):
     try:
         db_resource = boto3.resource("dynamodb")
 
@@ -162,7 +162,7 @@ def download(
         workdir = Path(EFS_ROOT, workdir)
         zip_dir = Path(EFS_ROOT)
         zip_dir.mkdir(parents=True, exist_ok=True)
-        zipfile_name = f"{project_name}_{down_type}.zip"
+        zipfile_name = f"{project_name}_{down_type}_{task_id}.zip"
         zip_path = zip_dir.joinpath(zipfile_name)
         json_object = {}
 
@@ -231,6 +231,6 @@ if __name__ == "__main__":
     project_id = os.getenv("PROJECT_ID")
     workdir = os.getenv("WORKDIR")
 
-    url, s3_key = download(down_type, project_name, workdir, identity_id, project_id)
+    url, s3_key = download(down_type, project_name, workdir, identity_id, project_id, task_id)
     upload_progress_db(VALUE_TASK_FINISH, identity_id, task_id, url, s3_key)
     print(url, s3_key)

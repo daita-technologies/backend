@@ -9,6 +9,8 @@ RESPONSE_HEADER = {
 	"access-control-allow-headers": "Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token,X-Amz-User-Agent"
 }
 
+HTTP_STATUS_WARNING = 205
+
 # RESPONSE_HEADER_2 = {
 #     'Access-Control-Allow-Headers': 'Content-Type',
 #     'Access-Control-Allow-Origin': '*',

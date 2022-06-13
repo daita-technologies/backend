@@ -166,6 +166,7 @@ Resources:
         TableDataOriginalName: !GetAtt DatabaseService.Outputs.TableDataOriginalName
         TableDataPreprocessName: !GetAtt DatabaseService.Outputs.TableDataPreprocessName
         MaxConcurrencyTasks: !Ref MaxConcurrencyTasks
+
   DataFlowService:
     Type: AWS::Serverless::Application
     Properties:
@@ -179,8 +180,6 @@ Resources:
         CompressDownloadEcrRepositoryName: !Ref CompressDownloadEcrRepository
         TableMethodsName: !GetAtt DatabaseService.Outputs.TableMethodsName
         CommonCodeLayerName: !Ref CommonCodeLayer
-
-
 
   DatabaseService:
     Type: AWS::Serverless::Application
@@ -227,6 +226,7 @@ Resources:
         TableDataPreprocessName: !GetAtt DatabaseService.Outputs.TableDataPreprocessName
         MaxConcurrencyTasks: !Ref MaxConcurrencyTasks
         TaskQueueName: !GetAtt AICallerService.Outputs.TaskQueueName
+
   HealthCheckService:
     Type: AWS::Serverless::Application
     Properties:

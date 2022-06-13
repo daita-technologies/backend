@@ -224,6 +224,7 @@ class GenerateImageClass(LambdaBaseClass):
         }
         event_id = self._put_event_bus(detail_pass_para) 
         message = "OK"
+        status_code = HTTPStatus.OK
         sqsClient = boto3.client('sqs',REGION)
         
         def getQueue(queue_name_env):
@@ -247,10 +248,11 @@ class GenerateImageClass(LambdaBaseClass):
         print(QueueResq)
         if QueueResq > int(os.environ['MAX_CONCURRENCY_TASK']):
             message = "The system is limited, Please waiting."
+            status_code = HTTP_STATUS_WARNING
 
         return generate_response(
             message=message,
-            status_code=HTTPStatus.OK,
+            status_code=status_code,
             data={
                 KEY_NAME_TASK_ID: task_id,
                 KEY_NAME_TIMES_AUGMENT: times_augment,
