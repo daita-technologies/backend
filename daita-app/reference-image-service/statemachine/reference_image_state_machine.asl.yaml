@@ -1,0 +1,102 @@
+StartAt: GetDataTask
+States:
+  GetDataTask:
+    Type: Task
+    Resource: 'arn:aws:states:::lambda:invoke'
+    InputPath: $
+    ResultSelector:
+      body.$: $.Payload.body.data
+      detail.$: $$.Execution.Input.detail
+    ResultPath: $
+    OutputPath: $
+    Parameters:
+      FunctionName: "${GetDataFunction}"
+      Payload:
+        body.$: $
+    Next: CalculateReferenceImageMap
+    Comment: >-
+      Check the level of parallelism, split requests into chunks and invoke
+      lamndas
+    Catch: 
+      - ErrorEquals: 
+        - States.ALL
+        Next: CatchErrorTaskDynamoDB 
+        ResultPath: null 
+    Retry:
+      - ErrorEquals:
+          - RetriableCallerServiceError
+        IntervalSeconds: 1
+        MaxAttempts: 2
+        BackoffRate: 1    
+
+  CalculateReferenceImageMap:
+    Type: Map
+    InputPath: $
+    ItemsPath: $.body.ls_length_batch    
+    ResultPath: $.result_map
+    Parameters:
+      index.$: $$.Map.Item.Value
+      project_id.$: $.detail.project_id
+      task_id.$: $.detail.task_id
+      identity_id.$: $.detail.identity_id
+      ls_method_id.$: $.detail.ls_method_id
+      bucket.$: $.body.bucket
+      s3_key_path.$: $.body.s3_key_path
+    MaxConcurrency: 10
+    Catch: 
+      - ErrorEquals: 
+        - States.ALL
+        Next: CatchErrorTaskDynamoDB 
+        ResultPath: null
+    Iterator:
+      StartAt: CalculateRITask
+      States:
+        CalculateRITask:
+          Type: Task
+          Resource: 'arn:aws:states:::lambda:invoke'          
+          ResultPath: $
+          OutputPath: $.Payload
+          Parameters:
+            FunctionName: "${CalculateReferenceImageFunction}"
+            Payload:
+              body.$: $
+          End: true       
+    Next: MergeResultTask
+
+  MergeResultTask:
+    Type: Task
+    Resource: 'arn:aws:states:::lambda:invoke'
+    InputPath: $
+    OutputPath: $.Payload.body
+    Parameters:
+      FunctionName: "${MergeResultFunction}"
+      Payload:
+        body.$: $
+    Catch: 
+      - ErrorEquals: 
+        - States.ALL
+        Next: CatchErrorTaskDynamoDB 
+        ResultPath: null
+    End: true 
+
+  CatchErrorTaskDynamoDB:
+    Type: Task
+    Resource: 'arn:aws:states:::dynamodb:updateItem'
+    InputPath: $.detail
+    Parameters:
+      TableName: "${TableReferenceImageTasksName}"
+      Key:
+        identity_id:
+          S.$: $.identity_id
+        task_id:
+          S.$: $.task_id
+      UpdateExpression: 'SET #st = :st'
+      ExpressionAttributeNames:
+        '#st': status
+      ExpressionAttributeValues:
+        ':st':
+          S: ERROR
+    ResultPath: $.DynamoDB
+    End: true
+
+TimeoutSeconds: 6000

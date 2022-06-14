@@ -1,0 +1,344 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Transform: AWS::Serverless-2016-10-31
+Description: >
+  decompress-upload-app
+
+Parameters:
+  StagePara:
+    Type: String
+  ApplicationPara:
+    Type: String
+  SecurityGroupIds:
+    Type: String
+    Default: 'sg-af50cbde'
+  SubnetId:
+    Type: String
+    Default: subnet-31ff5b5a
+  EFSFileSystemId:
+    Type:  String
+    Default: fs-0199771f2dfe97ace
+  EFSMountPath:
+    Type: String
+    Default: /mnt/efs
+  EFSAccessPointRootPath:
+    Type: String
+    Default: /decompress-app
+  S3BucketName:
+    Type: String
+  TableDataFlowTaskName:
+    Type: String
+  DecompressEcrRepositoryName:
+    Type: String
+  VPCEndpointForS3:
+    Type: String
+  VPCEndpointForDynamoDB:
+    Type: String
+  CommonCodeLayerName:
+    Type: String
+  AllowedImageExtenesions:
+    Type: String
+    Default: ".jpeg,.jpg,.png"
+  UploadS3FileChunk:
+    Type: String
+    Default: 8
+
+Globals:
+  Function:
+    Timeout: 10
+    Handler: app.lambda_handler
+    Runtime: python3.8
+    Architectures:
+      - x86_64
+    Layers:
+      - !Ref CommonCodeLayerName
+
+
+Resources:
+  #================ ROLES =====================================================
+  # AWSServiceRoleForECS :
+  #   Type: AWS::IAM::ServiceLinkedRole
+  #   Properties:
+  #     AWSServiceName: ecs.amazonaws.com
+  #     Description: "Using for ECS Fargate"
+
+  # DefaultSubnet: # Fargate required a awsvpc config so
+  #   Type: AWS::EC2::Subnet
+  #   Properties:
+  #     VpcId: !Ref VpcId
+  #     CidrBlock: 172.31.0.0/16
+
+  #================ LOGS FOR STEP FUNCTIONS ===================================
+
+  DecompressFileStateMachineLogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: !Sub "/aws/vendedlogs/states/${StagePara}-DecompressFileSMLogGroup-${AWS::StackName}"
+      RetentionInDays: 7
+
+  ECSTaskLogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: !Sub "/aws/vendedlogs/states/${StagePara}-ECSTaskLogGroup-${AWS::StackName}"
+      RetentionInDays: 7
+
+
+  #======================= NETWORKING ==========================================
+
+  # InternetRouteTable:
+  #   Type: AWS::EC2::RouteTable
+  #   Properties:
+  #     VpcId: !Ref VpcId
+
+  # # Needed to attached in a VPC
+  # InternetGateway:
+  #   Type: AWS::EC2::InternetGateway
+
+  # InternetRoute:
+  #   Type: AWS::EC2::Route
+  #   Properties:
+  #     RouteTableId: !GetAtt InternetRouteTable.RouteTableId
+  #     GatewayId: !GetAtt InternetGateway.InternetGatewayId
+  #     DestinationCidrBlock: 0.0.0.0/0
+
+  EFSAccessPoint:
+    Type: AWS::EFS::AccessPoint
+    Properties:
+      FileSystemId: !Ref EFSFileSystemId
+      PosixUser:
+        Gid: "1000"
+        Uid: "1000"
+      RootDirectory:
+        CreationInfo:
+          OwnerGid: "1000"
+          OwnerUid: "1000"
+          Permissions: "777"
+        Path: !Ref EFSAccessPointRootPath
+
+  # ==================== State machine & steps resource ==========================================
+
+  DecompressFileStateMachine:
+    Type: AWS::Serverless::StateMachine # More info about State Machine Resource: https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/sam-resource-statemachine.html
+    Properties:
+      Type: STANDARD
+      Name: !Sub "${StagePara}-${ApplicationPara}-DecompressFileSM"
+      DefinitionUri: statemachine/decompress_file.asl.yml
+      DefinitionSubstitutions:
+        DecompressTaskCluster: !GetAtt DecompressTaskCluster.Arn
+        DecompressTask: !Ref DecompressTask
+        SubnetId: !Ref SubnetId
+        DivideDecompressChunksFunction: !GetAtt DivideDecompressChunksFunction.Arn
+        UploadDecompressedFunction: !GetAtt UploadDecompressedFunction.Arn
+        FinishDecompressTaskFunction: !GetAtt FinishDecompressTaskFunction.Arn
+        DecompressTaskTable: !Ref TableDataFlowTaskName
+        ProjectUploadUpdateFunction: staging-project-upload-update
+        PostUploadFunction: !Ref PostUploadFunction
+        TableDataFlowTaskName: !Ref TableDataFlowTaskName
+      Logging:
+        Level: ALL
+        IncludeExecutionData: true
+        Destinations:
+        - CloudWatchLogsLogGroup:
+            LogGroupArn: !GetAtt DecompressFileStateMachineLogGroup.Arn
+      Tracing:
+        Enabled: true
+      Policies: # Find out more about SAM policy templates: https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/serverless-policy-templates.html
+        - LambdaInvokePolicy:
+            FunctionName: !Ref DivideDecompressChunksFunction
+        - LambdaInvokePolicy:
+            FunctionName: !Ref UploadDecompressedFunction
+        - LambdaInvokePolicy:
+            FunctionName: !Ref FinishDecompressTaskFunction
+        - LambdaInvokePolicy:
+            FunctionName: staging-project-upload-update
+        - LambdaInvokePolicy:
+            FunctionName: !Ref PostUploadFunction
+        - DynamoDBCrudPolicy:
+            TableName: !Ref TableDataFlowTaskName
+        - Statement:
+          - # Allow step to start ecs task
+            Effect: Allow
+            Action:
+              - ecs:RunTask
+              - ecs:StopTask
+              - ecs:DescribeTasks
+            Resource:
+              - "*"
+          -
+            Effect: Allow
+            Action:
+              - events:PutTargets
+              - events:PutRule
+              - events:DescribeRule
+            Resource:
+              - !Sub arn:${AWS::Partition}:events:${AWS::Region}:${AWS::AccountId}:rule/StepFunctionsGetEventsForECSTaskRule
+          -
+            Effect: Allow
+            Action:
+              - iam:PassRole
+            Resource:
+              - "*"
+          - # Allow access log groups
+            Sid: CloudWatchLogsPolicy
+            Effect: Allow
+            Action:
+              - "logs:CreateLogDelivery"
+              - "logs:GetLogDelivery"
+              - "logs:UpdateLogDelivery"
+              - "logs:DeleteLogDelivery"
+              - "logs:ListLogDeliveries"
+              - "logs:PutResourcePolicy"
+              - "logs:DescribeResourcePolicies"
+              - "logs:DescribeLogGroup"
+              - "logs:DescribeLogGroups"
+            Resource: "*"
+
+  DivideDecompressChunksFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: functions/divide_decompressed_chunks
+      VpcConfig:
+        SecurityGroupIds:
+          - !Ref SecurityGroupIds
+        SubnetIds:
+          - !Ref SubnetId
+      FileSystemConfigs:
+        - Arn: !GetAtt EFSAccessPoint.Arn
+          LocalMountPath: !Ref EFSMountPath
+      Timeout: 120
+      Policies:
+        - AmazonDynamoDBFullAccess
+        - Statement:
+          - Sid: ALLOWCRUDDynamoDB
+            Effect: Allow
+            Action:
+            - "dynamodb:GetItem"
+            - "dynamodb:DeleteItem"
+            - "dynamodb:PutItem"
+            - "dynamodb:Scan"
+            - "dynamodb:Query"
+            - "dynamodb:UpdateItem"
+            - "dynamodb:BatchWriteItem"
+            - "dynamodb:BatchGetItem"
+            - "dynamodb:DescribeTable"
+            - "dynamodb:ConditionCheckItem"
+            Resource: "*"
+      Environment:
+        Variables:
+          TableDataFlowTask: !Ref TableDataFlowTaskName
+          EFSMountPath: !Ref EFSMountPath
+          AllowedImageExtenesions: !Ref AllowedImageExtenesions
+          UploadS3FileChunk: !Ref UploadS3FileChunk
+
+  UploadDecompressedFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: functions/upload_decompressed
+      Timeout: 30
+      VpcConfig:
+        SecurityGroupIds:
+          - !Ref SecurityGroupIds
+        SubnetIds:
+          - !Ref SubnetId
+      FileSystemConfigs:
+        - Arn: !GetAtt EFSAccessPoint.Arn
+          LocalMountPath: !Ref EFSMountPath
+      Policies:
+        - AmazonDynamoDBFullAccess
+        - Version: '2012-10-17'
+          Statement:
+            - Effect: Allow
+              Action:
+                - s3:GetObject
+                - s3:PutObject
+                - s3:PutObjectAcl
+              Resource: !Sub 'arn:aws:s3:::${S3BucketName}/*'
+      Environment:
+        Variables:
+          EFSMountPath: !Ref EFSMountPath
+          S3BucketName: !Ref S3BucketName
+
+  PostUploadFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: functions/post_upload/
+      Timeout: 30
+
+  FinishDecompressTaskFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: functions/finish_decompress_task/
+      Policies:
+        - AmazonDynamoDBFullAccess
+        - Statement:
+          - Effect: Allow
+            Action:
+              - elasticfilesystem:ClientRootAccess
+              - elasticfilesystem:ClientWrite
+              - elasticfilesystem:ClientMount
+            Resource: "*"
+      VpcConfig:
+        SecurityGroupIds:
+          - !Ref SecurityGroupIds
+        SubnetIds:
+          - !Ref SubnetId
+      FileSystemConfigs:
+        - Arn: !GetAtt EFSAccessPoint.Arn
+          LocalMountPath: !Ref EFSMountPath
+      Environment:
+        Variables:
+          DecompressTaskTable: !Ref TableDataFlowTaskName
+          FileSystemId: !Ref EFSFileSystemId
+          EFSMountPath: !Ref EFSMountPath
+
+  # ECS resources
+  DecompressTaskCluster:
+    Type: AWS::ECS::Cluster
+    Properties:
+      CapacityProviders:
+        - FARGATE
+
+  DecompressTask:
+    Type: AWS::ECS::TaskDefinition
+    Properties:
+      RequiresCompatibilities:
+        - "FARGATE"
+      ExecutionRoleArn: arn:aws:iam::366577564432:role/ecsTaskExecutionRole #TODO:create this in template
+      TaskRoleArn: arn:aws:iam::366577564432:role/DecompressTaskRole #TODO:create this in template
+      Cpu: 256
+      Memory: 512
+      NetworkMode: awsvpc
+      ContainerDefinitions:
+        -
+          Name: "decompress-file"
+          Image: !Sub "366577564432.dkr.ecr.${AWS::Region}.amazonaws.com/${DecompressEcrRepositoryName}:latest"
+          Cpu: 256
+          Memory: 512
+          Environment:
+            - Name: DecompressTaskTable
+              Value: !Ref TableDataFlowTaskName
+            - Name: EFSMountPath
+              Value: !Ref EFSMountPath
+          LogConfiguration:
+            LogDriver: awslogs
+            Options:
+              awslogs-region: !Sub "${AWS::Region}"
+              awslogs-group: !Ref ECSTaskLogGroup
+              awslogs-stream-prefix: decompress
+          MountPoints:
+            -
+              SourceVolume: "my-vol"
+              ContainerPath: !Ref EFSMountPath
+      Volumes:
+        -
+          EFSVolumeConfiguration:
+            AuthorizationConfig:
+              AccessPointId: !Ref EFSAccessPoint
+            FilesystemId: !Ref EFSFileSystemId
+            TransitEncryption: ENABLED # enable this so maybe we don't need to config a access point https://docs.aws.amazon.com/pt_br/AWSCloudFormation/latest/UserGuide/aws-properties-ecs-taskdefinition-authorizationconfig.html
+          Name: "my-vol"
+
+
+Outputs:
+  DecompressFileStateMachineArn:
+    Description: "Arn of DecompressFileStateMachineArn"
+    Value: !GetAtt DecompressFileStateMachine.Arn

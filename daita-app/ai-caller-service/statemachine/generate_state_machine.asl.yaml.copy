@@ -1,0 +1,118 @@
+StartAt: GenerateTask
+States:
+  GenerateTask:
+    Type: Task
+    Resource: 'arn:aws:states:::lambda:invoke'
+    InputPath: $
+    OutputPath: $.Payload
+    Parameters:
+      FunctionName: '${HandleGenerateStep}'
+      Payload.$: $
+    Next: ChoiceStageRequestAI
+    Comment: >-
+      Check the level of parallelism, split requests into chunks and invoke
+      lamndas
+    Retry:
+      - ErrorEquals:
+          - RetriableCallerServiceError
+        IntervalSeconds: 1
+        MaxAttempts: 2
+        BackoffRate: 1
+  ChoiceStageRequestAI:
+    Type: Choice
+    Choices:
+      - Variable: $.state
+        StringEquals: Request_AI
+        Next: HandleBatchRequestAI
+      - Variable: $.state
+        StringEquals: FINISH
+        Next: UpdateStatusTask
+      - Variable: $.state
+        StringEquals: ERROR
+        Next: UpdateStatusTask
+  UpdateStatusTask:
+    Type: Task
+    Resource: 'arn:aws:states:::lambda:invoke'
+    Next: GenerateComplete
+    InputPath: $
+    OutputPath: $
+    Parameters:
+      FunctionName: '${UpdateStatusTask}'
+      Payload.$: $
+    Retry:
+      - ErrorEquals:
+          - RetriableCallerServiceError
+        IntervalSeconds: 1
+        MaxAttempts: 2
+        BackoffRate: 1
+  HandleBatchRequestAI:
+    Type: Map
+    MaxConcurrency: 5
+    InputPath: $
+    ItemsPath: $.list_request_ai
+    Parameters:
+      batch.$: $$.Map.Item.Value
+      identity_id.$: $.identity_id
+      task_id.$: $.task_id
+    Iterator:
+      StartAt: RequestAI
+      States:
+        RequestAI:
+          Type: Task
+          Resource: 'arn:aws:states:::lambda:invoke'
+          OutputPath: $.Payload
+          Parameters:
+            FunctionName: '${WorkerRequestAI}'
+            Payload.$: $
+          Next: IsCheckRetry
+        IsCheckRetry:
+          Type: Choice
+          Choices:
+            - Variable: $.is_retry
+              BooleanEquals: true
+              Next: RequestAI
+            - Variable: $.is_retry
+              BooleanEquals: false
+              Next: UploadToS3
+        UploadToS3:
+          Type: Task
+          Resource: 'arn:aws:states:::lambda:invoke'
+          OutputPath: $.Payload
+          Parameters:
+            FunctionName: '${HandlerUploadBatchToS3}'
+            Payload.$: $
+          End: true
+    ResultPath: $
+    Next: MergeResultRequestAI
+  MergeResultRequestAI:
+    Type: Task
+    Resource: 'arn:aws:states:::lambda:invoke'
+    InputPath: $
+    OutputPath: $.Payload
+    Parameters:
+      FunctionName: '${HandleMergeResultRequestAI}'
+      Payload.$: $
+    Next: CheckResponse
+  CheckResponse:
+    Type: Choice
+    Choices:
+      - Variable: $.reponse
+        StringEquals: OK
+        Next: HandleCompleteRequestAI
+      - Variable: $.reponse
+        StringEquals: NOT_OK
+        Next: ChoiceStageRequestAI
+  HandleCompleteRequestAI:
+    Type: Task
+    Resource: 'arn:aws:states:::lambda:invoke'
+    InputPath: $
+    OutputPath: $.Payload
+    Parameters:
+      FunctionName: '${HandleCompleteRequestAI}'
+      Payload.$: $
+    Next: ChoiceStageRequestAI
+  GenerateComplete:
+    Type: Pass
+    Comment: Used for result aggregation
+    End: true
+TimeoutSeconds: 1800

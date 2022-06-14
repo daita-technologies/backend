@@ -1,0 +1,134 @@
+StartAt: StartECSDecompressTask
+States:
+  StartECSDecompressTask:
+    Type: Task
+    Resource: arn:aws:states:::ecs:runTask.sync
+    Parameters:
+      Cluster: ${DecompressTaskCluster}
+      LaunchType: FARGATE
+      NetworkConfiguration:
+        AwsvpcConfiguration:
+          AssignPublicIp: ENABLED # Needed when pulling public Docker image
+          Subnets:
+            - ${SubnetId}
+      Overrides:
+        ContainerOverrides:
+          -
+            Name: decompress-file
+            Environment:
+              - Name: DecompressTaskTable
+                Value: ${DecompressTaskTable}
+              - Name: FILE_URL
+                Value.$: $.file_url
+              - Name: TASK_ID
+                Value.$: $.task_id
+              - Name: INDENTITY_ID
+                Value.$: $.identity_id
+      TaskDefinition: ${DecompressTask}
+    ResultPath: null # Forward previous step input as this step output
+    Next: DivideDecompressChunksFunction
+
+  DivideDecompressChunksFunction:
+    Type: Task
+    Resource: arn:aws:states:::lambda:invoke
+    ResultSelector:
+        identity_id.$: "$$.Execution.Input.identity_id"
+        task_id.$: "$.Payload.task_id"
+        result.$: "$.Payload"
+    Parameters:
+      FunctionName: "${DivideDecompressChunksFunction}"
+      Payload.$: $
+    Catch:
+      - ErrorEquals:
+        - States.ALL
+        Next: CatchErrorTaskDynamoDB
+        ResultPath: null
+    Next: UploadDecompressedMapping
+
+  UploadDecompressedMapping:
+    Type: Map
+    InputPath: $
+    ItemsPath: $.result.file_chunks
+    Parameters:
+      file_chunk.$: $$.Map.Item.Value
+      project_id.$: $.result.project_id
+      id_token.$: $.result.id_token
+      project_name.$: $.result.project_name
+      type_method.$: $.result.type_method
+      s3_prefix.$: $.result.s3_prefix
+      identity_id.$: $.identity_id
+    MaxConcurrency: 30
+    Catch:
+      - ErrorEquals:
+        - States.ALL
+        Next: CatchErrorTaskDynamoDB
+        ResultPath: null
+    Iterator:
+      StartAt: UploadDecompressedFunction
+      States:
+        UploadDecompressedFunction:
+          Type: Task
+          Resource: arn:aws:states:::lambda:invoke
+          Parameters:
+            FunctionName: "${UploadDecompressedFunction}"
+            Payload.$: $
+          Next: ProjectUploadUpdateFunction
+        ProjectUploadUpdateFunction:
+          Type: Task
+          Resource: arn:aws:states:::lambda:invoke
+          InputPath: $.Payload
+          Parameters:
+            FunctionName: "${ProjectUploadUpdateFunction}"
+            Payload:
+              body.$: $.body
+          Next: PostUploadFunction
+        PostUploadFunction:
+          Type: Task
+          Resource: arn:aws:states:::lambda:invoke
+          InputPath: $.Payload
+          Parameters:
+            FunctionName: "${PostUploadFunction}"
+            Payload.$: $
+          End: True
+    ResultPath: null
+    Next: FinishDecompressTaskFunction
+
+  FinishDecompressTaskFunction:
+    Type: Task
+    Resource: arn:aws:states:::lambda:invoke
+    InputPath: $
+    Parameters:
+      FunctionName: "${FinishDecompressTaskFunction}"
+      Payload.$: $
+    Catch:
+      - ErrorEquals:
+        - States.ALL
+        Next: CatchErrorTaskDynamoDB
+        ResultPath: null
+    Next: Complete
+
+  CatchErrorTaskDynamoDB:
+    Type: Task
+    Resource: 'arn:aws:states:::dynamodb:updateItem'
+    InputPath: $
+    Parameters:
+      TableName: "${TableDataFlowTaskName}"
+      Key:
+        identity_id:
+          S.$: $.identity_id
+        task_id:
+          S.$: $.task_id
+      UpdateExpression: 'SET #st = :st'
+      ExpressionAttributeNames:
+        '#st': status
+      ExpressionAttributeValues:
+        ':st':
+          S: ERROR
+    ResultPath: $.DynamoDB
+    Next: Complete
+
+  Complete:
+    Type: Pass
+    # Comment: Used for result aggregation
+    End: true
+TimeoutSeconds: 1800

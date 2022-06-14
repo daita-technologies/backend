@@ -1,0 +1,137 @@
+StartAt: PrepareTask
+States:
+  PrepareTask:
+    Type: Task
+    Resource: 'arn:aws:states:::states:startExecution.sync:2'
+    InputPath: $.detail
+    OutputPath: $.Output.Payload
+    HeartbeatSeconds: 1800
+    TimeoutSeconds: 1800
+    Parameters:
+      StateMachineArn: '${PrepareStateMachine}'
+      Input:
+        abc: abc
+        abcd.$: $$.Execution.Id
+        ori.$: $
+        ori2.$: $$
+    Catch:
+      - ErrorEquals:
+          - States.Timeout
+        Next: CatchErrorTaskDynamoDB
+      - ErrorEquals:
+          - States.ALL
+        Next: CatchErrorTaskDynamoDB
+        ResultPath: null
+    Next: DownloadTask
+    Comment: >-
+      Check the level of parallelism, split requests into chunks and invoke
+      lamndas
+    Retry:
+      - ErrorEquals:
+          - RetriableCallerServiceError
+        IntervalSeconds: 1
+        MaxAttempts: 2
+        BackoffRate: 1
+  DownloadTask:
+    Type: Task
+    Resource: 'arn:aws:states:::states:startExecution.sync:2'
+    InputPath: $.body
+    OutputPath: $.Output.Payload
+    HeartbeatSeconds: 1800
+    TimeoutSeconds: 1800
+    Parameters:
+      StateMachineArn: '${DownloadStateMachine}'
+      Input:
+        test: test
+        body.$: $
+    Catch:
+      - ErrorEquals:
+          - States.Timeout
+        Next: CatchErrorTaskDynamoDB
+      - ErrorEquals:
+          - States.ALL
+        Next: CatchErrorTaskDynamoDB
+        ResultPath: null
+    Next: GenerateTask
+    Comment: >-
+      Check the level of parallelism, split requests into chunks and invoke
+      lamndas
+    Retry:
+      - ErrorEquals:
+          - RetriableCallerServiceError
+        IntervalSeconds: 1
+        MaxAttempts: 2
+        BackoffRate: 1
+  GenerateTask:
+    Type: Task
+    Resource: 'arn:aws:states:::states:startExecution.sync:2'
+    InputPath: $
+    OutputPath: $
+    HeartbeatSeconds: 1800
+    TimeoutSeconds: 1800
+    Parameters:
+      StateMachineArn: '${GenerateStateMachine}'
+      Input:
+        test: helloword
+        body.$: $
+    Catch:
+      - ErrorEquals:
+          - States.Timeout
+        Next: CatchErrorTaskDynamoDB
+      - ErrorEquals:
+          - States.ALL
+        Next: CatchErrorTaskDynamoDB
+        ResultPath: null
+    Next: UploadTask
+    Comment: >-
+      Check the level of parallelism, split requests into chunks and invoke
+      lamndas
+    Retry:
+      - ErrorEquals:
+          - RetriableCallerServiceError
+        IntervalSeconds: 1
+        MaxAttempts: 2
+        BackoffRate: 1
+  CatchErrorTaskDynamoDB:
+    Type: Task
+    Resource: 'arn:aws:states:::dynamodb:updateItem'
+    InputPath: $
+    Parameters:
+      TableName: '${TableGenerateTaskName}'
+      Key:
+        identity_id:
+          S.$: $$.Execution.Input.detail.identity_id
+        task_id:
+          S.$: $$.Execution.Input.detail.task_id
+      UpdateExpression: 'SET #st = :st'
+      ExpressionAttributeNames:
+        '#st': status
+      ExpressionAttributeValues:
+        ':st':
+          S: ERROR
+    ResultPath: $.DynamoDB
+    Next: Complete
+  UploadTask:
+    Type: Task
+    Resource: 'arn:aws:states:::states:startExecution.sync:2'
+    InputPath: $
+    OutputPath: $
+    HeartbeatSeconds: 1800
+    TimeoutSeconds: 1800
+    Parameters:
+      StateMachineArn: '${UploadStateMachine}'
+    Next: Complete
+    Comment: >-
+      Check the level of parallelism, split requests into chunks and invoke
+      lamndas
+    Retry:
+      - ErrorEquals:
+          - RetriableCallerServiceError
+        IntervalSeconds: 1
+        MaxAttempts: 2
+        BackoffRate: 1
+  Complete:
+    Type: Pass
+    Comment: Used for result aggregation
+    End: true
+TimeoutSeconds: 1800

@@ -1,0 +1,161 @@
+StartAt: GenerateTask
+States:
+  GenerateTask:
+    Type: Task
+    Resource: 'arn:aws:states:::lambda:invoke'
+    InputPath: $
+    OutputPath: $.Payload
+    Parameters:
+      FunctionName: '${HandleGenerateStep}'
+      Payload.$: $
+    Next: ChoiceStageRequestAI
+    Comment: >-
+      Check the level of parallelism split requests into chunks and invoke
+      lamndas
+    Retry:
+      - ErrorEquals:
+          - RetriableCallerServiceError
+        IntervalSeconds: 1
+        MaxAttempts: 2
+        BackoffRate: 1
+      - ErrorEquals:
+          - Lambda.TooManyRequestsException
+          - Lambda.ServiceException
+        IntervalSeconds: 3
+        MaxAttempts: 7
+        BackoffRate: 2
+  ChoiceStageRequestAI:
+    Type: Choice
+    Choices:
+      - Variable: $.state
+        StringEquals: Request_AI
+        Next: HandleBatchRequestAI
+      - Variable: $.state
+        StringEquals: FINISH
+        Next: UpdateStatusTask
+      - Variable: $.state
+        StringEquals: ERROR
+        Next: UpdateStatusTask
+  UpdateStatusTask:
+    Type: Task
+    Resource: 'arn:aws:states:::lambda:invoke'
+    Next: GenerateComplete
+    InputPath: $
+    OutputPath: $.Payload
+    Parameters:
+      FunctionName: '${UpdateStatusTask}'
+      Payload:
+        identity_id.$: $$.Execution.Input.body.identity_id
+        task_id.$: $$.Execution.Input.body.task_id
+        status.$: $.status
+    Retry:
+      - ErrorEquals:
+          - RetriableCallerServiceError
+        IntervalSeconds: 1
+        MaxAttempts: 2
+        BackoffRate: 1
+  HandleBatchRequestAI:
+    Type: Map
+    MaxConcurrency: 5
+    InputPath: $
+    ItemsPath: $.list_request_ai
+    Parameters:
+      batch.$: $$.Map.Item.Value
+      current_num_retries.$: $.current_num_retries
+      max_retries.$: $.max_retries
+      is_retry.$: $.is_retry
+      identity_id.$: $$.Execution.Input.body.identity_id
+      task_id.$: $$.Execution.Input.body.task_id
+    Iterator:
+      StartAt: RequestAI
+      States:
+        RequestAI:
+          Type: Task
+          Resource: 'arn:aws:states:::lambda:invoke'
+          ResultSelector:
+            identity_id.$: $$.Execution.Input.body.identity_id
+            task_id.$: $$.Execution.Input.body.task_id
+            project_id.$: $$.Execution.Input.body.project_id
+            project_name.$: $$.Execution.Input.body.project_name
+            project_prefix.$: $$.Execution.Input.body.project_prefix
+            current_num_retries.$: $.Payload.current_num_retries
+            id_token.$: $$.Execution.Input.body.id_token
+            max_retries.$: $.Payload.max_retries
+            batch.$: $.Payload.batch
+            response.$: $.Payload.response
+            is_retry.$: $.Payload.is_retry
+            augment_codes.$: $.Payload.augment_codes
+            output_images.$: $.Payload.output_images
+          Parameters:
+            FunctionName: '${WorkerRequestAI}'
+            Payload.$: $
+          Retry:
+            - ErrorEquals:
+                - Lambda.TooManyRequestsException
+                - Lambda.ServiceException
+              IntervalSeconds: 3
+              MaxAttempts: 7
+              BackoffRate: 2
+          ResultPath: $
+          OutputPath: $
+          Next: IsCheckRetry
+        IsCheckRetry:
+          Type: Choice
+          Choices:
+            - Variable: $.is_retry
+              BooleanEquals: true
+              Next: RequestAI
+            - Variable: $.is_retry
+              BooleanEquals: false
+              Next: UploadToS3
+        UploadToS3:
+          Type: Task
+          Resource: 'arn:aws:states:::lambda:invoke'
+          InputPath: $
+          OutputPath: $.Payload
+          Parameters:
+            FunctionName: '${HandlerUploadBatchToS3}'
+            Payload.$: $
+          Retry:
+            - ErrorEquals:
+                - Lambda.TooManyRequestsException
+                - Lambda.ServiceException
+              IntervalSeconds: 3
+              MaxAttempts: 7
+              BackoffRate: 2
+          Next: CompleteRequestAI
+        CompleteRequestAI:
+          Type: Task
+          Resource: 'arn:aws:states:::lambda:invoke'
+          InputPath: $
+          OutputPath: $
+          Parameters:
+            FunctionName: '${HandleCompleteRequestAI}'
+            Payload.$: $
+          ResultSelector:
+            response.$: $.Payload.response
+          Retry:
+            - ErrorEquals:
+                - Lambda.TooManyRequestsException
+                - Lambda.ServiceException
+              IntervalSeconds: 3
+              MaxAttempts: 7
+              BackoffRate: 2
+          End: true
+    ResultPath: $
+    Next: MergeResultRequestAI
+  MergeResultRequestAI:
+    Type: Task
+    Resource: 'arn:aws:states:::lambda:invoke'
+    InputPath: $
+    OutputPath: $.Payload
+    Parameters:
+      FunctionName: '${HandleMergeResultRequestAI}'
+      Payload.$: $
+    ResultPath: $
+    Next: ChoiceStageRequestAI
+  GenerateComplete:
+    Type: Pass
+    Comment: Used for result aggregation
+    End: true
+TimeoutSeconds: 1800

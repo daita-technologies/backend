@@ -1,0 +1,431 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: >
+  daita-caller-service-app
+
+  Sample SAM Template for daita-caller-service-app
+
+
+# More info about Globals: https://github.com/awslabs/serverless-application-model/blob/master/docs/globals.rst
+Globals:
+  Function:
+    Timeout: 800
+    Handler: app.lambda_handler
+    Runtime: python3.8
+    Architectures:
+      - x86_64
+    Environment:
+      Variables:
+        STAGE: !Ref StagePara
+        TABLE_NAME: global-table
+        LOGGING: !Ref minimumLogLevel
+        TABLE_GENERATE_TASK: !Ref TableGenerateTaskName
+        TABLE_PROJECTS_NAME: !Ref TableProjectsName
+        TABLE_METHODS_NAME: !Ref TableMethodsName
+        TABLE_HEALTHCHECK_TASK: !Ref TableHealthCheckTasksName
+        TABLE_HEALTHCHECK_INFO: !Ref TableHealthCheckInfoName
+        INDEX_TASK_PROJECTID_TASKID: !Ref ParaIndexTaskProjectIDTaskID
+    Layers:
+        - !Ref CommonCodeLayerName
+
+## The general rule seems to be to use !Sub for in line substitutions and !ref for stand alone text
+Parameters:
+  minimumLogLevel:
+    Type: String
+    Default: DEBUG
+  StagePara:
+    Type: String
+  CallerServiceEventBusArn:
+    Type: String
+  CallerServiceEventBusName:
+    Type: String
+  ProcessAITaskEventBusName:
+    Type: String
+  ProcessAITaskEventBusArn:
+    Type: String
+  ProjectSummary:
+    Type: String
+    Default: prj_sum_all
+  DataOrigin:
+    Type: String
+    Default: data_original
+  TableProject:
+    Type: String
+    Default: projects
+  TableProjectDel:
+    Type: String
+    Default: projects_save_delete
+  TableGenerateTaskName:
+    Type: String
+  TableProjectsName:
+    Type: String
+  TableMethodsName:
+    Type: String
+  ParaTableDownloadTaskName:
+    Type: String
+  ParaTableProjectSumName:
+    Type: String
+  TableHealthCheckTasksName:
+    Type: String
+  TableHealthCheckInfoName:
+    Type: String
+  ParaTableDataFlowTaskName:
+    Type: String
+  ParaIndexTaskProjectIDTaskID:
+    Type: String
+  TableReferenceImageTasksName:
+    Type: String
+  TableReferenceImageInfoName:
+    Type: String
+  MaxConcurrencyTasks:
+    Type: String
+  CommonCodeLayerName:
+    Type: String
+  LimitPreprocessTimesName:
+    Type: String
+  LimitAugmentTimesName:
+    Type: String
+
+  HealthCheckEventBusArn:
+    Type: String
+  HealthCheckEventBusName:
+    Type: String 
+  ReferenceImageEventBusName:
+    Type: String
+  
+  ParaDecompressFileStateMachineArn:
+    Type: String
+  ParaCompressDownloadStateMachineArn:
+    Type: String
+  CognitoUserPoolId:
+    Type:  String
+    Default: us-east-2_ZbwpnYN4g
+  CognitoIdentityPoolId:
+    Type:  String
+    Default: us-east-2:fa0b76bc-01fa-4bb8-b7cf-a5000954aafb
+  StopProcessEventBusArn:
+    Type: String
+  StopProcessEventBusName:
+    Type: String
+  TableDataPreprocessName:
+    Type: String
+  TaskQueueName:
+    Type: String
+Resources:
+  #================ ROLES =====================================================
+
+  # use this role for apigateway access lambda
+  ApiGatewayCallLambdaRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+        - Effect: "Allow"
+          Principal:
+            Service: "apigateway.amazonaws.com"
+          Action:
+          - "sts:AssumeRole"
+      Policies:
+      - PolicyName: RestApiDirectInvokeLambda
+        PolicyDocument:
+          Version: "2012-10-17"
+          Statement:
+            Action:
+            - "lambda:InvokeFunction"
+            Effect: Allow
+            Resource: "*"
+
+  ### lambda role
+  LambdaExecutionRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+        - Effect: "Allow"
+          Principal:
+            Service: "lambda.amazonaws.com"
+          Action:
+          - "sts:AssumeRole"
+      Policies:
+        - PolicyName: 'SQS'
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - 'sqs:*'
+                Resource: '*'
+        - PolicyName: 'SecretsManagerParameterAccess'
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - ssm:GetParam*
+                  - ssm:DescribeParam*
+                Resource:
+                  - arn:aws:ssm:*:*:parameter/*
+        - PolicyName: 'CloudwatchPermission'
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              -
+                Effect: Allow
+                Action:
+                  - 'logs:CreateLogGroup'
+                  - 'logs:CreateLogStream'
+                  - 'logs:PutLogEvents'
+                Resource: '*'
+        - PolicyName: 'CognitoPermission'
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              -
+                Effect: Allow
+                Action:
+                  - cognito-identity:*
+                  - cognito-idp:*
+                Resource: '*'
+        - PolicyName: 'DynamoDBPermission'
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              -
+                Effect: Allow
+                Action:
+                  - dynamodb:*
+                Resource: "*"
+        - PolicyName: "OtherServicePermission"
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              -
+                Effect: Allow
+                Action:
+                  - events:PutEvents
+                Resource: "*"
+              - Effect: Allow
+                Action:
+                  - states:StartExecution
+                  - s3:*
+                Resource: "*"
+
+  #================ CALLER SERVICE HTTP API ===================================
+
+  DaitaHttpApi:
+    Type: AWS::Serverless::HttpApi
+    Properties:
+      StageName: !Ref StagePara
+      DefinitionBody:
+        Fn::Transform:
+          Name: AWS::Include
+          Parameters:
+            Location: './api-defs/daita_http_api.yaml'
+
+
+  #================ LAMBDA FUNCTIONS ==========================================
+
+  GenerateCheckConditionFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: functions/handlers/generate/generate_images
+      Role: !GetAtt LambdaExecutionRole.Arn
+      Environment:
+        Variables:
+          EVENT_BUS_NAME: !Ref ProcessAITaskEventBusName
+          LIMIT_PROCESSING_TIMES: !Ref LimitPreprocessTimesName
+          LIMIT_AUGMENT_TIMES: !Ref LimitAugmentTimesName
+          TABLE_PROJECT_SUM: !Ref ParaTableProjectSumName
+          TABLE_PREPROCESS: !Ref TableDataPreprocessName
+          MAX_CONCURRENCY_TASK: !Ref MaxConcurrencyTasks
+          QUEUE : !Ref TaskQueueName
+  TaskProgressFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: functions/handlers/generate/task_progress
+      Role: !GetAtt LambdaExecutionRole.Arn
+
+  ListMethodsFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: functions/handlers/generate/list_methods
+      Role: !GetAtt LambdaExecutionRole.Arn
+
+  SplitDataFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: functions/handlers/generate/split_data
+      Role: !GetAtt LambdaExecutionRole.Arn
+
+  StopProcessTask:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: functions/handlers/caller_stop_process
+      Role: !GetAtt LambdaExecutionRole.Arn
+      Environment:
+        Variables:
+          EVENT_BUS_NAME: !Ref StopProcessEventBusName
+
+  ### For Project lambda function
+  ApplyGenerateExpertParamFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: functions/handlers/project/apply_param_expert_mode
+      Role: !GetAtt LambdaExecutionRole.Arn          
+
+  DeleteImages:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: functions/handlers/delete_images
+      Role: !GetAtt LambdaExecutionRole.Arn
+      Environment:
+        Variables:
+          TABLE_HEALTHCHECK_INFO: !Ref TableHealthCheckInfoName
+          T_PROJECT_SUMMARY: !Ref ProjectSummary
+          T_DATA_ORI: !Ref DataOrigin
+          T_PROJECT: !Ref TableProject
+
+  DeleteProject:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: functions/handlers/delete_project
+      Role: !GetAtt LambdaExecutionRole.Arn
+      Environment:
+        Variables:
+          TABLE_HEALTHCHECK_INFO: !Ref TableHealthCheckInfoName
+          TABLE_HEALTHCHECK_TASK: !Ref TableHealthCheckTasksName
+          T_PROJECT_SUMMARY: !Ref ProjectSummary
+          T_DATA_ORI: !Ref DataOrigin
+          T_TASKS: !Ref TableGenerateTaskName
+          T_PROJECT: !Ref TableProject
+          T_PROJECT_DEL: !Ref TableProjectDel
+          T_DATA_FLOW: !Ref ParaTableDataFlowTaskName
+          T_REFERENCE_IMAGE: !Ref TableReferenceImageTasksName
+
+  ### for health check functions
+  HealthCheckFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: functions/handlers/health_check/calculate
+      Role: !GetAtt LambdaExecutionRole.Arn
+      Environment:
+        Variables:
+          EVENT_BUS_NAME: !Ref HealthCheckEventBusName
+          TABLE_HEALTHCHECK_TASK: !Ref TableHealthCheckTasksName
+
+  HCStatusFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: functions/handlers/health_check/get_status
+      Role: !GetAtt LambdaExecutionRole.Arn
+      Environment:
+        Variables:
+          TABLE_HEALTHCHECK_TASK: !Ref TableHealthCheckTasksName
+
+  HCInfoFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: functions/handlers/health_check/get_info
+      Role: !GetAtt LambdaExecutionRole.Arn
+      Environment:
+        Variables:
+          TABLE_HEALTHCHECK_INFO: !Ref TableHealthCheckInfoName
+
+  ### for reference images functions
+  RICalculateFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: functions/handlers/reference_image/calculate
+      Role: !GetAtt LambdaExecutionRole.Arn
+      Environment:
+        Variables:
+          EVENT_BUS_NAME: !Ref ReferenceImageEventBusName
+          TABLE_REFERENCE_IMAGE_TASK: !Ref TableReferenceImageTasksName
+
+  RIStatusFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: functions/handlers/reference_image/get_status
+      Role: !GetAtt LambdaExecutionRole.Arn
+      Environment:
+        Variables:
+          TABLE_REFERENCE_IMAGE_TASK: !Ref TableReferenceImageTasksName
+
+  RIInfoFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: functions/handlers/reference_image/get_info
+      Role: !GetAtt LambdaExecutionRole.Arn
+      Environment:
+        Variables:
+          TABLE_REFERENCE_IMAGE_INFO: !Ref TableReferenceImageInfoName
+
+  ### For augment_img_review
+  GetAugmentationImageReviewFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: functions/handlers/augmentation_review/get_aug_review
+      Role: !GetAtt LambdaExecutionRole.Arn
+
+  ### For data flow functions
+  CreateDecompressTaskFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: functions/handlers/dataflow/create_decompress_task
+      Role: !GetAtt LambdaExecutionRole.Arn
+      Environment:
+        Variables:
+          DecompressFileStateMachineArn: !Ref ParaDecompressFileStateMachineArn
+          DecompressTaskTable: !Ref ParaTableDataFlowTaskName
+          ProjectsTable: !Ref TableProjectsName
+
+  GetDecompressTaskFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: functions/handlers/dataflow/get_decompress_task
+      Role: !GetAtt LambdaExecutionRole.Arn
+      Environment:
+        Variables:
+          DecompressTaskTable: !Ref ParaTableDataFlowTaskName
+
+  CreateCompressDownloadTaskFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: functions/handlers/dataflow/create_compress_download_task
+      Role: !GetAtt LambdaExecutionRole.Arn
+      Environment:
+        Variables:
+          CompressDownloadStateMachineArn: !Ref ParaCompressDownloadStateMachineArn
+          TableDataFlowTaskName: !Ref ParaTableDataFlowTaskName
+
+  GetCompressDownloadTaskFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: functions/handlers/dataflow/get_compress_download_task
+      Role: !GetAtt LambdaExecutionRole.Arn
+      Environment:
+        Variables:
+          TableDataFlowTaskName: !Ref ParaTableDataFlowTaskName
+
+  ### For task dashboard function
+  TaskDashboardInfoFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: functions/handlers/task_dashboard/get_info
+      Role: !GetAtt LambdaExecutionRole.Arn
+      Environment:
+        Variables:
+          TableDataFlowTaskName: !Ref ParaTableDataFlowTaskName
+          TableHealthCheckTasksName: !Ref TableHealthCheckTasksName
+          TableGenerateTaskName: !Ref TableGenerateTaskName
+          TableReferenceImageName: !Ref TableReferenceImageTasksName
+
+
+Outputs:
+  CallerServiceHttpApiUrl:
+    Description: "Url of the Caller service API"
+    Value: !Sub "https://${DaitaHttpApi}.execute-api.${AWS::Region}.amazonaws.com"
+  LambdaRoleArn:
+    Value: !GetAtt LambdaExecutionRole.Arn

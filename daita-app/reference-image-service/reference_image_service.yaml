@@ -1,0 +1,216 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: >
+  daita-reference-image-service
+
+  Sample SAM Template for daita-reference-image-service
+
+
+Parameters:
+  minimumLogLevel:
+    Type: String
+    Default: DEBUG
+  LambdaRole:
+    Type: String
+  StagePara:
+    Type: String
+  TableReferenceImageTasksName:
+    Type: String
+  TableReferenceImageInfoName:
+    Type: String  
+  TableDataOriginalName:
+    Type: String  
+  CommonCodeLayerName:
+    Type: String
+  ApplicationPara:
+    Type: String
+  TableProjectsName:
+    Type: String
+  
+  ### System parameters
+  BatchsizeCalculateReferenceImage:
+    Type: String
+  MaxWidthResolutionImage: 
+    Type: String
+  MaxHeightResolutionImage: 
+    Type: String
+
+Globals:
+  Function:
+    Timeout: 800    
+    Environment:
+      Variables:
+        STAGE: !Ref StagePara        
+        LOGGING: !Ref minimumLogLevel
+        TABLE_REFERENCE_IMAGE_TASK: !Ref TableReferenceImageTasksName
+        TABLE_REFERENCE_IMAGE_INFO: !Ref TableReferenceImageInfoName
+        TABLE_DATA_ORIGINAL: !Ref TableDataOriginalName   
+        TABLE_PROJECT: !Ref TableProjectsName
+        BATCHSIZE_REF_IMG: !Ref BatchsizeCalculateReferenceImage
+        MAX_WIDTH_RESOLUTION_IMG: !Ref MaxWidthResolutionImage
+        MAX_HEIGHT_RESOLUTION_IMG: !Ref MaxHeightResolutionImage     
+
+Resources:
+  #================ ROLES =====================================================  
+
+  # add role to start state machine from eventbus
+  ReferenceImageServiceEventBusRole:
+    Type: "AWS::IAM::Role"
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: "Allow"
+            Principal:
+              Service: "events.amazonaws.com"
+            Action: 
+              - "sts:AssumeRole"
+      Policies:
+        - PolicyName: DirectlyInvokeStepFunctions
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              Action:
+              - "states:StartExecution"
+              Effect: Allow
+              Resource:
+                - !Ref ReferenceImageStateMachine
+
+  #================ EVENT BUS =================================================
+  ReferenceImageEventBus:
+    Type: AWS::Events::EventBus
+    Properties: 
+      Name: !Sub "${StagePara}-${ApplicationPara}-ReferenceImageEventBus"
+
+  ReferenceImageEventBusDefaultRule:
+    Type: AWS::Events::Rule
+    Properties:
+      Description: "Default Rule for Any event"
+      State: ENABLED
+      EventBusName: !Ref ReferenceImageEventBus
+      EventPattern:
+        source:
+          - "source.events"
+        detail-type:
+          - "lambda.event"
+      Targets:
+        - 
+          Arn: !GetAtt ReferenceImageStateMachine.Arn 
+          Id: "ReferenceImageSMTarget"
+          RoleArn: !GetAtt ReferenceImageServiceEventBusRole.Arn  
+
+  #================ LAMBDA FUNCTIONS ==========================================
+
+  GetDataFunction:
+    Type: AWS::Serverless::Function 
+    Properties:
+      Runtime: python3.8
+      Handler: app.lambda_handler
+      Architectures:
+        - x86_64
+      CodeUri: functions/handlers/get_data
+      Role: !Ref LambdaRole
+      Layers:
+        - !Ref CommonCodeLayerName
+
+  MergeResultFunction:
+    Type: AWS::Serverless::Function 
+    Properties:
+      Runtime: python3.8
+      Handler: app.lambda_handler
+      Architectures:
+        - x86_64
+      CodeUri: functions/handlers/merge_result
+      Role: !Ref LambdaRole
+      MemorySize: 256
+      Layers:
+        - !Ref CommonCodeLayerName
+
+  CalculateReferenceImageFunction:
+    Type: AWS::Serverless::Function 
+    Properties:
+      PackageType: Image            
+      Role: !Ref LambdaRole
+      MemorySize: 3072
+      Architectures:
+        - x86_64
+    Metadata:
+      Dockerfile: Dockerfile
+      DockerContext: ./functions/handlers/calculate_reference_image
+      DockerTag: python3.8-v1
+  
+  #================ LOGS FOR STEP FUNCTIONS ===================================
+
+  ReferenceImageStateMachineLogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties: 
+      LogGroupName: !Sub "/aws/vendedlogs/states/${StagePara}-${ApplicationPara}-ReferenceImageSMLogGroup"
+      RetentionInDays: 7
+
+
+  #================ PROCESSOR STATE MACHINE ===================================
+
+  ReferenceImageStateMachine:
+    Type: AWS::Serverless::StateMachine
+    Properties:
+      # Type: EXPRESS
+      Type: STANDARD
+      Name: !Sub "${StagePara}-${ApplicationPara}-ReferenceImageSM"
+      Policies:
+        - LambdaInvokePolicy:
+            FunctionName: !Ref GetDataFunction
+        - LambdaInvokePolicy:
+            FunctionName: !Ref CalculateReferenceImageFunction
+        - LambdaInvokePolicy:
+            FunctionName: !Ref MergeResultFunction
+        - DynamoDBCrudPolicy:
+            TableName: !Ref TableReferenceImageTasksName
+        - Statement: 
+          - Sid: CloudWatchLogsPolicy
+            Effect: Allow
+            Action:
+            - "logs:CreateLogDelivery"
+            - "logs:GetLogDelivery"
+            - "logs:UpdateLogDelivery"
+            - "logs:DeleteLogDelivery"
+            - "logs:ListLogDeliveries"
+            - "logs:PutResourcePolicy"
+            - "logs:DescribeResourcePolicies"
+            - "logs:DescribeLogGroup"
+            - "logs:DescribeLogGroups"
+            Resource: "*"
+          - Sid: CloudWatchEventsFullAccess
+            Effect: Allow
+            Action:
+            - "events:*"
+            Resource: "*"
+          - Sid: IAMPassRoleForCloudWatchEvents
+            Effect: Allow
+            Action:
+            - "iam:PassRole"
+            Resource: "arn:aws:iam::*:role/AWS_Events_Invoke_Targets"
+      Tracing:
+        Enabled: true
+      DefinitionUri: ./statemachine/reference_image_state_machine.asl.yaml
+      Logging:
+        Level: ALL
+        IncludeExecutionData: true
+        Destinations:
+        - CloudWatchLogsLogGroup:
+            LogGroupArn: !GetAtt ReferenceImageStateMachineLogGroup.Arn
+      DefinitionSubstitutions:
+        GetDataFunction: !GetAtt GetDataFunction.Arn
+        CalculateReferenceImageFunction: !GetAtt CalculateReferenceImageFunction.Arn
+        MergeResultFunction: !GetAtt MergeResultFunction.Arn
+        TableReferenceImageTasksName: !Ref TableReferenceImageTasksName
+
+Outputs:
+  # ServerlessRestApi is an implicit API created out of Events key under Serverless::Function
+  # Find out more about other implicit resources you can reference within SAM
+  # https://github.com/awslabs/serverless-application-model/blob/master/docs/internals/generated_resources.rst#api 
+  ReferenceImageEventBusArn:
+    Description: "ARN of EventBus"
+    Value: !GetAtt ReferenceImageEventBus.Arn
+  ReferenceImageEventBusName:
+    Description: "Name of EventBus"
+    Value: !Ref ReferenceImageEventBus

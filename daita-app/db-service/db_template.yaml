@@ -1,0 +1,237 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: >
+  SAM Template for Nested application resources
+
+Parameters:
+  StagePara:
+    Type: String
+  IndexTaskProjectIDTaskIDName:
+    Type: String
+    Default: index-projectid-taskid
+
+Resources:
+    #================ DYNAMODB ==================================================
+  GenerateTaskDB:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      AttributeDefinitions:
+        - 
+          AttributeName: identity_id
+          AttributeType: S
+        - 
+          AttributeName: task_id
+          AttributeType: S
+        -
+          AttributeName: project_id
+          AttributeType: S
+      KeySchema:
+        - 
+          AttributeName: identity_id
+          KeyType: HASH
+        -
+          AttributeName: task_id
+          KeyType: RANGE
+      TableName: !Sub "${StagePara}-generate-tasks"
+      GlobalSecondaryIndexes:
+        -
+          IndexName: !Ref IndexTaskProjectIDTaskIDName
+          KeySchema:
+            - 
+              AttributeName: project_id
+              KeyType: HASH
+            -
+              AttributeName: task_id
+              KeyType: RANGE
+          Projection:
+            ProjectionType: ALL  
+      BillingMode: PAY_PER_REQUEST
+
+  
+  ###==== Healthcheck service database
+  HealthCheckTaskDB:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      AttributeDefinitions:
+        - 
+          AttributeName: identity_id
+          AttributeType: S
+        - 
+          AttributeName: task_id
+          AttributeType: S
+        -
+          AttributeName: project_id
+          AttributeType: S
+      KeySchema:
+        - 
+          AttributeName: identity_id
+          KeyType: HASH
+        -
+          AttributeName: task_id
+          KeyType: RANGE
+      TableName: !Sub "${StagePara}-healthcheck-tasks"
+      GlobalSecondaryIndexes:
+        -
+          IndexName: !Ref IndexTaskProjectIDTaskIDName
+          KeySchema:
+            - 
+              AttributeName: project_id
+              KeyType: HASH
+            -
+              AttributeName: task_id
+              KeyType: RANGE
+          Projection:
+            ProjectionType: ALL  
+      BillingMode: PAY_PER_REQUEST
+
+  HealthCheckInfoDB:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      AttributeDefinitions:
+        - 
+          AttributeName: project_id
+          AttributeType: S
+        - 
+          AttributeName: healthcheck_id
+          AttributeType: S
+      KeySchema:
+        - 
+          AttributeName: project_id
+          KeyType: HASH
+        -
+          AttributeName: healthcheck_id
+          KeyType: RANGE
+      TableName: !Sub "${StagePara}-healthcheck-info"
+      BillingMode: PAY_PER_REQUEST
+
+  ###==== Reference Image service database
+  TableReferenceImageTasks:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      AttributeDefinitions:
+        - 
+          AttributeName: identity_id
+          AttributeType: S
+        - 
+          AttributeName: task_id
+          AttributeType: S
+        -
+          AttributeName: project_id
+          AttributeType: S
+      KeySchema:
+        - 
+          AttributeName: identity_id
+          KeyType: HASH
+        -
+          AttributeName: task_id
+          KeyType: RANGE
+      TableName: !Sub "${StagePara}-reference-image-tasks"
+      GlobalSecondaryIndexes:
+        -
+          IndexName: !Ref IndexTaskProjectIDTaskIDName
+          KeySchema:
+            - 
+              AttributeName: project_id
+              KeyType: HASH
+            -
+              AttributeName: task_id
+              KeyType: RANGE
+          Projection:
+            ProjectionType: ALL  
+      BillingMode: PAY_PER_REQUEST
+
+  TableReferenceImageInfo:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      AttributeDefinitions:
+        - 
+          AttributeName: project_id
+          AttributeType: S
+        - 
+          AttributeName: method_id
+          AttributeType: S
+      KeySchema:
+        - 
+          AttributeName: project_id
+          KeyType: HASH
+        -
+          AttributeName: method_id
+          KeyType: RANGE
+      TableName: !Sub "${StagePara}-reference-image-info"
+      BillingMode: PAY_PER_REQUEST
+
+  DataFlowTaskTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: !Sub "${StagePara}-dataflow-task"
+      AttributeDefinitions:
+        - 
+          AttributeName: identity_id
+          AttributeType: S
+        - 
+          AttributeName: task_id
+          AttributeType: S
+        -
+          AttributeName: project_id
+          AttributeType: S
+      KeySchema:
+        - 
+          AttributeName: identity_id
+          KeyType: HASH
+        -
+          AttributeName: task_id
+          KeyType: RANGE
+      GlobalSecondaryIndexes:
+        -
+          IndexName: !Ref IndexTaskProjectIDTaskIDName
+          KeySchema:
+            - 
+              AttributeName: project_id
+              KeyType: HASH
+            -
+              AttributeName: task_id
+              KeyType: RANGE
+          Projection:
+            ProjectionType: ALL        
+      BillingMode: PAY_PER_REQUEST
+
+Outputs:
+  TableGenerateTaskName:
+    Description: "Name of table generate task"
+    Value: !Ref GenerateTaskDB
+  TableProjectsName:
+    Description: "Name of table projects"
+    Value: projects
+  TableProjectSumName:
+    Value: prj_sum_all
+  TableMethodsName:
+    Description: "Name of table methods"
+    Value: methods
+  TableHealthCheckTasksName:
+    Description: "Name of table health check tasks"
+    Value: !Ref HealthCheckTaskDB
+  TableHealthCheckInfoName:
+    Description: "Name of table health check info !Ref HealthCheckInfoDB"
+    Value: !Ref HealthCheckInfoDB
+  TableReferenceImageTasksName:
+    Description: "Name of table reference image tasks"
+    Value: !Ref TableReferenceImageTasks
+  TableReferenceImageInfoName:
+    Description: "Name of table health check info !Ref HealthCheckInfoDB"
+    Value: !Ref TableReferenceImageInfo
+  TableDataAugmentName:
+    Description: "Name of table data augment"
+    Value: data_augment
+  TableDataOriginalName:
+    Description: "Name of table data original"
+    Value: data_original
+  TableDataPreprocessName:
+    Description: "Name of table data preprocess"
+    Value: data_preprocess
+  TableDataFlowTaskName:
+    Description: "Content task of download and upload service"
+    Value: !Ref DataFlowTaskTable
+  TableDownloadTaskName:
+    Value: down_tasks
+  IndexTaskProjectIDTaskIDName:
+    Value: !Ref IndexTaskProjectIDTaskIDName
