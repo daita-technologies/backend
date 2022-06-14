@@ -20,6 +20,8 @@ def lambda_handler(event, context):
     lenBatches =  len(batches)
     task_finish = 0
     for  batch in batches:
+        if not 'response' in batch:
+            continue 
         if batch['response'] == 'OK':
             task_finish += 1
     if task_finish == 0:
@@ -32,7 +34,4 @@ def lambda_handler(event, context):
     else:
         result['status'] = 'FINISH_ERROR'
         result['state'] = 'FINISH'
-    result['retry_waiting_message_in_flight'] = 10
-    result['current_retry'] = 1
-    result['is_retry'] = True
     return result

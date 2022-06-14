@@ -1,7 +1,7 @@
 AWSTemplateFormatVersion: "2010-09-09"
 Transform: AWS::Serverless-2016-10-31
 Description: >
-  decompress-app
+  compress-app
 
 Parameters:
   StagePara:
@@ -49,6 +49,9 @@ Parameters:
     Default: 'noreply@daita.tech'
   CommonCodeLayerName:
     Type: String
+  # CompressedByLambdaMaxinumNrOfFiles:
+  #   Type: Number
+  #   Default: 100
 
 
 Globals:
@@ -109,6 +112,8 @@ Resources:
         DivideDownloadKeysFunction: !GetAtt DivideDownloadKeysFunction.Arn
         DownloadFilesFunction: !GetAtt DownloadFilesFunction.Arn
         TableDataFlowTaskName: !Ref TableDataFlowTaskName
+        CompressFunction: !GetAtt CompressFunction.Arn
+        # CompressedByLambdaMaxinumNrOfFiles: !Ref CompressedByLambdaMaxinumNrOfFiles
       Logging:
         Level: ALL
         IncludeExecutionData: true
@@ -124,6 +129,8 @@ Resources:
             FunctionName: !Ref DivideDownloadKeysFunction
         - LambdaInvokePolicy:
             FunctionName: !Ref DownloadFilesFunction
+        - LambdaInvokePolicy:
+            FunctionName: !Ref CompressFunction
         - DynamoDBCrudPolicy:
             TableName: !Ref TableDataFlowTaskName
         - Statement:
@@ -214,6 +221,44 @@ Resources:
         Variables:
           S3_BUCKET: !Ref S3BucketName
           EFSMountPath: !Ref EFSMountPath
+
+  CompressFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: functions/compress
+      Timeout: 600
+      VpcConfig:
+        SecurityGroupIds:
+          - !Ref SecurityGroupIds
+        SubnetIds:
+          - !Ref SubnetId
+      FileSystemConfigs:
+        - Arn: !GetAtt EFSAccessPoint.Arn
+          LocalMountPath: !Ref EFSMountPath
+      Policies:
+        - AmazonDynamoDBFullAccess
+        - Statement:
+          - Sid: ALLOWCRUDDynamoDB
+            Effect: Allow
+            Action:
+            - "dynamodb:GetItem"
+            - "dynamodb:DeleteItem"
+            - "dynamodb:PutItem"
+            - "dynamodb:Scan"
+            - "dynamodb:Query"
+            - "dynamodb:UpdateItem"
+            - "dynamodb:BatchWriteItem"
+            - "dynamodb:BatchGetItem"
+            - "dynamodb:DescribeTable"
+            - "dynamodb:ConditionCheckItem"
+            - "s3:*"
+            Resource: "*"
+      Environment:
+        Variables:
+          EFSMountPath: !Ref EFSMountPath
+          TableDataFlowTaskName: !Ref TableDataFlowTaskName
+          TableMethodsName: !Ref TableMethodsName
+          S3BucketName: !Ref S3BucketName
 
   SendCompletedMailFunction:
     Type: AWS::Serverless::Function

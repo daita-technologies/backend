@@ -11,11 +11,15 @@ from utils import *
 from identity_check import *
 from boto3.dynamodb.conditions import Key, Attr
 from models.generate_task_model import GenerateTaskModel
+from models.task_model import TaskModel
+
 TBL_data_original = 'data_original'
 TBL_data_proprocess= 'data_preprocess'
 TBL_PROJECT = 'projects'
 MAX_NUMBER_GEN_PER_IMAGES = 5
 generate_task_model = GenerateTaskModel(os.environ["TABLE_GENERATE_TASK"])
+task_model = TaskModel(os.environ["TABLE_GENERATE_TASK"],None)
+
 def dydb_update_project_data_type_number(db_resource, identity_id, project_name, data_type, data_number, times_generated):
     try:
         table = db_resource.Table(TBL_PROJECT)
@@ -148,6 +152,8 @@ def lambda_handler(event, context):
     generate_task_model.update_ExecutionArn(
         identity_id=body['identity_id'], task_id=body['task_id'],executionArn=exceArn
     )
+    task_model.update_generate_progress(task_id = body['task_id'], identity_id = body['identity_id'], num_finish = 0, status = 'PREPARING_DATA')
+
     imageLoad = ImageLoader()
     data = imageLoad(body)
     data['id_token'] = body['id_token']

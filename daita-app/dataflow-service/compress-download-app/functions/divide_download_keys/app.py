@@ -65,7 +65,7 @@ def lambda_handler(event, context):
     file_chunks = []
     for size in range(0, len(ls_object), CHUNK_SIZE):
         file_chunks.append(ls_object[size:size + CHUNK_SIZE])
-        
+
     if len(ls_object)>0:
         bucket, folder = get_bucket_key_from_s3_uri(ls_object[0]["s3_key"])
         folder = "/".join(folder.split("/")[:-1])
@@ -74,13 +74,14 @@ def lambda_handler(event, context):
                 Body=json.dumps(file_chunks),
                 Bucket= bucket,
                 Key= s3_key_path
-            )            
+            )
     else:
         bucket = None
         s3_key_path = None
 
     return {
         "file_chunks": list(range(len(file_chunks))),
+        "nrof_files": len(ls_object),
         "bucket": bucket,
         "s3_key_path": s3_key_path,
         "workdir": task_id,

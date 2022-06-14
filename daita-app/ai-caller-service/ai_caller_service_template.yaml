@@ -20,6 +20,7 @@ Globals:
         TABLE_NAME: global-table
         LOGGING: !Ref minimumLogLevel
         TABLE_GENERATE_TASK: !Ref TableGenerateTaskName
+        ROOTEFS: !Ref ROOTEFS
     Layers:
         - !Ref CommonCodeLayerName
 
@@ -32,7 +33,6 @@ Parameters:
     Type: String
   MaxConcurrencyTasks:
     Type: String
-    Default: 3
   CommonCodeLayerName:
     Type: String
   ApplicationPara:
@@ -258,12 +258,12 @@ Resources:
           TABLE_DATA_ORIGINAL: !Ref TableDataOriginalName
           TABLE_DATA_PREPROCESS: !Ref TableDataPreprocessName
           T_PROJECT_SUMMARY: !Ref TableProjectSumAll
-      Events:
-        SQSQueueEvent:
-          Type: SQS
-          Properties:
-            BatchSize: 10
-            Queue: !GetAtt UpdateDatabaseRequestAI.Arn
+      # Events:
+      #   SQSQueueEvent:
+      #     Type: SQS
+      #     Properties:
+      #       BatchSize: 10
+      #       Queue: !GetAtt UpdateDatabaseRequestAI.Arn
       Policies:
         - Statement:
           -
@@ -1337,6 +1337,8 @@ Outputs:
   ProcessAITaskEventBusName:
     Description: "Name of EventBus"
     Value: !Ref ProcessAITaskEventBus
+  TaskQueueName:
+    Value: !GetAtt TaskQueue.QueueName
   # LayerARN:
   #   Description: "ARN of common code layer"
   #   Value: !GetAtt CommonCodeLayer.Arn

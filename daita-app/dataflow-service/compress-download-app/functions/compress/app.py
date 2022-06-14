@@ -2,17 +2,15 @@ import os
 import boto3
 import time
 import json
-from zipfile import ZipFile
 import shutil
-from botocore.client import Config
-from boto3.dynamodb.conditions import Key, Attr
-from concurrent import futures
-from datetime import datetime
 import logging
+import time
+from zipfile import ZipFile
+from datetime import datetime
 from pathlib import Path
+from botocore.client import Config
 from boto3.s3.transfer import TransferConfig
 from botocore.exceptions import ClientError
-import time
 
 
 EFS_ROOT = os.getenv("EFSMountPath")
@@ -59,22 +57,22 @@ def convert_method_name(dict_method, ls_method_id_str):
 def upload_progress_db(status, identity_id, task_id, presign_url, s3_key):
     db_resource = boto3.resource("dynamodb")
     table = db_resource.Table(TableDataFlowTaskName)
-    response = table.update_item(
-                    Key={
-                        'identity_id': identity_id,
-                        'task_id': task_id,
-                    },
-                    ExpressionAttributeNames= {
-                        '#ST': "status"
-                    },
-                    ExpressionAttributeValues = {
-                        ':da': convert_current_date_to_iso8601(),
-                        ":ke": s3_key,
-                        ":ur": presign_url,
-                        ":st": status
-                    },
-                    UpdateExpression = 'SET s3_key = :ke, presign_url = :ur, #ST = :st, updated_date = :da'
-                )
+    table.update_item(
+        Key={
+            'identity_id': identity_id,
+            'task_id': task_id,
+        },
+        ExpressionAttributeNames= {
+            '#ST': "status"
+        },
+        ExpressionAttributeValues = {
+            ':da': convert_current_date_to_iso8601(),
+            ":ke": s3_key,
+            ":ur": presign_url,
+            ":st": status
+        },
+        UpdateExpression = 'SET s3_key = :ke, presign_url = :ur, #ST = :st, updated_date = :da'
+    )
     return
 
 def put_zip_to_s3(filepath, bucket_name, key_name, metadata=None):
@@ -223,13 +221,13 @@ def download(
         raise Exception("Error!")
 
 
-if __name__ == "__main__":
-    task_id = os.getenv("TASK_ID")
-    identity_id = os.getenv("IDENTITY_ID")
-    down_type = os.getenv("DOWN_TYPE")
-    project_name = os.getenv("PROJECT_NAME")
-    project_id = os.getenv("PROJECT_ID")
-    workdir = os.getenv("WORKDIR")
+def lambda_handler(event, context):
+    task_id = event["task_id"]
+    identity_id = event["identity_id"]
+    down_type = event["down_type"]
+    project_name = event["project_name"]
+    project_id = event["project_id"]
+    workdir = event["taskresult"]["workdir"]
 
     url, s3_key = download(down_type, project_name, workdir, identity_id, project_id, task_id)
     upload_progress_db(VALUE_TASK_FINISH, identity_id, task_id, url, s3_key)
