@@ -59,20 +59,19 @@ class CreateCompressDownloadClass(LambdaBaseClass):
             raise Exception(f"invalid down_type: {self.down_type}")
 
         ## get all dowloaded object information from DB, check return error with empty download
-        if len(ls_table) == 1:
-            is_empty_input_files = True
-            for table in ls_table:
-                response = table.query(
-                        KeyConditionExpression = Key('project_id').eq(self.project_id),
-                        ProjectionExpression='filename, s3_key, classtype',
-                        Limit = 10
-                    )
-                if len(response.get('Items', []))>0:
-                    is_empty_input_files = False
-                    break
+        is_exist_files = False
+        for table in ls_table:
+            response = table.query(
+                    KeyConditionExpression = Key('project_id').eq(self.project_id),
+                    ProjectionExpression='filename, s3_key, classtype',
+                    Limit = 10
+                )
+            if len(response.get('Items', []))>0:
+                is_exist_files = True
+                break
 
-            if is_empty_input_files:
-                raise Exception(MESS_NO_DATA_IN_VIEWED_TAB.format(self.down_type))
+        if not is_exist_files:
+            raise Exception(MESS_NO_DATA_IN_VIEWED_TAB.format(self.down_type))
 
         task_id = create_task_id_w_created_time()
         response = task_table.update_attribute(
