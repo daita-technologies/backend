@@ -89,10 +89,10 @@ Parameters:
   HealthCheckEventBusArn:
     Type: String
   HealthCheckEventBusName:
-    Type: String 
+    Type: String
   ReferenceImageEventBusName:
     Type: String
-  
+
   ParaDecompressFileStateMachineArn:
     Type: String
   ParaCompressDownloadStateMachineArn:
@@ -111,6 +111,11 @@ Parameters:
     Type: String
   TaskQueueName:
     Type: String
+  TableDataOriginalName:
+    Type: String
+  TableDataAugmentName:
+    Type: String
+
 Resources:
   #================ ROLES =====================================================
 
@@ -273,7 +278,7 @@ Resources:
     Type: AWS::Serverless::Function
     Properties:
       CodeUri: functions/handlers/project/apply_param_expert_mode
-      Role: !GetAtt LambdaExecutionRole.Arn          
+      Role: !GetAtt LambdaExecutionRole.Arn
 
   DeleteImages:
     Type: AWS::Serverless::Function
@@ -399,6 +404,9 @@ Resources:
         Variables:
           CompressDownloadStateMachineArn: !Ref ParaCompressDownloadStateMachineArn
           TableDataFlowTaskName: !Ref ParaTableDataFlowTaskName
+          TableDataOriginal: !Ref TableDataOriginalName
+          TableDataAugment: !Ref TableDataAugmentName
+          TableDataPreprocess: !Ref TableDataPreprocessName
 
   GetCompressDownloadTaskFunction:
     Type: AWS::Serverless::Function
