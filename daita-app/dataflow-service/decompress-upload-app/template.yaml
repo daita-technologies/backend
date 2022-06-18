@@ -302,15 +302,15 @@ Resources:
     Properties:
       RequiresCompatibilities:
         - "FARGATE"
-      ExecutionRoleArn: arn:aws:iam::366577564432:role/ecsTaskExecutionRole #TODO:create this in template
-      TaskRoleArn: arn:aws:iam::366577564432:role/DecompressTaskRole #TODO:create this in template
+      ExecutionRoleArn: !Sub arn:aws:iam::${AWS::AccountId}:role/ecsTaskExecutionRole #TODO:create this in template
+      TaskRoleArn: !Sub arn:aws:iam::${AWS::AccountId}:role/DecompressTaskRole #TODO:create this in template
       Cpu: 256
       Memory: 512
       NetworkMode: awsvpc
       ContainerDefinitions:
         -
           Name: "decompress-file"
-          Image: !Sub "366577564432.dkr.ecr.${AWS::Region}.amazonaws.com/${DecompressEcrRepositoryName}:latest"
+          Image: !Sub "${AWS::AccountId}.dkr.ecr.${AWS::Region}.amazonaws.com/${DecompressEcrRepositoryName}:latest"
           Cpu: 256
           Memory: 512
           Environment:

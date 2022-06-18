@@ -45,7 +45,6 @@ Parameters:
   CommonCodeLayerName:
     Type: String
 
-
 Globals:
   Function:
     Timeout: 10
@@ -153,6 +152,7 @@ Resources:
         VPCEndpointForS3: !Ref VPCEndpointForS3
         VPCEndpointForDynamoDB: !Ref VPCEndpointForDynamoDB
         CommonCodeLayerName: !Ref CommonCodeLayerName
+        EFSFileSystemId: !Ref EFSFileSystemId
 
   CompressDownloadApp:
     Type: AWS::Serverless::Application
@@ -173,7 +173,7 @@ Resources:
         VPCEndpointForDynamoDB: !Ref VPCEndpointForDynamoDB
         SESIdentityName: noreply@daita.tech
         CommonCodeLayerName: !Ref CommonCodeLayerName
-
+        EFSFileSystemId: !Ref EFSFileSystemId
 
 
 Outputs:

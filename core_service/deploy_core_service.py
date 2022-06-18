@@ -13,13 +13,13 @@ from dynamoDB.de_dynamodb import deploy_dynamoDB
 MODE_DB = ''    #'stage_'
 
 GENERAL_SETUP = {
-    'MODE': 'staging',
-    'BUCKET_NAME': 'daita-client-data',
-    'USER_POOL_ID': 'us-east-2_ZbwpnYN4g',
-    'IDENTITY_POOL_ID': 'us-east-2:fa0b76bc-01fa-4bb8-b7cf-a5000954aafb',
-    'CLIENT_ID':'4cpbb5etp3q7grnnrhrc7irjoa',
-    'aws_access_key_id':'AKIAVKWNZXMINQ6JTYXY',
-    'aws_secret_access_key':'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',
+    'MODE': os.environ.get('MODE','staging'),
+    'BUCKET_NAME': os.environ.get('BUCKET_NAME','daita-client-data'),
+    'USER_POOL_ID': os.environ.get('USER_POOL_ID','us-east-2_ZbwpnYN4g'),
+    'IDENTITY_POOL_ID': os.environ.get('IDENTITY_POOL_ID','us-east-2:fa0b76bc-01fa-4bb8-b7cf-a5000954aafb'),
+    'CLIENT_ID':os.environ.get('CLIENT_ID','4cpbb5etp3q7grnnrhrc7irjoa'),
+    'aws_access_key_id':os.environ.get('aws_access_key_id','AKIAVKWNZXMINQ6JTYXY'),
+    'aws_secret_access_key':os.environ.get('aws_secret_access_key','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'),
     'DOWNLOAD_SERVICE_URL': '3.140.206.255',
 
     'T_PROJECT' : MODE_DB + 'projects',
@@ -33,7 +33,7 @@ GENERAL_SETUP = {
     'T_INSTANCES': MODE_DB + 'ec2',
     'T_EC2_TASK': MODE_DB + 'ec2_task',
 
-    'T_TASKS' : MODE_DB + 'dev-generate-tasks',
+    'T_TASKS' :os.environ.get('T_TASKS',MODE_DB + 'dev-generate-tasks'),
     'T_METHODS' : MODE_DB + 'methods',
     "T_QUOTAS": MODE_DB + "quotas",
     "T_TASK_DOWNLOAD": MODE_DB + "down_tasks",

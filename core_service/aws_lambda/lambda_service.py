@@ -1,3 +1,4 @@
+import os
 import boto3
 import botocore
 from aws_lambda.utils.utils import create_zip_object
@@ -28,7 +29,7 @@ class AWSLambdaService:
                 # KMSKeyArn='',   # use as default of Lambda service key
                 MemorySize=memorysize,
                 Publish=True,
-                Role='arn:aws:iam::366577564432:role/role_lambda',
+                Role=os.environ.get('ROLE','arn:aws:iam::366577564432:role/role_lambda'),
                 Runtime='python3.8',
                 Tags={
                     'DEPARTMENT': 'Assets',

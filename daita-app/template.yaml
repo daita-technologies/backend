@@ -14,12 +14,24 @@ Parameters:
   SecurityGroupIds:
     Type: String
     Default: 'sg-0315a5ecee0dc69fe,sg-0b3b2fcc4dc7686ad,sg-af50cbde,sg-07c27f59bc172f180,sg-0796222bd5149736f'
+  SecurityGroupsIdsDefault:
+    Type: String
+    Default: 'sg-af50cbde'
   SubnetIDs:
     Type:  String
+    Default: subnet-31ff5b5a
+  SubnetIDDefault:
+    Type: String
     Default: subnet-31ff5b5a
   S3BucketName:
     Type: String
     Default: daita-client-data
+  VPCid:
+    Type: String
+    Default: vpc-53239e38
+  EFSFileSystemId:
+    Type:  String
+    Default: fs-0199771f2dfe97ace
   MaxConcurrencyTasks:
     Type: String
     Default: 3
@@ -166,7 +178,7 @@ Resources:
         TableDataOriginalName: !GetAtt DatabaseService.Outputs.TableDataOriginalName
         TableDataPreprocessName: !GetAtt DatabaseService.Outputs.TableDataPreprocessName
         MaxConcurrencyTasks: !Ref MaxConcurrencyTasks
-
+        EFSFileSystemId: !Ref EFSFileSystemId
   DataFlowService:
     Type: AWS::Serverless::Application
     Properties:
@@ -180,6 +192,10 @@ Resources:
         CompressDownloadEcrRepositoryName: !Ref CompressDownloadEcrRepository
         TableMethodsName: !GetAtt DatabaseService.Outputs.TableMethodsName
         CommonCodeLayerName: !Ref CommonCodeLayer
+        VpcId: !Ref VPCid
+        SubnetId: !Ref SubnetIDDefault
+        EFSFileSystemId: !Ref EFSFileSystemId
+        SecurityGroupIds: !Ref SecurityGroupsIdsDefault
 
   DatabaseService:
     Type: AWS::Serverless::Application

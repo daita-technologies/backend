@@ -1,3 +1,4 @@
+import os
 import boto3
 
 from .api_gateway_service import ApiGatewayToService
@@ -12,7 +13,7 @@ def deploy_api_project(ls_lambda_info, general_info):
     RESOURCE_SENMAIL = 'send-mail'
     STAGES = general_info['MODE']
 
-    API_GW_ROLE = 'arn:aws:iam::366577564432:role/role_apigw'
+    API_GW_ROLE = os.environ.get('ROLE','arn:aws:iam::366577564432:role/role_apigw')
     gateway = ApiGatewayToService(boto3.client('apigateway'))
     gateway.create_rest_api(REST_API_NAME)
     project_id = gateway.add_rest_resource(gateway.root_id, RESOURCE_PROJECT)

@@ -2,19 +2,19 @@ version = 0.1
 [default]
 [default.deploy]
 [default.deploy.parameters]
-stack_name = "testapp"
-s3_bucket = "aws-sam-cli-managed-default-samclisourcebucket-pemlzh8np33c"
-s3_prefix = "testapp"
+stack_name = "devdaitabeapp"
+s3_bucket = "aws-sam-cli-managed-default-samclisourcebucket-eu58g5l8is1s"
+s3_prefix = "devdaitabeapp"
 region = "us-east-2"
 confirm_changeset = true
 capabilities = "CAPABILITY_IAM CAPABILITY_AUTO_EXPAND"
 disable_rollback = true
-image_repositories = []
-parameter_overrides = "Stage=\"testapp\" Application=\"testapp\" SecurityGroupIds=\"sg-0315a5ecee0dc69fe,sg-0b3b2fcc4dc7686ad,sg-af50cbde,sg-07c27f59bc172f180,sg-0796222bd5149736f\" SubnetIDs=\"subnet-31ff5b5a\" S3BucketName=\"daita-client-data\""
+image_repositories = ["HealthCheckService/CalculateHealthCheckFunction=737589818430.dkr.ecr.us-east-2.amazonaws.com/devdaitabeappb6b54d79/healthcheckservicecalculatehealthcheckfunction6d6be9a4repo", "ReferenceImageService/CalculateReferenceImageFunction=737589818430.dkr.ecr.us-east-2.amazonaws.com/devdaitabeappb6b54d79/referenceimageservicecalculatereferenceimagefunctione6710baarepo"]
+parameter_overrides = "Stage=\"devdaitabeapp\" Application=\"devdaitabeapp\" SecurityGroupIds=\"sg-0c9a0ca7844d7b128,sg-00d8b4ca79ee1e42f,sg-007caf776eee9bd32,sg-04b9c865721337372,sg-0b411b5391db8d7a3\" SubnetIDs=\"subnet-0642064673fd68d2e\" S3BucketName=\"client-data-test\" MaxConcurrencyTasks=\"2\""
 
 [dev.deploy.parameters]
 stack_name = "dev-daita-app"
-s3_bucket = "aws-sam-cli-managed-default-samclisourcebucket-pemlzh8np33c"
+s3_bucket = "aws-sam-cli-managed-default-samclisourcebucket-eu58g5l8is1s"
 s3_prefix = "dev-daita-app"
 region = "us-east-2"
 confirm_changeset = true
@@ -145,3 +145,16 @@ capabilities = "CAPABILITY_IAM CAPABILITY_AUTO_EXPAND"
 disable_rollback = true
 parameter_overrides = "Stage=\"testapp1\" Application=\"testapp1\" SecurityGroupIds=\"sg-0315a5ecee0dc69fe,sg-0b3b2fcc4dc7686ad,sg-af50cbde,sg-07c27f59bc172f180,sg-0796222bd5149736f\" SubnetIDs=\"subnet-31ff5b5a\" S3BucketName=\"daita-client-data\""
 image_repositories = ["HealthCheckService/CalculateHealthCheckFunction=366577564432.dkr.ecr.us-east-2.amazonaws.com/testapp14acbe16e/healthcheckservicecalculatehealthcheckfunction6d6be9a4repo", "ReferenceImageService/CalculateReferenceImageFunction=366577564432.dkr.ecr.us-east-2.amazonaws.com/testapp14acbe16e/referenceimageservicecalculatereferenceimagefunctione6710baarepo"]
+
+[devdaitabeapp]
+[devdaitabeapp.deploy]
+[devdaitabeapp.deploy.parameters]
+stack_name = "devdaitabeapp"
+s3_bucket = "aws-sam-cli-managed-default-samclisourcebucket-eu58g5l8is1s"
+s3_prefix = "devdaitabeapp"
+region = "us-east-2"
+confirm_changeset = true
+capabilities = "CAPABILITY_IAM CAPABILITY_AUTO_EXPAND"
+disable_rollback = true
+parameter_overrides = "Stage=\"devdaitabeapp\" Application=\"devdaitabeapp\" SecurityGroupIds=\"sg-0c9a0ca7844d7b128,sg-00d8b4ca79ee1e42f,sg-007caf776eee9bd32,sg-04b9c865721337372,sg-0b411b5391db8d7a3\" SecurityGroupsIdsDefault=\"sg-04187bcd923f53b8e\" SubnetIDs=\"subnet-0642064673fd68d2e\" SubnetIDDefault=\"subnet-079365f0ecde37d92\" S3BucketName=\"client-data-test\" VPCid=\"vpc-057803c925fd8138a\" EFSFileSystemId=\"fs-01115862a24b75423\" MaxConcurrencyTasks=\"2\""
+image_repositories = ["HealthCheckService/CalculateHealthCheckFunction=737589818430.dkr.ecr.us-east-2.amazonaws.com/devdaitabeappb6b54d79/healthcheckservicecalculatehealthcheckfunction6d6be9a4repo", "ReferenceImageService/CalculateReferenceImageFunction=737589818430.dkr.ecr.us-east-2.amazonaws.com/devdaitabeappb6b54d79/referenceimageservicecalculatereferenceimagefunctione6710baarepo"]
