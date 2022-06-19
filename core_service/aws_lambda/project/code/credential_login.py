@@ -24,7 +24,7 @@ cog_provider_client = boto3.client('cognito-idp')
 cog_identity_client = boto3.client('cognito-identity')
 # endpoint = 'https://devdaitaloginsocial.auth.us-east-2.amazoncognito.com/oauth2/token'
 endpoint = OAUTHENPOINT.get(os.environ['MODE'],'https://auth.daita.tech/oauth2/token')
-client_id = CLIENT_ID
+client_id = CLIENTPOOLID
 def getRedirectURI():
     return ENDPPOINTREDIRCTLOGINSOCIALOAUTH.get(os.environ['MODE'],'https://nzvw2zvu3d.execute-api.us-east-2.amazonaws.com/staging/auth/login_social')
 
@@ -87,6 +87,7 @@ def Oauth2(code):
     headers = {"Content-Type": "application/x-www-form-urlencoded"}
     data = urlencode(params)
     result = requests.post(endpoint, data=data, headers=headers)
+    print(result.text)
     return result
 ############################################################################################################
 def getDisplayName(username):

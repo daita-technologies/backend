@@ -29,7 +29,7 @@ class AWSLambdaService:
                 # KMSKeyArn='',   # use as default of Lambda service key
                 MemorySize=memorysize,
                 Publish=True,
-                Role=os.environ.get('ROLE','arn:aws:iam::366577564432:role/role_lambda'),
+                Role=os.environ.get('ROLEGATEWAY','arn:aws:iam::366577564432:role/role_lambda'),
                 Runtime='python3.8',
                 Tags={
                     'DEPARTMENT': 'Assets',
