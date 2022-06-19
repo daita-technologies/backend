@@ -39,6 +39,8 @@
 
 URL: https://4cujdvfmd4.execute-api.us-east-2.amazonaws.com/staging/projects/create
 
+DEV_URL: https://yf6ayuvru1.execute-api.us-east-2.amazonaws.com/dev/projects/create
+
 Create new project for user with id_token from project name
 
 REQUEST BODY:
@@ -66,6 +68,8 @@ EXCEPTION EXPLAINATION:
 ### Project Create Sample
 
 URL: https://4cujdvfmd4.execute-api.us-east-2.amazonaws.com/staging/projects/create_sample
+
+DEV_URL: https://yf6ayuvru1.execute-api.us-east-2.amazonaws.com/dev/projects/create_sample
 
 FUNCTION:
 
@@ -115,6 +119,8 @@ EXAMPLE
 
 URL: https://119u2071ul.execute-api.us-east-2.amazonaws.com/dev/projects/delete_images
 
+Dev_URL: https://uflt5029de.execute-api.us-east-2.amazonaws.com/devdaitabeapp/projects/delete_images
+
 FUNCTION
 
     Delete selected images in project.
@@ -162,6 +168,8 @@ EXAMPLE
 
 URL: https://119u2071ul.execute-api.us-east-2.amazonaws.com/dev/projects/delete
 
+DEV_URL: https://uflt5029de.execute-api.us-east-2.amazonaws.com/devdaitabeapp/projects/delete_images
+
 FUNCTION
 
     Delete selected project.
@@ -204,6 +212,8 @@ EXAMPLE
 
 URL:  https://4cujdvfmd4.execute-api.us-east-2.amazonaws.com/staging/projects/create
 
+Dev_URL: https://yf6ayuvru1.execute-api.us-east-2.amazonaws.com/dev/projects/list
+
 FUNCTION:
 
     List all projects of user
@@ -236,6 +246,8 @@ EXCEPTION EXPLAINATION:
 ### Project List Info
 
 URL:  https://4cujdvfmd4.execute-api.us-east-2.amazonaws.com/staging/projects/list_info
+
+Dev_URL : https://yf6ayuvru1.execute-api.us-east-2.amazonaws.com/dev/projects/list_info
 
 FUNCTION:
 
@@ -320,6 +332,8 @@ EXAMPLE
 ### Project Info
 
 URL: https://4cujdvfmd4.execute-api.us-east-2.amazonaws.com/staging/projects/info
+
+Dev_URL: https://yf6ayuvru1.execute-api.us-east-2.amazonaws.com/dev/projects/info
 
 FUNCTION
 
@@ -419,6 +433,8 @@ EXAMPLE
 
 URL: https://4cujdvfmd4.execute-api.us-east-2.amazonaws.com/staging/projects/update_info
 
+Dev_URL: https://yf6ayuvru1.execute-api.us-east-2.amazonaws.com/dev/projects/update_info
+
 FUNCTION
 
     Update current information of project including project_name or description
@@ -477,6 +493,8 @@ EXAMPLE
 ### Project List Data in Project
 
 URL: https://4cujdvfmd4.execute-api.us-east-2.amazonaws.com/staging/projects/list_data
+
+Dev_URL: https://yf6ayuvru1.execute-api.us-east-2.amazonaws.com/dev/projects/list_data
 
 FUNCTION:
 
@@ -602,6 +620,8 @@ EXAMPLE
 
 URL: https://4cujdvfmd4.execute-api.us-east-2.amazonaws.com/staging/projects/download_create
 
+Dev_URL: https://yf6ayuvru1.execute-api.us-east-2.amazonaws.com/dev/projects/download_create
+
 FUNCTION
 
     Create an download task
@@ -643,6 +663,8 @@ EXAMPLE
 #### Update Progress of Download Task
 
 URL: https://4cujdvfmd4.execute-api.us-east-2.amazonaws.com/staging/projects/download_update
+
+Dev_URL: https://yf6ayuvru1.execute-api.us-east-2.amazonaws.com/dev/projects/download_update
 
 FUNCTION
 
@@ -701,6 +723,8 @@ EXAMPLE
 
 URL: https://4cujdvfmd4.execute-api.us-east-2.amazonaws.com/staging/projects/upload_check
 
+Dev_URL: https://yf6ayuvru1.execute-api.us-east-2.amazonaws.com/dev/projects/upload_check
+
 FUNCTION
 
     Check list data prepare for uploading with current data in DB.
@@ -753,6 +777,8 @@ EXAMPLE
 #### Update Data on the Server After It Has Been Uploaded From the Client to S3
 
 URL: https://4cujdvfmd4.execute-api.us-east-2.amazonaws.com/staging/projects/upload_update
+
+Dev_URL: https://yf6ayuvru1.execute-api.us-east-2.amazonaws.com/dev/projects/upload_update
 
 FUNCTION
 
@@ -814,6 +840,8 @@ EXAMPLE
 
 URL: https://4cujdvfmd4.execute-api.us-east-2.amazonaws.com/staging/generate/list_method
 
+Dev_URL: https://uflt5029de.execute-api.us-east-2.amazonaws.com/devdaitabeapp/generate/list_method
+
 FUNCTION
 
     Get list method for proprocessing and augmenting.
@@ -872,6 +900,8 @@ EXAMPLE
 
 URL: https://4cujdvfmd4.execute-api.us-east-2.amazonaws.com/staging/generate/images
 
+Dev_URL: https://uflt5029de.execute-api.us-east-2.amazonaws.com/devdaitabeapp/generate/images
+
 FUNCTION
 
     Generate images with preprocessing or augmentation.
@@ -923,6 +953,8 @@ EXAMPLE
 ### Get Current Progress of Task
 
 URL: https://4cujdvfmd4.execute-api.us-east-2.amazonaws.com/staging/generate/task_progress
+
+Dev_URL: https://uflt5029de.execute-api.us-east-2.amazonaws.com/devdaitabeapp/generate/task_progress
 
 FUNCTION
 
@@ -1036,8 +1068,8 @@ EXAMPLE
 ### API Sign Up
 - POST
   ```
-  staging: https://rtv81e9ysk.execute-api.us-east-2.amazonaws.com/staging/user_signup
-  dev: https://nzvw2zvu3d.execute-api.us-east-2.amazonaws.com/staging/auth/user_signup
+  Dev: https://yf6ayuvru1.execute-api.us-east-2.amazonaws.com/dev/auth/user_signup
+  Product: https://nzvw2zvu3d.execute-api.us-east-2.amazonaws.com/staging/auth/user_signup
   ```
 - Request
   - Content-type: application/json
@@ -1055,8 +1087,8 @@ EXAMPLE
 ### API Login
 - POST
   ```
-  staging: https://rtv81e9ysk.execute-api.us-east-2.amazonaws.com/staging/user_login
-  dev: https://nzvw2zvu3d.execute-api.us-east-2.amazonaws.com/staging/auth/user_login
+  Dev: https://yf6ayuvru1.execute-api.us-east-2.amazonaws.com/dev/auth/user_login
+  Product: https://nzvw2zvu3d.execute-api.us-east-2.amazonaws.com/staging/auth/user_login
   ```
 - Request
   - Content-type: application/json
@@ -1081,8 +1113,8 @@ EXAMPLE
 ### API Confirmation Email
 - POST
   ```
-  staging: https://rtv81e9ysk.execute-api.us-east-2.amazonaws.com/staging/auth_confirm
-  dev: https://nzvw2zvu3d.execute-api.us-east-2.amazonaws.com/staging/auth/auth_confirm
+  Dev: https://yf6ayuvru1.execute-api.us-east-2.amazonaws.com/dev/auth/auth_confirm
+  Product: https://nzvw2zvu3d.execute-api.us-east-2.amazonaws.com/staging/auth/auth_confirm
   ```
 - Request
   - Content-type: application/json
@@ -1106,8 +1138,8 @@ EXAMPLE
 ### API Resend Confirmation Code
 - POST
   ```
-  staging: https://rtv81e9ysk.execute-api.us-east-2.amazonaws.com/staging/resend_confirmcode
-  dev: https://nzvw2zvu3d.execute-api.us-east-2.amazonaws.com/staging/auth/resend_confirmcode
+  Dev: https://yf6ayuvru1.execute-api.us-east-2.amazonaws.com/dev/auth/resend_confirmcode
+  Product: https://nzvw2zvu3d.execute-api.us-east-2.amazonaws.com/staging/auth/resend_confirmcode
   ```
 - Request
   - Content-type: application/json
@@ -1130,8 +1162,8 @@ EXAMPLE
 ### API Resend Confirmation Code - Forgot Password
 - POST
   ```
-  staging: https://4145bk5g67.execute-api.us-east-2.amazonaws.com/staging/confirm_code_forgot_password
-  dev: https://nzvw2zvu3d.execute-api.us-east-2.amazonaws.com/staging/auth/confirm_code_forgot_password
+  Dev: https://yf6ayuvru1.execute-api.us-east-2.amazonaws.com/dev/auth/confirm_code_forgot_password
+  Product: https://nzvw2zvu3d.execute-api.us-east-2.amazonaws.com/staging/auth/confirm_code_forgot_password
   ```
 - Request
   - Content-type: application/json
@@ -1156,8 +1188,8 @@ EXAMPLE
 ### API Forgot Password
 - POST
   ```
-  staging: https://4145bk5g67.execute-api.us-east-2.amazonaws.com/staging/forgot_password
-  dev: https://nzvw2zvu3d.execute-api.us-east-2.amazonaws.com/staging/auth/forgot_password
+  Dev: https://yf6ayuvru1.execute-api.us-east-2.amazonaws.com/dev/auth/forgot_password
+  Product: https://nzvw2zvu3d.execute-api.us-east-2.amazonaws.com/staging/auth/forgot_password
   ```
 - Request
   - Content-type: application/json
@@ -1180,8 +1212,8 @@ EXAMPLE
 ### API Refresh Token
 - POST
   ```
-  staging: https://4145bk5g67.execute-api.us-east-2.amazonaws.com/staging/refresh_token
-  dev: https://nzvw2zvu3d.execute-api.us-east-2.amazonaws.com/staging/auth/refresh_token
+  Dev: https://yf6ayuvru1.execute-api.us-east-2.amazonaws.com/dev/auth/refresh_token
+  Product: https://nzvw2zvu3d.execute-api.us-east-2.amazonaws.com/staging/auth/refresh_token
   ```
 - Request
   - Content-type: application/json
@@ -1213,8 +1245,8 @@ EXAMPLE
 ### API Send Email
 - POST
   ```
-  staging: https://54upf5w03c.execute-api.us-east-2.amazonaws.com/staging/send-mail/reference-email
-  dev: https://nzvw2zvu3d.execute-api.us-east-2.amazonaws.com/staging/send-mail/reference-email
+  Dev: https://yf6ayuvru1.execute-api.us-east-2.amazonaws.com/dev/auth/reference-email
+  Product: https://nzvw2zvu3d.execute-api.us-east-2.amazonaws.com/staging/send-mail/reference-email
   ```
 - Request
   - Content-type: application/json
@@ -1238,8 +1270,8 @@ EXAMPLE
 ### API Template Invitation Email
 - GET
   ```
-  staging :https://4145bk5g67.execute-api.us-east-2.amazonaws.com/staging/template-invite-mail
-  dev :https://nzvw2zvu3d.execute-api.us-east-2.amazonaws.com/staging/auth/template-invite-mail
+  Dev     :   https://yf6ayuvru1.execute-api.us-east-2.amazonaws.com/dev/auth/template-invite-mail
+  Product :   https://nzvw2zvu3d.execute-api.us-east-2.amazonaws.com/staging/auth/template-invite-mail
   ```
 - Request
     - Header: Authorization: "Bearer "The Token""
@@ -1274,7 +1306,10 @@ EXAMPLE
         "error": boolean
     }
     ```
-
+### API logout social login
+```
+ DEV_URL: https://daitasociallogin.auth.us-east-2.amazoncognito.com/logout?client_id=7v8h65t0d3elscfqll090acf9h&logout_uri=https://dev.daita.tech
+```
 ## Download images APIs
 
 ### Create Download task
