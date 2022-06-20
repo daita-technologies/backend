@@ -1,7 +1,8 @@
-CLIENT_POOL_ID        = "4cpbb5etp3q7grnnrhrc7irjoa"
-USER_POOL_ID          = "us-east-2_ZbwpnYN4g"
-REGION              = "us-east-2"
-IDENTITY_POOL_ID      = "us-east-2:fa0b76bc-01fa-4bb8-b7cf-a5000954aafb"
+import os 
+CLIENT_POOL_ID          = "7v8h65t0d3elscfqll090acf9h" if os.environ['MODE'] == 'dev' else "4cpbb5etp3q7grnnrhrc7irjoa"
+USER_POOL_ID            = "us-east-2_6Sc8AZij7" if os.environ['MODE'] == 'dev' else "us-east-2_ZbwpnYN4g"
+REGION                  = "us-east-2"
+IDENTITY_POOL_ID        = "us-east-2:639788f0-a9b0-460d-9f50-23bbe5bc7140" if os.environ['MODE'] == 'dev' else  "us-east-2:fa0b76bc-01fa-4bb8-b7cf-a5000954aafb"
 
 ### config for status of generate task
 VALUE_GENERATE_TASK_STATUS_FINISH           = "FINISH"

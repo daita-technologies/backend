@@ -5,6 +5,9 @@ Description: >
 
 ## The general rule seems to be to use !Sub for in line substitutions and !ref for stand alone text
 Parameters:
+  Mode:
+    Type: String
+    Default: staging
   Stage:
     Type: String
     Default: dev
@@ -67,7 +70,6 @@ Resources:
       Name: !Sub "${Stage}-MaxHeightResolutionImage"
       Type: String
       Value: "4000"
-
 
   #=============== ECR ========================================================
   DecompressEcrRepository:
@@ -159,6 +161,7 @@ Resources:
       CompatibleRuntimes:
         - python3.8
 
+
   #================ APPLICATIONS  =============================================
   AICallerService:
     Type: AWS::Serverless::Application
@@ -179,6 +182,7 @@ Resources:
         TableDataPreprocessName: !GetAtt DatabaseService.Outputs.TableDataPreprocessName
         MaxConcurrencyTasks: !Ref MaxConcurrencyTasks
         EFSFileSystemId: !Ref EFSFileSystemId
+        Mode: !Ref Mode
   DataFlowService:
     Type: AWS::Serverless::Application
     Properties:
@@ -196,7 +200,7 @@ Resources:
         SubnetId: !Ref SubnetIDDefault
         EFSFileSystemId: !Ref EFSFileSystemId
         SecurityGroupIds: !Ref SecurityGroupsIdsDefault
-
+        Mode: !Ref Mode
   DatabaseService:
     Type: AWS::Serverless::Application
     Properties:
@@ -244,7 +248,7 @@ Resources:
         TaskQueueName: !GetAtt AICallerService.Outputs.TaskQueueName
         TableDataOriginalName: !GetAtt DatabaseService.Outputs.TableDataOriginalName
         TableDataAugmentName: !GetAtt DatabaseService.Outputs.TableDataAugmentName
-
+        Mode: !Ref Mode
   HealthCheckService:
     Type: AWS::Serverless::Application
     Properties:
@@ -259,7 +263,7 @@ Resources:
         TableDataPreprocessName: !GetAtt DatabaseService.Outputs.TableDataPreprocessName
         CommonCodeLayerName: !Ref CommonCodeLayer
         ApplicationPara: !Ref Application
-
+        Mode: !Ref Mode
   ReferenceImageService:
     Type: AWS::Serverless::Application
     Properties:
@@ -276,7 +280,7 @@ Resources:
         BatchsizeCalculateReferenceImage: !Ref BatchsizeCalculateReferenceImage
         MaxWidthResolutionImage: !Ref MaxWidthResolutionImage
         MaxHeightResolutionImage: !Ref MaxHeightResolutionImage
-
+        Mode: !Ref Mode
 
 Outputs:
   ZZBC:

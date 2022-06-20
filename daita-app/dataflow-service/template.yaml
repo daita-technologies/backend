@@ -44,7 +44,8 @@ Parameters:
     Default: 'noreply@daita.tech'
   CommonCodeLayerName:
     Type: String
-
+  Mode:
+    Type: String
 Globals:
   Function:
     Timeout: 10
@@ -52,7 +53,9 @@ Globals:
     Runtime: python3.8
     Architectures:
       - x86_64
-
+    Environment:
+      Variables:
+        Mode: !Ref Mode
 
 Resources:
   #================ ROLES =====================================================

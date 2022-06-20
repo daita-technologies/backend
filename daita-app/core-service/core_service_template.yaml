@@ -25,6 +25,7 @@ Globals:
         TABLE_HEALTHCHECK_TASK: !Ref TableHealthCheckTasksName
         TABLE_HEALTHCHECK_INFO: !Ref TableHealthCheckInfoName
         INDEX_TASK_PROJECTID_TASKID: !Ref ParaIndexTaskProjectIDTaskID
+        Mode: !Ref Mode
     Layers:
         - !Ref CommonCodeLayerName
 
@@ -115,7 +116,8 @@ Parameters:
     Type: String
   TableDataAugmentName:
     Type: String
-
+  Mode:
+    Type: String
 Resources:
   #================ ROLES =====================================================
 

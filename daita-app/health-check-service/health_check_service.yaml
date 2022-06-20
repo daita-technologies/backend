@@ -28,7 +28,8 @@ Parameters:
     Type: String
   ApplicationPara:
     Type: String
-
+  Mode:
+    Type: String
 Globals:
   Function:
     Timeout: 800    
@@ -41,7 +42,7 @@ Globals:
         TABLE_DATA_AUGMENT: !Ref TableDataAugmentName
         TABLE_DATA_ORIGINAL: !Ref TableDataOriginalName
         TABLE_DATA_PREPROCESS: !Ref TableDataPreprocessName    
-
+        Mode: !Ref Mode
 Resources:
   #================ ROLES =====================================================  
 

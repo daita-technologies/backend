@@ -21,6 +21,7 @@ Globals:
         LOGGING: !Ref minimumLogLevel
         TABLE_GENERATE_TASK: !Ref TableGenerateTaskName
         ROOTEFS: !Ref ROOTEFS
+        Mode: !Ref Mode
     Layers:
         - !Ref CommonCodeLayerName
 
@@ -68,6 +69,8 @@ Parameters:
   TableDataOriginalName:
     Type: String
   TableDataPreprocessName:
+    Type: String
+  Mode:
     Type: String
 Resources:
   LambdaExecutionRole:

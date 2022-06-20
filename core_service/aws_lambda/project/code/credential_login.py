@@ -23,7 +23,7 @@ ACCESS_TOKEN_EXPIRATION = 24 * 60 * 60
 cog_provider_client = boto3.client('cognito-idp')
 cog_identity_client = boto3.client('cognito-identity')
 # endpoint = 'https://devdaitaloginsocial.auth.us-east-2.amazoncognito.com/oauth2/token'
-endpoint = OAUTHENPOINT.get(os.environ['MODE'],'https://auth.daita.tech/oauth2/token')
+endpoint = OAUTHENPOINT
 client_id = CLIENTPOOLID
 def getRedirectURI():
     return ENDPPOINTREDIRCTLOGINSOCIALOAUTH
