@@ -26,7 +26,7 @@ cog_identity_client = boto3.client('cognito-identity')
 endpoint = OAUTHENPOINT.get(os.environ['MODE'],'https://auth.daita.tech/oauth2/token')
 client_id = CLIENTPOOLID
 def getRedirectURI():
-    return ENDPPOINTREDIRCTLOGINSOCIALOAUTH.get(os.environ['MODE'],'https://nzvw2zvu3d.execute-api.us-east-2.amazonaws.com/staging/auth/login_social')
+    return ENDPPOINTREDIRCTLOGINSOCIALOAUTH
 
 #############################################################################################################################################################
 def getMail(user):
