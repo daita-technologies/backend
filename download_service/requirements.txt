@@ -10,7 +10,7 @@ click==8.0.3
 click-didyoumean==0.3.0
 click-plugins==1.1.1
 click-repl==0.2.0
-colorama==0.4.3
+colorama==0.4.5
 cryptography==36.0.1
 Deprecated==1.2.13
 docutils==0.15.2
