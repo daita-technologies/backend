@@ -9,6 +9,7 @@ updates:
     target-branch: "develop"
     labels:
       - "dependencies 🔁"
+      - "python 🐍"
     assignees:
       - "ttattl"
 
@@ -21,5 +22,6 @@ updates:
     target-branch: "develop"
     labels:
       - "dependencies 🔁"
+      - "typescript 𝐓𝐒"
     assignees:
       - "ttattl"
