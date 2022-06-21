@@ -1,0 +1,19 @@
+{
+  "baseBranches": ["develop"],
+  "labels": ["dependencies 🔁"],
+  "assignees": ["ttattl"],
+  "separateMajorMinor": false,
+  "extends": [
+    ":preserveSemverRanges",
+    "group:all",
+    "schedule:monthly",
+    ":maintainLockFilesMonthly"
+  ],
+  "lockFileMaintenance": {
+    "extends": ["group:all"],
+    "commitMessageAction": "Update"
+  },
+  "pip_requirements": {
+    "fileMatch": ["requirements.txt"]
+  }
+}
