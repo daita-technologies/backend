@@ -55,7 +55,7 @@ Globals:
       - x86_64
     Environment:
       Variables:
-        Mode: !Ref Mode
+        MODE: !Ref Mode
 
 Resources:
   #================ ROLES =====================================================
@@ -156,7 +156,7 @@ Resources:
         VPCEndpointForDynamoDB: !Ref VPCEndpointForDynamoDB
         CommonCodeLayerName: !Ref CommonCodeLayerName
         EFSFileSystemId: !Ref EFSFileSystemId
-
+        Mode: !Ref Mode
   CompressDownloadApp:
     Type: AWS::Serverless::Application
     Properties:
@@ -177,7 +177,7 @@ Resources:
         SESIdentityName: noreply@daita.tech
         CommonCodeLayerName: !Ref CommonCodeLayerName
         EFSFileSystemId: !Ref EFSFileSystemId
-
+        Mode: !Ref Mode
 
 Outputs:
   DecompressFileStateMachineArn:

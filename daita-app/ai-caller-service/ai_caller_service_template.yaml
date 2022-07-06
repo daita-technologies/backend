@@ -21,7 +21,8 @@ Globals:
         LOGGING: !Ref minimumLogLevel
         TABLE_GENERATE_TASK: !Ref TableGenerateTaskName
         ROOTEFS: !Ref ROOTEFS
-        Mode: !Ref Mode
+        EFSPATH: !Ref EFSStorageAI
+        MODE: !Ref Mode
     Layers:
         - !Ref CommonCodeLayerName
 
@@ -46,7 +47,6 @@ Parameters:
     Default: /mnt/generation-task
   ROOTEFS:
     Type: String
-    Default: /efs
   SubnetIDsPara:
     Type: CommaDelimitedList
   SecurityGroupIdsPara:

@@ -42,7 +42,7 @@ Globals:
         TABLE_DATA_AUGMENT: !Ref TableDataAugmentName
         TABLE_DATA_ORIGINAL: !Ref TableDataOriginalName
         TABLE_DATA_PREPROCESS: !Ref TableDataPreprocessName    
-        Mode: !Ref Mode
+        MODE: !Ref Mode
 Resources:
   #================ ROLES =====================================================  
 

@@ -194,7 +194,38 @@ Resources:
           Projection:
             ProjectionType: ALL        
       BillingMode: PAY_PER_REQUEST
-
+  TableGenerateDaitaUploadToken:
+    Type:  AWS::DynamoDB::Table
+    Properties:
+      TableName: !Sub "${StagePara}-generate-daita-upload-token"
+      AttributeDefinitions:
+        -
+          AttributeName: identity_id
+          AttributeType: S
+        -
+          AttributeName: token
+          AttributeType: S
+      KeySchema:
+        -
+          AttributeName: identity_id
+          KeyType: HASH
+        -
+          AttributeName: token
+          KeyType: RANGE
+      BillingMode: PAY_PER_REQUEST
+      TimeToLiveSpecification:
+        AttributeName: time_to_live
+        Enabled: True
+      GlobalSecondaryIndexes:
+        -
+          IndexName: !Sub  "${StagePara}-generate-daita-upload-token-1"
+          KeySchema:
+            - 
+              AttributeName: token
+              KeyType: HASH
+          Projection:
+            ProjectionType: ALL  
+      
 Outputs:
   TableGenerateTaskName:
     Description: "Name of table generate task"
@@ -235,3 +266,5 @@ Outputs:
     Value: down_tasks
   IndexTaskProjectIDTaskIDName:
     Value: !Ref IndexTaskProjectIDTaskIDName
+  TableGenerateDaitaUploadToken:
+    Value: !Ref TableGenerateDaitaUploadToken

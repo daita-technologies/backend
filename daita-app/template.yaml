@@ -38,6 +38,9 @@ Parameters:
   MaxConcurrencyTasks:
     Type: String
     Default: 3
+  ROOTEFS:
+    Type: String
+    Default: /efs
 Resources:
   #=============== SYSTEM PARAMETER CONFIGURATON ==============================
   LimitPreprocessTimes:
@@ -182,6 +185,7 @@ Resources:
         TableDataPreprocessName: !GetAtt DatabaseService.Outputs.TableDataPreprocessName
         MaxConcurrencyTasks: !Ref MaxConcurrencyTasks
         EFSFileSystemId: !Ref EFSFileSystemId
+        ROOTEFS: !Ref ROOTEFS
         Mode: !Ref Mode
   DataFlowService:
     Type: AWS::Serverless::Application
@@ -197,7 +201,7 @@ Resources:
         TableMethodsName: !GetAtt DatabaseService.Outputs.TableMethodsName
         CommonCodeLayerName: !Ref CommonCodeLayer
         VpcId: !Ref VPCid
-        SubnetId: !Ref SubnetIDDefault
+        SubnetId: !Ref SubnetIDs
         EFSFileSystemId: !Ref EFSFileSystemId
         SecurityGroupIds: !Ref SecurityGroupsIdsDefault
         Mode: !Ref Mode
@@ -248,6 +252,8 @@ Resources:
         TaskQueueName: !GetAtt AICallerService.Outputs.TaskQueueName
         TableDataOriginalName: !GetAtt DatabaseService.Outputs.TableDataOriginalName
         TableDataAugmentName: !GetAtt DatabaseService.Outputs.TableDataAugmentName
+        TableGenerateDaitaUploadToken: !GetAtt DatabaseService.Outputs.TableGenerateDaitaUploadToken
+        S3BucketName: !Ref S3BucketName
         Mode: !Ref Mode
   HealthCheckService:
     Type: AWS::Serverless::Application

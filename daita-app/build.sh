@@ -31,7 +31,7 @@ fi
 
 ###=== AWS config ======
 AWS_REGION="us-east-2"
-AWS_ACCOUNT_ID="366577564432"
+AWS_ACCOUNT_ID="737589818430"
 
 
 sam build

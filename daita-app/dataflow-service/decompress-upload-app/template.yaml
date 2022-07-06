@@ -41,7 +41,8 @@ Parameters:
   UploadS3FileChunk:
     Type: String
     Default: 8
-
+  Mode:
+    Type: String
 Globals:
   Function:
     Timeout: 10
@@ -51,7 +52,9 @@ Globals:
       - x86_64
     Layers:
       - !Ref CommonCodeLayerName
-
+    Environment:
+      Variables:
+        MODE: !Ref Mode
 
 Resources:
   #================ ROLES =====================================================
@@ -302,8 +305,8 @@ Resources:
     Properties:
       RequiresCompatibilities:
         - "FARGATE"
-      ExecutionRoleArn: !Sub arn:aws:iam::${AWS::AccountId}:role/ecsTaskExecutionRole #TODO:create this in template
-      TaskRoleArn: !Sub arn:aws:iam::${AWS::AccountId}:role/DecompressTaskRole #TODO:create this in template
+      ExecutionRoleArn: !Sub "arn:aws:iam::${AWS::AccountId}:role/ecsTaskExecutionRole" #TODO:create this in template
+      TaskRoleArn: !Sub "arn:aws:iam::${AWS::AccountId}:role/DecompressTaskRole" #TODO:create this in template
       Cpu: 256
       Memory: 512
       NetworkMode: awsvpc

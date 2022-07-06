@@ -226,7 +226,9 @@ def deploy_lambda_auth(general_info, lambda_service):
                                                                            PROJECT_DIR.joinpath(
                                                                                "packages"),
                                                                        ],
-                                                                       env_vari={},
+                                                                       env_vari={
+                                                                           'MODE': general_info['MODE']
+                                                                       },
                                                                        handler='github_openid_token_wrapper.lambda_handler',
                                                                        description='staging: Wrapper for Github token api to comply with Cognito OpenID')
     add_lambda_info_to_list(ls_lambda_val, lambda_uri,
@@ -242,7 +244,9 @@ def deploy_lambda_auth(general_info, lambda_service):
                                                                            PROJECT_DIR.joinpath(
                                                                                "packages"),
                                                                        ],
-                                                                       env_vari={},
+                                                                       env_vari={
+                                                                           'MODE': general_info['MODE']
+                                                                       },
                                                                        handler='github_openid_userinfo_wrapper.lambda_handler',
                                                                        description='staging: Wrapper for Github userinfo api to comply with Cognito OpenID')
     add_lambda_info_to_list(ls_lambda_val, lambda_uri,

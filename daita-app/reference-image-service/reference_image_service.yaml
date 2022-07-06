@@ -50,7 +50,7 @@ Globals:
         BATCHSIZE_REF_IMG: !Ref BatchsizeCalculateReferenceImage
         MAX_WIDTH_RESOLUTION_IMG: !Ref MaxWidthResolutionImage
         MAX_HEIGHT_RESOLUTION_IMG: !Ref MaxHeightResolutionImage     
-        Mode: !Ref Mode
+        MODE: !Ref Mode
 Resources:
   #================ ROLES =====================================================  
 

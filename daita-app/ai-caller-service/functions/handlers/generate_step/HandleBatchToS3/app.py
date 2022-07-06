@@ -19,7 +19,10 @@ from pathlib import Path
 task_model = TaskModel(os.environ["TABLE_GENERATE_TASK"], None)
 generate_task_model = GenerateTaskModel(os.environ["TABLE_GENERATE_TASK"])
 ROOT_EFS = os.environ["ROOTEFS"]
-
+Mode = os.environ.get(
+    'MODE', 'staging'
+)
+prefix_pwd = os.environ['EFSPATH']
 s3 = boto3.client('s3')
 
 
@@ -82,13 +85,24 @@ def lambda_handler(event, context):
 
     if event['response'] == 'OK':
         if 'output_images' in event:
-            output = list(map(lambda x: x.replace(
-                ROOT_EFS, ''), event['output_images']))
+            ######################## Hot Fix for dev enviroment#########
+            if Mode == 'dev':
+                output = list(map(lambda x: x.replace(
+                    '/mnt/efs', ''), event['output_images']))
+            else:
+                output = list(map(lambda x: x.replace(
+                    ROOT_EFS, ''), event['output_images']))
+
             infoUploadS3 = UploadImage(
                 output=output, project_prefix=event['project_prefix'], task_id=event['task_id'])
 
-            output_folder = event["batch"]['request_json']['output_folder'].replace(
-                ROOT_EFS, '')
+            if Mode == 'dev':
+                output_folder = '/mnt/' + \
+                    event["batch"]['request_json']['output_folder']
+            else:
+                output_folder = event["batch"]['request_json']['output_folder'].replace(
+                    ROOT_EFS, '')
+
             ls_split = output_folder.split(os.sep)
             path_check_finish = "/".join(ls_split[0:-1])
             result["num_finish"] = get_number_files(path_check_finish)

@@ -115,9 +115,9 @@ def lambda_handler(event, context):
         ## get task of generation
         ls_tasks = get_running_task(os.environ['T_TASKS'], db_resource, ls_tasks, identity_id, res_projectid)
         ls_tasks = get_running_task("down_tasks", db_resource, ls_tasks, identity_id, res_projectid)
-        ls_tasks = get_running_task("dev-healthcheck-tasks", db_resource, ls_tasks, identity_id, res_projectid, "HEALTHCHECK")
-        ls_tasks = get_running_task("dev-dataflow-task", db_resource, ls_tasks, identity_id, res_projectid)
-        ls_tasks = get_running_task("dev-reference-image-tasks", db_resource, ls_tasks, identity_id, res_projectid)
+        ls_tasks = get_running_task("devdaitabeapp-healthcheck-tasks", db_resource, ls_tasks, identity_id, res_projectid, "HEALTHCHECK")
+        ls_tasks = get_running_task("devdaitabeapp-dataflow-task", db_resource, ls_tasks, identity_id, res_projectid)
+        ls_tasks = get_running_task("devdaitabeapp-reference-image-tasks", db_resource, ls_tasks, identity_id, res_projectid)
         
         return convert_response({'data': {
                     "identity_id": identity_id,

@@ -25,7 +25,8 @@ Globals:
         TABLE_HEALTHCHECK_TASK: !Ref TableHealthCheckTasksName
         TABLE_HEALTHCHECK_INFO: !Ref TableHealthCheckInfoName
         INDEX_TASK_PROJECTID_TASKID: !Ref ParaIndexTaskProjectIDTaskID
-        Mode: !Ref Mode
+        BUCKET_NAME: !Ref S3BucketName
+        MODE: !Ref Mode
     Layers:
         - !Ref CommonCodeLayerName
 
@@ -115,6 +116,10 @@ Parameters:
   TableDataOriginalName:
     Type: String
   TableDataAugmentName:
+    Type: String
+  TableGenerateDaitaUploadToken:
+    Type: String
+  S3BucketName:
     Type: String
   Mode:
     Type: String
@@ -218,6 +223,15 @@ Resources:
                   - states:StartExecution
                   - s3:*
                 Resource: "*"
+        - PolicyName: "InvokeFunction"
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              -
+                Effect: Allow
+                Action:
+                  - lambda:InvokeFunction
+                Resource: "*"
 
   #================ CALLER SERVICE HTTP API ===================================
 
@@ -233,7 +247,63 @@ Resources:
 
 
   #================ LAMBDA FUNCTIONS ==========================================
+  CreatePresignUrlForImageFeedbackFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: functions/handlers/feedback/presignUrl
+      Role: !GetAtt LambdaExecutionRole.Arn
 
+  CreateDecompressFileCLIFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: functions/handlers/cli/create_decompress_task
+      Role: !GetAtt LambdaExecutionRole.Arn
+      Environment:
+        Variables:
+          T_GEN_DAITA_UPLOAD_TOKEN: !Ref TableGenerateDaitaUploadToken
+          DECOMPRESS_LAMBDA_INVOKE: !Ref CreateDecompressTaskFunction
+  CliCheckExistenceFileFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: functions/handlers/cli/check_existence_file
+      Role: !GetAtt LambdaExecutionRole.Arn
+      Environment:
+        Variables:
+          T_GEN_DAITA_UPLOAD_TOKEN: !Ref TableGenerateDaitaUploadToken
+  CreatePresignUrlFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: functions/handlers/cli/create_presignurl_zip
+      Role: !GetAtt LambdaExecutionRole.Arn
+      Environment:
+        Variables:
+          T_GEN_DAITA_UPLOAD_TOKEN: !Ref TableGenerateDaitaUploadToken
+  CheckDaitaTokenFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: functions/handlers/cli/check_daita_token
+      Role: !GetAtt LambdaExecutionRole.Arn
+      Environment:
+        Variables:
+          T_GEN_DAITA_UPLOAD_TOKEN: !Ref TableGenerateDaitaUploadToken
+
+  CliUploadProjectFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: functions/handlers/cli/cli_upload_project
+      Role: !GetAtt LambdaExecutionRole.Arn
+      Environment:
+        Variables:
+          T_GEN_DAITA_UPLOAD_TOKEN: !Ref TableGenerateDaitaUploadToken
+          TABLE_PROJECT_SUM: !Ref ParaTableProjectSumName
+  GenertateTokenUploadProjectFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: functions/handlers/generate/daita_upload_token
+      Role: !GetAtt LambdaExecutionRole.Arn
+      Environment:
+        Variables:
+          T_GEN_DAITA_UPLOAD_TOKEN: !Ref TableGenerateDaitaUploadToken
   GenerateCheckConditionFunction:
     Type: AWS::Serverless::Function
     Properties:
