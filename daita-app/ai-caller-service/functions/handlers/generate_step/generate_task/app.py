@@ -34,30 +34,6 @@ def split(uri):
     return bucket, filename
 
 
-"""
-    download_task:
-        images_download:
-        batched_input:
-        batched_output:
-        batch_size
-    output:
-            state:
-            list_request_ai :
-                            [
-                                {
-                                    task_id
-                                    batch_input:
-                                    batch_out:
-                                    api:
-                                    project_prefix:
-                                    identity_id:
-                                    project_id:
-
-                                }
-                            ]
-    """
-
-
 @error_response
 def lambda_handler(event, context):
     inputJson = event['body']

@@ -33,7 +33,7 @@ def lambda_handler(event, context):
             basename = os.path.basename(filename)
             new_image = os.path.join(reference_images_folder, basename)
             s3.download_file(bucket, filename, new_image)
-            ########################Hot Fix for dev enviroment##############################
+            ######################## Hot Fix for dev enviroment#########
             if Mode == 'dev':
                 tmp = os.path.join('reference_images', basename)
                 task_id_dir = os.path.join(event['task_id'], tmp)
