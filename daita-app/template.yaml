@@ -287,7 +287,15 @@ Resources:
         MaxWidthResolutionImage: !Ref MaxWidthResolutionImage
         MaxHeightResolutionImage: !Ref MaxHeightResolutionImage
         Mode: !Ref Mode
-
+  AuthService:
+    Type: AWS::Serverless::Application
+    Properties:
+      Location: auth-service/auth_service_template.yaml
+      Parameters:
+        StagePara: !Ref Stage
+        LambdaRole: !GetAtt GeneralLambdaExecutionRole.Arn
+        Mode: !Ref Mode
+        CommonCodeLayerName: !Ref CommonCodeLayer
 Outputs:
   ZZBC:
     Value: Stage

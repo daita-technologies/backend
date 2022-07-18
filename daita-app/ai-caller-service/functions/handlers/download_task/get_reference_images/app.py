@@ -14,9 +14,10 @@ def lambda_handler(event, context):
     if 'process_type' in event and event['process_type'] != 'PREPROCESS':
         event['is_retry'] = False
         return event
+
     if bool(event['reference_images']):
         event['is_retry'] = False
-        return event
+
     if not 'reference_image_task_id' in event:
         reponseCalRefImage = requests.post(calculateReferencesImagesApi, json={
             'id_token': event['id_token'],
@@ -24,10 +25,11 @@ def lambda_handler(event, context):
             'ls_method_client_choose': [],
             'project_name': event['project_name']
         })
+
         if reponseCalRefImage.status_code == 200:
             data = reponseCalRefImage.json()
             event['reference_image_task_id'] = data['data']['task_id']
-            print(data)
+            print(f"Logging Debug :{data}")
 
     start = time.time()
 
