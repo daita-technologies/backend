@@ -41,6 +41,12 @@ Parameters:
   ROOTEFS:
     Type: String
     Default: /efs
+  DomainUserPool:
+    Type: String
+    Default: auth.daita.tech
+  LogoutUrl:
+    Type: String
+    Default: https://app.daita.tech
 Resources:
   #=============== SYSTEM PARAMETER CONFIGURATON ==============================
   LimitPreprocessTimes:
@@ -48,7 +54,7 @@ Resources:
     Properties:
       Name: !Sub "${Stage}-LimitPreprocessTimes"
       Type: String
-      Value: "1"
+      Value: "5"
   LimitAugmentTimes:
     Type: AWS::SSM::Parameter
     Properties:
@@ -296,6 +302,8 @@ Resources:
         LambdaRole: !GetAtt GeneralLambdaExecutionRole.Arn
         Mode: !Ref Mode
         CommonCodeLayerName: !Ref CommonCodeLayer
+        LogoutUrl: !Ref LogoutUrl
+        DomainUserPool: !Ref DomainUserPool
 Outputs:
   ZZBC:
     Value: Stage

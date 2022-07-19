@@ -9,7 +9,14 @@ Parameters:
     Type: String
   LogoutUrl:
     Type: String
-  
+  StagePara:
+    Type: String
+  Mode:
+    Type: String
+  LambdaRole:
+    Type: String
+  CommonCodeLayerName:
+    Type: String
     
 Globals:
   Function:
@@ -114,21 +121,44 @@ Resources:
     Type: AWS::Cognito::UserPool
     Properties:
       UserPoolName: !Sub ${Mode}-UserPool
-      ClientName: !Sub ${Mode}-UserPoolClient
       Policies:
         PasswordPolicy:
-          MinimumLenghth: 8 
-        AutoVerifiedAttributes:
-          - email
-        UsernameAttributes:
-          - email
-        Schema:
-          - AttributeDataType: String
-            Name: email
-            Required: true        
-  UserPoolDomain:
-    Type: AWS::Cognito::UserPoolDomain
+          MinimumLength: 8
+      AutoVerifiedAttributes:
+        - email
+      UsernameAttributes:
+        - email
+      Schema:
+        - AttributeDataType: String
+          Name: email
+          Required: true     
+  UserPoolClient:
+    Type: AWS::Cognito::UserPoolClient
     Properties:
-      Domain: !Sub ${DomainUserPool}
       UserPoolId: !Ref UserPool
+      ClientName: !Sub ${Mode}-UserPoolClient
+      GenerateSecret: false # set to false for web clients
+      SupportedIdentityProviders:
+        - COGNITO
+      CallbackURLs: !Ref DomainUserPool
+      LogoutURLs: !Ref LogoutUrl
+      AllowedOAuthFlowsUserPoolClient: true
+      AllowedOAuthFlows:
+        - code
+        - implicit # for testing with Paw
+      AllowedOAuthScopes:
+        - email
+        - openid
+        - profile   
+  # UserPoolDomain:
+  #   Type: AWS::Cognito::UserPoolDomain
+  #   Properties:
+  #     Domain: !Sub ${DomainUserPool}
+  #     UserPoolId: !Ref UserPool
       
+# Outputs:
+#   UserPoolId:
+#     Export:
+#       Name: !Sub $
+    
+#   UserPoolClientId:
