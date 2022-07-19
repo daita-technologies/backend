@@ -5,10 +5,12 @@ Description: >
 
   Sample SAM Template for daita-caller-service-app
 Parameters:
+  CallbackUrl:
+    Type: CommaDelimitedList
   DomainUserPool:
-    Type: String
+    Type: CommaDelimitedList
   LogoutUrl:
-    Type: String
+    Type: CommaDelimitedList
   StagePara:
     Type: String
   Mode:
@@ -140,12 +142,12 @@ Resources:
       GenerateSecret: false # set to false for web clients
       SupportedIdentityProviders:
         - COGNITO
-      CallbackURLs: !Ref DomainUserPool
-      LogoutURLs: !Ref LogoutUrl
+      CallbackURLs: !Split [',', !Join [',', !Ref CallbackUrl]]
+      LogoutURLs: !Split [',', !Join [',', !Ref LogoutUrl]]
       AllowedOAuthFlowsUserPoolClient: true
       AllowedOAuthFlows:
         - code
-        - implicit # for testing with Paw
+        - implicit 
       AllowedOAuthScopes:
         - email
         - openid

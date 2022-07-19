@@ -47,6 +47,9 @@ Parameters:
   LogoutUrl:
     Type: String
     Default: https://app.daita.tech
+  CallbackUrl:
+    Type: String
+    Default: https://nzvw2zvu3d.execute-api.us-east-2.amazonaws.com/staging/auth/login_social
 Resources:
   #=============== SYSTEM PARAMETER CONFIGURATON ==============================
   LimitPreprocessTimes:
@@ -304,6 +307,7 @@ Resources:
         CommonCodeLayerName: !Ref CommonCodeLayer
         LogoutUrl: !Ref LogoutUrl
         DomainUserPool: !Ref DomainUserPool
+        CallbackUrl: !Ref CallbackUrl
 Outputs:
   ZZBC:
     Value: Stage
