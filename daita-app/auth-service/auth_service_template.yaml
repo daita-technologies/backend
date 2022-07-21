@@ -31,6 +31,8 @@ Globals:
       Variables:
         STAGE: !Ref StagePara
         MODE: !Ref Mode
+        COGNITO_CLIENT_ID: !Ref CognitoUserPool
+        COGNITO_USER_POOL: !Ref CognitoUserPoolClient
     Layers:
         - !Ref CommonCodeLayerName
 Resources:
@@ -118,49 +120,105 @@ Resources:
                 Action:
                   - lambda:InvokeFunction
                 Resource: "*"
-
-  UserPool:
+  CognitoUserPool:
     Type: AWS::Cognito::UserPool
     Properties:
-      UserPoolName: !Sub ${Mode}-UserPool
-      Policies:
-        PasswordPolicy:
-          MinimumLength: 8
-      AutoVerifiedAttributes:
-        - email
-      UsernameAttributes:
-        - email
-      Schema:
-        - AttributeDataType: String
-          Name: email
-          Required: true     
-  UserPoolClient:
+      UserPoolName: !Ref AWS::StackName
+  CognitoUserPoolClient:
     Type: AWS::Cognito::UserPoolClient
     Properties:
-      UserPoolId: !Ref UserPool
-      ClientName: !Sub ${Mode}-UserPoolClient
-      GenerateSecret: false # set to false for web clients
-      SupportedIdentityProviders:
-        - COGNITO
+      UserPoolId: !Ref CognitoUserPool
+      ClientName: user-pool-client
+      GenerateSecret: false
+      AllowedOAuthFlowsUserPoolClient: true
       CallbackURLs: !Split [',', !Join [',', !Ref CallbackUrl]]
       LogoutURLs: !Split [',', !Join [',', !Ref LogoutUrl]]
-      AllowedOAuthFlowsUserPoolClient: true
       AllowedOAuthFlows:
         - code
-        - implicit 
+        - implicit
       AllowedOAuthScopes:
+        - phone
         - email
         - openid
-        - profile   
-  # UserPoolDomain:
-  #   Type: AWS::Cognito::UserPoolDomain
-  #   Properties:
-  #     Domain: !Sub ${DomainUserPool}
-  #     UserPoolId: !Ref UserPool
-      
-# Outputs:
-#   UserPoolId:
-#     Export:
-#       Name: !Sub $
-    
-#   UserPoolClientId:
+        - profile
+        - aws.cognito.signin.user.admin
+      SupportedIdentityProviders:
+        - COGNITO
+      AccessTokenValidity: 2
+      RefreshTokenValidity: 24
+      IdTokenValidity: 2
+      TokenValidityUnits: 
+          AccessToken: hours
+          IdToken: hours
+          RefreshToken: hours
+      AllowedOAuthFlowsUserPoolClient: true
+      ExplicitAuthFlows: 
+        - ALLOW_REFRESH_TOKEN_AUTH
+        - ALLOW_USER_PASSWORD_AUTH       
+        - ALLOW_USER_SRP_AUTH
+      PreventUserExistenceErrors: ENABLED
+  LoginFunction:
+    Type:  AWS::Serverless::Function
+    Properties:
+      CodeUri: functions/login
+      Role: !GetAtt LambdaExecutionRole.Arn
+  
+  RegisterFunction:
+    Type:  AWS::Serverless::Function
+    Properties:
+      CodeUri: functions/sign_up
+      Role: !GetAtt LambdaExecutionRole.Arn
+  
+  LoginRefreshTokenFunction:
+    Type:  AWS::Serverless::Function
+    Properties:
+      CodeUri: functions/login_refresh_token
+      Role: !GetAtt LambdaExecutionRole.Arn
+  
+  AuthConfirmFunction:
+    Type:  AWS::Serverless::Function
+    Properties:
+      CodeUri: functions/auth_confirm
+      Role: !GetAtt LambdaExecutionRole.Arn
+  
+  ConfirmCodeForgotPasswordFunction:
+    Type:  AWS::Serverless::Function
+    Properties:
+      CodeUri: functions/confirm_code_forgot_password
+       Role: !GetAtt LambdaExecutionRole.Arn
+  
+  GithubTokenWrapper:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: functions/github_openid_token_wrapper
+      Role:  !GetAtt LambdaExecutionRole.Arn
+  
+  GithubUserinfoWrapper:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: functions/github_openid_userinfo_wrapper
+      Role:  !GetAtt LambdaExecutionRole.Arn
+
+  CredentialLoginFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: functions/credential_login
+      Role:  !GetAtt LambdaExecutionRole.Arn
+  
+  LoginSocialFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: functions/login_social
+      Role:  !GetAtt LambdaExecutionRole.Arn
+  
+  ResendCodeAuthConfirmCodeFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: functions/resend_confirmcode
+      Role:  !GetAtt LambdaExecutionRole.Arn
+
+Outputs:
+  UserPoolClientId:
+    Value: !Ref CognitoUserPoolClient
+  UserPool:
+    Value: !Ref CognitoUserPool
