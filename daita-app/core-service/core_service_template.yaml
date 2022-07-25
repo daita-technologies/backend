@@ -516,10 +516,8 @@ Resources:
   AuthTransportFunction:
     Type: AWS::Serverless::Function
     Properties:
-      CodeUri:
+      CodeUri: functions/handlers/auth_service
       Role: !GetAtt LambdaExecutionRole.Arn
-    Environment:
-      Variables:
 
 Outputs:
   CallerServiceHttpApiUrl:
