@@ -281,7 +281,7 @@ Resources:
         AuthConfirm: !GetAtt AuthService.Outputs.AuthConfirm
         ResendCodeAuthConfirmCode: !GetAtt AuthService.Outputs.ResendCodeAuthConfirmCode
         ConfirmCodeForgotPassword: !GetAtt AuthService.Outputs.ConfirmCodeForgotPassword
-
+        Forgotpassword: !GetAtt AuthService.Outputs.Forgotpassword
   HealthCheckService:
     Type: AWS::Serverless::Application
     Properties:

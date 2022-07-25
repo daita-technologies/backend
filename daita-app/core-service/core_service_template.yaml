@@ -134,7 +134,9 @@ Parameters:
   ResendCodeAuthConfirmCode:
     Type: String
   ConfirmCodeForgotPassword:
-    Type: String 
+    Type: String
+  Forgotpassword:
+    Type: String
 Resources:
   #================ ROLES =====================================================
 
@@ -518,7 +520,15 @@ Resources:
     Properties:
       CodeUri: functions/handlers/auth_service
       Role: !GetAtt LambdaExecutionRole.Arn
-
+      Environment:
+        Variables:
+          LOGIN_LAMBDA: !Ref Login
+          SIGNUP_LAMBDA: !Ref SignUp
+          RERRESHTOKEN_LAMBDA:  !Ref LoginRefreshToken
+          AUTHCONFIRM_LAMBDA: !Ref  AuthConfirm
+          RESENDCODEAUTH_LAMBDA: !Ref ResendCodeAuthConfirmCode
+          CONFIRMCODEFORGOTPASSWORD_LAMBDA: !Ref ConfirmCodeForgotPassword
+          FORGOTPASSWORD_LAMBDA: !Ref Forgotpassword
 Outputs:
   CallerServiceHttpApiUrl:
     Description: "Url of the Caller service API"

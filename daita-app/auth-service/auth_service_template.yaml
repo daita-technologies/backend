@@ -216,7 +216,11 @@ Resources:
     Properties:
       CodeUri: functions/resend_confirmcode
       Role:  !GetAtt LambdaExecutionRole.Arn
-
+  ForgotpasswordFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: functions/forgot_password
+      Role:  !GetAtt LambdaExecutionRole.Arn
 Outputs:
   UserPoolClientId:
     Value: !Ref CognitoUserPoolClient
@@ -234,3 +238,5 @@ Outputs:
     Value: !Ref ResendCodeAuthConfirmCodeFunction
   ConfirmCodeForgotPassword:
     Value: !Ref ConfirmCodeForgotPasswordFunction
+  Forgotpassword:
+    Value: !Ref ForgotpasswordFunction
