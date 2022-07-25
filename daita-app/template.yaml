@@ -220,7 +220,18 @@ Resources:
       Location: db-service/db_template.yaml
       Parameters:
         StagePara: !Ref Stage
-
+  AuthService:
+    Type: AWS::Serverless::Application
+    Properties:
+      Location: auth-service/auth_service_template.yaml
+      Parameters:
+        StagePara: !Ref Stage
+        LambdaRole: !GetAtt GeneralLambdaExecutionRole.Arn
+        Mode: !Ref Mode
+        CommonCodeLayerName: !Ref CommonCodeLayer
+        LogoutUrl: !Ref LogoutUrl
+        DomainUserPool: !Ref DomainUserPool
+        CallbackUrl: !Ref CallbackUrl
   CoreService:
     Type: AWS::Serverless::Application
     Properties:
@@ -264,6 +275,13 @@ Resources:
         TableGenerateDaitaUploadToken: !GetAtt DatabaseService.Outputs.TableGenerateDaitaUploadToken
         S3BucketName: !Ref S3BucketName
         Mode: !Ref Mode
+        Login: !GetAtt AuthService.Outputs.Login
+        SignUp: !GetAtt AuthService.Outputs.SignUp
+        LoginRefreshToken: !GetAtt AuthService.Outputs.LoginRefreshToken
+        AuthConfirm: !GetAtt AuthService.Outputs.AuthConfirm
+        ResendCodeAuthConfirmCode: !GetAtt AuthService.Outputs.ResendCodeAuthConfirmCode
+        ConfirmCodeForgotPassword: !GetAtt AuthService.Outputs.ConfirmCodeForgotPassword
+
   HealthCheckService:
     Type: AWS::Serverless::Application
     Properties:
@@ -296,18 +314,6 @@ Resources:
         MaxWidthResolutionImage: !Ref MaxWidthResolutionImage
         MaxHeightResolutionImage: !Ref MaxHeightResolutionImage
         Mode: !Ref Mode
-  AuthService:
-    Type: AWS::Serverless::Application
-    Properties:
-      Location: auth-service/auth_service_template.yaml
-      Parameters:
-        StagePara: !Ref Stage
-        LambdaRole: !GetAtt GeneralLambdaExecutionRole.Arn
-        Mode: !Ref Mode
-        CommonCodeLayerName: !Ref CommonCodeLayer
-        LogoutUrl: !Ref LogoutUrl
-        DomainUserPool: !Ref DomainUserPool
-        CallbackUrl: !Ref CallbackUrl
 Outputs:
   ZZBC:
     Value: Stage

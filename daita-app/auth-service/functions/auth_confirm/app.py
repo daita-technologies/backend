@@ -14,6 +14,8 @@ from config import *
 from custom_mail import *
 from datetime import datetime
 
+USERPOOLID = os.environ['COGNITO_USER_POOL']
+CLIENTPOOLID = os.environ['COGNITO_CLIENT_ID']
 cog_provider_client = boto3.client('cognito-idp')
 cog_identity_client = boto3.client('cognito-identity')
 

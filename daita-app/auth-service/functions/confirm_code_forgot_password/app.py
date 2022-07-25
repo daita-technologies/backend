@@ -1,5 +1,5 @@
 import re
-
+import os
 import boto3
 import json
 from config import *
@@ -7,7 +7,8 @@ from error import *
 from custom_mail import *
 from response import generate_response, error_response
 
-
+USERPOOLID = os.environ['COGNITO_USER_POOL']
+CLIENTPOOLID = os.environ['COGNITO_CLIENT_ID']
 cog_provider_client = boto3.client('cognito-idp')
 RESPONSE_HEADER = {
     "Access-Control-Allow-Credentials": "true",

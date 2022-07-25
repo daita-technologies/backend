@@ -6,7 +6,9 @@ info:
 tags:
 - name: "httpapi:createdBy"
   x-amazon-apigateway-tag-value: "SAM"
-paths: 
+paths:
+  #####################################################################################################################################################################
+  #####################################################################################################################################################################
   /feedback/presign_url_image:
     post:
       responses:
@@ -85,7 +87,7 @@ paths:
         httpMethod: "POST"
         type: "aws_proxy"
         payloadFormatVersion: "2.0"
-  /generrate/daita_upload_token:
+  /generate/daita_upload_token:
     post:
       responses:
         default:

@@ -185,7 +185,7 @@ Resources:
     Type:  AWS::Serverless::Function
     Properties:
       CodeUri: functions/confirm_code_forgot_password
-       Role: !GetAtt LambdaExecutionRole.Arn
+      Role: !GetAtt LambdaExecutionRole.Arn
   
   GithubTokenWrapper:
     Type: AWS::Serverless::Function
@@ -222,3 +222,15 @@ Outputs:
     Value: !Ref CognitoUserPoolClient
   UserPool:
     Value: !Ref CognitoUserPool
+  Login:
+    Value: !Ref LoginFunction
+  SignUp:
+    Value: !Ref RegisterFunction
+  LoginRefreshToken:
+    Value: !Ref LoginRefreshTokenFunction
+  AuthConfirm:
+    Value: !Ref AuthConfirmFunction
+  ResendCodeAuthConfirmCode:
+    Value: !Ref ResendCodeAuthConfirmCodeFunction
+  ConfirmCodeForgotPassword:
+    Value: !Ref ConfirmCodeForgotPasswordFunction

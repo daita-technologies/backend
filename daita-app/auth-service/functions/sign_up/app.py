@@ -1,4 +1,3 @@
-from cmath import inf
 import os
 import json
 import logging
@@ -22,6 +21,8 @@ def convert_current_date_to_iso8601():
     return my_date.isoformat()
 
 
+USERPOOLID = os.environ['COGNITO_USER_POOL']
+CLIENTPOOLID = os.environ['COGNITO_CLIENT_ID']
 cog_provider_client = boto3.client("cognito-idp")
 cog_identity_client = boto3.client("cognito-identity")
 RESPONSE_HEADER = {

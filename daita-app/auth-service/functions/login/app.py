@@ -1,11 +1,13 @@
 import os
 import json
 import re
+import datetime
 import boto3
 from response import *
 from config import *
 
-
+USERPOOLID = os.environ['COGNITO_USER_POOL']
+CLIENTPOOLID = os.environ['COGNITO_CLIENT_ID']
 ACCESS_TOKEN_EXPIRATION = 24 * 60 * 60
 mailRegexString = re.compile(
     '([A-Za-z0-9]+[.-_])*[A-Za-z0-9]+@[A-Za-z0-9-]+(\.[A-Z|a-z]{2,})+')

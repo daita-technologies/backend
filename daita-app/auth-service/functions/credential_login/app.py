@@ -20,6 +20,8 @@ import base64
 import urllib.parse
 from urllib.parse import urlencode
 ACCESS_TOKEN_EXPIRATION = 24 * 60 * 60
+USERPOOLID = os.environ['COGNITO_USER_POOL']
+CLIENTPOOLID = os.environ['COGNITO_CLIENT_ID']
 cog_provider_client = boto3.client('cognito-idp')
 cog_identity_client = boto3.client('cognito-identity')
 # endpoint = 'https://devdaitaloginsocial.auth.us-east-2.amazoncognito.com/oauth2/token'

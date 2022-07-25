@@ -123,6 +123,18 @@ Parameters:
     Type: String
   Mode:
     Type: String
+  Login:
+    Type: String
+  SignUp:
+    Type: String
+  LoginRefreshToken:
+    Type: String
+  AuthConfirm:
+    Type: String
+  ResendCodeAuthConfirmCode:
+    Type: String
+  ConfirmCodeForgotPassword:
+    Type: String 
 Resources:
   #================ ROLES =====================================================
 
@@ -501,7 +513,13 @@ Resources:
           TableHealthCheckTasksName: !Ref TableHealthCheckTasksName
           TableGenerateTaskName: !Ref TableGenerateTaskName
           TableReferenceImageName: !Ref TableReferenceImageTasksName
-
+  AuthTransportFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri:
+      Role: !GetAtt LambdaExecutionRole.Arn
+    Environment:
+      Variables:
 
 Outputs:
   CallerServiceHttpApiUrl:
