@@ -124,6 +124,19 @@ Resources:
     Type: AWS::Cognito::UserPool
     Properties:
       UserPoolName: !Ref AWS::StackName
+  CognitoUserPoolIdentityProvider:
+    Type: AWS::Cognito::UserPoolIdentityProvider
+    Properties:
+      ProviderName: Google
+      AttributeMapping:
+        email: email
+      ProviderDetails:
+        client_id: 639730110991-9t82efunb20f6m4stek56f6ut9t0kjfu.apps.googleusercontent.com
+        client_secret: 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
+        authorize_scopes: profile email openid
+      ProviderType: Google
+      UserPoolId:
+        Ref : CognitoUserPool
   CognitoUserPoolClient:
     Type: AWS::Cognito::UserPoolClient
     Properties:
@@ -144,6 +157,7 @@ Resources:
         - aws.cognito.signin.user.admin
       SupportedIdentityProviders:
         - COGNITO
+        - Google
       AccessTokenValidity: 2
       RefreshTokenValidity: 24
       IdTokenValidity: 2
