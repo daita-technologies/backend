@@ -124,10 +124,10 @@ Resources:
     Type: AWS::Cognito::UserPool
     Properties:
       UserPoolName: !Ref AWS::StackName
-  CognitoUserPoolIdentityProvider:
+  GoogleCognitoUserPoolIdentityProvider:
     Type: AWS::Cognito::UserPoolIdentityProvider
     Properties:
-      ProviderName: Google
+      ProviderName: "Google"
       AttributeMapping:
         email: email
       ProviderDetails:
@@ -137,8 +137,30 @@ Resources:
       ProviderType: Google
       UserPoolId:
         Ref : CognitoUserPool
+  GithubCognitoUserPoolIdentityProvider:
+    Type: AWS::Cognito::UserPoolIdentityProvider
+    Properties:
+      UserPoolId: !Ref CognitoUserPool
+      ProviderName: github
+      ProviderDetails:
+        client_id: 0cec5cf3d1f070b36b63 
+        client_secret: 5929cb027e02330533a587a8e9f5d2e0fd40e48e
+        attributes_request_method: POST
+        oidc_issuer: https://yf6ayuvru1.execute-api.us-east-2.amazonaws.com/dev
+        authorize_scopes: "openid read:user user:email"
+        jwks_uri: https://yf6ayuvru1.execute-api.us-east-2.amazonaws.com/dev/auth/github-openid-token-wrapper
+        token_url: https://yf6ayuvru1.execute-api.us-east-2.amazonaws.com/dev/auth/github-openid-token-wrapper
+        authorize_url: https://yf6ayuvru1.execute-api.us-east-2.amazonaws.com/dev/auth/github-openid-userinfo-wrapper
+        attributes_url: https://github.com/login/oauth/authorize
+      ProviderType: "OIDC"
+      AttributeMapping:
+        email: "email"
+        username: sub
   CognitoUserPoolClient:
     Type: AWS::Cognito::UserPoolClient
+    DependsOn:
+      - GoogleCognitoUserPoolIdentityProvider
+      - GithubCognitoUserPoolIdentityProvider
     Properties:
       UserPoolId: !Ref CognitoUserPool
       ClientName: user-pool-client
@@ -157,6 +179,7 @@ Resources:
         - aws.cognito.signin.user.admin
       SupportedIdentityProviders:
         - COGNITO
+        - github
         - Google
       AccessTokenValidity: 2
       RefreshTokenValidity: 24
@@ -171,6 +194,7 @@ Resources:
         - ALLOW_USER_PASSWORD_AUTH       
         - ALLOW_USER_SRP_AUTH
       PreventUserExistenceErrors: ENABLED
+
   LoginFunction:
     Type:  AWS::Serverless::Function
     Properties:
