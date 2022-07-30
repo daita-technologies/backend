@@ -1,9 +1,9 @@
 import os
 import json
-import uuid
-from datetime import datetime
+from http import HTTPStatus
 
 import boto3
+from boto3.dynamodb.conditions import Key
 
 from response import *
 from error_messages import *
@@ -12,7 +12,10 @@ from utils import create_task_id_w_created_time, convert_current_date_to_iso8601
 from lambda_base_class import LambdaBaseClass
 from models.task_model import TaskModel
 
-
+db_resource = boto3.resource("dynamodb")
+data_original_table = db_resource.Table(os.getenv("TableDataOriginal"))
+data_augment_table = db_resource.Table(os.getenv("TableDataAugment"))
+data_preprocess_table = db_resource.Table(os.getenv("TableDataPreprocess"))
 task_table = TaskModel(os.environ["TableDataFlowTaskName"], None)
 COMPRESS_DOWNLOAD_STATEMACHINE = os.getenv("CompressDownloadStateMachineArn")
 
@@ -39,6 +42,36 @@ class CreateCompressDownloadClass(LambdaBaseClass):
 
         ### check identity
         identity_id = self.get_identity(self.id_token)
+
+        # hotfix, refactor later
+        ls_table = []
+        if self.down_type == "ALL":
+            ls_table.append(data_original_table)
+            ls_table.append(data_augment_table)
+            ls_table.append(data_preprocess_table)
+        elif self.down_type == "ORIGINAL":
+            ls_table.append(data_original_table)
+        elif self.down_type == "PREPROCESS":
+            ls_table.append(data_preprocess_table)
+        elif self.down_type == "AUGMENT":
+            ls_table.append(data_augment_table)
+        else:
+            raise Exception(f"invalid down_type: {self.down_type}")
+
+        ## get all dowloaded object information from DB, check return error with empty download
+        is_exist_files = False
+        for table in ls_table:
+            response = table.query(
+                    KeyConditionExpression = Key('project_id').eq(self.project_id),
+                    ProjectionExpression='filename, s3_key, classtype',
+                    Limit = 10
+                )
+            if len(response.get('Items', []))>0:
+                is_exist_files = True
+                break
+
+        if not is_exist_files:
+            raise Exception(MESS_NO_DATA_IN_VIEWED_TAB.format(self.down_type))
 
         task_id = create_task_id_w_created_time()
         response = task_table.update_attribute(
