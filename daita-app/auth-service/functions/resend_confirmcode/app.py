@@ -8,7 +8,7 @@ import boto3
 from dataclasses import dataclass
 import re
 
-from error import *
+from error_messages import *
 from response import *
 from config import *
 from custom_mail import *
@@ -55,10 +55,13 @@ def lambda_handler(event, context):
         raise Exception(e)
 
     ResendCodeConfirm({
+        'lambda_name': os.environ['INVOKE_MAIL_LAMBDA'],
         'region': REGION,
         'user': username,
         'mail': mail,
-        'subject': 'Your email confirmation code'
+        'subject': 'Your email confirmation code',
+        'confirm_code_Table': os.environ['TBL_CONFIRM_CODE']
+
     })
     return generate_response(
         message=MessageResendEmailConfirmCodeSuccessfully,

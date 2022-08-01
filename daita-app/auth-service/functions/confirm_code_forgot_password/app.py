@@ -36,14 +36,15 @@ def lambda_handler(event, context):
         DeleteConfirmCode({
             'region': REGION,
             'user': username,
-            'code': confirm_code
+            'code': confirm_code,
+            'confirm_code_Table': os.environ['TBL_CONFIRM_CODE']
         })
     except Exception as e:
         raise Exception(e)
 
     if not re.match(PASSWORD_REGEX, password):
         AddInsertConfirmCode(
-            info={'user': username, 'confirm_code': confirm_code})
+            info={'user': username, 'confirm_code': confirm_code, 'confirm_code_Table': os.environ['TBL_CONFIRM_CODE']})
         raise Exception(MessageInvalidPassword)
 
     try:
@@ -53,7 +54,7 @@ def lambda_handler(event, context):
     except Exception as exc:
         print(exc)
         AddInsertConfirmCode(
-            info={'user': username, 'confirm_code': confirm_code})
+            info={'user': username, 'confirm_code': confirm_code, 'confirm_code_Table': os.environ['TBL_CONFIRM_CODE']})
         raise Exception(MessageForgotPasswordConfirmcodeFailed) from exc
 
     return generate_response(

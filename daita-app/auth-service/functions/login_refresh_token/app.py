@@ -7,7 +7,7 @@ from http import HTTPStatus
 import boto3
 
 from config import *
-from error import *
+from error_messages import *
 from response import generate_response, error_response
 from utils import create_secret_hash, aws_get_identity_id
 

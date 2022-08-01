@@ -19,7 +19,8 @@ Parameters:
     Type: String
   CommonCodeLayerName:
     Type: String
-    
+  TableConfirmCodeAuth:
+    Type: String
 Globals:
   Function:
     Timeout: 800
@@ -33,6 +34,7 @@ Globals:
         MODE: !Ref Mode
         COGNITO_CLIENT_ID: !Ref CognitoUserPool
         COGNITO_USER_POOL: !Ref CognitoUserPoolClient
+        TBL_CONFIRM_CODE: !Ref TableConfirmCodeAuth
     Layers:
         - !Ref CommonCodeLayerName
 Resources:
@@ -74,9 +76,7 @@ Resources:
               -
                 Effect: Allow
                 Action:
-                  - 'logs:CreateLogGroup'
-                  - 'logs:CreateLogStream'
-                  - 'logs:PutLogEvents'
+                  - 'logs:*'
                 Resource: '*'
         - PolicyName: 'CognitoPermission'
           PolicyDocument:
@@ -206,6 +206,9 @@ Resources:
     Properties:
       CodeUri: functions/sign_up
       Role: !GetAtt LambdaExecutionRole.Arn
+      Environment:
+        Variables:
+          MAIL_LAMBDA: !Ref MailServiceFunction
   
   LoginRefreshTokenFunction:
     Type:  AWS::Serverless::Function
@@ -254,10 +257,21 @@ Resources:
     Properties:
       CodeUri: functions/resend_confirmcode
       Role:  !GetAtt LambdaExecutionRole.Arn
+      Environment:
+        Variables:
+          MAIL_LAMBDA: !Ref MailServiceFunction
   ForgotpasswordFunction:
     Type: AWS::Serverless::Function
     Properties:
       CodeUri: functions/forgot_password
+      Role:  !GetAtt LambdaExecutionRole.Arn
+      Environment:
+        Variables:
+          MAIL_LAMBDA: !Ref MailServiceFunction
+  MailServiceFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: functions/mail_service
       Role:  !GetAtt LambdaExecutionRole.Arn
 Outputs:
   UserPoolClientId:

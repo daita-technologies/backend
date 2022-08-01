@@ -224,7 +224,29 @@ Resources:
               AttributeName: token
               KeyType: HASH
           Projection:
-            ProjectionType: ALL  
+            ProjectionType: ALL
+  TableConfirmCodeAuth:
+    Type:  AWS::DynamoDB::Table
+    Properties:
+      TableName: !Sub "${StagePara}-confirm-code"
+      AttributeDefinitions:
+        -
+          AttributeName: user
+          AttributeType: S
+        -
+          AttributeName: code
+          AttributeType: S
+      KeySchema:
+        -
+          AttributeName: user
+          KeyType: HASH
+        -
+          AttributeName: code
+          KeyType: RANGE
+      BillingMode: PAY_PER_REQUEST
+      TimeToLiveSpecification:
+        AttributeName: time_to_live
+        Enabled: True
       
 Outputs:
   TableGenerateTaskName:
@@ -268,3 +290,5 @@ Outputs:
     Value: !Ref IndexTaskProjectIDTaskIDName
   TableGenerateDaitaUploadToken:
     Value: !Ref TableGenerateDaitaUploadToken
+  TableConfirmCodeAuth:
+    Value: !Ref TableConfirmCodeAuth

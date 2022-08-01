@@ -172,6 +172,7 @@ Resources:
       ContentUri: shared-layer/commons/
       CompatibleRuntimes:
         - python3.8
+      
 
 
   #================ APPLICATIONS  =============================================
@@ -232,6 +233,7 @@ Resources:
         LogoutUrl: !Ref LogoutUrl
         DomainUserPool: !Ref DomainUserPool
         CallbackUrl: !Ref CallbackUrl
+        TableConfirmCodeAuth : !GetAtt DatabaseService.Outputs.TableConfirmCodeAuth
   CoreService:
     Type: AWS::Serverless::Application
     Properties:

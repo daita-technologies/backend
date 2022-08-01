@@ -37,7 +37,8 @@ def lambda_handler(event, context):
         DeleteConfirmCode({
             'region': REGION,
             'user': username,
-            'code': confirmCode
+            'code': confirmCode,
+            'confirm_code_Table': os.environ['TBL_CONFIRM_CODE']
         })
     except Exception as e:
         raise Exception(e)

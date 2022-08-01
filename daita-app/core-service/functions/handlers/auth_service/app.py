@@ -15,6 +15,7 @@ lambda_mapper = {
 
 
 def invokeLambda(info, lambdaFunc):
+    print()
     lambdaInvokeClient = boto3.client('lambda')
     lambdaInvokeReq = lambdaInvokeClient.invoke(
         FunctionName=lambdaFunc,
@@ -37,12 +38,17 @@ def lambda_handler(event, context):
                                  headers=RESPONSE_HEADER,
                                  )
 
-    lambdaNameInvoke = lambda_mapper[funcString]
+    lambdaNameInvoke = str(lambda_mapper[funcString])
     body = event['body']
-    data = invokeLambda(lambdaNameInvoke, body)
-    return generate_response(
-        message='AUth Service',
-        data=data,
-        headers=RESPONSE_HEADER,
-        error=False
-    )
+    print(body)
+    try:
+        response = invokeLambda(info=body, lambdaFunc=lambdaNameInvoke)
+    except Exception as e:
+        print(e)
+        return generate_response(
+            message=str(e),
+            data={},
+            headers=RESPONSE_HEADER,
+            error=True
+        )
+    return response

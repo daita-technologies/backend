@@ -11,7 +11,7 @@ import cognitojwt
 from utils import create_secret_hash, aws_get_identity_id
 from urllib.parse import urlparse, quote
 
-from error import *
+from error_messages import *
 from response import *
 from config import *
 

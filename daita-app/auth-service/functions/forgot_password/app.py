@@ -6,7 +6,7 @@ from http import HTTPStatus
 import boto3
 import json
 from config import *
-from error import *
+from error_messages import *
 from verify_captcha import *
 from custom_mail import *
 from response import generate_response, error_response
@@ -71,10 +71,12 @@ def lambda_handler(event, context):
         )
     mail = getMail(username)
     AddTriggerCustomMail({
+        'lambda_name': os.environ['INVOKE_MAIL_LAMBDA'],
         'region': REGION,
         'user': username,
         'mail': mail,
-        'subject': 'Your email confirmation code'
+        'subject': 'Your email confirmation code',
+        'confirm_code_Table': os.environ['TBL_CONFIRM_CODE']
     })
 
     return generate_response(

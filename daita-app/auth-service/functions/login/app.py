@@ -5,7 +5,8 @@ import datetime
 import boto3
 from response import *
 from config import *
-
+from error_messages import *
+from verify_captcha import *
 USERPOOLID = os.environ['COGNITO_USER_POOL']
 CLIENTPOOLID = os.environ['COGNITO_CLIENT_ID']
 ACCESS_TOKEN_EXPIRATION = 24 * 60 * 60

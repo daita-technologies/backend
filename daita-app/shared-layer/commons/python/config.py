@@ -7,6 +7,8 @@ IDENTITY_POOL_ID = "us-east-2:639788f0-a9b0-460d-9f50-23bbe5bc7140" if os.enviro
     'MODE'] == 'dev' else "us-east-2:fa0b76bc-01fa-4bb8-b7cf-a5000954aafb"
 URL = "https://uflt5029de.execute-api.us-east-2.amazonaws.com/devdaitabeapp/" if os.environ[
     'MODE'] == 'dev' else "https://119u2071ul.execute-api.us-east-2.amazonaws.com/dev/"
+ENDPOINTCAPTCHAVERIFY = "https://www.google.com/recaptcha/api/siteverify"
+
 # config for status of generate task
 VALUE_GENERATE_TASK_STATUS_FINISH = "FINISH"
 VALUE_GENERATE_TASK_STATUS_ERROR = "ERROR"
