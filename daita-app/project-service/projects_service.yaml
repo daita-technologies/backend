@@ -1,0 +1,205 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: >
+  daita-caller-service-app
+
+  Sample SAM Template for daita-caller-service-app
+Parameters:
+  StagePara:
+    Type: String
+  Mode:
+    Type: String
+  CommonCodeLayerName:
+    Type: String
+Globals:
+  Function:
+    Timeout: 800
+    Handler: app.lambda_handler
+    Runtime: python3.8
+    Architectures:
+      - x86_64
+    Environment:
+      Variables:
+        STAGE: !Ref StagePara
+        MODE: !Ref Mode
+    Layers:
+        - !Ref CommonCodeLayerName
+Resources:
+  LambdaExecutionRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+        - Effect: "Allow"
+          Principal:
+            Service: "lambda.amazonaws.com"
+          Action:
+          - "sts:AssumeRole"
+      Policies:
+        - PolicyName: 'SQS'
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - 'sqs:*'
+                Resource: '*'
+        - PolicyName: 'SecretsManagerParameterAccess'
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - ssm:GetParam*
+                  - ssm:DescribeParam*
+                Resource:
+                  - arn:aws:ssm:*:*:parameter/*
+        - PolicyName: 'CloudwatchPermission'
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              -
+                Effect: Allow
+                Action:
+                  - 'logs:*'
+                Resource: '*'
+        - PolicyName: 'CognitoPermission'
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              -
+                Effect: Allow
+                Action:
+                  - cognito-identity:*
+                  - cognito-idp:*
+                Resource: '*'
+        - PolicyName: 'DynamoDBPermission'
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              -
+                Effect: Allow
+                Action:
+                  - dynamodb:*
+                Resource: "*"
+        - PolicyName: "OtherServicePermission"
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              -
+                Effect: Allow
+                Action:
+                  - events:PutEvents
+                Resource: "*"
+              - Effect: Allow
+                Action:
+                  - states:StartExecution
+                  - s3:*
+                Resource: "*"
+        - PolicyName: "InvokeFunction"
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              -
+                Effect: Allow
+                Action:
+                  - lambda:InvokeFunction
+                Resource: "*"
+  ProjectAsyCreateSampleFunction:
+    Type:  AWS::Serverless::Function
+    Properties:
+      CodeUri: functions/project_asy_create_sample
+      Role: !GetAtt LambdaExecutionRole.Arn
+  
+  ProjectCreateSampleFunction:
+    Type:  AWS::Serverless::Function
+    Properties:
+      CodeUri: functions/project_create
+      Role: !GetAtt LambdaExecutionRole.Arn
+  
+  ProjectDownloadCreateFunction:
+    Type:  AWS::Serverless::Function
+    Properties:
+      CodeUri: functions/project_download_create
+      Role: !GetAtt LambdaExecutionRole.Arn
+  
+  ProjectDownloadUpdateFunction:
+    Type:  AWS::Serverless::Function
+    Properties:
+      CodeUri: functions/project_download_update
+      Role: !GetAtt LambdaExecutionRole.Arn
+  
+  ProjectInfoFunction:
+    Type:  AWS::Serverless::Function
+    Properties:
+      CodeUri: functions/project_info
+      Role: !GetAtt LambdaExecutionRole.Arn
+  
+  ProjectListFunction:
+    Type:  AWS::Serverless::Function
+    Properties:
+      CodeUri: functions/project_list
+      Role: !GetAtt LambdaExecutionRole.Arn
+  
+  ProjectListDataFunction:
+    Type:  AWS::Serverless::Function
+    Properties:
+      CodeUri: functions/project_list_data
+      Role: !GetAtt LambdaExecutionRole.Arn
+
+  ProjectListInfoFunction:
+    Type:  AWS::Serverless::Function
+    Properties:
+      CodeUri: functions/project_list_info
+      Role: !GetAtt LambdaExecutionRole.Arn
+  
+  ProjectSampleFunction:
+    Type:  AWS::Serverless::Function
+    Properties:
+      CodeUri: functions/project_sample
+      Role: !GetAtt LambdaExecutionRole.Arn
+  
+  ProjectUpdateInfoFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: functions/project_update_info
+      Role: !GetAtt LambdaExecutionRole.Arn
+
+  ProjectUpdateCheckFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: functions/project_upload_check
+      Role: !GetAtt LambdaExecutionRole.Arn
+  
+  ProjectUploadUpdateFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: functions/project_upload_update
+      Role:  !GetAtt LambdaExecutionRole.Arn
+
+Outputs:
+  ProjectAsyCreateSample:
+    Value: !Ref ProjectAsyCreateSampleFunction
+  ProjectCreateSample:
+    Value: !Ref ProjectCreateSampleFunction
+  ProjectDownloadCreate:
+    Value: !Ref ProjectDownloadCreateFunction
+  ProjectDownloadUpdate:
+    Value: !Ref ProjectDownloadUpdateFunction
+  ProjectInfo:
+    Value: !Ref ProjectInfoFunction
+  ProjectList:
+    Value: !Ref ProjectListFunction
+  ProjectListData:
+    Value: !Ref ProjectListDataFunction
+  ProjectListInfo:
+    Value: !Ref ProjectListInfoFunction
+  ProjectSample:
+    Value: !Ref ProjectSampleFunction
+  ProjectUpdateInfo:
+    Value: !Ref ProjectUpdateInfoFunction
+  ProjectUpdateCheck:
+    Value: !Ref ProjectUpdateCheckFunction
+  ProjectUploadUpdate:
+    Value: !Ref ProjectUploadUpdateFunction

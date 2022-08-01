@@ -137,6 +137,30 @@ Parameters:
     Type: String
   Forgotpassword:
     Type: String
+  ProjectAsyCreateSample: 
+    Type: String  
+  ProjectCreateSample:
+    Type: String
+  ProjectDownloadCreate:
+    Type: String
+  ProjectDownloadUpdate:
+    Type: String
+  ProjectInfo:
+    Type: String
+  ProjectList:
+    Type: String
+  ProjectListData:
+    Type: String
+  ProjectListInfo:
+    Type: String
+  ProjectSample:
+    Type: String
+  ProjectUpdateInfo:
+    Type: String
+  ProjectUpdateCheck:
+    Type: String
+  ProjectUploadUpdate:
+    Type: String
 Resources:
   #================ ROLES =====================================================
 
@@ -529,6 +553,25 @@ Resources:
           RESENDCODEAUTH_LAMBDA: !Ref ResendCodeAuthConfirmCode
           CONFIRMCODEFORGOTPASSWORD_LAMBDA: !Ref ConfirmCodeForgotPassword
           FORGOTPASSWORD_LAMBDA: !Ref Forgotpassword
+  ProjectTransportFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: functions/handlers/project_service
+      Role: !GetAtt LambdaExecutionRole.Arn
+      Environment:
+        Variables:
+        PRJ_ASY_CREATE: !Ref ProjectAsyCreateSample
+        PRJ_CREATE_SAMPLE: !Ref ProjectCreateSample
+        PRJ_DOWNLOAD_CREATE: !Ref  ProjectDownloadCreate
+        PRJ_DOWNLOAD_UPDATE: !Ref ProjectDownloadUpdate
+        PRJ_INFO: !Ref ProjectInfo
+        PRJ_LIST: !Ref ProjectList
+        PRJ_LIST_DATA: !Ref ProjectListData
+        PRJ_LIST_INFO: !Ref ProjectListInfo
+        PRJ_SAMPLE: !Ref  ProjectSample
+        PRJ_UPDATE_INFO: !Ref ProjectUpdateInfo
+        PRJ_UPDATE_CHECK: !Ref  ProjectUpdateCheck
+        PRJ_UPLOAD_UPDATE: !Ref ProjectUploadUpdate
 Outputs:
   CallerServiceHttpApiUrl:
     Description: "Url of the Caller service API"

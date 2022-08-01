@@ -221,6 +221,16 @@ Resources:
       Location: db-service/db_template.yaml
       Parameters:
         StagePara: !Ref Stage
+  
+  ProjectService:
+    Type:  AWS::Serverless::Application
+    Properties:
+      Location: project-service/projects_service.yaml
+      Parameters:
+        StagePara: !Ref Stage
+        Mode: !Ref Mode
+        CommonCodeLayerName: !Ref CommonCodeLayer
+
   AuthService:
     Type: AWS::Serverless::Application
     Properties:
@@ -234,6 +244,7 @@ Resources:
         DomainUserPool: !Ref DomainUserPool
         CallbackUrl: !Ref CallbackUrl
         TableConfirmCodeAuth : !GetAtt DatabaseService.Outputs.TableConfirmCodeAuth
+  
   CoreService:
     Type: AWS::Serverless::Application
     Properties:
@@ -277,6 +288,7 @@ Resources:
         TableGenerateDaitaUploadToken: !GetAtt DatabaseService.Outputs.TableGenerateDaitaUploadToken
         S3BucketName: !Ref S3BucketName
         Mode: !Ref Mode
+        ########################################Auth Service#############################################
         Login: !GetAtt AuthService.Outputs.Login
         SignUp: !GetAtt AuthService.Outputs.SignUp
         LoginRefreshToken: !GetAtt AuthService.Outputs.LoginRefreshToken
@@ -284,6 +296,20 @@ Resources:
         ResendCodeAuthConfirmCode: !GetAtt AuthService.Outputs.ResendCodeAuthConfirmCode
         ConfirmCodeForgotPassword: !GetAtt AuthService.Outputs.ConfirmCodeForgotPassword
         Forgotpassword: !GetAtt AuthService.Outputs.Forgotpassword
+        ###############################################################################################
+        ProjectAsyCreateSample: !GetAtt ProjectService.Outputs.ProjectAsyCreateSample
+        ProjectCreateSample: !GetAtt ProjectService.Outputs.ProjectCreateSample
+        ProjectDownloadCreate: !GetAtt ProjectService.Outputs.ProjectDownloadCreate
+        ProjectDownloadUpdate: !GetAtt ProjectService.Outputs.ProjectDownloadUpdate
+        ProjectInfo: !GetAtt ProjectService.Outputs.ProjectInfo
+        ProjectList: !GetAtt ProjectService.Outputs.ProjectList
+        ProjectListData: !GetAtt ProjectService.Outputs.ProjectListData
+        ProjectListInfo: !GetAtt ProjectService.Outputs.ProjectListInfo
+        ProjectSample: !GetAtt ProjectService.Outputs.ProjectSample
+        ProjectUpdateInfo: !GetAtt ProjectService.Outputs.ProjectUpdateInfo
+        ProjectUpdateCheck: !GetAtt ProjectService.Outputs.ProjectUpdateCheck
+        ProjectUploadUpdate: !GetAtt ProjectService.Outputs.ProjectUploadUpdate
+
   HealthCheckService:
     Type: AWS::Serverless::Application
     Properties:

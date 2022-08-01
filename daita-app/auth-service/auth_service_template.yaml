@@ -208,7 +208,7 @@ Resources:
       Role: !GetAtt LambdaExecutionRole.Arn
       Environment:
         Variables:
-          MAIL_LAMBDA: !Ref MailServiceFunction
+          INVOKE_MAIL_LAMBDA: !Ref MailServiceFunction
   
   LoginRefreshTokenFunction:
     Type:  AWS::Serverless::Function
@@ -259,7 +259,7 @@ Resources:
       Role:  !GetAtt LambdaExecutionRole.Arn
       Environment:
         Variables:
-          MAIL_LAMBDA: !Ref MailServiceFunction
+          INVOKE_MAIL_LAMBDA: !Ref MailServiceFunction
   ForgotpasswordFunction:
     Type: AWS::Serverless::Function
     Properties:
@@ -267,7 +267,7 @@ Resources:
       Role:  !GetAtt LambdaExecutionRole.Arn
       Environment:
         Variables:
-          MAIL_LAMBDA: !Ref MailServiceFunction
+          INVOKE_MAIL_LAMBDA: !Ref MailServiceFunction
   MailServiceFunction:
     Type: AWS::Serverless::Function
     Properties:

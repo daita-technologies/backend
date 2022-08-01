@@ -15,7 +15,6 @@ lambda_mapper = {
 
 
 def invokeLambda(info, lambdaFunc):
-    print()
     lambdaInvokeClient = boto3.client('lambda')
     lambdaInvokeReq = lambdaInvokeClient.invoke(
         FunctionName=lambdaFunc,
@@ -30,7 +29,6 @@ def invokeLambda(info, lambdaFunc):
 def lambda_handler(event, context):
     rawPath = event['rawPath']
     funcString = rawPath.split('/')[-1]
-    print(event)
     if lambda_mapper.get(funcString, None) is None:
         return generate_response(error=True,
                                  message="Not Found!",
@@ -40,7 +38,6 @@ def lambda_handler(event, context):
 
     lambdaNameInvoke = str(lambda_mapper[funcString])
     body = event['body']
-    print(body)
     try:
         response = invokeLambda(info=body, lambdaFunc=lambdaNameInvoke)
     except Exception as e:
