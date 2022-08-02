@@ -247,7 +247,26 @@ Resources:
       TimeToLiveSpecification:
         AttributeName: time_to_live
         Enabled: True
-      
+  TableUser:
+    Type:  AWS::DynamoDB::Table
+    Properties:
+      TableName: !Sub "${StagePara}-User"
+      AttributeDefinitions:
+        -
+          AttributeName: ID
+          AttributeType: S
+        -
+          AttributeName: username
+          AttributeType: S
+      KeySchema:
+        -
+          AttributeName: ID
+          KeyType: HASH
+        -
+          AttributeName: username
+          KeyType: RANGE
+      BillingMode: PAY_PER_REQUEST
+
 Outputs:
   TableGenerateTaskName:
     Description: "Name of table generate task"
@@ -292,3 +311,5 @@ Outputs:
     Value: !Ref TableGenerateDaitaUploadToken
   TableConfirmCodeAuth:
     Value: !Ref TableConfirmCodeAuth
+  TableUser:
+    Value: !Ref TableUser

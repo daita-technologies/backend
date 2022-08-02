@@ -33,13 +33,16 @@ RESPONSE_HEADER = {
 
 PASSWORD_REGEX = r"^(?=.*[a-z])(?=.*[A-Z])(?=.*[0-9])(?=.*[\^$*.\[\]{}\(\)?\-\"!@#%&\/,><\':;|_~`])\S{8,99}$"
 
+TableUser = os.environ['TBL_USER']
+
 
 class User(object):
     def __init__(self):
         self.db_client = boto3.resource("dynamodb", region_name=REGION)
+        self.TBL = TableUser
 
     def create_item(self, info):
-        self.db_client.Table("User").put_item(
+        self.db_client.Table(self.TBL).put_item(
             Item={
                 "ID": info["ID"],
                 "username": info["username"],
@@ -108,16 +111,23 @@ def lambda_handler(event, context):
     except Exception as e:
         print(e)
         raise Exception(MessageSignUpFailed)
-
-    AddTriggerCustomMail(
-        {
-            'lambda_name': os.environ['INVOKE_MAIL_LAMBDA'],
-            'region': REGION,
-            'user': username,
-            'mail': mail,
-            'subject': "Your email confirmation code",
-            'confirm_code_Table': os.environ['TBL_CONFIRM_CODE']
-        }
+    try:
+        AddTriggerCustomMail(
+            {
+                'lambda_name': os.environ['INVOKE_MAIL_LAMBDA'],
+                'region': REGION,
+                'user': username,
+                'mail': mail,
+                'subject': "Your email confirmation code",
+                'confirm_code_Table': os.environ['TBL_CONFIRM_CODE']
+            }
+        )
+    except Exception as e:
+        return generate_response(
+        message=str(e),
+        data={},
+        headers=RESPONSE_HEADER,
+        error= True
     )
     return generate_response(
         message="Sign up for user {} was successful.".format(username),

@@ -33,7 +33,6 @@ def lambda_handler(event, context):
         )
 
     client = boto3.client("ses")
-    print("send mail")
     try:
         response = client.send_email(
             Destination={
@@ -56,7 +55,6 @@ def lambda_handler(event, context):
         return convert_response(
             {"error": True, "success": False, "message": e, "data": None}
         )
-    print(response["MessageId"])
     return convert_response(
         {
             "error": False,

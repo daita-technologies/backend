@@ -19,6 +19,7 @@ RESPONSE_HEADER = {
     "Access-Control-Allow-Creentials": "true",
     "Access-Control-Allow-Methods": "GET, HEAD, OPTIONS, POST, PUT",
 }
+TableUser = os.environ['TBL_USER']
 
 ######################################################################################
 
@@ -65,9 +66,10 @@ def checkEmailVerified(access_token):
 class User(object):
     def __init__(self):
         self.db_client = boto3.resource('dynamodb', region_name=REGION)
+        self.TBL = TableUser
 
     def checkFirstLogin(self, ID, username):
-        response = self.db_client.Table("User").get_item(
+        response = self.db_client.Table(self.TBL).get_item(
             Key={
                 'ID': ID,
                 'username': username
@@ -79,7 +81,7 @@ class User(object):
         return False
 
     def updateActivateUser(self, info):
-        self.db_client.Table("User").update_item(
+        self.db_client.Table(self.TBL).update_item(
             Key={'ID': info['ID'], 'username': info['username']},
             UpdateExpression="SET  #s = :s , #i = :i , #k = :k , #u = :u",
             ExpressionAttributeValues={

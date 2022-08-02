@@ -8,7 +8,13 @@ IDENTITY_POOL_ID = "us-east-2:639788f0-a9b0-460d-9f50-23bbe5bc7140" if os.enviro
 URL = "https://uflt5029de.execute-api.us-east-2.amazonaws.com/devdaitabeapp/" if os.environ[
     'MODE'] == 'dev' else "https://119u2071ul.execute-api.us-east-2.amazonaws.com/dev/"
 ENDPOINTCAPTCHAVERIFY = "https://www.google.com/recaptcha/api/siteverify"
-
+SITEKEYGOOGLE = "6LcqEGMeAAAAAAEDnBue7fwR4pmvNO7JKWkHtAjl"
+SECRETKEYGOOGLE = "6LcqEGMeAAAAAOiJAMcg1NNfj6eA62gQPLJAtQMt"
+ENDPOINTCAPTCHAVERIFY = "https://www.google.com/recaptcha/api/siteverify"
+# Github OpenID wrapper
+# Change these if used with GitHub Enterprise (see below)
+GITHUB_API_URL = "https://api.github.com"
+GITHUB_LOGIN_URL = "https://github.com"
 # config for status of generate task
 VALUE_GENERATE_TASK_STATUS_FINISH = "FINISH"
 VALUE_GENERATE_TASK_STATUS_ERROR = "ERROR"

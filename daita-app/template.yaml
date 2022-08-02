@@ -244,7 +244,7 @@ Resources:
         DomainUserPool: !Ref DomainUserPool
         CallbackUrl: !Ref CallbackUrl
         TableConfirmCodeAuth : !GetAtt DatabaseService.Outputs.TableConfirmCodeAuth
-  
+        TableUser: !GetAtt DatabaseService.Outputs.TableUser
   CoreService:
     Type: AWS::Serverless::Application
     Properties:

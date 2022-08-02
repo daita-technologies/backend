@@ -1,6 +1,7 @@
 import boto3
 import json
 import random
+import time
 from boto3 import resource
 from boto3.dynamodb.conditions import Key
 
@@ -29,13 +30,14 @@ def invoke_sendmail_cognito_service(lambda_name, subject, destination_email, mes
 
 
 class TriggerCustomMailcode:
-    def __init__(self, REGION, TBL):
+    def __init__(self, REGION, Table):
         self.db_client = boto3.resource("dynamodb", region_name=REGION)
-        self.TBL = TBL
+        self.TBL = Table
 
     def create_item(self, info):
         self.db_client.Table(self.TBL).put_item(
-            Item={"user": info["user"], "code": info["code"]}
+            Item={"user": info["user"], "code": info["code"],
+                  "time_to_live": 90*60 + 5 + int(time.time())}
         )
 
     def query_all_partition_key(self, value):
@@ -44,7 +46,6 @@ class TriggerCustomMailcode:
 
     def delete_item(self, info):
         items = (self.query_all_partition_key(value=info["user"])).get("Items")
-        # print(items)
         for item in items:
             self.db_client.Table(self.TBL).delete_item(
                 Key={"user": item["user"], "code": item["code"]}
