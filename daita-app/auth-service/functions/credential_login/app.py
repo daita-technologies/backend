@@ -205,7 +205,6 @@ def lambda_handler(event, context):
     sub, username = claimsToken(resqData['access_token'], 'sub'), claimsToken(
         resqData['access_token'], 'username')
     mail = getMail(username)
-    print(mail, username)
     checkemail = checkInvalidUserRegister(user=username, mail=mail)
     if not CheckEventUserLogin(sub):
         CreateEventUserLoginOauth2(sub, code)

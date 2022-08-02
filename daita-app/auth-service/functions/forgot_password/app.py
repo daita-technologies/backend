@@ -70,14 +70,23 @@ def lambda_handler(event, context):
             headers=RESPONSE_HEADER
         )
     mail = getMail(username)
-    AddTriggerCustomMail({
-        'lambda_name': os.environ['INVOKE_MAIL_LAMBDA'],
-        'region': REGION,
-        'user': username,
-        'mail': mail,
-        'subject': 'Your email confirmation code',
-        'confirm_code_Table': os.environ['TBL_CONFIRM_CODE']
-    })
+    try:
+        AddTriggerCustomMail({
+            'lambda_name': os.environ['INVOKE_MAIL_LAMBDA'],
+            'region': REGION,
+            'user': username,
+            'mail': mail,
+            'subject': 'Your email confirmation code',
+            'confirm_code_Table': os.environ['TBL_CONFIRM_CODE']
+        })
+    except Exception as e:
+        print(e)
+        return generate_response(
+        message=MessageForgotPasswordSuccessfully,
+        headers=RESPONSE_HEADER,
+        error= True
+    )
+
 
     return generate_response(
         message=MessageForgotPasswordSuccessfully,
