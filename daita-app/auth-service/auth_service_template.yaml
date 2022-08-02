@@ -287,10 +287,10 @@ Resources:
       CodeUri: functions/mail_service
       Role:  !GetAtt LambdaExecutionRole.Arn
   
-  TemplateMailInviteFriend:
+  TemplateMailInviteFriendFunction:
     Type: AWS::Serverless::Function
     Properties:
-      Codeuri: functions/template_mail
+      CodeUri: functions/template_mail
       Role: !GetAtt LambdaExecutionRole.Arn
 
 Outputs:
@@ -313,4 +313,4 @@ Outputs:
   Forgotpassword:
     Value: !Ref ForgotpasswordFunction
   TemplateMailInviteFriend:
-    Value: !Ref TemplateMailInviteFriend
+    Value: !Ref TemplateMailInviteFriendFunction
