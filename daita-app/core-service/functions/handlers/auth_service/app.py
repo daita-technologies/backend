@@ -10,7 +10,8 @@ lambda_mapper = {
     'resend_confirmcode': os.environ['RESENDCODEAUTH_LAMBDA'],
     'confirm_code_forgot_password': os.environ['CONFIRMCODEFORGOTPASSWORD_LAMBDA'],
     'forgot_password': os.environ['FORGOTPASSWORD_LAMBDA'],
-    'refresh_token': os.environ['RERRESHTOKEN_LAMBDA']
+    'refresh_token': os.environ['RERRESHTOKEN_LAMBDA'],
+    'template-invite-mail': os.environ['TEMPLATE_MAIL_INVITE_FRIEND_LAMBDA']
 }
 
 

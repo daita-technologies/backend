@@ -137,6 +137,8 @@ Parameters:
     Type: String
   Forgotpassword:
     Type: String
+  TemplateMailInviteFriend:
+    Type: String
   ProjectAsyCreateSample: 
     Type: String  
   ProjectCreateSample:
@@ -553,6 +555,7 @@ Resources:
           RESENDCODEAUTH_LAMBDA: !Ref ResendCodeAuthConfirmCode
           CONFIRMCODEFORGOTPASSWORD_LAMBDA: !Ref ConfirmCodeForgotPassword
           FORGOTPASSWORD_LAMBDA: !Ref Forgotpassword
+          TEMPLATE_MAIL_INVITE_FRIEND_LAMBDA: !Ref TemplateMailInviteFriend
   ProjectTransportFunction:
     Type: AWS::Serverless::Function
     Properties:

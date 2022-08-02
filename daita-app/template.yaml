@@ -296,6 +296,7 @@ Resources:
         ResendCodeAuthConfirmCode: !GetAtt AuthService.Outputs.ResendCodeAuthConfirmCode
         ConfirmCodeForgotPassword: !GetAtt AuthService.Outputs.ConfirmCodeForgotPassword
         Forgotpassword: !GetAtt AuthService.Outputs.Forgotpassword
+        TemplateMailInviteFriend: !GetAtt AuthService.Outputs.TemplateMailInviteFriend
         ###############################################################################################
         ProjectAsyCreateSample: !GetAtt ProjectService.Outputs.ProjectAsyCreateSample
         ProjectCreateSample: !GetAtt ProjectService.Outputs.ProjectCreateSample

@@ -280,11 +280,19 @@ Resources:
       Environment:
         Variables:
           INVOKE_MAIL_LAMBDA: !Ref MailServiceFunction
+  
   MailServiceFunction:
     Type: AWS::Serverless::Function
     Properties:
       CodeUri: functions/mail_service
       Role:  !GetAtt LambdaExecutionRole.Arn
+  
+  TemplateMailInviteFriend:
+    Type: AWS::Serverless::Function
+    Properties:
+      Codeuri: functions/template_mail
+      Role: !GetAtt LambdaExecutionRole.Arn
+
 Outputs:
   UserPoolClientId:
     Value: !Ref CognitoUserPoolClient
@@ -304,3 +312,5 @@ Outputs:
     Value: !Ref ConfirmCodeForgotPasswordFunction
   Forgotpassword:
     Value: !Ref ForgotpasswordFunction
+  TemplateMailInviteFriend:
+    Value: !Ref TemplateMailInviteFriend
