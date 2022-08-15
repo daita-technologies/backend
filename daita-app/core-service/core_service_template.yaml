@@ -129,6 +129,8 @@ Parameters:
     Type: String
   CognitoUserPoolClient:
     Type: String
+  TableFeedback:
+    Type: String
 Resources:
   #================ ROLES =====================================================
 
@@ -593,6 +595,20 @@ Resources:
     Properties:
       CodeUri: functions/handlers/auth_service/template_mail
       Role: !GetAtt LambdaExecutionRole.Arn
+  WebHookBotFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: functions/handlers/webhook
+      Role: !GetAtt LambdaExecutionRole.Arn
+      Environment:
+        Variables:
+          T_FEEDBACK: !Ref TableFeedback
+  InviteFriendMailFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: functions/handlers/send-mail/reference-email
+      Role: !GetAtt LambdaExecutionRole.Arn
+
   # ProjectTransportFunction:
   #   Type: AWS::Serverless::Function
   #   Properties:
