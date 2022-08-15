@@ -5,9 +5,11 @@ updates:
     schedule:
       interval: "weekly"
       day: "monday"
+    open-pull-requests-limit: 10
     target-branch: "develop"
     labels:
       - "dependencies 🔁"
+      - "python 🐍"
     assignees:
       - "ttattl"
 
@@ -16,8 +18,10 @@ updates:
     schedule:
       interval: "weekly"
       day: "monday"
+    open-pull-requests-limit: 10
     target-branch: "develop"
     labels:
       - "dependencies 🔁"
+      - "typescript 𝐓𝐒"
     assignees:
       - "ttattl"
