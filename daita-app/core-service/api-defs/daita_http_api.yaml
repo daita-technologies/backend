@@ -17,7 +17,7 @@ paths:
         credentials:
           Fn::GetAtt: [ApiGatewayCallLambdaRole, Arn]
         uri:
-          Fn::Sub: arn:${AWS::Partition}:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${AuthTransportFunction.Arn}/invocations
+          Fn::Sub: arn:${AWS::Partition}:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${RegisterFunction.Arn}/invocations
         httpMethod: "POST"
         type: "aws_proxy"
         payloadFormatVersion: "2.0"
@@ -30,7 +30,7 @@ paths:
         credentials:
           Fn::GetAtt: [ApiGatewayCallLambdaRole, Arn]
         uri:
-          Fn::Sub: arn:${AWS::Partition}:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${AuthTransportFunction.Arn}/invocations
+          Fn::Sub: arn:${AWS::Partition}:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${LoginFunction.Arn}/invocations
         httpMethod: "POST"
         type: "aws_proxy"
         payloadFormatVersion: "2.0"
@@ -43,7 +43,7 @@ paths:
         credentials:
           Fn::GetAtt: [ApiGatewayCallLambdaRole, Arn]
         uri:
-          Fn::Sub: arn:${AWS::Partition}:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${AuthTransportFunction.Arn}/invocations
+          Fn::Sub: arn:${AWS::Partition}:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${AuthConfirmFunction.Arn}/invocations
         httpMethod: "POST"
         type: "aws_proxy"
         payloadFormatVersion: "2.0"
@@ -56,7 +56,7 @@ paths:
         credentials:
           Fn::GetAtt: [ApiGatewayCallLambdaRole, Arn]
         uri:
-          Fn::Sub: arn:${AWS::Partition}:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${AuthTransportFunction.Arn}/invocations
+          Fn::Sub: arn:${AWS::Partition}:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${ResendCodeAuthConfirmCodeFunction.Arn}/invocations
         httpMethod: "POST"
         type: "aws_proxy"
         payloadFormatVersion: "2.0"
@@ -69,7 +69,7 @@ paths:
         credentials:
           Fn::GetAtt: [ApiGatewayCallLambdaRole, Arn]
         uri:
-          Fn::Sub: arn:${AWS::Partition}:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${AuthTransportFunction.Arn}/invocations
+          Fn::Sub: arn:${AWS::Partition}:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${ConfirmCodeForgotPasswordFunction.Arn}/invocations
         httpMethod: "POST"
         type: "aws_proxy"
         payloadFormatVersion: "2.0"
@@ -82,7 +82,7 @@ paths:
         credentials:
           Fn::GetAtt: [ApiGatewayCallLambdaRole, Arn]
         uri:
-          Fn::Sub: arn:${AWS::Partition}:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${AuthTransportFunction.Arn}/invocations
+          Fn::Sub: arn:${AWS::Partition}:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${ForgotpasswordFunction.Arn}/invocations
         httpMethod: "POST"
         type: "aws_proxy"
         payloadFormatVersion: "2.0"
@@ -95,7 +95,7 @@ paths:
         credentials:
           Fn::GetAtt: [ApiGatewayCallLambdaRole, Arn]
         uri:
-          Fn::Sub: arn:${AWS::Partition}:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${AuthTransportFunction.Arn}/invocations
+          Fn::Sub: arn:${AWS::Partition}:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${LoginRefreshTokenFunction.Arn}/invocations
         httpMethod: "POST"
         type: "aws_proxy"
         payloadFormatVersion: "2.0"
@@ -108,7 +108,7 @@ paths:
         credentials:
           Fn::GetAtt: [ApiGatewayCallLambdaRole, Arn]
         uri:
-          Fn::Sub: arn:${AWS::Partition}:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${AuthTransportFunction.Arn}/invocations
+          Fn::Sub: arn:${AWS::Partition}:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${TemplateMailInviteFriendFunction.Arn}/invocations
         httpMethod: "POST"
         type: "aws_proxy"
         payloadFormatVersion: "2.0"
@@ -273,178 +273,178 @@ paths:
         type: "aws_proxy"
         payloadFormatVersion: "2.0"
 
-  ###==============================
-  ### For project functions
-  /projects/apply_expert_mode_param:
-    post:
-      responses:
-        default:
-          description: "apply generate expert mode parameters"
-      x-amazon-apigateway-integration:
-        credentials:
-          Fn::GetAtt: [ApiGatewayCallLambdaRole, Arn]
-        uri:
-          Fn::Sub: arn:${AWS::Partition}:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${ApplyGenerateExpertParamFunction.Arn}/invocations
-        httpMethod: "POST"
-        type: "aws_proxy"
-        payloadFormatVersion: "2.0"  
+  # ###==============================
+  # ### For project functions
+  # /projects/apply_expert_mode_param:
+  #   post:
+  #     responses:
+  #       default:
+  #         description: "apply generate expert mode parameters"
+  #     x-amazon-apigateway-integration:
+  #       credentials:
+  #         Fn::GetAtt: [ApiGatewayCallLambdaRole, Arn]
+  #       uri:
+  #         Fn::Sub: arn:${AWS::Partition}:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${ApplyGenerateExpertParamFunction.Arn}/invocations
+  #       httpMethod: "POST"
+  #       type: "aws_proxy"
+  #       payloadFormatVersion: "2.0"  
 
-  /projects/delete_images:
-    post:
-      responses:
-        default:
-          description: "delete images"
-      x-amazon-apigateway-integration:
-        credentials:
-          Fn::GetAtt: [ApiGatewayCallLambdaRole, Arn]
-        uri:
-          Fn::Sub: arn:${AWS::Partition}:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${DeleteImages.Arn}/invocations
-        httpMethod: "POST"
-        type: "aws_proxy"
-        payloadFormatVersion: "2.0"
-  /projects/delete:
-    post:
-      responses:
-        default:
-          description: "delete project"
-      x-amazon-apigateway-integration:
-        credentials:
-          Fn::GetAtt: [ApiGatewayCallLambdaRole, Arn]
-        uri:
-          Fn::Sub: arn:${AWS::Partition}:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${DeleteProject.Arn}/invocations
-        httpMethod: "POST"
-        type: "aws_proxy"
-        payloadFormatVersion: "2.0"
-  /projects/create:
-    post:
-      response:
-        default:
-          description: "create project"
-        x-amazon-apigateway-integration:
-          credentials:
-            Fn::GetAtt: [ApiGatewayCallLambdaRole, Arn]
-        uri:
-          Fn::Sub: arn:${AWS::Partition}:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${ProjectTransportFunction.Arn}/invocations
-        httpMethod: "POST"
-        type: "aws_proxy"
-        payloadFormatVersion: "2.0"
-  /projects/create_sample:
-    post:
-      response:
-        default:
-          description: "create project"
-        x-amazon-apigateway-integration:
-          credentials:
-            Fn::GetAtt: [ApiGatewayCallLambdaRole, Arn]
-        uri:
-          Fn::Sub: arn:${AWS::Partition}:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${ProjectTransportFunction.Arn}/invocations
-        httpMethod: "POST"
-        type: "aws_proxy"
-        payloadFormatVersion: "2.0"
-  /projects/list_info:
-    post:
-      response:
-        default:
-          description: "create project"
-        x-amazon-apigateway-integration:
-          credentials:
-            Fn::GetAtt: [ApiGatewayCallLambdaRole, Arn]
-        uri:
-          Fn::Sub: arn:${AWS::Partition}:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${ProjectTransportFunction.Arn}/invocations
-        httpMethod: "POST"
-        type: "aws_proxy"
-        payloadFormatVersion: "2.0"
-  /projects/info:
-    post:
-      response:
-        default:
-          description: "create project"
-        x-amazon-apigateway-integration:
-          credentials:
-            Fn::GetAtt: [ApiGatewayCallLambdaRole, Arn]
-        uri:
-          Fn::Sub: arn:${AWS::Partition}:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${ProjectTransportFunction.Arn}/invocations
-        httpMethod: "POST"
-        type: "aws_proxy"
-        payloadFormatVersion: "2.0"
-  /projects/update_info:
-    post:
-      response:
-        default:
-          description: "create project"
-        x-amazon-apigateway-integration:
-          credentials:
-            Fn::GetAtt: [ApiGatewayCallLambdaRole, Arn]
-        uri:
-          Fn::Sub: arn:${AWS::Partition}:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${ProjectTransportFunction.Arn}/invocations
-        httpMethod: "POST"
-        type: "aws_proxy"
-        payloadFormatVersion: "2.0"
-  /projects/list_data:
-    post:
-      response:
-        default:
-          description: "create project"
-        x-amazon-apigateway-integration:
-          credentials:
-            Fn::GetAtt: [ApiGatewayCallLambdaRole, Arn]
-        uri:
-          Fn::Sub: arn:${AWS::Partition}:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${ProjectTransportFunction.Arn}/invocations
-        httpMethod: "POST"
-        type: "aws_proxy"
-        payloadFormatVersion: "2.0"
-  /projects/download_create:
-    post:
-      response:
-        default:
-          description: "create project"
-        x-amazon-apigateway-integration:
-          credentials:
-            Fn::GetAtt: [ApiGatewayCallLambdaRole, Arn]
-        uri:
-          Fn::Sub: arn:${AWS::Partition}:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${ProjectTransportFunction.Arn}/invocations
-        httpMethod: "POST"
-        type: "aws_proxy"
-        payloadFormatVersion: "2.0"
-  /projects/download_update:
-    post:
-      response:
-        default:
-          description: "create project"
-        x-amazon-apigateway-integration:
-          credentials:
-            Fn::GetAtt: [ApiGatewayCallLambdaRole, Arn]
-        uri:
-          Fn::Sub: arn:${AWS::Partition}:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${ProjectTransportFunction.Arn}/invocations
-        httpMethod: "POST"
-        type: "aws_proxy"
-        payloadFormatVersion: "2.0"
-  /projects/upload_check:
-    post:
-      response:
-        default:
-          description: "create project"
-        x-amazon-apigateway-integration:
-          credentials:
-            Fn::GetAtt: [ApiGatewayCallLambdaRole, Arn]
-        uri:
-          Fn::Sub: arn:${AWS::Partition}:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${ProjectTransportFunction.Arn}/invocations
-        httpMethod: "POST"
-        type: "aws_proxy"
-        payloadFormatVersion: "2.0"
-  /projects/upload_update:
-    post:
-      response:
-        default:
-          description: "create project"
-        x-amazon-apigateway-integration:
-          credentials:
-            Fn::GetAtt: [ApiGatewayCallLambdaRole, Arn]
-        uri:
-          Fn::Sub: arn:${AWS::Partition}:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${ProjectTransportFunction.Arn}/invocations
-        httpMethod: "POST"
-        type: "aws_proxy"
-        payloadFormatVersion: "2.0"
+  # /projects/delete_images:
+  #   post:
+  #     responses:
+  #       default:
+  #         description: "delete images"
+  #     x-amazon-apigateway-integration:
+  #       credentials:
+  #         Fn::GetAtt: [ApiGatewayCallLambdaRole, Arn]
+  #       uri:
+  #         Fn::Sub: arn:${AWS::Partition}:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${DeleteImages.Arn}/invocations
+  #       httpMethod: "POST"
+  #       type: "aws_proxy"
+  #       payloadFormatVersion: "2.0"
+  # /projects/delete:
+  #   post:
+  #     responses:
+  #       default:
+  #         description: "delete project"
+  #     x-amazon-apigateway-integration:
+  #       credentials:
+  #         Fn::GetAtt: [ApiGatewayCallLambdaRole, Arn]
+  #       uri:
+  #         Fn::Sub: arn:${AWS::Partition}:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${DeleteProject.Arn}/invocations
+  #       httpMethod: "POST"
+  #       type: "aws_proxy"
+  #       payloadFormatVersion: "2.0"
+  # /projects/create:
+  #   post:
+  #     response:
+  #       default:
+  #         description: "create project"
+  #       x-amazon-apigateway-integration:
+  #         credentials:
+  #           Fn::GetAtt: [ApiGatewayCallLambdaRole, Arn]
+  #       uri:
+  #         Fn::Sub: arn:${AWS::Partition}:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${ProjectTransportFunction.Arn}/invocations
+  #       httpMethod: "POST"
+  #       type: "aws_proxy"
+  #       payloadFormatVersion: "2.0"
+  # /projects/create_sample:
+  #   post:
+  #     response:
+  #       default:
+  #         description: "create project"
+  #       x-amazon-apigateway-integration:
+  #         credentials:
+  #           Fn::GetAtt: [ApiGatewayCallLambdaRole, Arn]
+  #       uri:
+  #         Fn::Sub: arn:${AWS::Partition}:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${ProjectTransportFunction.Arn}/invocations
+  #       httpMethod: "POST"
+  #       type: "aws_proxy"
+  #       payloadFormatVersion: "2.0"
+  # /projects/list_info:
+  #   post:
+  #     response:
+  #       default:
+  #         description: "create project"
+  #       x-amazon-apigateway-integration:
+  #         credentials:
+  #           Fn::GetAtt: [ApiGatewayCallLambdaRole, Arn]
+  #       uri:
+  #         Fn::Sub: arn:${AWS::Partition}:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${ProjectTransportFunction.Arn}/invocations
+  #       httpMethod: "POST"
+  #       type: "aws_proxy"
+  #       payloadFormatVersion: "2.0"
+  # /projects/info:
+  #   post:
+  #     response:
+  #       default:
+  #         description: "create project"
+  #       x-amazon-apigateway-integration:
+  #         credentials:
+  #           Fn::GetAtt: [ApiGatewayCallLambdaRole, Arn]
+  #       uri:
+  #         Fn::Sub: arn:${AWS::Partition}:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${ProjectTransportFunction.Arn}/invocations
+  #       httpMethod: "POST"
+  #       type: "aws_proxy"
+  #       payloadFormatVersion: "2.0"
+  # /projects/update_info:
+  #   post:
+  #     response:
+  #       default:
+  #         description: "create project"
+  #       x-amazon-apigateway-integration:
+  #         credentials:
+  #           Fn::GetAtt: [ApiGatewayCallLambdaRole, Arn]
+  #       uri:
+  #         Fn::Sub: arn:${AWS::Partition}:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${ProjectTransportFunction.Arn}/invocations
+  #       httpMethod: "POST"
+  #       type: "aws_proxy"
+  #       payloadFormatVersion: "2.0"
+  # /projects/list_data:
+  #   post:
+  #     response:
+  #       default:
+  #         description: "create project"
+  #       x-amazon-apigateway-integration:
+  #         credentials:
+  #           Fn::GetAtt: [ApiGatewayCallLambdaRole, Arn]
+  #       uri:
+  #         Fn::Sub: arn:${AWS::Partition}:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${ProjectTransportFunction.Arn}/invocations
+  #       httpMethod: "POST"
+  #       type: "aws_proxy"
+  #       payloadFormatVersion: "2.0"
+  # /projects/download_create:
+  #   post:
+  #     response:
+  #       default:
+  #         description: "create project"
+  #       x-amazon-apigateway-integration:
+  #         credentials:
+  #           Fn::GetAtt: [ApiGatewayCallLambdaRole, Arn]
+  #       uri:
+  #         Fn::Sub: arn:${AWS::Partition}:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${ProjectTransportFunction.Arn}/invocations
+  #       httpMethod: "POST"
+  #       type: "aws_proxy"
+  #       payloadFormatVersion: "2.0"
+  # /projects/download_update:
+  #   post:
+  #     response:
+  #       default:
+  #         description: "create project"
+  #       x-amazon-apigateway-integration:
+  #         credentials:
+  #           Fn::GetAtt: [ApiGatewayCallLambdaRole, Arn]
+  #       uri:
+  #         Fn::Sub: arn:${AWS::Partition}:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${ProjectTransportFunction.Arn}/invocations
+  #       httpMethod: "POST"
+  #       type: "aws_proxy"
+  #       payloadFormatVersion: "2.0"
+  # /projects/upload_check:
+  #   post:
+  #     response:
+  #       default:
+  #         description: "create project"
+  #       x-amazon-apigateway-integration:
+  #         credentials:
+  #           Fn::GetAtt: [ApiGatewayCallLambdaRole, Arn]
+  #       uri:
+  #         Fn::Sub: arn:${AWS::Partition}:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${ProjectTransportFunction.Arn}/invocations
+  #       httpMethod: "POST"
+  #       type: "aws_proxy"
+  #       payloadFormatVersion: "2.0"
+  # /projects/upload_update:
+  #   post:
+  #     response:
+  #       default:
+  #         description: "create project"
+  #       x-amazon-apigateway-integration:
+  #         credentials:
+  #           Fn::GetAtt: [ApiGatewayCallLambdaRole, Arn]
+  #       uri:
+  #         Fn::Sub: arn:${AWS::Partition}:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${ProjectTransportFunction.Arn}/invocations
+  #       httpMethod: "POST"
+  #       type: "aws_proxy"
+  #       payloadFormatVersion: "2.0"
   ####===================================================================================
   #### For healthcheck API
   /health_check/calculate:

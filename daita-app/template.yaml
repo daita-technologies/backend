@@ -289,27 +289,8 @@ Resources:
         S3BucketName: !Ref S3BucketName
         Mode: !Ref Mode
         ########################################Auth Service#############################################
-        Login: !GetAtt AuthService.Outputs.Login
-        SignUp: !GetAtt AuthService.Outputs.SignUp
-        LoginRefreshToken: !GetAtt AuthService.Outputs.LoginRefreshToken
-        AuthConfirm: !GetAtt AuthService.Outputs.AuthConfirm
-        ResendCodeAuthConfirmCode: !GetAtt AuthService.Outputs.ResendCodeAuthConfirmCode
-        ConfirmCodeForgotPassword: !GetAtt AuthService.Outputs.ConfirmCodeForgotPassword
-        Forgotpassword: !GetAtt AuthService.Outputs.Forgotpassword
-        TemplateMailInviteFriend: !GetAtt AuthService.Outputs.TemplateMailInviteFriend
-        ###############################################################################################
-        ProjectAsyCreateSample: !GetAtt ProjectService.Outputs.ProjectAsyCreateSample
-        ProjectCreateSample: !GetAtt ProjectService.Outputs.ProjectCreateSample
-        ProjectDownloadCreate: !GetAtt ProjectService.Outputs.ProjectDownloadCreate
-        ProjectDownloadUpdate: !GetAtt ProjectService.Outputs.ProjectDownloadUpdate
-        ProjectInfo: !GetAtt ProjectService.Outputs.ProjectInfo
-        ProjectList: !GetAtt ProjectService.Outputs.ProjectList
-        ProjectListData: !GetAtt ProjectService.Outputs.ProjectListData
-        ProjectListInfo: !GetAtt ProjectService.Outputs.ProjectListInfo
-        ProjectSample: !GetAtt ProjectService.Outputs.ProjectSample
-        ProjectUpdateInfo: !GetAtt ProjectService.Outputs.ProjectUpdateInfo
-        ProjectUpdateCheck: !GetAtt ProjectService.Outputs.ProjectUpdateCheck
-        ProjectUploadUpdate: !GetAtt ProjectService.Outputs.ProjectUploadUpdate
+        CognitoUserPoolClient: !GetAtt AuthService.Outputs.UserPoolClientId
+        CognitoUserPool: !GetAtt AuthService.Outputs.UserPool
 
   HealthCheckService:
     Type: AWS::Serverless::Application

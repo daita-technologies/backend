@@ -207,110 +207,110 @@ Resources:
         - ALLOW_USER_SRP_AUTH
       PreventUserExistenceErrors: ENABLED
 
-  LoginFunction:
-    Type:  AWS::Serverless::Function
-    Properties:
-      CodeUri: functions/login
-      Role: !GetAtt LambdaExecutionRole.Arn
+  # LoginFunction:
+  #   Type:  AWS::Serverless::Function
+  #   Properties:
+  #     CodeUri: functions/login
+  #     Role: !GetAtt LambdaExecutionRole.Arn
   
-  RegisterFunction:
-    Type:  AWS::Serverless::Function
-    Properties:
-      CodeUri: functions/sign_up
-      Role: !GetAtt LambdaExecutionRole.Arn
-      Environment:
-        Variables:
-          INVOKE_MAIL_LAMBDA: !Ref MailServiceFunction
+  # RegisterFunction:
+  #   Type:  AWS::Serverless::Function
+  #   Properties:
+  #     CodeUri: functions/sign_up
+  #     Role: !GetAtt LambdaExecutionRole.Arn
+  #     Environment:
+  #       Variables:
+  #         INVOKE_MAIL_LAMBDA: !Ref MailServiceFunction
   
-  LoginRefreshTokenFunction:
-    Type:  AWS::Serverless::Function
-    Properties:
-      CodeUri: functions/login_refresh_token
-      Role: !GetAtt LambdaExecutionRole.Arn
+  # LoginRefreshTokenFunction:
+  #   Type:  AWS::Serverless::Function
+  #   Properties:
+  #     CodeUri: functions/login_refresh_token
+  #     Role: !GetAtt LambdaExecutionRole.Arn
   
-  AuthConfirmFunction:
-    Type:  AWS::Serverless::Function
-    Properties:
-      CodeUri: functions/auth_confirm
-      Role: !GetAtt LambdaExecutionRole.Arn
+  # AuthConfirmFunction:
+  #   Type:  AWS::Serverless::Function
+  #   Properties:
+  #     CodeUri: functions/auth_confirm
+  #     Role: !GetAtt LambdaExecutionRole.Arn
   
-  ConfirmCodeForgotPasswordFunction:
-    Type:  AWS::Serverless::Function
-    Properties:
-      CodeUri: functions/confirm_code_forgot_password
-      Role: !GetAtt LambdaExecutionRole.Arn
+  # ConfirmCodeForgotPasswordFunction:
+  #   Type:  AWS::Serverless::Function
+  #   Properties:
+  #     CodeUri: functions/confirm_code_forgot_password
+  #     Role: !GetAtt LambdaExecutionRole.Arn
   
-  GithubTokenWrapper:
-    Type: AWS::Serverless::Function
-    Properties:
-      CodeUri: functions/github_openid_token_wrapper
-      Role:  !GetAtt LambdaExecutionRole.Arn
+  # GithubTokenWrapper:
+  #   Type: AWS::Serverless::Function
+  #   Properties:
+  #     CodeUri: functions/github_openid_token_wrapper
+  #     Role:  !GetAtt LambdaExecutionRole.Arn
   
-  GithubUserinfoWrapper:
-    Type: AWS::Serverless::Function
-    Properties:
-      CodeUri: functions/github_openid_userinfo_wrapper
-      Role:  !GetAtt LambdaExecutionRole.Arn
+  # GithubUserinfoWrapper:
+  #   Type: AWS::Serverless::Function
+  #   Properties:
+  #     CodeUri: functions/github_openid_userinfo_wrapper
+  #     Role:  !GetAtt LambdaExecutionRole.Arn
 
-  CredentialLoginFunction:
-    Type: AWS::Serverless::Function
-    Properties:
-      CodeUri: functions/credential_login
-      Role:  !GetAtt LambdaExecutionRole.Arn
+  # CredentialLoginFunction:
+  #   Type: AWS::Serverless::Function
+  #   Properties:
+  #     CodeUri: functions/credential_login
+  #     Role:  !GetAtt LambdaExecutionRole.Arn
   
-  LoginSocialFunction:
-    Type: AWS::Serverless::Function
-    Properties:
-      CodeUri: functions/login_social
-      Role:  !GetAtt LambdaExecutionRole.Arn
+  # LoginSocialFunction:
+  #   Type: AWS::Serverless::Function
+  #   Properties:
+  #     CodeUri: functions/login_social
+  #     Role:  !GetAtt LambdaExecutionRole.Arn
   
-  ResendCodeAuthConfirmCodeFunction:
-    Type: AWS::Serverless::Function
-    Properties:
-      CodeUri: functions/resend_confirmcode
-      Role:  !GetAtt LambdaExecutionRole.Arn
-      Environment:
-        Variables:
-          INVOKE_MAIL_LAMBDA: !Ref MailServiceFunction
-  ForgotpasswordFunction:
-    Type: AWS::Serverless::Function
-    Properties:
-      CodeUri: functions/forgot_password
-      Role:  !GetAtt LambdaExecutionRole.Arn
-      Environment:
-        Variables:
-          INVOKE_MAIL_LAMBDA: !Ref MailServiceFunction
+  # ResendCodeAuthConfirmCodeFunction:
+  #   Type: AWS::Serverless::Function
+  #   Properties:
+  #     CodeUri: functions/resend_confirmcode
+  #     Role:  !GetAtt LambdaExecutionRole.Arn
+  #     Environment:
+  #       Variables:
+  #         INVOKE_MAIL_LAMBDA: !Ref MailServiceFunction
+  # ForgotpasswordFunction:
+  #   Type: AWS::Serverless::Function
+  #   Properties:
+  #     CodeUri: functions/forgot_password
+  #     Role:  !GetAtt LambdaExecutionRole.Arn
+  #     Environment:
+  #       Variables:
+  #         INVOKE_MAIL_LAMBDA: !Ref MailServiceFunction
   
-  MailServiceFunction:
-    Type: AWS::Serverless::Function
-    Properties:
-      CodeUri: functions/mail_service
-      Role:  !GetAtt LambdaExecutionRole.Arn
+  # MailServiceFunction:
+  #   Type: AWS::Serverless::Function
+  #   Properties:
+  #     CodeUri: functions/mail_service
+  #     Role:  !GetAtt LambdaExecutionRole.Arn
   
-  TemplateMailInviteFriendFunction:
-    Type: AWS::Serverless::Function
-    Properties:
-      CodeUri: functions/template_mail
-      Role: !GetAtt LambdaExecutionRole.Arn
+  # TemplateMailInviteFriendFunction:
+  #   Type: AWS::Serverless::Function
+  #   Properties:
+  #     CodeUri: functions/template_mail
+  #     Role: !GetAtt LambdaExecutionRole.Arn
 
 Outputs:
   UserPoolClientId:
     Value: !Ref CognitoUserPoolClient
   UserPool:
     Value: !Ref CognitoUserPool
-  Login:
-    Value: !Ref LoginFunction
-  SignUp:
-    Value: !Ref RegisterFunction
-  LoginRefreshToken:
-    Value: !Ref LoginRefreshTokenFunction
-  AuthConfirm:
-    Value: !Ref AuthConfirmFunction
-  ResendCodeAuthConfirmCode:
-    Value: !Ref ResendCodeAuthConfirmCodeFunction
-  ConfirmCodeForgotPassword:
-    Value: !Ref ConfirmCodeForgotPasswordFunction
-  Forgotpassword:
-    Value: !Ref ForgotpasswordFunction
-  TemplateMailInviteFriend:
-    Value: !Ref TemplateMailInviteFriendFunction
+  # Login:
+  #   Value: !Ref LoginFunction
+  # SignUp:
+  #   Value: !Ref RegisterFunction
+  # LoginRefreshToken:
+  #   Value: !Ref LoginRefreshTokenFunction
+  # AuthConfirm:
+  #   Value: !Ref AuthConfirmFunction
+  # ResendCodeAuthConfirmCode:
+  #   Value: !Ref ResendCodeAuthConfirmCodeFunction
+  # ConfirmCodeForgotPassword:
+  #   Value: !Ref ConfirmCodeForgotPasswordFunction
+  # Forgotpassword:
+  #   Value: !Ref ForgotpasswordFunction
+  # TemplateMailInviteFriend:
+  #   Value: !Ref TemplateMailInviteFriendFunction

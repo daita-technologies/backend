@@ -16,9 +16,9 @@ from response import *
 from config import *
 
 import requests
-import base64
-import urllib.parse
 from urllib.parse import urlencode
+from lambda_base_class import LambdaBaseClass
+
 ACCESS_TOKEN_EXPIRATION = 24 * 60 * 60
 USERPOOLID = os.environ['COGNITO_USER_POOL']
 CLIENTPOOLID = os.environ['COGNITO_CLIENT_ID']
@@ -185,73 +185,149 @@ class User(object):
 #############################################################################################################################################################
 
 
-@error_response
-def lambda_handler(event, context):
-    try:
-        body = json.loads(event['body'])
-        code = body['code']
-    except Exception as e:
-        print("error ", e)
+# @error_response
+# def lambda_handler(event, context):
+#     try:
+#         body = json.loads(event['body'])
+#         code = body['code']
+#     except Exception as e:
+#         print("error ", e)
+#         return generate_response(
+#             message=MessageUnmarshalInputJson,
+#             data={},
+#             headers=RESPONSE_HEADER
+#         )
+#     model = User()
+#     resq = Oauth2(code)
+#     if resq.status_code != 200:
+#         raise Exception("Login Social Failed")
+#     resqData = resq.json()
+#     sub, username = claimsToken(resqData['access_token'], 'sub'), claimsToken(
+#         resqData['access_token'], 'username')
+#     mail = getMail(username)
+#     checkemail = checkInvalidUserRegister(user=username, mail=mail)
+#     if not CheckEventUserLogin(sub):
+#         CreateEventUserLoginOauth2(sub, code)
+#     try:
+#         credentialsForIdentity = getCredentialsForIdentity(
+#             resqData['id_token'])
+#     except Exception as e:
+#         print(e)
+#         return generate_response(
+#             message=MessageAuthenFailed,
+#             data={},
+#             headers=RESPONSE_HEADER)
+#     if not model.IsNotcheckFirstLogin(ID=sub, username=username):
+#         if not checkemail:
+#             resp = cog_provider_client.admin_delete_user(
+#                 UserPoolId=USERPOOLID,
+#                 Username=username
+#             )
+#             print(resp)
+#             raise Exception(MessageSignUPEmailInvalid)
+#         responseIdentity = aws_get_identity_id(resqData['id_token'])
+#         if 'IS_ENABLE_KMS' in os.environ and eval(os.environ['IS_ENABLE_KMS']) == True:
+#             kms = createKMSKey(responseIdentity)
+#         else:
+#             kms = ''
+#         model.updateActivateUser(info={
+#             'indentityID': responseIdentity,
+#             'ID': sub,
+#             'username': username,
+#             'kms': kms,
+#         })
+#     name = getDisplayName(username)
+#     result = {
+#         'token': resqData['access_token'],
+#         'resfresh_token': resqData['refresh_token'],
+#         'access_key':  credentialsForIdentity['access_key'],
+#         'session_key':       credentialsForIdentity['session_key'],
+#         'id_token':        resqData['id_token'],
+#         'credential_token_expires_in':    credentialsForIdentity['credential_token_expires_in'],
+#         'token_expires_in': float(int((datetime.now().timestamp() + ACCESS_TOKEN_EXPIRATION)*1000)),
+#         'secret_key':                credentialsForIdentity['secret_key'],
+#         'identity_id': credentialsForIdentity['identity_id'],
+#         'username': username,
+#         'name': name
+#     }
+#     return generate_response(
+#         message=MessageSuccessfullyCredential,
+#         data=result,
+#         headers=RESPONSE_HEADER
+#     )
+
+
+class CredentialSocialLoginClass(LambdaBaseClass):
+    def __init__(self) -> None:
+        super().__init__()
+
+    @LambdaBaseClass.parse_body
+    def parser(self, body):
+        self.body = json.loads(body)
+        self.code = self.body['code']
+
+    def handle(self, event, context):
+        self.parser(event, context)
+        model = User()
+        resq = Oauth2(self.code)
+        if resq.status_code != 200:
+            raise Exception("Login Social Failed")
+        resqData = resq.json()
+        sub, username = claimsToken(resqData['access_token'], 'sub'), claimsToken(
+            resqData['access_token'], 'username')
+        mail = getMail(username)
+        checkemail = checkInvalidUserRegister(user=username, mail=mail)
+        if not CheckEventUserLogin(sub):
+            CreateEventUserLoginOauth2(sub, code)
+        try:
+            credentialsForIdentity = getCredentialsForIdentity(
+                resqData['id_token'])
+        except Exception as e:
+            print(e)
+            return generate_response(
+                message=MessageAuthenFailed,
+                data={},
+                headers=RESPONSE_HEADER)
+        if not model.IsNotcheckFirstLogin(ID=sub, username=username):
+            if not checkemail:
+                resp = cog_provider_client.admin_delete_user(
+                    UserPoolId=USERPOOLID,
+                    Username=username
+                )
+                print(resp)
+                raise Exception(MessageSignUPEmailInvalid)
+            responseIdentity = aws_get_identity_id(resqData['id_token'])
+            if 'IS_ENABLE_KMS' in os.environ and eval(os.environ['IS_ENABLE_KMS']) == True:
+                kms = createKMSKey(responseIdentity)
+            else:
+                kms = ''
+            model.updateActivateUser(info={
+                'indentityID': responseIdentity,
+                'ID': sub,
+                'username': username,
+                'kms': kms,
+            })
+        name = getDisplayName(username)
+        result = {
+            'token': resqData['access_token'],
+            'resfresh_token': resqData['refresh_token'],
+            'access_key':  credentialsForIdentity['access_key'],
+            'session_key':       credentialsForIdentity['session_key'],
+            'id_token':        resqData['id_token'],
+            'credential_token_expires_in':    credentialsForIdentity['credential_token_expires_in'],
+            'token_expires_in': float(int((datetime.now().timestamp() + ACCESS_TOKEN_EXPIRATION)*1000)),
+            'secret_key':                credentialsForIdentity['secret_key'],
+            'identity_id': credentialsForIdentity['identity_id'],
+            'username': username,
+            'name': name
+        }
         return generate_response(
-            message=MessageUnmarshalInputJson,
-            data={},
+            message=MessageSuccessfullyCredential,
+            data=result,
             headers=RESPONSE_HEADER
         )
-    model = User()
-    resq = Oauth2(code)
-    if resq.status_code != 200:
-        raise Exception("Login Social Failed")
-    resqData = resq.json()
-    sub, username = claimsToken(resqData['access_token'], 'sub'), claimsToken(
-        resqData['access_token'], 'username')
-    mail = getMail(username)
-    checkemail = checkInvalidUserRegister(user=username, mail=mail)
-    if not CheckEventUserLogin(sub):
-        CreateEventUserLoginOauth2(sub, code)
-    try:
-        credentialsForIdentity = getCredentialsForIdentity(
-            resqData['id_token'])
-    except Exception as e:
-        print(e)
-        return generate_response(
-            message=MessageAuthenFailed,
-            data={},
-            headers=RESPONSE_HEADER)
-    if not model.IsNotcheckFirstLogin(ID=sub, username=username):
-        if not checkemail:
-            resp = cog_provider_client.admin_delete_user(
-                UserPoolId=USERPOOLID,
-                Username=username
-            )
-            print(resp)
-            raise Exception(MessageSignUPEmailInvalid)
-        responseIdentity = aws_get_identity_id(resqData['id_token'])
-        if 'IS_ENABLE_KMS' in os.environ and eval(os.environ['IS_ENABLE_KMS']) == True:
-            kms = createKMSKey(responseIdentity)
-        else:
-            kms = ''
-        model.updateActivateUser(info={
-            'indentityID': responseIdentity,
-            'ID': sub,
-            'username': username,
-            'kms': kms,
-        })
-    name = getDisplayName(username)
-    result = {
-        'token': resqData['access_token'],
-        'resfresh_token': resqData['refresh_token'],
-        'access_key':  credentialsForIdentity['access_key'],
-        'session_key':       credentialsForIdentity['session_key'],
-        'id_token':        resqData['id_token'],
-        'credential_token_expires_in':    credentialsForIdentity['credential_token_expires_in'],
-        'token_expires_in': float(int((datetime.now().timestamp() + ACCESS_TOKEN_EXPIRATION)*1000)),
-        'secret_key':                credentialsForIdentity['secret_key'],
-        'identity_id': credentialsForIdentity['identity_id'],
-        'username': username,
-        'name': name
-    }
-    return generate_response(
-        message=MessageSuccessfullyCredential,
-        data=result,
-        headers=RESPONSE_HEADER
-    )
+
+
+@error_response
+def lambda_handler(event, context):
+    return CredentialSocialLoginClass.handle(event=event, context=context)
