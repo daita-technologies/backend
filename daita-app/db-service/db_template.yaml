@@ -266,7 +266,19 @@ Resources:
           AttributeName: username
           KeyType: RANGE
       BillingMode: PAY_PER_REQUEST
-
+  TableFeedback:
+    Type:  AWS::DynamoDB::Table
+    Properties:
+      TableName: !Sub "${StagePara}-feedback"
+      AttributeDefinitions:
+        -
+          AttributeName: ID
+          AttributeType: S
+      KeySchema:
+        -
+          AttributeName: ID
+          KeyType: HASH
+      BillingMode: PAY_PER_REQUEST      
 Outputs:
   TableGenerateTaskName:
     Description: "Name of table generate task"
@@ -313,3 +325,5 @@ Outputs:
     Value: !Ref TableConfirmCodeAuth
   TableUser:
     Value: !Ref TableUser
+  TableFeedback:
+    Value: !Ref TableFeedback

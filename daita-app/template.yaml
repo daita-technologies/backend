@@ -291,6 +291,7 @@ Resources:
         ########################################Auth Service#############################################
         CognitoUserPoolClient: !GetAtt AuthService.Outputs.UserPoolClientId
         CognitoUserPool: !GetAtt AuthService.Outputs.UserPool
+        TableFeedback: !GetAtt DatabaseService.Outputs.TableFeedback
 
   HealthCheckService:
     Type: AWS::Serverless::Application
