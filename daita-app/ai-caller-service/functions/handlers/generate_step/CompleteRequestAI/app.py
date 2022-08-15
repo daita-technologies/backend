@@ -44,8 +44,9 @@ def request_update_proj(update_pro_info,list_file_s3,gen_id,task_id):
                 'gen_id' :gen_id 
             })     
         print("[DEBUG] Log Request Update Upload : {}\n".format(info))
-        update_project_output = requests.post('https://nzvw2zvu3d.execute-api.us-east-2.amazonaws.com/staging/projects/upload_update',json=info)
-    
+        # WARNINGGGGGGG :  refactor again 
+        # update_project_output = requests.post('https://nzvw2zvu3d.execute-api.us-east-2.amazonaws.com/staging/projects/upload_update',json=info)
+        update_project_output = requests.post('https://yf6ayuvru1.execute-api.us-east-2.amazonaws.com/dev/projects/upload_update',json=info)
         print("[DEBUG] Request Update Upload: {}\n".format(update_project_output.text))
 
 

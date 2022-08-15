@@ -64,13 +64,6 @@ def checkEmailVerified(access_token):
         if it['Name'] == 'email_verified' and it['Value'] == 'false':
             return False
     return True
-
-####################################################################################
-
-
-def checkEmailVerified(email):
-
-    return True
 ####################################################################################
 
 

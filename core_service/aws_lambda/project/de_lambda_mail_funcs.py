@@ -15,7 +15,8 @@ def deploy_lambda_send_mail(general_info, lambda_service):
                                          ],
                                         {
                                             'USER_POOL_ID' : general_info['USER_POOL_ID'],
-                                            'IDENTITY_POOL_ID': general_info['IDENTITY_POOL_ID']
+                                            'IDENTITY_POOL_ID': general_info['IDENTITY_POOL_ID'],
+                                            'MODE': general_info['MODE']
                                         },
                                         'invite_friend.lambda_handler',
                                         'staging: reference-email')
@@ -26,7 +27,8 @@ def deploy_lambda_send_mail(general_info, lambda_service):
                                          ],
                                         {
                                             'USER_POOL_ID' : general_info['USER_POOL_ID'],
-                                            'IDENTITY_POOL_ID': general_info['IDENTITY_POOL_ID']
+                                            'IDENTITY_POOL_ID': general_info['IDENTITY_POOL_ID'],
+                                            'MODE': general_info['MODE']
                                         },
                                         'cognito_send_mail.lambda_handler',
                                         'staging: cognito_send_mail')

@@ -21,6 +21,8 @@ Globals:
         LOGGING: !Ref minimumLogLevel
         TABLE_GENERATE_TASK: !Ref TableGenerateTaskName
         ROOTEFS: !Ref ROOTEFS
+        EFSPATH: !Ref EFSStorageAI
+        MODE: !Ref Mode
     Layers:
         - !Ref CommonCodeLayerName
 
@@ -45,7 +47,6 @@ Parameters:
     Default: /mnt/generation-task
   ROOTEFS:
     Type: String
-    Default: /efs
   SubnetIDsPara:
     Type: CommaDelimitedList
   SecurityGroupIdsPara:
@@ -68,6 +69,8 @@ Parameters:
   TableDataOriginalName:
     Type: String
   TableDataPreprocessName:
+    Type: String
+  Mode:
     Type: String
 Resources:
   LambdaExecutionRole:
@@ -208,6 +211,63 @@ Resources:
                 - !Ref CallerServiceStateMachine
 
   #================ LAMBDA FUNCTIONS ==========================================
+  
+  ReferenceImageCalculateFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: functions/handlers/download_task/get_reference_images
+      Policies:
+      - Statement:
+        - Effect: Allow
+          Action:
+          - "sqs:*"
+          Resource: "*"
+        - Sid: CloudWatchLogsPolicy
+          Effect: Allow
+          Action:
+            - "logs:CreateLogDelivery"
+            - "logs:GetLogDelivery"
+            - "logs:UpdateLogDelivery"
+            - "logs:DeleteLogDelivery"
+            - "logs:ListLogDeliveries"
+            - "logs:PutResourcePolicy"
+            - "logs:DescribeResourcePolicies"
+            - "logs:DescribeLogGroup"
+            - "logs:DescribeLogGroups"
+          Resource: "*"
+        - Effect: Allow
+          Action:
+          - "dynamodb:GetItem"
+          - "dynamodb:DeleteItem"
+          - "dynamodb:PutItem"
+          - "dynamodb:Scan"
+          - "dynamodb:Query"
+          - "dynamodb:UpdateItem"
+          - "dynamodb:BatchWriteItem"
+          - "dynamodb:BatchGetItem"
+          - "dynamodb:DescribeTable"
+          - "dynamodb:ConditionCheckItem"
+          - "lambda:InvokeFunction"
+          Resource: "*"
+        - Sid: CloudWatchEventsFullAccess
+          Effect: Allow
+          Action:
+            - "events:*"
+          Resource: "*"
+        - Sid: AmazonElasticFileSystemClientFullAccess
+          Effect: Allow
+          Action:
+          - elasticfilesystem:ClientMount
+          - elasticfilesystem:ClientRootAccess
+          - elasticfilesystem:ClientWrite
+          - elasticfilesystem:DescribeMountTargets
+          Resource: "*"
+        - Effect: Allow
+          Action:
+            - s3:GetObject
+            - s3:PutObject
+            - s3:PutObjectAcl
+          Resource: "*"
   StopTaskStop:
     Type:  AWS::Serverless::Function
     DependsOn: CallerServiceStateMachineLogGroup
@@ -1147,6 +1207,7 @@ Resources:
             FunctionName: !Ref HandleDownloadImages
             FunctionName: !Ref HandleMergeResultDownloadImages
             FunctionName: !Ref HandleGetResultDownloadTask
+            FunctionName: !Ref ReferenceImageCalculateFunction
         - Statement:
           - Sid: ALLOWCRUDDynamoDB
             Effect: Allow
@@ -1191,6 +1252,7 @@ Resources:
         HandleDownloadImages: !GetAtt HandleDownloadImages.Arn
         HandleMergeResultDownloadImages: !GetAtt HandleMergeResultDownloadImages.Arn
         HandleGetResultDownloadTask: !GetAtt HandleGetResultDownloadTask.Arn
+        ReferenceImageCalculateFunction: !GetAtt ReferenceImageCalculateFunction.Arn
 ############################################################################################################
   GenerateStateMachine:
     Type: AWS::Serverless::StateMachine

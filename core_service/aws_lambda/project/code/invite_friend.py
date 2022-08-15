@@ -22,7 +22,8 @@ def get_email(user):
         return None, e
     info_user = list(filter(lambda x: x["Username"] == user, resp["Users"]))
     if len(info_user):
-        email = list(filter(lambda x: x["Name"] == "email", info_user[0]["Attributes"]))
+        email = list(
+            filter(lambda x: x["Name"] == "email", info_user[0]["Attributes"]))
         return email[0]["Value"], None
     return None, None
 
@@ -36,11 +37,11 @@ def lambda_handler(event, context):
         return convert_response(
             {"error": True, "success": False, "message": repr(e), "data": None}
         )
-    print(body)
     email_name, error = get_email(source_user)
     if error != None:
         return convert_response(
-            {"error": True, "success": False, "message": str(error), "data": None}
+            {"error": True, "success": False,
+                "message": str(error), "data": None}
         )
     if email_name == None:
         return convert_response(

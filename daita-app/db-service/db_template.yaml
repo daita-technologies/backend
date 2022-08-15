@@ -194,6 +194,78 @@ Resources:
           Projection:
             ProjectionType: ALL        
       BillingMode: PAY_PER_REQUEST
+  TableGenerateDaitaUploadToken:
+    Type:  AWS::DynamoDB::Table
+    Properties:
+      TableName: !Sub "${StagePara}-generate-daita-upload-token"
+      AttributeDefinitions:
+        -
+          AttributeName: identity_id
+          AttributeType: S
+        -
+          AttributeName: token
+          AttributeType: S
+      KeySchema:
+        -
+          AttributeName: identity_id
+          KeyType: HASH
+        -
+          AttributeName: token
+          KeyType: RANGE
+      BillingMode: PAY_PER_REQUEST
+      TimeToLiveSpecification:
+        AttributeName: time_to_live
+        Enabled: True
+      GlobalSecondaryIndexes:
+        -
+          IndexName: !Sub  "${StagePara}-generate-daita-upload-token-1"
+          KeySchema:
+            - 
+              AttributeName: token
+              KeyType: HASH
+          Projection:
+            ProjectionType: ALL
+  TableConfirmCodeAuth:
+    Type:  AWS::DynamoDB::Table
+    Properties:
+      TableName: !Sub "${StagePara}-confirm-code"
+      AttributeDefinitions:
+        -
+          AttributeName: user
+          AttributeType: S
+        -
+          AttributeName: code
+          AttributeType: S
+      KeySchema:
+        -
+          AttributeName: user
+          KeyType: HASH
+        -
+          AttributeName: code
+          KeyType: RANGE
+      BillingMode: PAY_PER_REQUEST
+      TimeToLiveSpecification:
+        AttributeName: time_to_live
+        Enabled: True
+  TableUser:
+    Type:  AWS::DynamoDB::Table
+    Properties:
+      TableName: !Sub "${StagePara}-User"
+      AttributeDefinitions:
+        -
+          AttributeName: ID
+          AttributeType: S
+        -
+          AttributeName: username
+          AttributeType: S
+      KeySchema:
+        -
+          AttributeName: ID
+          KeyType: HASH
+        -
+          AttributeName: username
+          KeyType: RANGE
+      BillingMode: PAY_PER_REQUEST
 
 Outputs:
   TableGenerateTaskName:
@@ -235,3 +307,9 @@ Outputs:
     Value: down_tasks
   IndexTaskProjectIDTaskIDName:
     Value: !Ref IndexTaskProjectIDTaskIDName
+  TableGenerateDaitaUploadToken:
+    Value: !Ref TableGenerateDaitaUploadToken
+  TableConfirmCodeAuth:
+    Value: !Ref TableConfirmCodeAuth
+  TableUser:
+    Value: !Ref TableUser

@@ -49,6 +49,8 @@ Parameters:
     Default: 'noreply@daita.tech'
   CommonCodeLayerName:
     Type: String
+  Mode:
+    Type: String
   # CompressedByLambdaMaxinumNrOfFiles:
   #   Type: Number
   #   Default: 100
@@ -63,7 +65,9 @@ Globals:
       - x86_64
     Layers:
       - !Ref CommonCodeLayerName
-
+    Environment:
+      Variables:
+        MODE: !Ref Mode
 
 Resources:
   #================ ROLES =====================================================
@@ -281,15 +285,15 @@ Resources:
     Properties:
       RequiresCompatibilities:
         - "FARGATE"
-      ExecutionRoleArn: arn:aws:iam::366577564432:role/ecsTaskExecutionRole #TODO:create this in template
-      TaskRoleArn: arn:aws:iam::366577564432:role/DecompressTaskRole #TODO:create this in template
+      ExecutionRoleArn: !Sub "arn:aws:iam::${AWS::AccountId}:role/ecsTaskExecutionRole" #TODO:create this in template
+      TaskRoleArn: !Sub "arn:aws:iam::${AWS::AccountId}:role/DecompressTaskRole" #TODO:create this in template
       Cpu: 256
       Memory: 512
       NetworkMode: awsvpc
       ContainerDefinitions:
         -
           Name: "compress-download"
-          Image: !Sub "366577564432.dkr.ecr.${AWS::Region}.amazonaws.com/${CompressDownloadEcrRepositoryName}:latest"
+          Image: !Sub "${AWS::AccountId}.dkr.ecr.${AWS::Region}.amazonaws.com/${CompressDownloadEcrRepositoryName}:latest"
           Cpu: 256
           Memory: 512
           Environment:

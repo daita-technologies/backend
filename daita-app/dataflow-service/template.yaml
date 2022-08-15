@@ -44,16 +44,18 @@ Parameters:
     Default: 'noreply@daita.tech'
   CommonCodeLayerName:
     Type: String
-
-
+  Mode:
+    Type: String
 Globals:
   Function:
-    Timeout: 10
+    Timeout: 180
     Handler: app.lambda_handler
     Runtime: python3.8
     Architectures:
       - x86_64
-
+    Environment:
+      Variables:
+        MODE: !Ref Mode
 
 Resources:
   #================ ROLES =====================================================
@@ -153,7 +155,8 @@ Resources:
         VPCEndpointForS3: !Ref VPCEndpointForS3
         VPCEndpointForDynamoDB: !Ref VPCEndpointForDynamoDB
         CommonCodeLayerName: !Ref CommonCodeLayerName
-
+        EFSFileSystemId: !Ref EFSFileSystemId
+        Mode: !Ref Mode
   CompressDownloadApp:
     Type: AWS::Serverless::Application
     Properties:
@@ -173,8 +176,8 @@ Resources:
         VPCEndpointForDynamoDB: !Ref VPCEndpointForDynamoDB
         SESIdentityName: noreply@daita.tech
         CommonCodeLayerName: !Ref CommonCodeLayerName
-
-
+        EFSFileSystemId: !Ref EFSFileSystemId
+        Mode: !Ref Mode
 
 Outputs:
   DecompressFileStateMachineArn:

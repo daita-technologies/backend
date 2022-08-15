@@ -13,7 +13,8 @@ def deploy_lambda_s3(general_info, lambda_service):
                                          ],
                                         {
                                             'USER_POOL_ID' : general_info['USER_POOL_ID'],
-                                            'IDENTITY_POOL_ID': general_info['IDENTITY_POOL_ID']
+                                            'IDENTITY_POOL_ID': general_info['IDENTITY_POOL_ID'],
+                                            'MODE': general_info['MODE']
                                         },
                                         'presigned_url_s3.py.lambda_handler',
                                         'staging: presigned_url_s3.py')

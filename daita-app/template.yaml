@@ -5,6 +5,9 @@ Description: >
 
 ## The general rule seems to be to use !Sub for in line substitutions and !ref for stand alone text
 Parameters:
+  Mode:
+    Type: String
+    Default: staging
   Stage:
     Type: String
     Default: dev
@@ -14,15 +17,39 @@ Parameters:
   SecurityGroupIds:
     Type: String
     Default: 'sg-0315a5ecee0dc69fe,sg-0b3b2fcc4dc7686ad,sg-af50cbde,sg-07c27f59bc172f180,sg-0796222bd5149736f'
+  SecurityGroupsIdsDefault:
+    Type: String
+    Default: 'sg-af50cbde'
   SubnetIDs:
     Type:  String
+    Default: subnet-31ff5b5a
+  SubnetIDDefault:
+    Type: String
     Default: subnet-31ff5b5a
   S3BucketName:
     Type: String
     Default: daita-client-data
+  VPCid:
+    Type: String
+    Default: vpc-53239e38
+  EFSFileSystemId:
+    Type:  String
+    Default: fs-0199771f2dfe97ace
   MaxConcurrencyTasks:
     Type: String
     Default: 3
+  ROOTEFS:
+    Type: String
+    Default: /efs
+  DomainUserPool:
+    Type: String
+    Default: auth.daita.tech
+  LogoutUrl:
+    Type: String
+    Default: https://app.daita.tech
+  CallbackUrl:
+    Type: String
+    Default: https://nzvw2zvu3d.execute-api.us-east-2.amazonaws.com/staging/auth/login_social
 Resources:
   #=============== SYSTEM PARAMETER CONFIGURATON ==============================
   LimitPreprocessTimes:
@@ -30,7 +57,7 @@ Resources:
     Properties:
       Name: !Sub "${Stage}-LimitPreprocessTimes"
       Type: String
-      Value: "1"
+      Value: "5"
   LimitAugmentTimes:
     Type: AWS::SSM::Parameter
     Properties:
@@ -55,7 +82,6 @@ Resources:
       Name: !Sub "${Stage}-MaxHeightResolutionImage"
       Type: String
       Value: "4000"
-
 
   #=============== ECR ========================================================
   DecompressEcrRepository:
@@ -146,6 +172,8 @@ Resources:
       ContentUri: shared-layer/commons/
       CompatibleRuntimes:
         - python3.8
+      
+
 
   #================ APPLICATIONS  =============================================
   AICallerService:
@@ -166,7 +194,9 @@ Resources:
         TableDataOriginalName: !GetAtt DatabaseService.Outputs.TableDataOriginalName
         TableDataPreprocessName: !GetAtt DatabaseService.Outputs.TableDataPreprocessName
         MaxConcurrencyTasks: !Ref MaxConcurrencyTasks
-
+        EFSFileSystemId: !Ref EFSFileSystemId
+        ROOTEFS: !Ref ROOTEFS
+        Mode: !Ref Mode
   DataFlowService:
     Type: AWS::Serverless::Application
     Properties:
@@ -180,14 +210,41 @@ Resources:
         CompressDownloadEcrRepositoryName: !Ref CompressDownloadEcrRepository
         TableMethodsName: !GetAtt DatabaseService.Outputs.TableMethodsName
         CommonCodeLayerName: !Ref CommonCodeLayer
-
+        VpcId: !Ref VPCid
+        SubnetId: !Ref SubnetIDs
+        EFSFileSystemId: !Ref EFSFileSystemId
+        SecurityGroupIds: !Ref SecurityGroupsIdsDefault
+        Mode: !Ref Mode
   DatabaseService:
     Type: AWS::Serverless::Application
     Properties:
       Location: db-service/db_template.yaml
       Parameters:
         StagePara: !Ref Stage
+  
+  ProjectService:
+    Type:  AWS::Serverless::Application
+    Properties:
+      Location: project-service/projects_service.yaml
+      Parameters:
+        StagePara: !Ref Stage
+        Mode: !Ref Mode
+        CommonCodeLayerName: !Ref CommonCodeLayer
 
+  AuthService:
+    Type: AWS::Serverless::Application
+    Properties:
+      Location: auth-service/auth_service_template.yaml
+      Parameters:
+        StagePara: !Ref Stage
+        LambdaRole: !GetAtt GeneralLambdaExecutionRole.Arn
+        Mode: !Ref Mode
+        CommonCodeLayerName: !Ref CommonCodeLayer
+        LogoutUrl: !Ref LogoutUrl
+        DomainUserPool: !Ref DomainUserPool
+        CallbackUrl: !Ref CallbackUrl
+        TableConfirmCodeAuth : !GetAtt DatabaseService.Outputs.TableConfirmCodeAuth
+        TableUser: !GetAtt DatabaseService.Outputs.TableUser
   CoreService:
     Type: AWS::Serverless::Application
     Properties:
@@ -228,6 +285,12 @@ Resources:
         TaskQueueName: !GetAtt AICallerService.Outputs.TaskQueueName
         TableDataOriginalName: !GetAtt DatabaseService.Outputs.TableDataOriginalName
         TableDataAugmentName: !GetAtt DatabaseService.Outputs.TableDataAugmentName
+        TableGenerateDaitaUploadToken: !GetAtt DatabaseService.Outputs.TableGenerateDaitaUploadToken
+        S3BucketName: !Ref S3BucketName
+        Mode: !Ref Mode
+        ########################################Auth Service#############################################
+        CognitoUserPoolClient: !GetAtt AuthService.Outputs.UserPoolClientId
+        CognitoUserPool: !GetAtt AuthService.Outputs.UserPool
 
   HealthCheckService:
     Type: AWS::Serverless::Application
@@ -243,7 +306,7 @@ Resources:
         TableDataPreprocessName: !GetAtt DatabaseService.Outputs.TableDataPreprocessName
         CommonCodeLayerName: !Ref CommonCodeLayer
         ApplicationPara: !Ref Application
-
+        Mode: !Ref Mode
   ReferenceImageService:
     Type: AWS::Serverless::Application
     Properties:
@@ -260,8 +323,7 @@ Resources:
         BatchsizeCalculateReferenceImage: !Ref BatchsizeCalculateReferenceImage
         MaxWidthResolutionImage: !Ref MaxWidthResolutionImage
         MaxHeightResolutionImage: !Ref MaxHeightResolutionImage
-
-
+        Mode: !Ref Mode
 Outputs:
   ZZBC:
     Value: Stage
