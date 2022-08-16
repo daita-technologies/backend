@@ -18,8 +18,6 @@ GENERAL_SETUP = {
     'USER_POOL_ID': os.environ.get('USER_POOL_ID','us-east-2_ZbwpnYN4g'),
     'IDENTITY_POOL_ID': os.environ.get('IDENTITY_POOL_ID','us-east-2:fa0b76bc-01fa-4bb8-b7cf-a5000954aafb'),
     'CLIENT_ID':os.environ.get('CLIENT_ID','4cpbb5etp3q7grnnrhrc7irjoa'),
-    'aws_access_key_id':os.environ.get('aws_access_key_id','AKIAVKWNZXMINQ6JTYXY'),
-    'aws_secret_access_key':os.environ.get('aws_secret_access_key','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'),
     'DOWNLOAD_SERVICE_URL': '3.140.206.255',
 
     'T_PROJECT' : MODE_DB + 'projects',
