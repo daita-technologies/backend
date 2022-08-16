@@ -1,0 +1,14 @@
+Parameters:
+  UserPoolClientId:
+    Type: String
+  ProviderNameUserPool:
+    Type: String
+Resources:
+  IdentityPool:
+     Type: "AWS::Cognito::IdentityPool"
+     Properties:
+      IdentityPoolName: !Ref AWS::StackName
+      AllowUnauthenticatedIdentities: true
+      CognitoIdentityProviders:
+        - ClientId: !Ref UserPoolClientId
+          ProviderName:  !Ref ProviderNameUserPool

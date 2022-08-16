@@ -231,20 +231,31 @@ Resources:
         Mode: !Ref Mode
         CommonCodeLayerName: !Ref CommonCodeLayer
 
-  AuthService:
+  CognitoUserPool:
     Type: AWS::Serverless::Application
     Properties:
-      Location: auth-service/auth_service_template.yaml
+      Location: auth-service/CognitoUserPool/template.yaml
       Parameters:
         StagePara: !Ref Stage
-        LambdaRole: !GetAtt GeneralLambdaExecutionRole.Arn
         Mode: !Ref Mode
         CommonCodeLayerName: !Ref CommonCodeLayer
-        LogoutUrl: !Ref LogoutUrl
+        
+  CognitoClient:
+    Type: AWS::Serverless::Application
+    Properties:
+      Location: auth-service/CognitoClient/template.yaml
+      Parameters:
         DomainUserPool: !Ref DomainUserPool
-        CallbackUrl: !Ref CallbackUrl
-        TableConfirmCodeAuth : !GetAtt DatabaseService.Outputs.TableConfirmCodeAuth
-        TableUser: !GetAtt DatabaseService.Outputs.TableUser
+        CognitoUserPool: !GetAtt CognitoUserPool.Outputs.UserPool
+        StagePara: !Ref Stage
+        AuthHttpAPI: !GetAtt CognitoUserPool.Outputs.AuthHttpAPI
+  IdentityPool:
+    Type: AWS::Serverless::Application
+    Properties:
+      Location: auth-service/IdentityPool/template.yaml
+      Parameters:
+        UserPoolClientId: !GetAtt CognitoClient.Outputs.UserPoolClientId
+        ProviderNameUserPool: !GetAtt CognitoUserPool.Outputs.ProviderNameUserPool
   CoreService:
     Type: AWS::Serverless::Application
     Properties:
@@ -289,9 +300,10 @@ Resources:
         S3BucketName: !Ref S3BucketName
         Mode: !Ref Mode
         ########################################Auth Service#############################################
-        CognitoUserPoolClient: !GetAtt AuthService.Outputs.UserPoolClientId
-        CognitoUserPool: !GetAtt AuthService.Outputs.UserPool
+        CognitoUserPoolClient: !GetAtt CognitoClient.Outputs.UserPoolClientId
+        CognitoUserPool: !GetAtt CognitoUserPool.Outputs.UserPool
         TableFeedback: !GetAtt DatabaseService.Outputs.TableFeedback
+        DomainUserPool: !Ref DomainUserPool
 
   HealthCheckService:
     Type: AWS::Serverless::Application
