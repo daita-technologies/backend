@@ -306,8 +306,8 @@ Resources:
         S3BucketName: !Ref S3BucketName
         Mode: !Ref Mode
         ########################################Auth Service#############################################
-        CognitoUserPoolClient: !GetAtt AuthService.Outputs.UserPoolClientId
-        CognitoUserPool: !GetAtt AuthService.Outputs.UserPool
+        CognitoUserPoolClient: !GetAtt CognitoClient.Outputs.UserPoolClientId
+        CognitoUserPool: !GetAtt CognitoUserPool.Outputs.UserPool
 
   HealthCheckService:
     Type: AWS::Serverless::Application
