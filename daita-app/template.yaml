@@ -256,12 +256,14 @@ Resources:
       Parameters:
         UserPoolClientId: !GetAtt CognitoClient.Outputs.UserPoolClientId
         ProviderNameUserPool: !GetAtt CognitoUserPool.Outputs.ProviderNameUserPool
-  # RoleIdentityS3:
-  #   Type: AWS::Serverless::Application
-  #   Properties:
-  #     Location: auth-service/RoleIdentity/template.yaml
-  #     Parameters:
-  #       Bucket: !Ref S3BucketName
+  RoleIdentityS3:
+    Type: AWS::Serverless::Application
+    Properties:
+      Location: auth-service/RoleIdentity/template.yaml
+      Parameters:
+        Bucket: !Ref S3BucketName
+        IdentityPool: !GetAtt IdentityPool.Outputs.IdentityPool
+
   CoreService:
     Type: AWS::Serverless::Application
     Properties:

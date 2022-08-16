@@ -12,3 +12,6 @@ Resources:
       CognitoIdentityProviders:
         - ClientId: !Ref UserPoolClientId
           ProviderName:  !Ref ProviderNameUserPool
+Outputs:
+  IdentityPool:
+    Value: !Ref IdentityPool
