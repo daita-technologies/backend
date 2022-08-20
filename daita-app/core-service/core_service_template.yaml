@@ -25,8 +25,8 @@ Globals:
         TABLE_HEALTHCHECK_TASK: !Ref TableHealthCheckTasksName
         TABLE_HEALTHCHECK_INFO: !Ref TableHealthCheckInfoName
         INDEX_TASK_PROJECTID_TASKID: !Ref ParaIndexTaskProjectIDTaskID
-        COGNITO_CLIENT_ID: !Ref CognitoUserPoolClient
         COGNITO_USER_POOL: !Ref CognitoUserPool
+        COGNITO_CLIENT_ID: !Ref CognitoUserPoolClient
         BUCKET_NAME: !Ref S3BucketName
         MODE: !Ref Mode
     Layers:
@@ -128,8 +128,6 @@ Parameters:
   CognitoUserPool:
     Type: String
   CognitoUserPoolClient:
-    Type: String
-  TableFeedback:
     Type: String
 Resources:
   #================ ROLES =====================================================
@@ -255,6 +253,17 @@ Resources:
 
 
   #================ LAMBDA FUNCTIONS ==========================================
+  
+  # LoginSocialFunction:
+  #   Type: AWS::Serverless::Function
+  #   Properties:
+  #     CodeUri: functions/handlers/auth_service/login_social
+  #     Role:  !GetAtt LambdaExecutionRole.Arn
+  # GithubTokenWrapper:
+  #   Type: AWS::Serverless::Function
+  #   Properties:
+  #     CodeUri: functions/handlers/auth_service/github_openid_token_wrapper
+  #     Role:  !GetAtt LambdaExecutionRole.Arn
   CreatePresignUrlForImageFeedbackFunction:
     Type: AWS::Serverless::Function
     Properties:
@@ -326,6 +335,7 @@ Resources:
           TABLE_PREPROCESS: !Ref TableDataPreprocessName
           MAX_CONCURRENCY_TASK: !Ref MaxConcurrencyTasks
           QUEUE : !Ref TaskQueueName
+
   TaskProgressFunction:
     Type: AWS::Serverless::Function
     Properties:
@@ -515,7 +525,7 @@ Resources:
     Properties:
       CodeUri: functions/handlers/auth_service/login
       Role: !GetAtt LambdaExecutionRole.Arn
-  
+      
   RegisterFunction:
     Type:  AWS::Serverless::Function
     Properties:
@@ -524,49 +534,31 @@ Resources:
       Environment:
         Variables:
           INVOKE_MAIL_LAMBDA: !Ref MailServiceFunction
-  
+
   LoginRefreshTokenFunction:
     Type:  AWS::Serverless::Function
     Properties:
       CodeUri: functions/handlers/auth_service/login_refresh_token
       Role: !GetAtt LambdaExecutionRole.Arn
-  
+
   AuthConfirmFunction:
     Type:  AWS::Serverless::Function
     Properties:
       CodeUri: functions/handlers/auth_service/auth_confirm
       Role: !GetAtt LambdaExecutionRole.Arn
-  
+
   ConfirmCodeForgotPasswordFunction:
     Type:  AWS::Serverless::Function
     Properties:
       CodeUri: functions/handlers/auth_service/confirm_code_forgot_password
       Role: !GetAtt LambdaExecutionRole.Arn
-  
-  GithubTokenWrapper:
-    Type: AWS::Serverless::Function
-    Properties:
-      CodeUri: functions/handlers/auth_service/github_openid_token_wrapper
-      Role:  !GetAtt LambdaExecutionRole.Arn
-  
-  GithubUserinfoWrapper:
-    Type: AWS::Serverless::Function
-    Properties:
-      CodeUri: functions/handlers/auth_service/github_openid_userinfo_wrapper
-      Role:  !GetAtt LambdaExecutionRole.Arn
 
   CredentialLoginFunction:
     Type: AWS::Serverless::Function
     Properties:
       CodeUri: functions/handlers/auth_service/credential_login
       Role:  !GetAtt LambdaExecutionRole.Arn
-  
-  LoginSocialFunction:
-    Type: AWS::Serverless::Function
-    Properties:
-      CodeUri: functions/handlers/auth_service/login_social
-      Role:  !GetAtt LambdaExecutionRole.Arn
-  
+
   ResendCodeAuthConfirmCodeFunction:
     Type: AWS::Serverless::Function
     Properties:
@@ -575,6 +567,7 @@ Resources:
       Environment:
         Variables:
           INVOKE_MAIL_LAMBDA: !Ref MailServiceFunction
+
   ForgotpasswordFunction:
     Type: AWS::Serverless::Function
     Properties:
@@ -583,51 +576,18 @@ Resources:
       Environment:
         Variables:
           INVOKE_MAIL_LAMBDA: !Ref MailServiceFunction
-  
+
   MailServiceFunction:
     Type: AWS::Serverless::Function
     Properties:
       CodeUri: functions/handlers/auth_service/mail_service
       Role:  !GetAtt LambdaExecutionRole.Arn
-  
+
   TemplateMailInviteFriendFunction:
     Type: AWS::Serverless::Function
     Properties:
       CodeUri: functions/handlers/auth_service/template_mail
       Role: !GetAtt LambdaExecutionRole.Arn
-  WebHookBotFunction:
-    Type: AWS::Serverless::Function
-    Properties:
-      CodeUri: functions/handlers/webhook
-      Role: !GetAtt LambdaExecutionRole.Arn
-      Environment:
-        Variables:
-          T_FEEDBACK: !Ref TableFeedback
-  InviteFriendMailFunction:
-    Type: AWS::Serverless::Function
-    Properties:
-      CodeUri: functions/handlers/send-mail/reference-email
-      Role: !GetAtt LambdaExecutionRole.Arn
-
-  # ProjectTransportFunction:
-  #   Type: AWS::Serverless::Function
-  #   Properties:
-  #     CodeUri: functions/handlers/project_service
-  #     Role: !GetAtt LambdaExecutionRole.Arn
-  #     Environment:
-  #       Variables:
-  #         PRJ_ASY_CREATE: !Ref ProjectAsyCreateSample
-  #         PRJ_CREATE_SAMPLE: !Ref ProjectCreateSample
-  #         PRJ_DOWNLOAD_CREATE: !Ref  ProjectDownloadCreate
-  #         PRJ_DOWNLOAD_UPDATE: !Ref ProjectDownloadUpdate
-  #         PRJ_INFO: !Ref ProjectInfo
-  #         PRJ_LIST: !Ref ProjectList
-  #         PRJ_LIST_DATA: !Ref ProjectListData
-  #         PRJ_LIST_INFO: !Ref ProjectListInfo
-  #         PRJ_SAMPLE: !Ref  ProjectSample
-  #         PRJ_UPDATE_INFO: !Ref ProjectUpdateInfo
-  #         PRJ_UPDATE_CHECK: !Ref  ProjectUpdateCheck
-  #         PRJ_UPLOAD_UPDATE: !Ref ProjectUploadUpdate
 Outputs:
   CallerServiceHttpApiUrl:
     Description: "Url of the Caller service API"
