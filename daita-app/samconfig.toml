@@ -20,8 +20,8 @@ region = "us-east-2"
 confirm_changeset = true
 capabilities = "CAPABILITY_IAM CAPABILITY_AUTO_EXPAND"
 disable_rollback = true
-image_repositories = ["HealthCheckService/CalculateHealthCheckFunction=366577564432.dkr.ecr.us-east-2.amazonaws.com/devdaitaapp620f3a3f/healthcheckservicecalculatehealthcheckfunction6d6be9a4repo", "ReferenceImageService/CalculateReferenceImageFunction=366577564432.dkr.ecr.us-east-2.amazonaws.com/devdaitaapp620f3a3f/referenceimageservicecalculatereferenceimagefunctione6710baarepo"]
-parameter_overrides = "Stage=\"dev\" Application=\"daita\" SecurityGroupIds=\"sg-0315a5ecee0dc69fe,sg-0b3b2fcc4dc7686ad,sg-af50cbde,sg-07c27f59bc172f180,sg-0796222bd5149736f\" SubnetIDs=\"subnet-31ff5b5a\" S3BucketName=\"daita-client-data\" MaxConcurrencyTasks=\"3\""
+image_repositories = ["HealthCheckService/CalculateHealthCheckFunction=737589818430.dkr.ecr.us-east-2.amazonaws.com/devdaitaapp620f3a3f/healthcheckservicecalculatehealthcheckfunction6d6be9a4repo", "ReferenceImageService/CalculateReferenceImageFunction=737589818430.dkr.ecr.us-east-2.amazonaws.com/devdaitaapp620f3a3f/referenceimageservicecalculatereferenceimagefunctione6710baarepo"]
+parameter_overrides = "Mode=\"dev\" Stage=\"dev\" Application=\"daita\" SecurityGroupIds=\"sg-0c9a0ca7844d7b128,sg-00d8b4ca79ee1e42f,sg-007caf776eee9bd32,sg-04b9c865721337372,sg-0b411b5391db8d7a3\" SecurityGroupsIdsDefault=\"sg-007caf776eee9bd32\" SubnetIDs=\"subnet-0642064673fd68d2e\" SubnetIDDefault=\"subnet-079365f0ecde37d92\" S3BucketName=\"client-data-test\" VPCid=\"vpc-057803c925fd8138a\" EFSFileSystemId=\"fs-01115862a24b75423\" MaxConcurrencyTasks=\"2\" ROOTEFS=\"/efs\" DomainUserPool=\"authdev.daita.tech\" LogoutUrl=\"http://localhost:3000,https://dev.daita.tech\" CallbackUrl=\"https://yf6ayuvru1.execute-api.us-east-2.amazonaws.com/dev/auth/login_social\""
 
 [prod.deploy.parameters]
 stack_name = "prod-daita-app"

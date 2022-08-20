@@ -81,6 +81,9 @@ Parameters:
     Type: String
   TableReferenceImageInfoName:
     Type: String
+  TableConstPrebuildDatasetName:
+    Type: String
+
   MaxConcurrencyTasks:
     Type: String
   CommonCodeLayerName:
@@ -388,6 +391,15 @@ Resources:
           T_PROJECT_DEL: !Ref TableProjectDel
           T_DATA_FLOW: !Ref ParaTableDataFlowTaskName
           T_REFERENCE_IMAGE: !Ref TableReferenceImageTasksName
+
+  ListPrebuildDatasetFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: functions/handlers/project/list_prebuild_dataset
+      Role: !GetAtt LambdaExecutionRole.Arn
+      Environment:
+        Variables:
+          T_CONST_PREBUILD_DATASET: !Ref TableConstPrebuildDatasetName
 
   ### for health check functions
   HealthCheckFunction:
