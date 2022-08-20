@@ -47,9 +47,9 @@ Parameters:
   LogoutUrl:
     Type: String
     Default: https://app.daita.tech
-  CallbackUrl:
-    Type: String
-    Default: https://nzvw2zvu3d.execute-api.us-east-2.amazonaws.com/staging/auth/login_social
+  # CallbackUrl:
+  #   Type: String
+  #   Default: https://nzvw2zvu3d.execute-api.us-east-2.amazonaws.com/staging/auth/login_social
 Resources:
   #=============== SYSTEM PARAMETER CONFIGURATON ==============================
   LimitPreprocessTimes:
@@ -263,6 +263,8 @@ Resources:
       Parameters:
         Bucket: !Ref S3BucketName
         IdentityPool: !GetAtt IdentityPool.Outputs.IdentityPool
+        StagePara: !Ref Stage
+        ApplicationPara: !Ref Application
 
   CoreService:
     Type: AWS::Serverless::Application

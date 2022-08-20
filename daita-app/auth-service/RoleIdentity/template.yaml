@@ -3,11 +3,16 @@ Parameters:
     Type: String
   IdentityPool:
     Type: String
+  StagePara: 
+    Type: String
+  ApplicationPara: 
+    Type: String
+
 Resources:
   CognitoAuthorizedRole:
     Type: AWS::IAM::Role
     Properties:
-      RoleName: authRole
+      RoleName: !Sub "${StagePara}-${ApplicationPara}-authRole"
       AssumeRolePolicyDocument:
         Version: "2012-10-17"
         Statement:
