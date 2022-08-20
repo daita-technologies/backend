@@ -1,0 +1,58 @@
+Parameters:
+  Bucket:
+    Type: String
+  IdentityPool:
+    Type: String
+Resources:
+  CognitoAuthorizedRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: authRole
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal:
+              Federated: cognito-identity.amazonaws.com
+            Action: sts:AssumeRoleWithWebIdentity
+            Condition:
+              StringEquals:
+                cognito-identity.amazonaws.com:aud:
+                  Ref: IdentityPool
+              ForAnyValue:StringLike:
+                cognito-identity.amazonaws.com:amr: authenticated
+      Policies:
+        - PolicyName: CognitoAuthorizedPolicy
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Sid: VisualEditor0
+                Effect: Allow
+                Action:
+                  - 's3:*'
+                Resource:
+                  -  "arn:aws:s3:::${Bucket}/${cognito-identity.amazonaws.com:sub}"
+                  -  "arn:aws:s3:::${Bucket}/${cognito-identity.amazonaws.com:sub}/*"
+              - Sid: VisualEditor1
+                Effect: Allow
+                Action: 's3:ListBucket'
+                Resource:   "arn:aws:s3:::${Bucket}"
+                Condition:
+                  StringLike:
+                    's3:prefix':
+                      - ''
+                      - /
+                      - '${cognito-identity.amazonaws.com:sub}/*'
+              - Sid: VisualEditor2
+                Effect: Allow
+                Action:
+                  - 's3:ListAllMyBuckets'
+                  - 'kms:*'
+                  - 's3:GetBucketLocation'
+                Resource: '*'
+              - Sid: VisualEditor3
+                Effect: Allow
+                Action: 's3:*'
+                Resource:
+                  -   "arn:aws:s3:::${Bucket}/${cognito-identity.amazonaws.com:sub}"
+                  -   "arn:aws:s3:::${Bucket}/${cognito-identity.amazonaws.com:sub}/*"
