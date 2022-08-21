@@ -28,7 +28,7 @@ cog_identity_client = boto3.client('cognito-identity')
 endpoint = OAUTHENPOINT
 client_id = CLIENTPOOLID
 
-TableUser = os.environ['TBL_USER']
+TableUser = os.environ['TABLE_USER']
 
 
 def getRedirectURI():
