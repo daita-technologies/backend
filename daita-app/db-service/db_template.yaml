@@ -278,7 +278,23 @@ Resources:
         -
           AttributeName: ID
           KeyType: HASH
-      BillingMode: PAY_PER_REQUEST      
+      BillingMode: PAY_PER_REQUEST 
+
+  ###==== for project =====
+  TableConstPrebuildDataset:
+    Type:  AWS::DynamoDB::Table
+    Properties:
+      TableName: !Sub "${StagePara}-const-prebuild_dataset"
+      AttributeDefinitions:
+        -
+          AttributeName: name
+          AttributeType: S
+      KeySchema:
+        -
+          AttributeName: name
+          KeyType: HASH
+      BillingMode: PAY_PER_REQUEST 
+
 Outputs:
   TableGenerateTaskName:
     Description: "Name of table generate task"
@@ -327,3 +343,5 @@ Outputs:
     Value: !Ref TableUser
   TableFeedback:
     Value: !Ref TableFeedback
+  TableConstPrebuildDatasetName:
+    Value: !Ref TableConstPrebuildDataset

@@ -84,6 +84,9 @@ Parameters:
     Type: String
   TableReferenceImageInfoName:
     Type: String
+  TableConstPrebuildDatasetName:
+    Type: String
+
   MaxConcurrencyTasks:
     Type: String
   CommonCodeLayerName:
@@ -258,50 +261,6 @@ Resources:
 
 
   #================ LAMBDA FUNCTIONS ==========================================
-  
-  # LoginSocialFunction:
-  #   Type: AWS::Serverless::Function
-  #   Properties:
-  #     CodeUri: functions/handlers/auth_service/login_social
-  #     Role:  !GetAtt LambdaExecutionRole.Arn
-  # GithubTokenWrapper:
-  #   Type: AWS::Serverless::Function
-  #   Properties:
-  #     CodeUri: functions/handlers/auth_service/github_openid_token_wrapper
-  #     Role:  !GetAtt LambdaExecutionRole.Arn
-  # ThumbnailStepFunction:
-  #   Type: AWS::Serverless::StateMachine
-  #   Properties:
-  #     Role: !GetAtt  LambdaExecutionRole.Arn
-  #     Type: STANDARD
-  #     Name: !Sub "${StagePara}-${ApplicationPara}-Thumbnail"
-  #     Policies:
-  #       - LambdaInvokePolicy:
-  #           FunctionName: !Ref ResizeImageThumbnailFunction
-  #     Tracing:
-  #         Enabled: true
-  #     DefinitionUri: statemachine/thumbnail_step_function.asl.yaml
-  # ThumbnailEventBridge:
-  #   Type: AWS::Events::EventBus
-  #   Properties:
-  #     Name: !Sub "${StagePara}-${ApplicationPara}-ThumbnailsEventBus"    
-  # ThumbnailsServiceEventBusDefaultRule:
-  #   Type: AWS::Events::Rule
-  #   Properties:
-  #     Description: "Default Rule for Any event"
-  #     State: ENABLED
-  #     EventBusName: !Ref ThumbnailEventBridge
-  #     EventPattern:
-  #       source:
-  #         - "source.events"
-  #       detail-type:
-  #         - "lambda.event"
-  #     Targets:
-  #       -
-  #         Arn: !GetAtt ThumbnailStepFunction.Arn
-  #         Id: "ThumbnailStepFunctionTarget"
-  #         RoleArn: !GetAtt ThumbnailStepFunction.Arn
-
   CreatePresignUrlForImageFeedbackFunction:
     Type: AWS::Serverless::Function
     Properties:
@@ -436,6 +395,15 @@ Resources:
           T_PROJECT_DEL: !Ref TableProjectDel
           T_DATA_FLOW: !Ref ParaTableDataFlowTaskName
           T_REFERENCE_IMAGE: !Ref TableReferenceImageTasksName
+
+  ListPrebuildDatasetFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: functions/handlers/project/list_prebuild_dataset
+      Role: !GetAtt LambdaExecutionRole.Arn
+      Environment:
+        Variables:
+          T_CONST_PREBUILD_DATASET: !Ref TableConstPrebuildDatasetName
 
   ### for health check functions
   HealthCheckFunction:
@@ -621,7 +589,10 @@ Resources:
       CodeUri: functions/handlers/auth_service/mail_service
       Role:  !GetAtt LambdaExecutionRole.Arn
 
+<<<<<<< HEAD
 
+=======
+>>>>>>> develop
   TemplateMailInviteFriendFunction:
     Type: AWS::Serverless::Function
     Properties:

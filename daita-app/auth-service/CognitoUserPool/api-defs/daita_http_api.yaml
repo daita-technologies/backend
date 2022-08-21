@@ -1,7 +1,7 @@
 openapi: "3.0.1"
 info:
   title:
-    Fn::Sub: "${StagePara}-Daita-HTTP-API"
+    Fn::Sub: "${StagePara}-Daita-Auth-HTTP-API"
   version: "2021-04-07"
 tags:
 - name: "httpapi:createdBy"

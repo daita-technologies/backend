@@ -275,6 +275,20 @@ paths:
 
   # ###==============================
   # ### For project functions
+  /projects/list_prebuild_dataset:
+    post:
+      responses:
+        default:
+          description: ""
+      x-amazon-apigateway-integration:
+        credentials:
+          Fn::GetAtt: [ApiGatewayCallLambdaRole, Arn]
+        uri:
+          Fn::Sub: arn:${AWS::Partition}:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${ListPrebuildDatasetFunction.Arn}/invocations
+        httpMethod: "POST"
+        type: "aws_proxy"
+        payloadFormatVersion: "2.0"  
+
   /projects/apply_expert_mode_param:
     post:
       responses:
