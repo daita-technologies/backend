@@ -263,7 +263,8 @@ Resources:
       Parameters:
         Bucket: !Ref S3BucketName
         IdentityPool: !GetAtt IdentityPool.Outputs.IdentityPool
-
+        StagePara: !Ref Stage
+        ApplicationPara: !Ref Application
   CoreService:
     Type: AWS::Serverless::Application
     Properties:

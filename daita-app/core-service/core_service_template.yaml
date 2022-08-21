@@ -588,11 +588,6 @@ Resources:
     Properties:
       CodeUri: functions/handlers/auth_service/mail_service
       Role:  !GetAtt LambdaExecutionRole.Arn
-
-<<<<<<< HEAD
-
-=======
->>>>>>> develop
   TemplateMailInviteFriendFunction:
     Type: AWS::Serverless::Function
     Properties:
