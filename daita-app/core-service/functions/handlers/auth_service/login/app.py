@@ -21,7 +21,7 @@ RESPONSE_HEADER = {
     "Access-Control-Allow-Creentials": "true",
     "Access-Control-Allow-Methods": "GET, HEAD, OPTIONS, POST, PUT",
 }
-TableUser = os.environ['TBL_USER']
+TableUser = os.environ['TABLE_USER']
 
 ######################################################################################
 

@@ -25,6 +25,7 @@ Globals:
         TABLE_HEALTHCHECK_TASK: !Ref TableHealthCheckTasksName
         TABLE_HEALTHCHECK_INFO: !Ref TableHealthCheckInfoName
         INDEX_TASK_PROJECTID_TASKID: !Ref ParaIndexTaskProjectIDTaskID
+        TABLE_USER: !Ref TableUser
         COGNITO_USER_POOL: !Ref CognitoUserPool
         COGNITO_CLIENT_ID: !Ref CognitoUserPoolClient
         BUCKET_NAME: !Ref S3BucketName
@@ -34,6 +35,8 @@ Globals:
 
 ## The general rule seems to be to use !Sub for in line substitutions and !ref for stand alone text
 Parameters:
+  ApplicationPara:
+    Type: String
   minimumLogLevel:
     Type: String
     Default: DEBUG
@@ -131,6 +134,8 @@ Parameters:
   CognitoUserPool:
     Type: String
   CognitoUserPoolClient:
+    Type: String
+  TableUser:
     Type: String
   CreateProjectPrebuildSMArn:
     Type: String
@@ -259,17 +264,6 @@ Resources:
 
 
   #================ LAMBDA FUNCTIONS ==========================================
-  
-  # LoginSocialFunction:
-  #   Type: AWS::Serverless::Function
-  #   Properties:
-  #     CodeUri: functions/handlers/auth_service/login_social
-  #     Role:  !GetAtt LambdaExecutionRole.Arn
-  # GithubTokenWrapper:
-  #   Type: AWS::Serverless::Function
-  #   Properties:
-  #     CodeUri: functions/handlers/auth_service/github_openid_token_wrapper
-  #     Role:  !GetAtt LambdaExecutionRole.Arn
   CreatePresignUrlForImageFeedbackFunction:
     Type: AWS::Serverless::Function
     Properties:
@@ -607,12 +601,96 @@ Resources:
     Properties:
       CodeUri: functions/handlers/auth_service/mail_service
       Role:  !GetAtt LambdaExecutionRole.Arn
-
   TemplateMailInviteFriendFunction:
     Type: AWS::Serverless::Function
     Properties:
       CodeUri: functions/handlers/auth_service/template_mail
       Role: !GetAtt LambdaExecutionRole.Arn
+
+  ResizeImageThumbnailFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: functions/handlers/thumbnail/resize_image
+      Role: !GetAtt LambdaExecutionRole.Arn
+
+  DivideBatchImagesThumbnailFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: functions/handlers/thumbnail/divide_batch
+      Role: !GetAtt LambdaExecutionRole.Arn
+##########################Project Service################################################
+
+  ProjectAsyCreateSampleFunction:
+    Type:  AWS::Serverless::Function
+    Properties:
+      CodeUri: functions/handlers/project/project_asy_create_sample
+      Role: !GetAtt LambdaExecutionRole.Arn
+  
+  ProjectCreateSampleFunction:
+    Type:  AWS::Serverless::Function
+    Properties:
+      CodeUri: functions/handlers/project/project_create
+      Role: !GetAtt LambdaExecutionRole.Arn
+  
+  ProjectDownloadCreateFunction:
+    Type:  AWS::Serverless::Function
+    Properties:
+      CodeUri: functions/handlers/project/project_download_create
+      Role: !GetAtt LambdaExecutionRole.Arn
+  
+  ProjectDownloadUpdateFunction:
+    Type:  AWS::Serverless::Function
+    Properties:
+      CodeUri: functions/handlers/project/project_download_update
+      Role: !GetAtt LambdaExecutionRole.Arn
+  
+  ProjectInfoFunction:
+    Type:  AWS::Serverless::Function
+    Properties:
+      CodeUri: functions/handlers/project/project_info
+      Role: !GetAtt LambdaExecutionRole.Arn
+  
+  ProjectListFunction:
+    Type:  AWS::Serverless::Function
+    Properties:
+      CodeUri: functions/handlers/project/project_list
+      Role: !GetAtt LambdaExecutionRole.Arn
+  
+  ProjectListDataFunction:
+    Type:  AWS::Serverless::Function
+    Properties:
+      CodeUri: functions/handlers/project/project_list_data
+      Role: !GetAtt LambdaExecutionRole.Arn
+
+  ProjectListInfoFunction:
+    Type:  AWS::Serverless::Function
+    Properties:
+      CodeUri: functions/handlers/project/project_list_info
+      Role: !GetAtt LambdaExecutionRole.Arn
+  
+  ProjectSampleFunction:
+    Type:  AWS::Serverless::Function
+    Properties:
+      CodeUri: functions/handlers/project/project_sample
+      Role: !GetAtt LambdaExecutionRole.Arn
+  
+  ProjectUpdateInfoFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: functions/handlers/project/project_update_info
+      Role: !GetAtt LambdaExecutionRole.Arn
+
+  ProjectUpdateCheckFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: functions/handlers/project/project_upload_check
+      Role: !GetAtt LambdaExecutionRole.Arn
+  
+  ProjectUploadUpdateFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: functions/handlers/project/project_upload_update
+      Role:  !GetAtt LambdaExecutionRole.Arn
 Outputs:
   CallerServiceHttpApiUrl:
     Description: "Url of the Caller service API"
