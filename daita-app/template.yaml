@@ -222,14 +222,14 @@ Resources:
       Parameters:
         StagePara: !Ref Stage
   
-  ProjectService:
-    Type:  AWS::Serverless::Application
-    Properties:
-      Location: project-service/projects_service.yaml
-      Parameters:
-        StagePara: !Ref Stage
-        Mode: !Ref Mode
-        CommonCodeLayerName: !Ref CommonCodeLayer
+  # ProjectService:
+  #   Type:  AWS::Serverless::Application
+  #   Properties:
+  #     Location: project-service/projects_service.yaml
+  #     Parameters:
+  #       StagePara: !Ref Stage
+  #       Mode: !Ref Mode
+  #       CommonCodeLayerName: !Ref CommonCodeLayer
 
   CognitoUserPool:
     Type: AWS::Serverless::Application
@@ -269,6 +269,7 @@ Resources:
     Properties:
       Location: core-service/core_service_template.yaml
       Parameters:
+        ApplicationPara: !Ref Application
         StagePara: !Ref Stage
         CallerServiceEventBusArn: !GetAtt AICallerService.Outputs.CallerServiceEventBusArn
         CallerServiceEventBusName: !GetAtt AICallerService.Outputs.CallerServiceEventBusName
@@ -305,6 +306,7 @@ Resources:
         TableDataOriginalName: !GetAtt DatabaseService.Outputs.TableDataOriginalName
         TableDataAugmentName: !GetAtt DatabaseService.Outputs.TableDataAugmentName
         TableGenerateDaitaUploadToken: !GetAtt DatabaseService.Outputs.TableGenerateDaitaUploadToken
+        TableUser: !GetAtt DatabaseService.Outputs.TableUser
         S3BucketName: !Ref S3BucketName
         Mode: !Ref Mode
         ########################################Auth Service#############################################

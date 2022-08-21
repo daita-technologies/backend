@@ -9,13 +9,6 @@ from error_messages import *
 from response import *
 from config import *
 from lambda_base_class import LambdaBaseClass
-from itertools import chain, islice
-
-
-def batcher(iterable, size):
-    iterator = iter(iterable)
-    for first in iterator:
-        yield list(chain([first], islice(iterator, size - 1)))
 
 
 class ResizeImageCls(LambdaBaseClass):
@@ -96,4 +89,4 @@ class ResizeImageCls(LambdaBaseClass):
 
 @error_response
 def lambda_handler(event, context):
-    return ResizeImageCls().hande(event, context)
+    return ResizeImageCls().handle(event, context)

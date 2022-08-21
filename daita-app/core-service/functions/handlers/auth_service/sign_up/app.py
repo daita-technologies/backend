@@ -34,7 +34,7 @@ RESPONSE_HEADER = {
 
 PASSWORD_REGEX = r"^(?=.*[a-z])(?=.*[A-Z])(?=.*[0-9])(?=.*[\^$*.\[\]{}\(\)?\-\"!@#%&\/,><\':;|_~`])\S{8,99}$"
 
-TableUser = os.environ['TBL_USER']
+TableUser = os.environ['TABLE_USER']
 
 
 class User(object):
