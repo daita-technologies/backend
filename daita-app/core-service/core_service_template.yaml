@@ -132,6 +132,9 @@ Parameters:
     Type: String
   CognitoUserPoolClient:
     Type: String
+  CreateProjectPrebuildSMArn:
+    Type: String
+
 Resources:
   #================ ROLES =====================================================
 
@@ -410,6 +413,16 @@ Resources:
       Environment:
         Variables:
           T_CONST_PREBUILD_DATASET: !Ref TableConstPrebuildDatasetName
+
+  FunctionCreateProjectFromPrebuild:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: functions/handlers/project/create_prj_fr_prebuild
+      Role: !GetAtt LambdaExecutionRole.Arn
+      Environment:
+        Variables:
+          T_CONST_PREBUILD_DATASET: !Ref TableConstPrebuildDatasetName
+          SM_CREATE_PRJ_PREBUILD: !Ref CreateProjectPrebuildSMArn
 
   ### for health check functions
   HealthCheckFunction:

@@ -1,0 +1,142 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: >
+  daita-reference-image-service
+
+  Sample SAM Template for daita-reference-image-service
+
+
+Parameters:
+  minimumLogLevel:
+    Type: String
+    Default: DEBUG
+  StagePara:
+    Type: String
+  CommonCodeLayerName:
+    Type: String
+  Mode:
+    Type: String
+  ApplicationPara:
+    Type: String
+  LambdaRole:
+    Type: String
+
+Globals:
+  Function:
+    Timeout: 800    
+    Environment:
+      Variables:
+        STAGE: !Ref StagePara        
+        LOGGING: !Ref minimumLogLevel  
+        MODE: !Ref Mode
+Resources:
+
+  #================ LAMBDA FUNCTIONS ==========================================
+
+  FuncGetData:
+    Type: AWS::Serverless::Function 
+    Properties:
+      Runtime: python3.8
+      Handler: hdler_get_data.lambda_handler
+      Architectures:
+        - x86_64
+      CodeUri: functions
+      Role: !Ref LambdaRole
+      Layers:
+        - !Ref CommonCodeLayerName
+
+  FuncMoveUpdateData:
+    Type: AWS::Serverless::Function 
+    Properties:
+      Runtime: python3.8
+      Handler: hdler_move_update_data.lambda_handler
+      Architectures:
+        - x86_64
+      CodeUri: functions
+      Role: !Ref LambdaRole
+      MemorySize: 256
+      Layers:
+        - !Ref CommonCodeLayerName
+
+  FuncUpdateSumaryDatabase:
+    Type: AWS::Serverless::Function 
+    Properties:
+      Runtime: python3.8
+      Handler: hdler_update_sumary_db.lambda_handler
+      Architectures:
+        - x86_64
+      CodeUri: functions
+      Role: !Ref LambdaRole
+      MemorySize: 256
+      Layers:
+        - !Ref CommonCodeLayerName
+  
+  #================ LOGS FOR STEP FUNCTIONS ===================================
+
+  CreateProjectPrebuildSMLogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties: 
+      LogGroupName: !Sub "/aws/vendedlogs/states/${StagePara}-${ApplicationPara}-CreateProjectPrebuild"
+      RetentionInDays: 7
+
+
+  #================ PROCESSOR STATE MACHINE ===================================
+
+  CreateProjectPrebuildSM:
+    Type: AWS::Serverless::StateMachine
+    Properties:
+      # Type: EXPRESS
+      Type: STANDARD
+      Name: !Sub "${StagePara}-${ApplicationPara}-CreateProjectPrebuildSM"
+      Policies:
+        - LambdaInvokePolicy:
+            FunctionName: !Ref FuncGetData
+        - LambdaInvokePolicy:
+            FunctionName: !Ref FuncMoveUpdateData
+        - LambdaInvokePolicy:
+            FunctionName: !Ref FuncUpdateSumaryDatabase
+        - Statement: 
+          - Sid: CloudWatchLogsPolicy
+            Effect: Allow
+            Action:
+            - "logs:CreateLogDelivery"
+            - "logs:GetLogDelivery"
+            - "logs:UpdateLogDelivery"
+            - "logs:DeleteLogDelivery"
+            - "logs:ListLogDeliveries"
+            - "logs:PutResourcePolicy"
+            - "logs:DescribeResourcePolicies"
+            - "logs:DescribeLogGroup"
+            - "logs:DescribeLogGroups"
+            Resource: "*"
+          - Sid: CloudWatchEventsFullAccess
+            Effect: Allow
+            Action:
+            - "events:*"
+            Resource: "*"
+          - Sid: IAMPassRoleForCloudWatchEvents
+            Effect: Allow
+            Action:
+            - "iam:PassRole"
+            Resource: "arn:aws:iam::*:role/AWS_Events_Invoke_Targets"
+      Tracing:
+        Enabled: true
+      DefinitionUri: ./statemachine/sm_create_project_fr_prebuild.asl.yaml
+      Logging:
+        Level: ALL
+        IncludeExecutionData: true
+        Destinations:
+        - CloudWatchLogsLogGroup:
+            LogGroupArn: !GetAtt CreateProjectPrebuildSMLogGroup.Arn
+      DefinitionSubstitutions:
+        Arn_FuncGetData: !GetAtt FuncGetData.Arn
+        Arn_FuncMoveUpdateData: !GetAtt FuncMoveUpdateData.Arn
+        Arn_FuncUpdateSumaryDatabase: !GetAtt FuncUpdateSumaryDatabase.Arn
+
+Outputs:
+  # ServerlessRestApi is an implicit API created out of Events key under Serverless::Function
+  # Find out more about other implicit resources you can reference within SAM
+  # https://github.com/awslabs/serverless-application-model/blob/master/docs/internals/generated_resources.rst#api 
+  CreateProjectPrebuildSMArn:
+    Description: "ARN of SM"
+    Value: !GetAtt CreateProjectPrebuildSM.Arn

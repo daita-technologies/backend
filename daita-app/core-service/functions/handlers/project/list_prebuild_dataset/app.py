@@ -35,15 +35,16 @@ class ListPrebuildDatasetClass(LambdaBaseClass):
         self.parser(event)
 
         ### check identity
-        identity_id = self.get_identity(self.id_token)
+        # identity_id = self.get_identity(self.id_token)
         
         ### get list info
-        items = self.prebuild_dataset_model.get_list_prebuild_dataset()         
+        items = self.prebuild_dataset_model.get_list_prebuild_dataset()   
+        ls_item_convert = [self.prebuild_dataset_model.convert_item_to_json(item) for item in items]      
                 
         return generate_response(
             message="OK",
             status_code=HTTPStatus.OK,
-            data=items,
+            data=ls_item_convert,
         )
 
 @error_response

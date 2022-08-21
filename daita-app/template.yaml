@@ -225,11 +225,13 @@ Resources:
   ProjectService:
     Type:  AWS::Serverless::Application
     Properties:
-      Location: project-service/projects_service.yaml
+      Location: project_service/project_service_template.yaml
       Parameters:
         StagePara: !Ref Stage
         Mode: !Ref Mode
         CommonCodeLayerName: !Ref CommonCodeLayer
+        ApplicationPara: !Ref Application
+        LambdaRole: !GetAtt GeneralLambdaExecutionRole.Arn
 
   CognitoUserPool:
     Type: AWS::Serverless::Application
@@ -314,6 +316,8 @@ Resources:
         ########################################Auth Service#############################################
         CognitoUserPoolClient: !GetAtt CognitoClient.Outputs.UserPoolClientId
         CognitoUserPool: !GetAtt CognitoUserPool.Outputs.UserPool
+        ### For project service
+        CreateProjectPrebuildSMArn: !GetAtt ProjectService.Outputs.CreateProjectPrebuildSMArn
 
   HealthCheckService:
     Type: AWS::Serverless::Application

@@ -289,6 +289,20 @@ paths:
         type: "aws_proxy"
         payloadFormatVersion: "2.0"  
 
+  /projects/create_project_from_prebuild:
+    post:
+      responses:
+        default:
+          description: ""
+      x-amazon-apigateway-integration:
+        credentials:
+          Fn::GetAtt: [ApiGatewayCallLambdaRole, Arn]
+        uri:
+          Fn::Sub: arn:${AWS::Partition}:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${FunctionCreateProjectFromPrebuild.Arn}/invocations
+        httpMethod: "POST"
+        type: "aws_proxy"
+        payloadFormatVersion: "2.0"  
+
   # /projects/apply_expert_mode_param:
   #   post:
   #     responses:

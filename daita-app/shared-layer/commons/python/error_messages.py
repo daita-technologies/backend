@@ -55,3 +55,6 @@ MessageErrorFeedbackInvalidType = "Please check format json!"
 MessageErrorFeedbackLimitword = "Word limit for feedback!"
 MessageErrorFeedbackLimitImages = "Attachment file count limit!"
 MessageErrorInvalidExtension = "Invalid extension of file attachment!"
+
+### Error create prebuild dataset
+MESS_ERR_INVALID_PREBUILD_DATASET_NAME = "The prebuild dataset {} is not valid now."
