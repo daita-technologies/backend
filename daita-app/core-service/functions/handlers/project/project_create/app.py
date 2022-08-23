@@ -10,6 +10,9 @@ from boto3.dynamodb.conditions import Key, Attr
 
 from utils import convert_response, convert_current_date_to_iso8601, aws_get_identity_id, get_num_prj
 import const
+USERPOOLID = os.environ['COGNITO_USER_POOL']
+CLIENTPOOLID = os.environ['COGNITO_CLIENT_ID']
+IDENTITY_POOL = os.environ['IDENTITY_POOL']
 
 
 class CreateProject(LambdaBaseClass):
@@ -25,7 +28,7 @@ class CreateProject(LambdaBaseClass):
     def handle(self, event, context):
         self.parser(json.loads(event['body']))
         try:
-            identity_id = aws_get_identity_id(self.id_token)
+            identity_id = aws_get_identity_id(self.id_token, USERPOOLID, IDENTITY_POOL)
         except Exception as e:
             print('Error: ', repr(e))
             return convert_response({"error": True,
@@ -33,7 +36,7 @@ class CreateProject(LambdaBaseClass):
                                      "message": repr(e),
                                      "data": None})
 
-        db_resource = boto3.resource("dynamodb")
+        db_resource=boto3.resource("dynamodb")
 
         try:
             # check length of projectname and project info
@@ -42,7 +45,7 @@ class CreateProject(LambdaBaseClass):
             if len(self.project_info) > const.MAX_LENGTH_PROJECT_NAME_INFO:
                 raise Exception(const.MES_LENGTH_OF_PROJECT_INFO)
 
-            num_prj = get_num_prj(identity_id)
+            num_prj=get_num_prj(identity_id)
             if num_prj >= const.MAX_NUM_PRJ_PER_USER:
                 raise Exception(const.MES_REACH_LIMIT_NUM_PRJ)
 
@@ -53,16 +56,16 @@ class CreateProject(LambdaBaseClass):
                                      "message": repr(e),
                                      "data": None})
 
-        _uuid = uuid.uuid4().hex
-        project_id = f'{self.project_name}_{_uuid}'
-        s3_prefix = f'{os.environ["BUCKET_NAME"]}/{identity_id}/{project_id}'
-        db_client = boto3.client('dynamodb')
+        _uuid=uuid.uuid4().hex
+        project_id=f'{self.project_name}_{_uuid}'
+        s3_prefix=f'{os.environ["BUCKET_NAME"]}/{identity_id}/{project_id}'
+        db_client=boto3.client('dynamodb')
         try:
-            is_sample = False
-            gen_status = "FINISH"
-            table_prj = db_resource.Table(os.environ["T_PROJECT"])
+            is_sample=False
+            gen_status="FINISH"
+            table_prj=db_resource.Table(os.environ["T_PROJECT"])
             table_prj.put_item(
-                Item={
+                Item = {
                     'ID': _uuid,
                     'project_id': project_id,
                     'identity_id': identity_id,
@@ -74,13 +77,13 @@ class CreateProject(LambdaBaseClass):
                     'is_sample': is_sample,
                     'gen_status': gen_status
                 },
-                ConditionExpression=Attr('project_name').not_exists() & Attr(
+                ConditionExpression = Attr('project_name').not_exists() & Attr(
                     'identity_id').not_exists()
             )
 
         except db_resource.meta.client.exceptions.ConditionalCheckFailedException as e:
             print('Error condition: ', e)
-            err_mess = const.MES_DUPLICATE_PROJECT_NAME.format(
+            err_mess=const.MES_DUPLICATE_PROJECT_NAME.format(
                 self.project_name)
             return convert_response({"error": True,
                                     "success": False,
@@ -109,4 +112,4 @@ class CreateProject(LambdaBaseClass):
 
 
 def lambda_handler(event, context):
-    return CreateProject().handle(event=event, context=context)
+    return CreateProject().handle(event = event, context = context)

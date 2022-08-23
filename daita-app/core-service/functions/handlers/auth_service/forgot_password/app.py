@@ -11,9 +11,12 @@ from verify_captcha import *
 from custom_mail import *
 from response import generate_response, error_response
 from lambda_base_class import LambdaBaseClass
+from utils import *
 
 USERPOOLID = os.environ['COGNITO_USER_POOL']
 CLIENTPOOLID = os.environ['COGNITO_CLIENT_ID']
+IDENTITY_POOL = os.environ['IDENTITY_POOL']
+
 cog_provider_client = boto3.client('cognito-idp')
 cog_identity_client = boto3.client('cognito-identity')
 RESPONSE_HEADER = {
@@ -36,77 +39,19 @@ def getMail(user):
     return None
 
 
-# @error_response
-# def lambda_handler(event, context):
-
-#     try:
-#         body = json.loads(event['body'])
-#         username = body["username"]
-#         captcha = body["captcha"]
-#     except Exception as exc:
-#         raise Exception(MessageUnmarshalInputJson) from exc
-
-#     try:
-#         verify_captcha(captcha)
-#     except Exception as exc:
-#         raise Exception(MessageCaptchaFailed) from exc
-
-#     try:
-#         response = cog_provider_client.admin_get_user(
-#             UserPoolId=USERPOOLID,
-#             Username=username
-#         )
-#     except Exception as exc:
-#         print(exc)
-#         raise Exception(MessageForgotPasswordUsernotExist) from exc
-
-#     is_email_verified = True
-#     for it in response['UserAttributes']:
-#         if it['Name'] == 'email_verified' and it['Value'] == 'false':
-#             is_email_verified = False
-#             break
-#     if not is_email_verified:
-#         return generate_response(
-#             message=MessageUserVerifyConfirmCode,
-#             headers=RESPONSE_HEADER
-#         )
-#     mail = getMail(username)
-#     try:
-#         AddTriggerCustomMail({
-#             'lambda_name': os.environ['INVOKE_MAIL_LAMBDA'],
-#             'region': REGION,
-#             'user': username,
-#             'mail': mail,
-#             'subject': 'Your email confirmation code',
-#             'confirm_code_Table': os.environ['TBL_CONFIRM_CODE']
-#         })
-#     except Exception as e:
-#         print(e)
-#         return generate_response(
-#             message=MessageForgotPasswordSuccessfully,
-#             headers=RESPONSE_HEADER,
-#             error=True
-#         )
-
-#     return generate_response(
-#         message=MessageForgotPasswordSuccessfully,
-#         headers=RESPONSE_HEADER
-#     )
-
-
 class ForgotPasswordClass(LambdaBaseClass):
 
     def __init__(self) -> None:
         super().__init__()
 
+    @LambdaBaseClass.parse_body
     def parser(self, body):
-        self.body = json.loads(body)
-        self.username = self.body["username"]
-        self.captcha = self.body["captcha"]
+        self.username = body["username"]
+        self.captcha = body["captcha"]
 
     def handle(self, event, context):
 
-        self.parser(event['body'])
+        self.parser(event)
 
         try:
             verify_captcha(self.captcha)
@@ -140,7 +85,7 @@ class ForgotPasswordClass(LambdaBaseClass):
                 'user': self.username,
                 'mail': mail,
                 'subject': 'Your email confirmation code',
-                'confirm_code_Table': os.environ['TBL_CONFIRM_CODE']
+                'confirm_code_Table': os.environ['TABLE_CONFIRM_CODE']
             })
         except Exception as e:
             print(e)

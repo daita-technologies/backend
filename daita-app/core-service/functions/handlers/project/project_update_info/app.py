@@ -9,9 +9,13 @@ from boto3.dynamodb.conditions import Key, Attr
 from utils import convert_response, aws_get_identity_id, dydb_get_project_id, dydb_get_project_full
 import const
 
+USERPOOLID = os.environ['COGNITO_USER_POOL']
+CLIENTPOOLID = os.environ['COGNITO_CLIENT_ID']
+IDENTITY_POOL = os.environ['IDENTITY_POOL']
+
 
 def lambda_handler(event, context):
-    return ProjectUpdateCls().handle(event,context)
+    return ProjectUpdateCls().handle(event, context)
 
 
 class ProjectUpdateCls(LambdaBaseClass):
@@ -35,7 +39,8 @@ class ProjectUpdateCls(LambdaBaseClass):
     def handle(self, event, context):
         self.parser(json.loads(event['body']))
         try:
-            identity_id = aws_get_identity_id(self.id_token)
+            identity_id = aws_get_identity_id(
+                self.id_token, USERPOOLID, IDENTITY_POOL)
         except Exception as e:
             print('Error: ', repr(e))
             return convert_response({"error": True,
@@ -66,7 +71,8 @@ class ProjectUpdateCls(LambdaBaseClass):
                             'project_name': self.new_prj_name
                         }
                     )
-                    print(const.MES_PROJECT_ALREADY_EXIST.format(self.new_prj_name))
+                    print(const.MES_PROJECT_ALREADY_EXIST.format(
+                        self.new_prj_name))
                     if response.get('Item', None):
                         raise Exception(
                             const.MES_PROJECT_ALREADY_EXIST.format(self.new_prj_name))

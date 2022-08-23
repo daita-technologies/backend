@@ -10,10 +10,14 @@ from boto3.dynamodb.conditions import Key, Attr
 from utils import convert_response, aws_get_identity_id
 
 MAX_NUMBER_LIMIT = 500
+USERPOOLID = os.environ['COGNITO_USER_POOL']
+CLIENTPOOLID = os.environ['COGNITO_CLIENT_ID']
+IDENTITY_POOL = os.environ['IDENTITY_POOL']
 
 
 def lambda_handler(event, context):
-    return ProjectListCls().handle(event,context)
+    return ProjectListCls().handle(event, context)
+
 
 class ProjectListCls(LambdaBaseClass):
     def __init__(self) -> None:
@@ -31,13 +35,14 @@ class ProjectListCls(LambdaBaseClass):
         self.parser(json.loads(event['body']))
         # get identity_id from id token, also check the authentication from client
         try:
-            identity_id = aws_get_identity_id(self.id_token)
+            identity_id = aws_get_identity_id(
+                self.id_token, USERPOOLID, IDENTITY_POOL)
         except Exception as e:
             print('Error: ', repr(e))
             return convert_response({"error": True,
                                     "success": False,
-                                    "message": repr(e),
-                                    "data": None})
+                                     "message": repr(e),
+                                     "data": None})
 
         # query list data of project
         dynamodb = boto3.resource('dynamodb')
@@ -49,13 +54,15 @@ class ProjectListCls(LambdaBaseClass):
             elif self.type_method == 'AUGMENT':
                 table_name = os.environ['T_DATA_AUGMENT']
             else:
-                raise (Exception(f'type_method: {self.type_method} is not valid!'))
+                raise (
+                    Exception(f'type_method: {self.type_method} is not valid!'))
 
             table = dynamodb.Table(table_name)
             if len(next_token) == 0:
                 response = table.query(
                     IndexName='index-created-sorted',
-                    KeyConditionExpression=Key('project_id').eq(self.project_id),
+                    KeyConditionExpression=Key(
+                        'project_id').eq(self.project_id),
                     ProjectionExpression='filename, s3_key, type_method, gen_id, created_date',
                     Limit=self.num_limit,
                     ScanIndexForward=False
@@ -64,7 +71,8 @@ class ProjectListCls(LambdaBaseClass):
             else:
                 response = table.query(
                     IndexName='index-created-sorted',
-                    KeyConditionExpression=Key('project_id').eq(self.sproject_id),
+                    KeyConditionExpression=Key(
+                        'project_id').eq(self.sproject_id),
                     ProjectionExpression='filename, s3_key, type_method, gen_id, created_date',
                     ExclusiveStartKey=next_token,
                     Limit=self.num_limit,
@@ -81,8 +89,8 @@ class ProjectListCls(LambdaBaseClass):
             print('Error: ', repr(e))
             return convert_response({"error": True,
                                     "success": False,
-                                    "message": repr(e),
-                                    "data": None})
+                                     "message": repr(e),
+                                     "data": None})
 
         return convert_response({'data': {
             'items': response['Items'],

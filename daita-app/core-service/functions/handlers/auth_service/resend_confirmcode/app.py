@@ -23,6 +23,8 @@ def convert_current_date_to_iso8601():
 
 USERPOOLID = os.environ['COGNITO_USER_POOL']
 CLIENTPOOLID = os.environ['COGNITO_CLIENT_ID']
+IDENTITY_POOL = os.environ['IDENTITY_POOL']
+
 cog_provider_client = boto3.client('cognito-idp')
 cog_identity_client = boto3.client('cognito-identity')
 RESPONSE_HEADER = {
@@ -45,50 +47,24 @@ def getMail(user):
     return None
 
 
-# @error_response
-# def lambda_handler(event, context):
-#     try:
-#         body = json.loads(event['body'])
-#         username = body['username']
-#         mail = getMail(username)
-#     except Exception as e:
-#         print(e)
-#         raise Exception(e)
-
-#     ResendCodeConfirm({
-#         'lambda_name': os.environ['INVOKE_MAIL_LAMBDA'],
-#         'region': REGION,
-#         'user': username,
-#         'mail': mail,
-#         'subject': 'Your email confirmation code',
-#         'confirm_code_Table': os.environ['TBL_CONFIRM_CODE']
-
-#     })
-#     return generate_response(
-#         message=MessageResendEmailConfirmCodeSuccessfully,
-#         data={},
-#         headers=RESPONSE_HEADER
-#     )
-
 class ResendConfirmCodeClass(LambdaBaseClass):
     def __init__(self) -> None:
         super().__init__()
 
     @LambdaBaseClass.parse_body
     def parser(self, body):
-        self.body = json.loads(body)
         self.username = body['username']
         self.mail = getMail(self.username)
 
     def handle(self, event, context):
-        self.parser(event['body'])
+        self.parser(event)
         ResendCodeConfirm({
             'lambda_name': os.environ['INVOKE_MAIL_LAMBDA'],
             'region': REGION,
             'user': self.username,
             'mail': self.mail,
             'subject': 'Your email confirmation code',
-            'confirm_code_Table': os.environ['TBL_CONFIRM_CODE']
+            'confirm_code_Table': os.environ['TABLE_CONFIRM_CODE']
 
         })
         return generate_response(

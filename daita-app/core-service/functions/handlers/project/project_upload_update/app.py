@@ -10,6 +10,10 @@ from utils import convert_response, aws_get_identity_id, convert_current_date_to
 MAX_NUMBER_ITEM_PUT = 500
 MAX_NUM_IMAGES_IN_ORIGINAL = 500
 
+USERPOOLID = os.environ['COGNITO_USER_POOL']
+CLIENTPOOLID = os.environ['COGNITO_CLIENT_ID']
+IDENTITY_POOL = os.environ['IDENTITY_POOL']
+
 
 def create_single_put_request(dict_value):
     dict_re = {
@@ -35,7 +39,8 @@ class ProjectUploadUpdateCls(LambdaBaseClass):
 
     def parser(self, body):
         id_token = body["id_token"]
-        self.identity_id = aws_get_identity_id(id_token)
+        self.identity_id = aws_get_identity_id(
+            id_token, USERPOOLID, IDENTITY_POOL)
 
         # get request data
         self.project_id = body['project_id']

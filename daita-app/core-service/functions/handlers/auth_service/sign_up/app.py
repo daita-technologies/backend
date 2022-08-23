@@ -24,6 +24,8 @@ def convert_current_date_to_iso8601():
 
 USERPOOLID = os.environ['COGNITO_USER_POOL']
 CLIENTPOOLID = os.environ['COGNITO_CLIENT_ID']
+IDENTITY_POOL = os.environ['IDENTITY_POOL']
+
 cog_provider_client = boto3.client("cognito-idp")
 cog_identity_client = boto3.client("cognito-identity")
 RESPONSE_HEADER = {
@@ -67,76 +69,6 @@ def checkInvalidUserRegister(user, mail):
     return True, True
 
 
-# @error_response
-# def lambda_handler(event, context):
-
-#     try:
-#         body = json.loads(event["body"])
-#         username = body["username"]
-#         mail = body["email"]
-#         password = body["password"]
-#         captcha = body["captcha"]
-#     except Exception as e:
-#         print(e)
-#         raise Exception(e)
-
-#     try:
-#         verify_captcha(captcha)
-#     except Exception as exc:
-#         raise Exception(MessageCaptchaFailed) from exc
-
-#     if not re.match(PASSWORD_REGEX, password):
-#         raise Exception(MessageInvalidPassword)
-#     checkUsername, checkemail = checkInvalidUserRegister(username, mail)
-
-#     if not checkUsername:
-#         raise Exception(MessageSignUpUsernameInvalid)
-#     elif not checkemail:
-#         raise Exception(MessageSignUPEmailInvalid)
-
-#     try:
-#         respUserSignUp = cog_provider_client.sign_up(
-#             ClientId=CLIENTPOOLID,
-#             Username=username,
-#             Password=password,
-#             UserAttributes=[{"Name": "email", "Value": mail}],
-#         )
-#     except Exception as e:
-#         print(e)
-#         raise Exception(MessageSignUpFailed)
-
-#     model = User()
-#     try:
-#         model.create_item(
-#             {"ID": respUserSignUp["UserSub"], "username": username})
-#     except Exception as e:
-#         print(e)
-#         raise Exception(MessageSignUpFailed)
-#     try:
-#         AddTriggerCustomMail(
-#             {
-#                 'lambda_name': os.environ['INVOKE_MAIL_LAMBDA'],
-#                 'region': REGION,
-#                 'user': username,
-#                 'mail': mail,
-#                 'subject': "Your email confirmation code",
-#                 'confirm_code_Table': os.environ['TBL_CONFIRM_CODE']
-#             }
-#         )
-#     except Exception as e:
-#         return generate_response(
-#             message=str(e),
-#             data={},
-#             headers=RESPONSE_HEADER,
-#             error=True
-#         )
-#     return generate_response(
-#         message="Sign up for user {} was successful.".format(username),
-#         data={},
-#         headers=RESPONSE_HEADER,
-#     )
-
-
 class SignUpClass(LambdaBaseClass):
 
     def __init__(self) -> None:
@@ -145,14 +77,13 @@ class SignUpClass(LambdaBaseClass):
 
     @LambdaBaseClass.parse_body
     def parser(self, body):
-        self.body = json.loads(body)
-        self.username = self.body["username"]
-        self.mail = self.body["email"]
-        self.password = self.body["password"]
-        self.captcha = self.body["captcha"]
+        self.username = body["username"]
+        self.mail = body["email"]
+        self.password = body["password"]
+        self.captcha = body["captcha"]
 
     def handle(self, event, context):
-        self.parser(event['body'])
+        self.parser(event)
 
         try:
             verify_captcha(self.captcha)
@@ -195,7 +126,7 @@ class SignUpClass(LambdaBaseClass):
                     'user': self.username,
                     'mail': self.mail,
                     'subject': "Your email confirmation code",
-                    'confirm_code_Table': os.environ['TBL_CONFIRM_CODE']
+                    'confirm_code_Table': os.environ['TABLE_CONFIRM_CODE']
                 }
             )
         except Exception as e:
