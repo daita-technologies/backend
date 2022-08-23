@@ -6,11 +6,10 @@ States:
     InputPath: $
     ResultSelector:
       body.$: $.Payload.body.data
-      detail.$: $$.Execution.Input.detail
     ResultPath: $
     OutputPath: $
     Parameters:
-      FunctionName: "${Arn_FuncGetData}"
+      FunctionName: "${Arn_FuncMoveS3Data}"
       Payload:
         body.$: $
     Next: MoveUpdateDataMap
@@ -25,38 +24,21 @@ States:
         BackoffRate: 1    
 
   MoveUpdateDataMap:
-    Type: Map
-    InputPath: $
-    ItemsPath: $.body.ls_length_batch    
-    ResultPath: $.result_map
+    Type: Task
+    Resource: 'arn:aws:states:::lambda:invoke'
+    InputPath: $.body
+    ResultPath: $
+    OutputPath: $.Payload
     Parameters:
-      index.$: $$.Map.Item.Value
-      project_id.$: $.detail.project_id
-      task_id.$: $.detail.task_id
-      identity_id.$: $.detail.identity_id
-      ls_method_id.$: $.detail.ls_method_id
-      bucket.$: $.body.bucket
-      s3_key_path.$: $.body.s3_key_path
-    MaxConcurrency: 10
-    Iterator:
-      StartAt: TaskMoveUpdate
-      States:
-        TaskMoveUpdate:
-          Type: Task
-          Resource: 'arn:aws:states:::lambda:invoke'          
-          ResultPath: $
-          OutputPath: $.Payload
-          Parameters:
-            FunctionName: "${Arn_FuncMoveUpdateData}"
-            Payload:
-              body.$: $
-          End: true       
+      FunctionName: "${Arn_FuncUpdateInputData}"
+      Payload:
+        body.$: $   
     Next: TaskUpdateSummaryDB
 
   TaskUpdateSummaryDB:
     Type: Task
     Resource: 'arn:aws:states:::lambda:invoke'
-    InputPath: $
+    InputPath: $.body.data
     OutputPath: $.Payload.body
     Parameters:
       FunctionName: "${Arn_FuncUpdateSumaryDatabase}"

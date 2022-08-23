@@ -20,6 +20,12 @@ Parameters:
     Type: String
   LambdaRole:
     Type: String
+  TableDataOriginalName:
+    Type: String 
+  TableProjectSumName:
+    Type: String
+  TableProjectsName:
+    Type: String
 
 Globals:
   Function:
@@ -29,15 +35,18 @@ Globals:
         STAGE: !Ref StagePara        
         LOGGING: !Ref minimumLogLevel  
         MODE: !Ref Mode
+        T_PROJECT_SUMMARY: !Ref TableProjectSumName
+        T_PROJECT: !Ref TableProjectsName
+        T_DATA_ORI: !Ref TableDataOriginalName
 Resources:
 
   #================ LAMBDA FUNCTIONS ==========================================
 
-  FuncGetData:
+  FuncMoveS3Data:
     Type: AWS::Serverless::Function 
     Properties:
       Runtime: python3.8
-      Handler: hdler_get_data.lambda_handler
+      Handler: hdler_move_s3_data.lambda_handler
       Architectures:
         - x86_64
       CodeUri: functions
@@ -45,11 +54,11 @@ Resources:
       Layers:
         - !Ref CommonCodeLayerName
 
-  FuncMoveUpdateData:
+  FuncUpdateInputData:
     Type: AWS::Serverless::Function 
     Properties:
       Runtime: python3.8
-      Handler: hdler_move_update_data.lambda_handler
+      Handler: hdler_update_input_data.lambda_handler
       Architectures:
         - x86_64
       CodeUri: functions
@@ -90,9 +99,9 @@ Resources:
       Name: !Sub "${StagePara}-${ApplicationPara}-CreateProjectPrebuildSM"
       Policies:
         - LambdaInvokePolicy:
-            FunctionName: !Ref FuncGetData
+            FunctionName: !Ref FuncMoveS3Data
         - LambdaInvokePolicy:
-            FunctionName: !Ref FuncMoveUpdateData
+            FunctionName: !Ref FuncUpdateInputData
         - LambdaInvokePolicy:
             FunctionName: !Ref FuncUpdateSumaryDatabase
         - Statement: 
@@ -129,8 +138,8 @@ Resources:
         - CloudWatchLogsLogGroup:
             LogGroupArn: !GetAtt CreateProjectPrebuildSMLogGroup.Arn
       DefinitionSubstitutions:
-        Arn_FuncGetData: !GetAtt FuncGetData.Arn
-        Arn_FuncMoveUpdateData: !GetAtt FuncMoveUpdateData.Arn
+        Arn_FuncMoveS3Data: !GetAtt FuncMoveS3Data.Arn
+        Arn_FuncUpdateInputData: !GetAtt FuncUpdateInputData.Arn
         Arn_FuncUpdateSumaryDatabase: !GetAtt FuncUpdateSumaryDatabase.Arn
 
 Outputs:

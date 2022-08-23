@@ -35,7 +35,7 @@ class ListPrebuildDatasetClass(LambdaBaseClass):
         self.parser(event)
 
         ### check identity
-        # identity_id = self.get_identity(self.id_token)
+        identity_id = self.get_identity(self.id_token)
         
         ### get list info
         items = self.prebuild_dataset_model.get_list_prebuild_dataset()   

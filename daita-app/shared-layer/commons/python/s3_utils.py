@@ -40,3 +40,24 @@ def generate_presigned_url(s3_link, expired=3600, bucket = None, object_key = No
     )
     
     return reponse
+
+def move_data_s3(source, target, bucket_name):
+    ls_info = []
+    #list all data in s3
+    s3 = boto3.resource('s3')
+    bucket = s3.Bucket(bucket_name)
+
+    for obj in bucket.objects.filter(Prefix=source):
+        if obj.key.endswith('/'):
+            continue
+
+        old_source = { 'Bucket': bucket_name,
+                       'Key': obj.key}
+        # replace the prefix
+        new_prefix = target.replace(f"{bucket_name}/", "")
+        new_key = f'{new_prefix}/{obj.key.replace(source, "")}'
+        s3.meta.client.copy(old_source, bucket_name, new_key)
+
+        ls_info.append((new_key.split('/')[-1], f"{bucket_name}/{new_key}", obj.size))
+
+    return ls_info
