@@ -319,7 +319,8 @@ Resources:
         CognitoUserPool: !GetAtt CognitoUserPool.Outputs.UserPool
         ### For project service
         CreateProjectPrebuildSMArn: !GetAtt ProjectService.Outputs.CreateProjectPrebuildSMArn
-
+        TableConfirmCodeAuth: !GetAtt DatabaseService.Outputs.TableConfirmCodeAuth
+        CognitoIdentityPoolId: !GetAtt IdentityPool.Outputs.IdentityPool
   HealthCheckService:
     Type: AWS::Serverless::Application
     Properties:

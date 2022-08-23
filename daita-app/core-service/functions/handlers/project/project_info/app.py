@@ -10,6 +10,10 @@ from decimal import Decimal
 from boto3.dynamodb.conditions import Key, Attr
 from utils import convert_response, aws_get_identity_id, dydb_get_project_id, dydb_get_project_full
 
+USERPOOLID = os.environ['COGNITO_USER_POOL']
+CLIENTPOOLID = os.environ['COGNITO_CLIENT_ID']
+IDENTITY_POOL = os.environ['IDENTITY_POOL']
+
 
 def get_running_task(table_name, db_resource, ls_tasks, identity_id, res_projectid, task_type=""):
     table = db_resource.Table(table_name)
@@ -49,19 +53,21 @@ class ProjectInfoCls(LambdaBaseClass):
     def handle(self, event, context):
         self.parser(json.loads(event['body']))
         try:
-            identity_id = aws_get_identity_id(self.id_token)
+            identity_id = aws_get_identity_id(
+                self.id_token, USERPOOLID, IDENTITY_POOL)
         except Exception as e:
             print('Error: ', repr(e))
             return convert_response({"error": True,
                                     "success": False,
-                                    "message": repr(e),
-                                    "data": None})
+                                     "message": repr(e),
+                                     "data": None})
 
         db_resource = boto3.resource('dynamodb')
         # get project_id
         try:
             table = db_resource.Table(os.environ['T_PROJECT'])
-            res_project = dydb_get_project_full(table, identity_id, self.project_name)
+            res_project = dydb_get_project_full(
+                table, identity_id, self.project_name)
 
             # print(res_projectid)
             res_projectid = res_project['project_id']
@@ -83,8 +89,8 @@ class ProjectInfoCls(LambdaBaseClass):
             print('Error: ', repr(e))
             return convert_response({"error": True,
                                     "success": False,
-                                    "message": repr(e),
-                                    "data": None})
+                                     "message": repr(e),
+                                     "data": None})
 
         # get info detail of a project
         try:
@@ -97,8 +103,8 @@ class ProjectInfoCls(LambdaBaseClass):
             print('Error: ', repr(e))
             return convert_response({"error": True,
                                     "success": False,
-                                    "message": repr(e),
-                                    "data": None})
+                                     "message": repr(e),
+                                     "data": None})
 
         if response.get('Items', None):
             groups = {}
@@ -157,6 +163,8 @@ class ProjectInfoCls(LambdaBaseClass):
             },
                 "error": False,
                 "success": True,
-                "message": None})        
+                "message": None})
+
+
 def lambda_handler(event, context):
-    return ProjectInfoCls().handle(event=event,context=context)
+    return ProjectInfoCls().handle(event=event, context=context)

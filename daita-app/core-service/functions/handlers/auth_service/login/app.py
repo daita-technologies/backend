@@ -1,16 +1,19 @@
 import os
 import json
 import re
-import datetime
+from datetime import datetime
 import boto3
 from response import *
 from config import *
 from error_messages import *
 from verify_captcha import *
 from lambda_base_class import LambdaBaseClass
+from utils import *
 
 USERPOOLID = os.environ['COGNITO_USER_POOL']
 CLIENTPOOLID = os.environ['COGNITO_CLIENT_ID']
+IDENTITY_POOL = os.environ['IDENTITY_POOL']
+
 ACCESS_TOKEN_EXPIRATION = 24 * 60 * 60
 mailRegexString = re.compile(
     '([A-Za-z0-9]+[.-_])*[A-Za-z0-9]+@[A-Za-z0-9-]+(\.[A-Z|a-z]{2,})+')
@@ -118,7 +121,7 @@ def createKMSKey(identity):
 
 def getCredentialsForIdentity(token_id):
     PROVIDER = f'cognito-idp.{REGION}.amazonaws.com/{USERPOOLID}'
-    responseIdentity = aws_get_identity_id(token_id)
+    responseIdentity = aws_get_identity_id(token_id, USERPOOLID, IDENTITY_POOL)
     credentialsResponse = cog_identity_client.get_credentials_for_identity(
         IdentityId=responseIdentity,
         Logins={
@@ -138,16 +141,16 @@ class LoginClass(LambdaBaseClass):
     def __init__(self) -> None:
         super().__init__()
 
+    @ LambdaBaseClass.parse_body
     def parser(self, body):
-        self.body = json.loads(body)
-        self.username = self.body['username']
-        self.password = self.body['password']
-        self.captcha = self.body['captcha']
+        self.username = body['username']
+        self.password = body['password']
+        self.captcha = body['captcha']
 
     def handle(self, event, context):
-        self.parser(event['body'])
+        self.parser(event)
         try:
-            verify_captcha(captcha)
+            verify_captcha(self.captcha)
         except Exception as exc:
             print(exc)
             raise Exception(MessageCaptchaFailed) from exc
@@ -157,7 +160,7 @@ class LoginClass(LambdaBaseClass):
             print("[DEBUG] username {}".format(self.username))
             if not err is None:
                 raise Exception(MessageUserVerifyConfirmCode)
-            if username is None:
+            if self.username is None:
                 raise Exception(MessageLoginMailNotExist)
         try:
             model = User()
@@ -250,120 +253,3 @@ class LoginClass(LambdaBaseClass):
 @error_response
 def lambda_handler(event, context):
     return LoginClass().handle(event=event, context=context)
-
-
-# @error_response
-# def lambda_handler(event, context):
-#     try:
-#         body = json.loads(event['body'])
-#         username = body['username']
-#         password = body['password']
-#         captcha = body['captcha']
-#     except Exception as e:
-#         print("error ", e)
-#         return generate_response(
-#             message=MessageUnmarshalInputJson,
-#             data={},
-#             headers=RESPONSE_HEADER,
-#             error=True
-#         )
-
-#     try:
-#         verify_captcha(captcha)
-#     except Exception as exc:
-#         print(exc)
-#         raise Exception(MessageCaptchaFailed) from exc
-
-#     if re.fullmatch(mailRegexString, username):
-#         username, err = getUsernameByEmail(email=username)
-#         print("[DEBUG] username {}".format(username))
-#         if not err is None:
-#             raise Exception(MessageUserVerifyConfirmCode)
-#         if username is None:
-#             raise Exception(MessageLoginMailNotExist)
-#     try:
-#         model = User()
-#     except Exception as e:
-#         print(e)
-#         return generate_response(
-#             message=MessageUnmarshalInputJson,
-#             data={},
-#             headers=RESPONSE_HEADER,
-#             error=True
-#         )
-
-#     try:
-#         authResponse = cog_provider_client.initiate_auth(
-#             ClientId=CLIENTPOOLID,
-#             AuthFlow='USER_PASSWORD_AUTH',
-#             AuthParameters={
-#                 'USERNAME':  username,
-#                 'PASSWORD': password
-#             }
-#         )
-#     except cog_provider_client.exceptions.UserNotConfirmedException:
-#         return generate_response(
-#             message=MessageUserVerifyConfirmCode,
-#             data={},
-#             headers=RESPONSE_HEADER,
-#             error=True
-#         )
-#     except Exception as e:
-#         print(e)
-#         return generate_response(
-#             message=MessageLoginFailed,
-#             data={},
-#             headers=RESPONSE_HEADER,
-#             error=True
-#         )
-
-#     response = {
-#         'token': authResponse['AuthenticationResult']['AccessToken'],
-#         'resfresh_token': authResponse['AuthenticationResult']['RefreshToken'],
-#         'id_token': authResponse['AuthenticationResult']['IdToken'],
-#         'token_expires_in': float(int((datetime.now().timestamp() + ACCESS_TOKEN_EXPIRATION)*1000))
-#     }
-
-#     if not checkEmailVerified(response['token']):
-#         raise Exception(MessageUserVerifyConfirmCode)
-
-#     try:
-#         credentialsForIdentity = getCredentialsForIdentity(
-#             authResponse['AuthenticationResult']['IdToken'])
-#     except Exception as e:
-#         print(e)
-#         return generate_response(
-#             message=MessageAuthenFailed,
-#             data={},
-#             headers=RESPONSE_HEADER,
-#             error=True)
-
-#     sub = getSub(response['token'])
-
-#     # # check the user is login another device
-#     # if CheckEventUserLogin(sub):
-#     #     raise Exception(MessageAnotherUserIsLoginBefore)
-#     # else:
-#     #     CreateEventUserLogin(sub)
-
-#     if not model.checkFirstLogin(ID=sub, username=username):
-#         if 'IS_ENABLE_KMS' in os.environ and eval(os.environ['IS_ENABLE_KMS']) == True:
-#             kms = createKMSKey(credentialsForIdentity['identity_id'])
-#         else:
-#             kms = ''
-#         model.updateActivateUser(info={
-#             'indentityID': credentialsForIdentity['identity_id'],
-#             'ID': sub,
-#             'username': username,
-#             'kms': kms,
-#         })
-
-#     for k, v in credentialsForIdentity.items():
-#         response[k] = v
-#     response['username'] = username
-#     response['name'] = username
-#     return generate_response(
-#         message=MessageSignInSuccessfully,
-#         data=response,
-#         headers=RESPONSE_HEADER
-#     )

@@ -9,6 +9,33 @@ Parameters:
     Type: String
 
 Resources:
+  CognitoUnAuthorizedRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: !Sub "${StagePara}-${ApplicationPara}-unauthRole"
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+            - Effect: "Allow"
+              Principal:
+                Federated: "cognito-identity.amazonaws.com"
+              Action: sts:AssumeRoleWithWebIdentity
+              Condition:
+                StringEquals:
+                  cognito-identity.amazonaws.com:aud:
+                    Ref: IdentityPool
+                ForAnyValue:StringLike:
+                  cognito-identity.amazonaws.com:amr: unauthenticated
+      Policies:
+        - PolicyName: "CognitoUnAuthorizedPolicy"
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Effect: "Allow"
+                Action:
+                  - "cognito-sync:*"
+                Resource: "*"
+
   CognitoAuthorizedRole:
     Type: AWS::IAM::Role
     Properties:
@@ -54,6 +81,8 @@ Resources:
                   - 's3:ListAllMyBuckets'
                   - 'kms:*'
                   - 's3:GetBucketLocation'
+                  - "cognito-sync:*"
+                  - "cognito-identity:*"
                 Resource: '*'
               - Sid: VisualEditor3
                 Effect: Allow
@@ -61,3 +90,13 @@ Resources:
                 Resource:
                   -   "arn:aws:s3:::${Bucket}/${cognito-identity.amazonaws.com:sub}"
                   -   "arn:aws:s3:::${Bucket}/${cognito-identity.amazonaws.com:sub}/*"
+  CognitoIdentityPoolRoles:
+    Type: AWS::Cognito::IdentityPoolRoleAttachment
+    Properties:
+      IdentityPoolId:
+        Ref: IdentityPool
+      Roles:
+        authenticated:
+          Fn::GetAtt: [CognitoAuthorizedRole,Arn]
+        unauthenticated:
+          Fn::GetAtt: [CognitoUnAuthorizedRole,Arn]

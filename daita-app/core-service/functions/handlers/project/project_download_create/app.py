@@ -13,6 +13,10 @@ from boto3.dynamodb.conditions import Key, Attr
 from utils import convert_response, convert_current_date_to_iso8601, aws_get_identity_id
 import const
 
+USERPOOLID = os.environ['COGNITO_USER_POOL']
+CLIENTPOOLID = os.environ['COGNITO_CLIENT_ID']
+IDENTITY_POOL = os.environ['IDENTITY_POOL']
+
 
 class ProjectDownloadCreateCls(LambdaBaseClass):
     def __init__(self) -> None:
@@ -27,7 +31,8 @@ class ProjectDownloadCreateCls(LambdaBaseClass):
     def handle(self, event, context):
         self.parser(json.loads(event['body']))
         try:
-            identity_id = aws_get_identity_id(self.id_token)
+            identity_id = aws_get_identity_id(
+                self.id_token, USERPOOLID, IDENTITY_POOL)
         except Exception as e:
             print('Error: ', repr(e))
             return convert_response({"error": True,

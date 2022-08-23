@@ -7,6 +7,9 @@ import base64
 import os
 from boto3.dynamodb.conditions import Key, Attr
 from utils import convert_response, aws_get_identity_id
+USERPOOLID = os.environ['COGNITO_USER_POOL']
+CLIENTPOOLID = os.environ['COGNITO_CLIENT_ID']
+IDENTITY_POOL = os.environ['IDENTITY_POOL']
 
 
 def lambda_handler(event, context):
@@ -24,7 +27,8 @@ class ProjectListInfoCls(LambdaBaseClass):
         self.parser(json.loads(event['body']))
         # get identity_id from id token, also check the authentication from client
         try:
-            identity_id = aws_get_identity_id(self.id_token)
+            identity_id = aws_get_identity_id(
+                self.id_token, USERPOOLID, IDENTITY_POOL)
         except Exception as e:
             print('Error: ', repr(e))
             return convert_response({"error": True,

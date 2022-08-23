@@ -17,6 +17,8 @@ import base64
 from urllib.parse import urlencode
 ACCESS_TOKEN_EXPIRATION = 24 * 60 * 60
 USERPOOLID = os.environ['COGNITO_USER_POOL']
+IDENTITY_POOL = os.environ['IDENTITY_POOL']
+
 cog_provider_client = boto3.client('cognito-idp')
 cog_identity_client = boto3.client('cognito-identity')
 
@@ -72,7 +74,6 @@ class LoginSocialClass(LambdaBaseClass):
     def __init__(self) -> None:
         super().__init__()
 
-    @LambdaBaseClass.parse_body
     def parser(self, body):
         self.code = body['code']
 

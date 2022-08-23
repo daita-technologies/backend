@@ -15,6 +15,9 @@ RESPONSE_HEADER = {
     "Access-Control-Allow-Creentials": "true",
     "Access-Control-Allow-Methods": "GET, HEAD, OPTIONS, POST, PUT",
 }
+USERPOOLID = os.environ['COGNITO_USER_POOL']
+CLIENTPOOLID = os.environ['COGNITO_CLIENT_ID']
+IDENTITY_POOL = os.environ['IDENTITY_POOL']
 
 
 def getMail(user):

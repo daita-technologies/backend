@@ -25,11 +25,14 @@ Globals:
         TABLE_HEALTHCHECK_TASK: !Ref TableHealthCheckTasksName
         TABLE_HEALTHCHECK_INFO: !Ref TableHealthCheckInfoName
         INDEX_TASK_PROJECTID_TASKID: !Ref ParaIndexTaskProjectIDTaskID
+        TABLE_CONFIRM_CODE: !Ref TableConfirmCodeAuth
         TABLE_USER: !Ref TableUser
         COGNITO_USER_POOL: !Ref CognitoUserPool
         COGNITO_CLIENT_ID: !Ref CognitoUserPoolClient
+        IDENTITY_POOL: !Ref CognitoIdentityPoolId
         BUCKET_NAME: !Ref S3BucketName
         MODE: !Ref Mode
+        IS_ENABLE_KMS: "False"
     Layers:
         - !Ref CommonCodeLayerName
 
@@ -86,7 +89,7 @@ Parameters:
     Type: String
   TableConstPrebuildDatasetName:
     Type: String
-
+  
   MaxConcurrencyTasks:
     Type: String
   CommonCodeLayerName:
@@ -139,7 +142,8 @@ Parameters:
     Type: String
   CreateProjectPrebuildSMArn:
     Type: String
-
+  TableConfirmCodeAuth:
+    Type: String
 Resources:
   #================ ROLES =====================================================
 
@@ -178,6 +182,14 @@ Resources:
           Action:
           - "sts:AssumeRole"
       Policies:
+        - PolicyName: 'SES'
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - 'ses:*'
+                Resource: '*'
         - PolicyName: 'SQS'
           PolicyDocument:
             Version: '2012-10-17'

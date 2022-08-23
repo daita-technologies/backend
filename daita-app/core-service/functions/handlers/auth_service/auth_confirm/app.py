@@ -7,8 +7,8 @@ import os
 import boto3
 from dataclasses import dataclass
 import re
-
-from error import *
+from utils import *
+from error_messages import *
 from response import *
 from config import *
 from custom_mail import *
@@ -16,6 +16,7 @@ from datetime import datetime
 
 USERPOOLID = os.environ['COGNITO_USER_POOL']
 CLIENTPOOLID = os.environ['COGNITO_CLIENT_ID']
+IDENTITY_POOL = os.environ['IDENTITY_POOL']
 cog_provider_client = boto3.client('cognito-idp')
 cog_identity_client = boto3.client('cognito-identity')
 
@@ -38,7 +39,7 @@ def lambda_handler(event, context):
             'region': REGION,
             'user': username,
             'code': confirmCode,
-            'confirm_code_Table': os.environ['TBL_CONFIRM_CODE']
+            'confirm_code_Table': os.environ['TABLE_CONFIRM_CODE']
         })
     except Exception as e:
         raise Exception(e)
