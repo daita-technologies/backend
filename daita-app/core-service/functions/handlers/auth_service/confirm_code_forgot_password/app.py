@@ -66,4 +66,4 @@ class ConfirmCodeForgotPasswordClass(LambdaBaseClass):
 
 @error_response
 def lambda_handler(event, context):
-    return ConfirmCodeForgotPasswordClass.handle(event=event, context=context)
+    return ConfirmCodeForgotPasswordClass().handle(event=event, context=context)

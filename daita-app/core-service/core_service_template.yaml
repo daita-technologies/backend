@@ -31,6 +31,9 @@ Globals:
         COGNITO_CLIENT_ID: !Ref CognitoUserPoolClient
         IDENTITY_POOL: !Ref CognitoIdentityPoolId
         BUCKET_NAME: !Ref S3BucketName
+        TABLE_PROJECT: !Ref TableProject
+        TABLE_TASK: !Ref TableTask
+        TABLE_PROJECT_SUMMARY: !Ref TableProjectSummary
         MODE: !Ref Mode
         IS_ENABLE_KMS: "False"
     Layers:
@@ -143,6 +146,12 @@ Parameters:
   CreateProjectPrebuildSMArn:
     Type: String
   TableConfirmCodeAuth:
+    Type: String
+  TableProject:
+    Type: String
+  TableTask:
+    Type: String
+  TableProjectSummary:
     Type: String
 Resources:
   #================ ROLES =====================================================

@@ -345,7 +345,7 @@ paths:
         payloadFormatVersion: "2.0"
   /projects/create:
     post:
-      response:
+      responses:
         default:
           description: "create project"
         x-amazon-apigateway-integration:
@@ -358,7 +358,7 @@ paths:
         payloadFormatVersion: "2.0"
   /projects/create_sample:
     post:
-      response:
+      responses:
         default:
           description: "create project"
         x-amazon-apigateway-integration:
@@ -371,12 +371,12 @@ paths:
         payloadFormatVersion: "2.0"
   /projects/list_info:
     post:
-      response:
+      responses:
         default:
-          description: "create project"
-        x-amazon-apigateway-integration:
-          credentials:
-            Fn::GetAtt: [ApiGatewayCallLambdaRole, Arn]
+          description: "list_info"
+      x-amazon-apigateway-integration:
+        credentials:
+          Fn::GetAtt: [ApiGatewayCallLambdaRole, Arn]
         uri:
           Fn::Sub: arn:${AWS::Partition}:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${ProjectListInfoFunction.Arn}/invocations
         httpMethod: "POST"
@@ -384,7 +384,7 @@ paths:
         payloadFormatVersion: "2.0"
   /projects/info:
     post:
-      response:
+      responses:
         default:
           description: "create project"
         x-amazon-apigateway-integration:
@@ -397,7 +397,7 @@ paths:
         payloadFormatVersion: "2.0"
   /projects/update_info:
     post:
-      response:
+      responses:
         default:
           description: "create project"
         x-amazon-apigateway-integration:
@@ -410,7 +410,7 @@ paths:
         payloadFormatVersion: "2.0"
   /projects/list_data:
     post:
-      response:
+      responses:
         default:
           description: "create project"
         x-amazon-apigateway-integration:
@@ -423,7 +423,7 @@ paths:
         payloadFormatVersion: "2.0"
   /projects/download_create:
     post:
-      response:
+      responses:
         default:
           description: "create project"
         x-amazon-apigateway-integration:
@@ -436,7 +436,7 @@ paths:
         payloadFormatVersion: "2.0"
   /projects/download_update:
     post:
-      response:
+      responses:
         default:
           description: "create project"
         x-amazon-apigateway-integration:
@@ -449,7 +449,7 @@ paths:
         payloadFormatVersion: "2.0"
   /projects/upload_check:
     post:
-      response:
+      responses:
         default:
           description: "create project"
         x-amazon-apigateway-integration:
@@ -462,7 +462,7 @@ paths:
         payloadFormatVersion: "2.0"
   /projects/upload_update:
     post:
-      response:
+      responses:
         default:
           description: "create project"
         x-amazon-apigateway-integration:

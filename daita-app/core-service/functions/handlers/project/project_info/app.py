@@ -65,7 +65,7 @@ class ProjectInfoCls(LambdaBaseClass):
         db_resource = boto3.resource('dynamodb')
         # get project_id
         try:
-            table = db_resource.Table(os.environ['T_PROJECT'])
+            table = db_resource.Table(os.environ['TABLE_PROJECT'])
             res_project = dydb_get_project_full(
                 table, identity_id, self.project_name)
 
@@ -94,7 +94,7 @@ class ProjectInfoCls(LambdaBaseClass):
 
         # get info detail of a project
         try:
-            table = db_resource.Table(os.environ['T_PROJECT_SUMMARY'])
+            table = db_resource.Table(os.environ['TABLE_PROJECT_SUMMARY'])
             response = table.query(
                 KeyConditionExpression=Key('project_id').eq(res_projectid),
             )
@@ -123,7 +123,7 @@ class ProjectInfoCls(LambdaBaseClass):
             ls_tasks = []
             # get task of generation
             ls_tasks = get_running_task(
-                os.environ['T_TASKS'], db_resource, ls_tasks, identity_id, res_projectid)
+                os.environ['TABLE_TASK'], db_resource, ls_tasks, identity_id, res_projectid)
             ls_tasks = get_running_task(
                 "down_tasks", db_resource, ls_tasks, identity_id, res_projectid)
             ls_tasks = get_running_task(

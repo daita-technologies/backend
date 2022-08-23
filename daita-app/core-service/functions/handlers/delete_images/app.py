@@ -24,7 +24,7 @@ def delete_image_healthycheck_info(db_resource,project_id,healthcheck_id):
                             )    
 def delete_reference_images(db_resource,identity_id,project_id,deletedfilename):
     print(f'Log Debug: {deletedfilename}')
-    table_project = db_resource.Table(os.environ['T_PROJECT'])
+    table_project = db_resource.Table(os.environ['TABLE_PROJECT'])
     queryResponse = table_project.query(
         KeyConditionExpression=Key('identity_id').eq(identity_id),
         FilterExpression=Attr('project_id').eq(project_id)
@@ -101,7 +101,7 @@ def lambda_handler(event, context):
     # we use batch_write, it means that if key are existed in tables => overwrite
     db_resource = boto3.resource('dynamodb')
     try:
-        table_sum_all = db_resource.Table(os.environ['T_PROJECT_SUMMARY'])
+        table_sum_all = db_resource.Table(os.environ['TABLE_PROJECT_SUMMARY'])
 
         for key, value in dict_request.items():
             

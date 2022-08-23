@@ -112,7 +112,7 @@ class AsyncCreateSample(LambdaBaseClass):
 
         # update generate status
         try:
-            table = db_resource.Table(os.environ['T_PROJECT'])
+            table = db_resource.Table(os.environ['TABLE_PROJECT'])
             response = table.update_item(
                 Key={
                     'identity_id': self.identity_id,

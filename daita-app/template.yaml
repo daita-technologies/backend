@@ -321,6 +321,9 @@ Resources:
         CreateProjectPrebuildSMArn: !GetAtt ProjectService.Outputs.CreateProjectPrebuildSMArn
         TableConfirmCodeAuth: !GetAtt DatabaseService.Outputs.TableConfirmCodeAuth
         CognitoIdentityPoolId: !GetAtt IdentityPool.Outputs.IdentityPool
+        TableProject: !GetAtt DatabaseService.Outputs.TableProject
+        TableTask: !GetAtt DatabaseService.Outputs.TableTask
+        TableProjectSummary: !GetAtt DatabaseService.Outputs.TableProjectSummary
   HealthCheckService:
     Type: AWS::Serverless::Application
     Properties:

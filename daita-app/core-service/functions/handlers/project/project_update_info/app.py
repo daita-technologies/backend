@@ -51,7 +51,7 @@ class ProjectUpdateCls(LambdaBaseClass):
         db_resource = boto3.resource('dynamodb')
         # get project_id
         try:
-            table = db_resource.Table(os.environ['T_PROJECT'])
+            table = db_resource.Table(os.environ['TABLE_PROJECT'])
             res_project = table.get_item(
                 Key={
                     'identity_id': identity_id,

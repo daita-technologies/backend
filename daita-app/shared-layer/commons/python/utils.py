@@ -5,7 +5,7 @@ from boto3.dynamodb.types import TypeDeserializer, TypeSerializer
 import re
 import boto3
 import os
-
+import json
 
 def convert_current_date_to_iso8601():
     my_date = datetime.now()
@@ -142,3 +142,17 @@ def aws_get_identity_id(id_token, USER_POOL_ID, IDENTITY_POOL_ID):
     identity_id = identity_response['IdentityId']
 
     return identity_id
+def convert_response(data):
+    if data.get('message', None):
+        # print("convert: ",data['message'])
+        # print("type: ", type(data['message']))
+        data['message'] = data['message'].replace("Exception('", "").replace("')", "")
+    return {
+        "statusCode": 200,
+        'headers': {
+            'Access-Control-Allow-Headers': 'Content-Type',
+            'Access-Control-Allow-Origin': '*',
+            'Access-Control-Allow-Methods': 'OPTIONS,POST,GET'
+        },
+        "body": json.dumps(data),
+    }
