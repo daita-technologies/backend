@@ -10,7 +10,9 @@ from response import *
 from error_messages import *
 from identity_check import *
 from utils import *
-
+USERPOOLID = os.environ['COGNITO_USER_POOL']
+CLIENTPOOLID = os.environ['COGNITO_CLIENT_ID']
+IDENTITY_POOL = os.environ['IDENTITY_POOL']
 def CheckRunningAndDeleteTask(tableTask,identity_id,project_id,name):
     queryResp = tableTask.query(
         KeyConditionExpression=Key('identity_id').eq(identity_id),
@@ -40,7 +42,7 @@ def lambda_handler(event, context):
 
         #check authentication
         id_token = body["id_token"]
-        identity_id = aws_get_identity_id(id_token)
+        identity_id = aws_get_identity_id(id_token, USERPOOLID, IDENTITY_POOL)
 
         #get request data
         project_id = body['project_id']

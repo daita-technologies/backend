@@ -12,7 +12,9 @@ from error_messages import *
 from identity_check import *
 from utils import *
 MAX_NUMBER_ITEM_DELETE = 100
-
+USERPOOLID = os.environ['COGNITO_USER_POOL']
+CLIENTPOOLID = os.environ['COGNITO_CLIENT_ID']
+IDENTITY_POOL = os.environ['IDENTITY_POOL']
 
 def delete_image_healthycheck_info(db_resource,project_id,healthcheck_id):
     table_healthycheck_info = db_resource.Table(os.environ['TABLE_HEALTHCHECK_INFO'])
@@ -60,7 +62,7 @@ def lambda_handler(event, context):
 
         #check authentication
         id_token = body["id_token"]
-        identity_id = aws_get_identity_id(id_token)
+        identity_id = aws_get_identity_id(id_token, USERPOOLID, IDENTITY_POOL)
 
         #get request data
         project_id = body['project_id']

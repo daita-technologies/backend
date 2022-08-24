@@ -394,7 +394,7 @@ Resources:
   DeleteImages:
     Type: AWS::Serverless::Function
     Properties:
-      CodeUri: functions/handlers/delete_images
+      CodeUri: functions/handlers/project/delete_images
       Role: !GetAtt LambdaExecutionRole.Arn
       Environment:
         Variables:
@@ -406,7 +406,7 @@ Resources:
   DeleteProject:
     Type: AWS::Serverless::Function
     Properties:
-      CodeUri: functions/handlers/delete_project
+      CodeUri: functions/handlers/project/delete_project
       Role: !GetAtt LambdaExecutionRole.Arn
       Environment:
         Variables:
