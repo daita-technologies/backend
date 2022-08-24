@@ -221,17 +221,21 @@ Resources:
       Location: db-service/db_template.yaml
       Parameters:
         StagePara: !Ref Stage
+        ApplicationPara: !Ref Application
   
   ProjectService:
     Type:  AWS::Serverless::Application
     Properties:
-      Location: project_service/project_service_template.yaml
+      Location: project-service/project_service_template.yaml
       Parameters:
         StagePara: !Ref Stage
         Mode: !Ref Mode
         CommonCodeLayerName: !Ref CommonCodeLayer
         ApplicationPara: !Ref Application
         LambdaRole: !GetAtt GeneralLambdaExecutionRole.Arn
+        TableDataOriginalName: !GetAtt DatabaseService.Outputs.TableDataOriginalName
+        TableProjectSumName: !GetAtt DatabaseService.Outputs.TableProjectSumName
+        TableProjectsName: !GetAtt DatabaseService.Outputs.TableProjectsName
 
   CognitoUserPool:
     Type: AWS::Serverless::Application

@@ -6,12 +6,146 @@ Description: >
 Parameters:
   StagePara:
     Type: String
+  ApplicationPara:
+    Type: String
   IndexTaskProjectIDTaskIDName:
     Type: String
     Default: index-projectid-taskid
+  IndexDataName:
+    Type: String
+    Default: index-created-sorted
 
 Resources:
     #================ DYNAMODB ==================================================
+
+  ###==== For Project ========
+  ProjectDB:
+    Type:  AWS::DynamoDB::Table
+    Properties:
+      TableName: !Sub "${StagePara}_${ApplicationPara}-project"
+      AttributeDefinitions:
+        -
+          AttributeName: identity_id
+          AttributeType: S
+        -
+          AttributeName: project_name
+          AttributeType: S
+      KeySchema:
+        -
+          AttributeName: identity_id
+          KeyType: HASH
+        -
+          AttributeName: project_name
+          KeyType: RANGE
+      BillingMode: PAY_PER_REQUEST
+
+  ProjectSummaryDB:
+    Type:  AWS::DynamoDB::Table
+    Properties:
+      TableName: !Sub "${StagePara}_${ApplicationPara}-prj-sum-all"
+      AttributeDefinitions:
+        -
+          AttributeName: project_id
+          AttributeType: S
+        -
+          AttributeName: type
+          AttributeType: S
+      KeySchema:
+        -
+          AttributeName: project_id
+          KeyType: HASH
+        -
+          AttributeName: type
+          KeyType: RANGE
+      BillingMode: PAY_PER_REQUEST
+
+  DataOriginalDB:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      AttributeDefinitions:
+        - 
+          AttributeName: project_id
+          AttributeType: S
+        - 
+          AttributeName: filename
+          AttributeType: S
+      KeySchema:
+        - 
+          AttributeName: project_id
+          KeyType: HASH
+        -
+          AttributeName: filename
+          KeyType: RANGE
+      TableName: !Sub "${StagePara}_${ApplicationPara}-data-original"
+      GlobalSecondaryIndexes:
+        -
+          IndexName: !Ref IndexDataName
+          KeySchema:
+            - 
+              AttributeName: project_id
+              KeyType: HASH
+          Projection:
+            ProjectionType: ALL  
+      BillingMode: PAY_PER_REQUEST
+
+  DataAugmentDB:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      AttributeDefinitions:
+        - 
+          AttributeName: project_id
+          AttributeType: S
+        - 
+          AttributeName: filename
+          AttributeType: S
+      KeySchema:
+        - 
+          AttributeName: project_id
+          KeyType: HASH
+        -
+          AttributeName: filename
+          KeyType: RANGE
+      TableName: !Sub "${StagePara}_${ApplicationPara}-data-augment"
+      GlobalSecondaryIndexes:
+        -
+          IndexName: !Ref IndexDataName
+          KeySchema:
+            - 
+              AttributeName: project_id
+              KeyType: HASH
+          Projection:
+            ProjectionType: ALL  
+      BillingMode: PAY_PER_REQUEST
+
+  DataPreprocessDB:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      AttributeDefinitions:
+        - 
+          AttributeName: project_id
+          AttributeType: S
+        - 
+          AttributeName: filename
+          AttributeType: S
+      KeySchema:
+        - 
+          AttributeName: project_id
+          KeyType: HASH
+        -
+          AttributeName: filename
+          KeyType: RANGE
+      TableName: !Sub "${StagePara}_${ApplicationPara}-data-preprocess"
+      GlobalSecondaryIndexes:
+        -
+          IndexName: !Ref IndexDataName
+          KeySchema:
+            - 
+              AttributeName: project_id
+              KeyType: HASH
+          Projection:
+            ProjectionType: ALL  
+      BillingMode: PAY_PER_REQUEST
+
   GenerateTaskDB:
     Type: AWS::DynamoDB::Table
     Properties:
@@ -357,9 +491,10 @@ Outputs:
     Value: !Ref GenerateTaskDB
   TableProjectsName:
     Description: "Name of table projects"
-    Value: projects
+    Value: !Ref ProjectDB
   TableProjectSumName:
-    Value: prj_sum_all
+    Description: "Name of table projects"
+    Value: !Ref ProjectSummaryDB
   TableMethodsName:
     Description: "Name of table methods"
     Value: methods
@@ -377,13 +512,13 @@ Outputs:
     Value: !Ref TableReferenceImageInfo
   TableDataAugmentName:
     Description: "Name of table data augment"
-    Value: data_augment
+    Value: !Ref DataAugmentDB
   TableDataOriginalName:
     Description: "Name of table data original"
-    Value: data_original
+    Value: !Ref DataOriginalDB
   TableDataPreprocessName:
     Description: "Name of table data preprocess"
-    Value: data_preprocess
+    Value: !Ref DataPreprocessDB
   TableDataFlowTaskName:
     Description: "Content task of download and upload service"
     Value: !Ref DataFlowTaskTable

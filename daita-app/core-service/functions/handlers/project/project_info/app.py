@@ -54,7 +54,8 @@ class ProjectInfoCls(LambdaBaseClass):
         self.parser(json.loads(event['body']))
         try:
             identity_id = aws_get_identity_id(
-                self.id_token, USERPOOLID, IDENTITY_POOL)
+                
+                self.id_token, USERPOOLID, IDENTITY_POOL, USERPOOLID, IDENTITY_POOL)
         except Exception as e:
             print('Error: ', repr(e))
             return convert_response({"error": True,
@@ -89,8 +90,8 @@ class ProjectInfoCls(LambdaBaseClass):
             print('Error: ', repr(e))
             return convert_response({"error": True,
                                     "success": False,
-                                     "message": repr(e),
-                                     "data": None})
+                                      "message": repr(e),
+                                      "data": None})
 
         # get info detail of a project
         try:
@@ -103,8 +104,8 @@ class ProjectInfoCls(LambdaBaseClass):
             print('Error: ', repr(e))
             return convert_response({"error": True,
                                     "success": False,
-                                     "message": repr(e),
-                                     "data": None})
+                                      "message": repr(e),
+                                      "data": None})
 
         if response.get('Items', None):
             groups = {}
@@ -167,4 +168,5 @@ class ProjectInfoCls(LambdaBaseClass):
 
 
 def lambda_handler(event, context):
-    return ProjectInfoCls().handle(event=event, context=context)
+    return ProjectInfoCls().handle(event=event,  context=context)
+
