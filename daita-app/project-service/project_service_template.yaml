@@ -29,18 +29,30 @@ Parameters:
 
 Globals:
   Function:
-    Timeout: 800    
+    Timeout: 800   
+    Runtime: python3.8
+    Architectures:
+      - x86_64 
     Environment:
       Variables:
         STAGE: !Ref StagePara        
         LOGGING: !Ref minimumLogLevel  
         MODE: !Ref Mode
-        T_PROJECT_SUMMARY: !Ref TableProjectSumName
-        T_PROJECT: !Ref TableProjectsName
+        TABLE_PROJECT_SUMMARY: !Ref TableProjectSumName
+        TABLE_PROJECT: !Ref TableProjectsName
         T_DATA_ORI: !Ref TableDataOriginalName
 Resources:
 
   #================ LAMBDA FUNCTIONS ==========================================
+
+  ProjectUploadUpdateFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: functions/api_handler
+      Handler: hdler_project_upload_update.lambda_handler
+      Role: !Ref LambdaRole
+      Layers:
+        - !Ref CommonCodeLayerName
 
   FuncMoveS3Data:
     Type: AWS::Serverless::Function 
@@ -149,3 +161,8 @@ Outputs:
   CreateProjectPrebuildSMArn:
     Description: "ARN of SM"
     Value: !GetAtt CreateProjectPrebuildSM.Arn
+  FuncProjectUploadUpdate:
+    Value: !Ref ProjectUploadUpdateFunction
+  FuncProjectUploadUpdateArn:
+    Value: !GetAtt ProjectUploadUpdateFunction.Arn
+  

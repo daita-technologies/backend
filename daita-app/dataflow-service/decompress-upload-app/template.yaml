@@ -43,6 +43,16 @@ Parameters:
     Default: 8
   Mode:
     Type: String
+  TableDataOriginalName:
+    Type: String
+  TableDataAugmentName:
+    Type: String
+  TableDataPreprocessName:
+    Type: String
+
+  FuncProjectUploadUpdate:
+    Type: String
+    
 Globals:
   Function:
     Timeout: 180

@@ -71,7 +71,7 @@ class AsyncCreateSample(LambdaBaseClass):
         # update summary information
         try:
             response = db_client.update_item(
-                TableName=os.environ["T_PROJECT_SUMMARY"],
+                TableName=os.environ["TABLE_PROJECT_SUMMARY"],
                 Key={
                     'project_id': {
                         'S': self.project_id

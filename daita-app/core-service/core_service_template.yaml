@@ -20,7 +20,6 @@ Globals:
         TABLE_NAME: global-table
         LOGGING: !Ref minimumLogLevel
         TABLE_GENERATE_TASK: !Ref TableGenerateTaskName
-        TABLE_PROJECTS_NAME: !Ref TableProjectsName
         TABLE_METHODS_NAME: !Ref TableMethodsName
         TABLE_HEALTHCHECK_TASK: !Ref TableHealthCheckTasksName
         TABLE_HEALTHCHECK_INFO: !Ref TableHealthCheckInfoName
@@ -31,9 +30,9 @@ Globals:
         COGNITO_CLIENT_ID: !Ref CognitoUserPoolClient
         IDENTITY_POOL: !Ref CognitoIdentityPoolId
         BUCKET_NAME: !Ref S3BucketName
-        TABLE_PROJECT: !Ref TableProject
+        TABLE_PROJECT: !Ref TableProjectsName
         TABLE_TASK: !Ref TableTask
-        TABLE_PROJECT_SUMMARY: !Ref TableProjectSummary
+        TABLE_PROJECT_SUMMARY: !Ref TableProjectSumName
         MODE: !Ref Mode
         IS_ENABLE_KMS: "False"
     Layers:
@@ -56,15 +55,11 @@ Parameters:
     Type: String
   ProcessAITaskEventBusArn:
     Type: String
-  ProjectSummary:
+  TableProjectSumName:
     Type: String
-    Default: prj_sum_all
   DataOrigin:
     Type: String
     Default: data_original
-  TableProject:
-    Type: String
-    Default: projects
   TableProjectDel:
     Type: String
     Default: projects_save_delete
@@ -76,7 +71,7 @@ Parameters:
     Type: String
   ParaTableDownloadTaskName:
     Type: String
-  ParaTableProjectSumName:
+  TableProjectSumName:
     Type: String
   TableHealthCheckTasksName:
     Type: String
@@ -147,12 +142,12 @@ Parameters:
     Type: String
   TableConfirmCodeAuth:
     Type: String
-  TableProject:
-    Type: String
   TableTask:
     Type: String
-  TableProjectSummary:
+
+  FuncProjectUploadUpdateArn:
     Type: String
+
 Resources:
   #================ ROLES =====================================================
 
@@ -333,7 +328,7 @@ Resources:
       Environment:
         Variables:
           T_GEN_DAITA_UPLOAD_TOKEN: !Ref TableGenerateDaitaUploadToken
-          TABLE_PROJECT_SUM: !Ref ParaTableProjectSumName
+          TABLE_PROJECT_SUMMARY: !Ref TableProjectSumName
   GenertateTokenUploadProjectFunction:
     Type: AWS::Serverless::Function
     Properties:
@@ -352,7 +347,7 @@ Resources:
           EVENT_BUS_NAME: !Ref ProcessAITaskEventBusName
           LIMIT_PROCESSING_TIMES: !Ref LimitPreprocessTimesName
           LIMIT_AUGMENT_TIMES: !Ref LimitAugmentTimesName
-          TABLE_PROJECT_SUM: !Ref ParaTableProjectSumName
+          TABLE_PROJECT_SUMMARY: !Ref TableProjectSumName
           TABLE_PREPROCESS: !Ref TableDataPreprocessName
           MAX_CONCURRENCY_TASK: !Ref MaxConcurrencyTasks
           QUEUE : !Ref TaskQueueName
@@ -399,9 +394,9 @@ Resources:
       Environment:
         Variables:
           TABLE_HEALTHCHECK_INFO: !Ref TableHealthCheckInfoName
-          T_PROJECT_SUMMARY: !Ref ProjectSummary
+          TABLE_PROJECT_SUMMARY: !Ref TableProjectSumName
           T_DATA_ORI: !Ref DataOrigin
-          T_PROJECT: !Ref TableProject
+          TABLE_PROJECT: !Ref TableProjectsName
 
   DeleteProject:
     Type: AWS::Serverless::Function
@@ -412,10 +407,10 @@ Resources:
         Variables:
           TABLE_HEALTHCHECK_INFO: !Ref TableHealthCheckInfoName
           TABLE_HEALTHCHECK_TASK: !Ref TableHealthCheckTasksName
-          T_PROJECT_SUMMARY: !Ref ProjectSummary
+          TABLE_PROJECT_SUMMARY: !Ref TableProjectSumName
           T_DATA_ORI: !Ref DataOrigin
           T_TASKS: !Ref TableGenerateTaskName
-          T_PROJECT: !Ref TableProject
+          TABLE_PROJECT: !Ref TableProjectsName
           T_PROJECT_DEL: !Ref TableProjectDel
           T_DATA_FLOW: !Ref ParaTableDataFlowTaskName
           T_REFERENCE_IMAGE: !Ref TableReferenceImageTasksName
@@ -706,12 +701,7 @@ Resources:
     Properties:
       CodeUri: functions/handlers/project/project_upload_check
       Role: !GetAtt LambdaExecutionRole.Arn
-  
-  ProjectUploadUpdateFunction:
-    Type: AWS::Serverless::Function
-    Properties:
-      CodeUri: functions/handlers/project/project_upload_update
-      Role:  !GetAtt LambdaExecutionRole.Arn
+      
 Outputs:
   CallerServiceHttpApiUrl:
     Description: "Url of the Caller service API"

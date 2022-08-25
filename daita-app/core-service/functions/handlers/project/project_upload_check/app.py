@@ -80,7 +80,7 @@ class ProjectUploadCheckCls(LambdaBaseClass):
 
             # check available image is over the limitation
             db_resource = boto3.resource("dynamodb")
-            table = db_resource.Table(os.environ["T_PROJECT_SUMMARY"])
+            table = db_resource.Table(os.environ["TABLE_PROJECT_SUMMARY"])
             response = table.get_item(
                 Key={
                     "project_id": self.project_id,

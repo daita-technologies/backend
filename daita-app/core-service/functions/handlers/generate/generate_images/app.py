@@ -25,7 +25,7 @@ class GenerateImageClass(LambdaBaseClass):
         self.const = SystemParameterStore()   
         self.project_model = ProjectModel(os.environ["TABLE_PROJECTS_NAME"])
         self.generate_task_model = GenerateTaskModel(os.environ["TABLE_GENERATE_TASK"])
-        self.project_sum_model = ProjectSumModel(os.environ["TABLE_PROJECT_SUM"])
+        self.project_sum_model = ProjectSumModel(os.environ["TABLE_PROJECT_SUMMARY"])
 
     @LambdaBaseClass.parse_body
     def parser(self, body):

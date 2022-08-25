@@ -89,7 +89,7 @@ class ProjectUploadUpdateCls(LambdaBaseClass):
         try:
             db_resource = boto3.resource("dynamodb")
             if self.is_ori:
-                table = db_resource.Table(os.environ["T_PROJECT_SUMMARY"])
+                table = db_resource.Table(os.environ["TABLE_PROJECT_SUMMARY"])
                 # get current data in original
                 response = table.get_item(
                     Key={
@@ -156,7 +156,7 @@ class ProjectUploadUpdateCls(LambdaBaseClass):
         try:
             if self.is_ori and thumbnail_key is None:
                 # update thumbnail key to project
-                table = db_resource.Table(os.environ["T_PROJECT_SUMMARY"])
+                table = db_resource.Table(os.environ["TABLE_PROJECT_SUMMARY"])
                 response = table.update_item(
                     Key={
                         'project_id': self.project_id,
@@ -180,7 +180,7 @@ class ProjectUploadUpdateCls(LambdaBaseClass):
                 )
             else:
                 response = db_client.update_item(
-                    TableName=os.environ["T_PROJECT_SUMMARY"],
+                    TableName=os.environ["TABLE_PROJECT_SUMMARY"],
                     Key={
                         'project_id': {
                             'S': self.project_id

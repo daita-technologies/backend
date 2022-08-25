@@ -102,7 +102,7 @@ def lambda_handler(event, context):
                                 'filename': each['filename']
                             })
                             total_size += each['size']
-                    # Update Table T_PROJECT_SUMMARY
+                    # Update Table TABLE_PROJECT_SUMMARY
 
                     prj_sum_all = db_resource.Table(
                         os.environ['TABLE_PROJECT_SUMMARY'])

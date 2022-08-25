@@ -23,7 +23,7 @@ class UpdateSummaryDBClass(LambdaBaseClass):
         self.client_events = boto3.client('events')    
         self.const = SystemParameterStore()  
         self.s3 = boto3.client('s3')
-        self.project_sum_model = ProjectSumModel(os.environ["T_PROJECT_SUMMARY"])
+        self.project_sum_model = ProjectSumModel(os.environ["TABLE_PROJECT_SUMMARY"])
 
     @LambdaBaseClass.parse_body
     def parser(self, body):
@@ -47,7 +47,7 @@ class UpdateSummaryDBClass(LambdaBaseClass):
         # update summary information
         try:
             response = db_client.update_item(
-                TableName=os.environ["T_PROJECT_SUMMARY"],
+                TableName=os.environ["TABLE_PROJECT_SUMMARY"],
                 Key={
                     'project_id': {
                         'S': self.project_id
@@ -85,7 +85,7 @@ class UpdateSummaryDBClass(LambdaBaseClass):
 
         # update generate status
         try:
-            table = db_resource.Table(os.environ['T_PROJECT'])
+            table = db_resource.Table(os.environ['TABLE_PROJECT'])
             response = table.update_item(
                 Key={
                     'identity_id': self.identity_id,

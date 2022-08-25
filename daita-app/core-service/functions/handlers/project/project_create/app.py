@@ -63,7 +63,7 @@ class CreateProject(LambdaBaseClass):
         try:
             is_sample=False
             gen_status="FINISH"
-            table_prj=db_resource.Table(os.environ["T_PROJECT"])
+            table_prj=db_resource.Table(os.environ["TABLE_PROJECT"])
             table_prj.put_item(
                 Item = {
                     'ID': _uuid,

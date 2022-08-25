@@ -9,7 +9,7 @@ from models.project_sum_model import ProjectSumModel
 
 generate_daita_upload_token_model = GenerateDaitaUploadTokenModel(
     os.environ['T_GEN_DAITA_UPLOAD_TOKEN'])
-project_sum_model = ProjectSumModel(os.environ["TABLE_PROJECT_SUM"])
+project_sum_model = ProjectSumModel(os.environ["TABLE_PROJECT_SUMMARY"])
 s3 = boto3.client('s3')
 bucket = os.environ['BUCKET_NAME']
 RESPONSE_HEADER = {

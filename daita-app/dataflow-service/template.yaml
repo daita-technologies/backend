@@ -46,6 +46,16 @@ Parameters:
     Type: String
   Mode:
     Type: String
+  TableDataOriginalName: 
+    Type: String
+  TableDataAugmentName:
+    Type: String
+  TableDataPreprocessName:
+    Type: String
+
+  FuncProjectUploadUpdate:
+    Type: String
+
 Globals:
   Function:
     Timeout: 180
@@ -157,6 +167,11 @@ Resources:
         CommonCodeLayerName: !Ref CommonCodeLayerName
         EFSFileSystemId: !Ref EFSFileSystemId
         Mode: !Ref Mode
+        TableDataOriginalName: !Ref TableDataOriginalName
+        TableDataAugmentName: !Ref TableDataAugmentName
+        TableDataPreprocessName: !Ref TableDataPreprocessName
+        FuncProjectUploadUpdate: !Ref FuncProjectUploadUpdate
+        
   CompressDownloadApp:
     Type: AWS::Serverless::Application
     Properties:
@@ -178,6 +193,9 @@ Resources:
         CommonCodeLayerName: !Ref CommonCodeLayerName
         EFSFileSystemId: !Ref EFSFileSystemId
         Mode: !Ref Mode
+        TableDataOriginalName: !Ref TableDataOriginalName
+        TableDataAugmentName: !Ref TableDataAugmentName
+        TableDataPreprocessName: !Ref TableDataPreprocessName
 
 Outputs:
   DecompressFileStateMachineArn:

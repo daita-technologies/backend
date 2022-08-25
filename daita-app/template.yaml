@@ -197,6 +197,7 @@ Resources:
         EFSFileSystemId: !Ref EFSFileSystemId
         ROOTEFS: !Ref ROOTEFS
         Mode: !Ref Mode
+
   DataFlowService:
     Type: AWS::Serverless::Application
     Properties:
@@ -215,6 +216,11 @@ Resources:
         EFSFileSystemId: !Ref EFSFileSystemId
         SecurityGroupIds: !Ref SecurityGroupsIdsDefault
         Mode: !Ref Mode
+        TableDataOriginalName: !Ref TableDataOriginalName
+        TableDataAugmentName: !Ref TableDataAugmentName
+        TableDataPreprocessName: !Ref TableDataPreprocessName
+        FuncProjectUploadUpdate: !GetAtt ProjectService.Outputs.FuncProjectUploadUpdate
+
   DatabaseService:
     Type: AWS::Serverless::Application
     Properties:
@@ -325,9 +331,12 @@ Resources:
         CreateProjectPrebuildSMArn: !GetAtt ProjectService.Outputs.CreateProjectPrebuildSMArn
         TableConfirmCodeAuth: !GetAtt DatabaseService.Outputs.TableConfirmCodeAuth
         CognitoIdentityPoolId: !GetAtt IdentityPool.Outputs.IdentityPool
-        TableProject: !GetAtt DatabaseService.Outputs.TableProject
+        TableProjectsName: !GetAtt DatabaseService.Outputs.TableProjectsName
         TableTask: !GetAtt DatabaseService.Outputs.TableTask
-        TableProjectSummary: !GetAtt DatabaseService.Outputs.TableProjectSummary
+        TableProjectSumName: !GetAtt DatabaseService.Outputs.TableProjectSumName
+        ##### for project function
+        FuncProjectUploadUpdateArn: !GetAtt ProjectService.Outputs.FuncProjectUploadUpdateArn
+
   HealthCheckService:
     Type: AWS::Serverless::Application
     Properties:

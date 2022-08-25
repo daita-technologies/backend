@@ -63,7 +63,7 @@ class ProjectSampleCls(LambdaBaseClass):
         try:
             is_sample = True
             gen_status = "GENERATING"
-            table_prj = db_resource.Table(os.environ["T_PROJECT"])
+            table_prj = db_resource.Table(os.environ["TABLE_PROJECT"])
             table_prj.put_item(
                 Item={
                     'ID': _uuid,

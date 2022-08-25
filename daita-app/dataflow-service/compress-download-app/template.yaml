@@ -26,15 +26,12 @@ Parameters:
     Type: String
   TableMethodsName:
     Type: String
-  TableDataOriginal:
+  TableDataOriginalName:
     Type: String
-    Default: data_original
-  TableDataAugment:
+  TableDataAugmentName:
     Type: String
-    Default: data_augment
-  TableDataPreprocess:
+  TableDataPreprocessName:
     Type: String
-    Default: data_preprocess
   VPCEndpointForS3:
     Type: String
   VPCEndpointForDynamoDB:
@@ -200,9 +197,9 @@ Resources:
             Resource: "*"
       Environment:
         Variables:
-          TableDataOriginal: !Ref TableDataOriginal
-          TableDataAugment: !Ref TableDataAugment
-          TableDataPreprocess: !Ref TableDataPreprocess
+          TableDataOriginal: !Ref TableDataOriginalName
+          TableDataAugment: !Ref TableDataAugmentName
+          TableDataPreprocess: !Ref TableDataPreprocessName
           CHUNK_SIZE: 8
 
   DownloadFilesFunction:
