@@ -35,7 +35,7 @@ class ProjectListCls(LambdaBaseClass):
         # query list of projects
         db_resource = boto3.resource('dynamodb')
         try:
-            table = db_resource.Table(os.environ['T_PROJECT'])
+            table = db_resource.Table(os.environ['TABLE_PROJECT'])
             items = table.query(
                 ProjectionExpression='project_name, project_id, s3_prefix, is_sample, gen_status',
                 KeyConditionExpression=Key('identity_id').eq(identity_id),

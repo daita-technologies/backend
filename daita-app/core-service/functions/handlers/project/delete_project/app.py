@@ -10,7 +10,9 @@ from response import *
 from error_messages import *
 from identity_check import *
 from utils import *
-
+USERPOOLID = os.environ['COGNITO_USER_POOL']
+CLIENTPOOLID = os.environ['COGNITO_CLIENT_ID']
+IDENTITY_POOL = os.environ['IDENTITY_POOL']
 def CheckRunningAndDeleteTask(tableTask,identity_id,project_id,name):
     queryResp = tableTask.query(
         KeyConditionExpression=Key('identity_id').eq(identity_id),
@@ -40,7 +42,7 @@ def lambda_handler(event, context):
 
         #check authentication
         id_token = body["id_token"]
-        identity_id = aws_get_identity_id(id_token)
+        identity_id = aws_get_identity_id(id_token, USERPOOLID, IDENTITY_POOL)
 
         #get request data
         project_id = body['project_id']
@@ -49,7 +51,7 @@ def lambda_handler(event, context):
         db_resource = boto3.resource('dynamodb')
         
         #### check task that belongs to the project id
-        tableGenerateTask = db_resource.Table(os.environ['T_TASKS'])
+        tableGenerateTask = db_resource.Table(os.environ['TABLE_TASK'])
         tableDataFlowstask = db_resource.Table(os.environ['T_DATA_FLOW'])
         tableReferenceImages = db_resource.Table(os.environ['T_REFERENCE_IMAGE'])
         tableHealthycheckTask = db_resource.Table(os.environ['TABLE_HEALTHCHECK_TASK'])
@@ -76,7 +78,7 @@ def lambda_handler(event, context):
                     'healthcheck_id': each['healthcheck_id']
                 })
         #### delete in project summary
-        table = db_resource.Table(os.environ['T_PROJECT_SUMMARY'])
+        table = db_resource.Table(os.environ['TABLE_PROJECT_SUMMARY'])
         for type_method in ['ORIGINAL', 'PREPROCESS', 'AUGMENT']:
             table.delete_item(Key={
                     'project_id': project_id,
@@ -84,7 +86,7 @@ def lambda_handler(event, context):
                 })
                 
         #### delete project info
-        table_project = db_resource.Table(os.environ['T_PROJECT'])
+        table_project = db_resource.Table(os.environ['TABLE_PROJECT'])
         table_project_delete = db_resource.Table(os.environ['T_PROJECT_DEL'])
         dydb_update_delete_project(table_project, table_project_delete, identity_id, project_name)
         

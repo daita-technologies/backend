@@ -428,7 +428,63 @@ Resources:
           AttributeName: name
           KeyType: HASH
       BillingMode: PAY_PER_REQUEST 
-
+  TableProject:
+    Type:  AWS::DynamoDB::Table
+    Properties:
+      TableName: !Sub "${StagePara}-Project"
+      AttributeDefinitions:
+        -
+          AttributeName: identity_id
+          AttributeType: S
+        -
+          AttributeName: project_name
+          AttributeType: S
+      KeySchema:
+        -
+          AttributeName: identity_id
+          KeyType: HASH
+        -
+          AttributeName: project_name
+          KeyType: RANGE
+      BillingMode: PAY_PER_REQUEST
+  TableTask:
+    Type:  AWS::DynamoDB::Table
+    Properties:
+      TableName: !Sub "${StagePara}-Task"
+      AttributeDefinitions:
+        -
+          AttributeName: identity_id
+          AttributeType: S
+        -
+          AttributeName: task_id
+          AttributeType: S
+      KeySchema:
+        -
+          AttributeName: identity_id
+          KeyType: HASH
+        -
+          AttributeName: task_id
+          KeyType: RANGE
+      BillingMode: PAY_PER_REQUEST
+  TableProjectSummary:
+    Type:  AWS::DynamoDB::Table
+    Properties:
+      TableName: !Sub "${StagePara}-Project-Summary"
+      AttributeDefinitions:
+        -
+          AttributeName: project_id
+          AttributeType: S
+        -
+          AttributeName: type
+          AttributeType: S
+      KeySchema:
+        -
+          AttributeName: project_id
+          KeyType: HASH
+        -
+          AttributeName: type
+          KeyType: RANGE
+      BillingMode: PAY_PER_REQUEST       
 Outputs:
   TableGenerateTaskName:
     Description: "Name of table generate task"
@@ -480,3 +536,9 @@ Outputs:
     Value: !Ref TableFeedback
   TableConstPrebuildDatasetName:
     Value: !Ref TableConstPrebuildDataset
+  TableProject:
+    Value: !Ref TableProject
+  TableTask:
+    Value: !Ref TableTask
+  TableProjectSummary:
+    Value: !Ref TableProjectSummary

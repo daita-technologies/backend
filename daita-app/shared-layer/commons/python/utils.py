@@ -5,7 +5,7 @@ from boto3.dynamodb.types import TypeDeserializer, TypeSerializer
 import re
 import boto3
 import os
-
+import json
 
 def convert_current_date_to_iso8601():
     my_date = datetime.now()
@@ -17,6 +17,7 @@ def create_unique_id():
     Create an unique id 
     """
     return str(uuid.uuid4())
+
 
 
 def create_task_id_w_created_time():
@@ -142,3 +143,52 @@ def aws_get_identity_id(id_token, USER_POOL_ID, IDENTITY_POOL_ID):
     identity_id = identity_response['IdentityId']
 
     return identity_id
+
+def convert_response(data):
+    if data.get('message', None):
+        # print("convert: ",data['message'])
+        # print("type: ", type(data['message']))
+        data['message'] = data['message'].replace("Exception('", "").replace("')", "")
+    return {
+        "statusCode": 200,
+        'headers': {
+            'Access-Control-Allow-Headers': 'Content-Type',
+            'Access-Control-Allow-Origin': '*',
+            'Access-Control-Allow-Methods': 'OPTIONS,POST,GET'
+        },
+        "body": json.dumps(data),
+    }
+
+def move_data_s3(source, target, bucket_name):
+    ls_info = []
+    #list all data in s3
+    s3 = boto3.resource('s3')
+    bucket = s3.Bucket(bucket_name)
+
+    for obj in bucket.objects.filter(Prefix=source):
+        if obj.key.endswith('/'):
+            continue
+
+        old_source = { 'Bucket': bucket_name,
+                       'Key': obj.key}
+        # replace the prefix
+        new_prefix = target.replace(f"{bucket_name}/", "")
+        new_key = f'{new_prefix}/{obj.key.replace(source, "")}'
+        s3.meta.client.copy(old_source, bucket_name, new_key)
+
+        ls_info.append((new_key.split('/')[-1], f"{bucket_name}/{new_key}", obj.size))
+
+    return ls_info
+
+def create_single_put_request(dict_value):
+    dict_re = {
+        'PutRequest': {
+            'Item': {
+            }
+        }
+    }
+    for key, value in dict_value.items():
+        dict_re['PutRequest']['Item'][key] = {
+            value[0]: value[1]
+        }
+    return dict_re

@@ -74,7 +74,7 @@ def lambda_handler(event, context):
         'user': username,
         'mail': mail,
         'subject': 'Your email confirmation code',
-        'confirm_code_Table': os.environ['TBL_CONFIRM_CODE']
+        'confirm_code_Table': os.environ['TABLE_CONFIRM_CODE']
     })
 
     return generate_response(

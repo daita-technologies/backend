@@ -39,13 +39,13 @@ class ProjectListInfoCls(LambdaBaseClass):
         # query list of projects
         db_resource = boto3.resource('dynamodb')
         try:
-            table = db_resource.Table(os.environ['T_PROJECT'])
+            table = db_resource.Table(os.environ['TABLE_PROJECT'])
             items_project = table.query(
                 ProjectionExpression='project_name, project_id, s3_prefix, is_sample, gen_status, project_info',
                 KeyConditionExpression=Key('identity_id').eq(identity_id),
             )
 
-            table = db_resource.Table(os.environ['T_TASKS'])
+            table = db_resource.Table(os.environ['TABLE_TASK'])
             items_task = table.query(
                 ProjectionExpression='project_id, task_id',
                 KeyConditionExpression=Key('identity_id').eq(identity_id),
@@ -76,7 +76,7 @@ class ProjectListInfoCls(LambdaBaseClass):
                     group_project_id[item_task['project_id']
                                      ]['ls_task'].append(item_task)
 
-            table = db_resource.Table(os.environ['T_PROJECT_SUMMARY'])
+            table = db_resource.Table(os.environ['TABLE_PROJECT_SUMMARY'])
 
             for key, value in group_project_id.items():
                 response = table.query(
