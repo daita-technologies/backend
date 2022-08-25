@@ -51,28 +51,25 @@ Resources:
       CodeUri: functions/api_handler
       Handler: hdler_project_upload_update.lambda_handler
       Role: !Ref LambdaRole
+      MemorySize: 256
       Layers:
         - !Ref CommonCodeLayerName
 
   FuncMoveS3Data:
     Type: AWS::Serverless::Function 
     Properties:
-      Runtime: python3.8
+      Timeout: 900
       Handler: hdler_move_s3_data.lambda_handler
-      Architectures:
-        - x86_64
       CodeUri: functions
       Role: !Ref LambdaRole
+      MemorySize: 256
       Layers:
         - !Ref CommonCodeLayerName
 
   FuncUpdateInputData:
     Type: AWS::Serverless::Function 
     Properties:
-      Runtime: python3.8
       Handler: hdler_update_input_data.lambda_handler
-      Architectures:
-        - x86_64
       CodeUri: functions
       Role: !Ref LambdaRole
       MemorySize: 256
@@ -82,10 +79,7 @@ Resources:
   FuncUpdateSumaryDatabase:
     Type: AWS::Serverless::Function 
     Properties:
-      Runtime: python3.8
       Handler: hdler_update_sumary_db.lambda_handler
-      Architectures:
-        - x86_64
       CodeUri: functions
       Role: !Ref LambdaRole
       MemorySize: 256

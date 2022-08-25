@@ -193,6 +193,7 @@ Resources:
         TableDataAugmentName: !GetAtt DatabaseService.Outputs.TableDataAugmentName
         TableDataOriginalName: !GetAtt DatabaseService.Outputs.TableDataOriginalName
         TableDataPreprocessName: !GetAtt DatabaseService.Outputs.TableDataPreprocessName
+        TableProjectSumName: !GetAtt DatabaseService.Outputs.TableProjectSumName
         MaxConcurrencyTasks: !Ref MaxConcurrencyTasks
         EFSFileSystemId: !Ref EFSFileSystemId
         ROOTEFS: !Ref ROOTEFS
@@ -216,9 +217,9 @@ Resources:
         EFSFileSystemId: !Ref EFSFileSystemId
         SecurityGroupIds: !Ref SecurityGroupsIdsDefault
         Mode: !Ref Mode
-        TableDataOriginalName: !Ref TableDataOriginalName
-        TableDataAugmentName: !Ref TableDataAugmentName
-        TableDataPreprocessName: !Ref TableDataPreprocessName
+        TableDataOriginalName: !GetAtt DatabaseService.Outputs.TableDataOriginalName
+        TableDataAugmentName: !GetAtt DatabaseService.Outputs.TableDataAugmentName
+        TableDataPreprocessName: !GetAtt DatabaseService.Outputs.TableDataPreprocessName
         FuncProjectUploadUpdate: !GetAtt ProjectService.Outputs.FuncProjectUploadUpdate
 
   DatabaseService:
@@ -289,7 +290,6 @@ Resources:
         StopProcessEventBusArn: !GetAtt  AICallerService.Outputs.StopProcessEventBusArn
         StopProcessEventBusName: !GetAtt AICallerService.Outputs.StopProcessEventBusName
         TableGenerateTaskName: !GetAtt DatabaseService.Outputs.TableGenerateTaskName
-        TableProjectsName: !GetAtt DatabaseService.Outputs.TableProjectsName
         TableMethodsName: !GetAtt DatabaseService.Outputs.TableMethodsName
         TableHealthCheckTasksName: !GetAtt DatabaseService.Outputs.TableHealthCheckTasksName
         TableHealthCheckInfoName: !GetAtt DatabaseService.Outputs.TableHealthCheckInfoName
@@ -304,7 +304,6 @@ Resources:
         ParaDecompressFileStateMachineArn: !GetAtt DataFlowService.Outputs.DecompressFileStateMachineArn
         ParaCompressDownloadStateMachineArn: !GetAtt DataFlowService.Outputs.CompressDownloadStateMachineArn
         ParaTableDownloadTaskName: !GetAtt DatabaseService.Outputs.TableDownloadTaskName
-        ParaTableProjectSumName: !GetAtt DatabaseService.Outputs.TableProjectSumName
         ParaIndexTaskProjectIDTaskID: !GetAtt DatabaseService.Outputs.IndexTaskProjectIDTaskIDName
         ProcessAITaskEventBusArn: !GetAtt  AICallerService.Outputs.ProcessAITaskEventBusArn
         ProcessAITaskEventBusName: !GetAtt  AICallerService.Outputs.ProcessAITaskEventBusName
