@@ -598,3 +598,13 @@ Outputs:
     
   TableTask:
     Value: !Ref TableTask
+  TableProjectSummary:
+    Value: !Ref TableProjectSummary
+  TableProjectDelete:
+    Value: !Ref TableProjectDelete
+  TableDataPreprocess:
+    Value: !Ref TableDataProcess
+  TableDataAugment:
+    Value: !Ref TableDataAugment
+  TableDataOriginal:
+    Value: !Ref TableDataOriginal
