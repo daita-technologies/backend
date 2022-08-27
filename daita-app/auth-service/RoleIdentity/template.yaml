@@ -63,8 +63,8 @@ Resources:
                 Action:
                   - 's3:*'
                 Resource:
-                  - "arn:aws:s3:::client-data-test/${cognito-identity.amazonaws.com:sub}"
-                  - "arn:aws:s3:::client-data-test/${cognito-identity.amazonaws.com:sub}/*"
+                  - "arn:aws:s3:::client-data-test/${cognito-identity.amazonaws.com:sub}" # TODO check enviorment app
+                  - "arn:aws:s3:::client-data-test/${cognito-identity.amazonaws.com:sub}/*"  # TODO check enviorment app
               - Sid: VisualEditor1
                 Effect: Allow
                 Action: 's3:ListBucket'
@@ -88,8 +88,8 @@ Resources:
                 Effect: Allow
                 Action: 's3:*'
                 Resource:
-                  - "arn:aws:s3:::client-data-test/${cognito-identity.amazonaws.com:sub}"
-                  - "arn:aws:s3:::client-data-test/${cognito-identity.amazonaws.com:sub}/*"
+                  - "arn:aws:s3:::client-data-test/${cognito-identity.amazonaws.com:sub}"  # TODO check enviorment app
+                  - "arn:aws:s3:::client-data-test/${cognito-identity.amazonaws.com:sub}/*"  # TODO check enviorment app
   CognitoIdentityPoolRoles:
     Type: AWS::Cognito::IdentityPoolRoleAttachment
     Properties:

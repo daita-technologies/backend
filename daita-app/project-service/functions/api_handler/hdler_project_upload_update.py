@@ -65,7 +65,7 @@ class ProjectUploadUpdateCls(LambdaBaseClass):
             size_old = object.get('size_old', 0)
             self.total_size += (object['size']-size_old)
             if size_old <= 0:
-                count += 1
+                self.count += 1
 
             self.is_ori = object['is_ori']
             request = {

@@ -243,6 +243,9 @@ Resources:
         TableDataOriginalName: !GetAtt DatabaseService.Outputs.TableDataOriginalName
         TableProjectSumName: !GetAtt DatabaseService.Outputs.TableProjectSumName
         TableProjectsName: !GetAtt DatabaseService.Outputs.TableProjectsName
+        CognitoUserPoolClient: !GetAtt CognitoClient.Outputs.UserPoolClientId
+        CognitoUserPool: !GetAtt CognitoUserPool.Outputs.UserPool
+        CognitoIdentityPoolId: !GetAtt IdentityPool.Outputs.IdentityPool
 
   CognitoUserPool:
     Type: AWS::Serverless::Application
@@ -326,10 +329,10 @@ Resources:
         ########################################Auth Service#############################################
         CognitoUserPoolClient: !GetAtt CognitoClient.Outputs.UserPoolClientId
         CognitoUserPool: !GetAtt CognitoUserPool.Outputs.UserPool
+        CognitoIdentityPoolId: !GetAtt IdentityPool.Outputs.IdentityPool
         ### For project service
         CreateProjectPrebuildSMArn: !GetAtt ProjectService.Outputs.CreateProjectPrebuildSMArn
         TableConfirmCodeAuth: !GetAtt DatabaseService.Outputs.TableConfirmCodeAuth
-        CognitoIdentityPoolId: !GetAtt IdentityPool.Outputs.IdentityPool
         TableProjectsName: !GetAtt DatabaseService.Outputs.TableProjectsName
         TableTask: !GetAtt DatabaseService.Outputs.TableTask
         TableProjectSumName: !GetAtt DatabaseService.Outputs.TableProjectSumName

@@ -8,14 +8,14 @@ States:
     Parameters:
       FunctionName: '${DivideBatchImagesThumbnailFunction}'
       Payload.$: $
-    Catch:
-      - ErrorEquals:
-          - States.Timeout
-        Next: CatchErrorTaskDynamoDB
-      - ErrorEquals:
-          - States.ALL
-        Next: CatchErrorTaskDynamoDB
-        ResultPath: null
+    # Catch:
+    #   - ErrorEquals:
+    #       - States.Timeout
+    #     Next: CatchErrorTaskDynamoDB
+    #   - ErrorEquals:
+    #       - States.ALL
+    #     Next: CatchErrorTaskDynamoDB
+    #     ResultPath: null
     Next: ResizeImageMap
   ResizeImageMap:
     Type: Map
@@ -42,4 +42,6 @@ States:
               IntervalSeconds: 3
               MaxAttempts: 7
               BackoffRate: 2 
-          Next: End         
+          End: true
+    End: true
+TimeoutSeconds: 1800

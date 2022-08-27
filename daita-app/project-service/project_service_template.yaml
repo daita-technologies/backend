@@ -26,6 +26,12 @@ Parameters:
     Type: String
   TableProjectsName:
     Type: String
+  CognitoUserPool:
+    Type: String
+  CognitoUserPoolClient:
+    Type: String
+  CognitoIdentityPoolId:
+    Type: String
 
 Globals:
   Function:
@@ -41,6 +47,9 @@ Globals:
         TABLE_PROJECT_SUMMARY: !Ref TableProjectSumName
         TABLE_PROJECT: !Ref TableProjectsName
         T_DATA_ORI: !Ref TableDataOriginalName
+        COGNITO_USER_POOL: !Ref CognitoUserPool
+        COGNITO_CLIENT_ID: !Ref CognitoUserPoolClient
+        IDENTITY_POOL: !Ref CognitoIdentityPoolId
 Resources:
 
   #================ LAMBDA FUNCTIONS ==========================================
