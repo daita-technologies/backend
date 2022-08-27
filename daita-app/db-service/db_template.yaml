@@ -449,25 +449,6 @@ Resources:
           AttributeName: task_id
           KeyType: RANGE
       BillingMode: PAY_PER_REQUEST
-  TableProjectSummary:
-    Type:  AWS::DynamoDB::Table
-    Properties:
-      TableName: !Sub "${StagePara}-Project-Summary"
-      AttributeDefinitions:
-        -
-          AttributeName: project_id
-          AttributeType: S
-        -
-          AttributeName: type
-          AttributeType: S
-      KeySchema:
-        -
-          AttributeName: project_id
-          KeyType: HASH
-        -
-          AttributeName: type
-          KeyType: RANGE
-      BillingMode: PAY_PER_REQUEST
   TableProjectDelete:
     Type:  AWS::DynamoDB::Table
     Properties:
@@ -486,64 +467,7 @@ Resources:
         -
           AttributeName: project_name
           KeyType: RANGE
-      BillingMode: PAY_PER_REQUEST
-  TableDataPreprocess:
-    Type:  AWS::DynamoDB::Table
-    Properties:
-      TableName: !Sub "${StagePara}-Project-Data-Preprocess"
-      AttributeDefinitions:
-        -
-          AttributeName: project_id
-          AttributeType: S
-        -
-          AttributeName: filename
-          AttributeType: S
-      KeySchema:
-        -
-          AttributeName: project_id
-          KeyType: HASH
-        -
-          AttributeName: filename
-          KeyType: RANGE
-      BillingMode: PAY_PER_REQUEST
-  TableDataAugment:
-    Type:  AWS::DynamoDB::Table
-    Properties:
-      TableName: !Sub "${StagePara}-Project-Data-Augment"
-      AttributeDefinitions:
-        -
-          AttributeName: project_id
-          AttributeType: S
-        -
-          AttributeName: filename
-          AttributeType: S
-      KeySchema:
-        -
-          AttributeName: project_id
-          KeyType: HASH
-        -
-          AttributeName: filename
-          KeyType: RANGE
-      BillingMode: PAY_PER_REQUEST    
-  TableDataOriginal:
-    Type:  AWS::DynamoDB::Table
-    Properties:
-      TableName: !Sub "${StagePara}-Project-Data-Original"
-      AttributeDefinitions:
-        -
-          AttributeName: project_id
-          AttributeType: S
-        -
-          AttributeName: filename
-          AttributeType: S
-      KeySchema:
-        -
-          AttributeName: project_id
-          KeyType: HASH
-        -
-          AttributeName: filename
-          KeyType: RANGE
-      BillingMode: PAY_PER_REQUEST    
+      BillingMode: PAY_PER_REQUEST 
 Outputs:
   TableGenerateTaskName:
     Description: "Name of table generate task"
@@ -598,13 +522,3 @@ Outputs:
     
   TableTask:
     Value: !Ref TableTask
-  TableProjectSummary:
-    Value: !Ref TableProjectSummary
-  TableProjectDelete:
-    Value: !Ref TableProjectDelete
-  TableDataPreprocess:
-    Value: !Ref TableDataProcess
-  TableDataAugment:
-    Value: !Ref TableDataAugment
-  TableDataOriginal:
-    Value: !Ref TableDataOriginal

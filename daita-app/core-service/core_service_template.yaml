@@ -147,7 +147,10 @@ Parameters:
 
   FuncProjectUploadUpdateArn:
     Type: String
-
+  TableDataPreprocess:
+    Type: String
+  TableDataAugment:
+    Type: String
 Resources:
   #================ ROLES =====================================================
 
@@ -677,6 +680,11 @@ Resources:
     Properties:
       CodeUri: functions/handlers/project/project_list_data
       Role: !GetAtt LambdaExecutionRole.Arn
+      Environment:
+        Variables:
+          T_DATA_ORI: !Ref DataOrigin
+          T_DATA_PREPROCESS: !Ref TableDataPreprocess
+          T_DATA_AUGMENT: !Ref TableDataAugment
 
   ProjectListInfoFunction:
     Type:  AWS::Serverless::Function
@@ -695,13 +703,21 @@ Resources:
     Properties:
       CodeUri: functions/handlers/project/project_update_info
       Role: !GetAtt LambdaExecutionRole.Arn
-
+      Environment:
+        Variables:
+          T_DATA_ORI: !Ref DataOrigin
+          T_DATA_PREPROCESS: !Ref TableDataPreprocess
+          T_DATA_AUGMENT: !Ref TableDataAugment
   ProjectUpdateCheckFunction:
     Type: AWS::Serverless::Function
     Properties:
       CodeUri: functions/handlers/project/project_upload_check
       Role: !GetAtt LambdaExecutionRole.Arn
-      
+      Environment:
+        Variables:
+          T_DATA_ORI: !Ref DataOrigin
+          T_DATA_PREPROCESS: !Ref TableDataPreprocess
+          T_DATA_AUGMENT: !Ref TableDataAugment      
 Outputs:
   CallerServiceHttpApiUrl:
     Description: "Url of the Caller service API"

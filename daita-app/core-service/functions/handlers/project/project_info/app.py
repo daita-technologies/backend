@@ -55,7 +55,7 @@ class ProjectInfoCls(LambdaBaseClass):
         try:
             identity_id = aws_get_identity_id(
                 
-                self.id_token, USERPOOLID, IDENTITY_POOL, USERPOOLID, IDENTITY_POOL)
+                self.id_token, USERPOOLID, IDENTITY_POOL)
         except Exception as e:
             print('Error: ', repr(e))
             return convert_response({"error": True,
