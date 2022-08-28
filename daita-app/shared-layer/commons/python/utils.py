@@ -2,6 +2,7 @@ from datetime import datetime
 from decimal import Decimal
 import uuid
 from boto3.dynamodb.types import TypeDeserializer, TypeSerializer
+from boto3.dynamodb.conditions import Key, Attr
 import re
 import boto3
 import os
@@ -79,12 +80,33 @@ def get_data_table_name(type_method):
     else:
         raise Exception(f'Method {type_method} is not exist!')
 
-
+def get_num_prj(identity_id):
+    db_resource = boto3.resource("dynamodb")
+    table = db_resource.Table(os.environ['TABLE_PROJECT'])
+    response = table.query(
+            KeyConditionExpression=Key('identity_id').eq(identity_id),
+            Select = 'COUNT'
+        )
+    return response.get("Count", 0)
 def get_table_dydb_object(db_resource, type_method):
     table_name = get_data_table_name(type_method)
     return db_resource.Table(table_name)
 
-
+def dydb_get_project_id(table, identity_id, project_name):
+    try:
+        response = table.get_item(
+            Key={
+                'identity_id': identity_id,
+                'project_name': project_name,
+            },
+            ProjectionExpression= 'project_id'
+        )
+    except Exception as e:
+        print('Error: ', repr(e))
+        raise
+    if response.get('Item', None):
+        return response['Item']['project_id']
+    return None
 def dydb_update_prj_sum(table, project_id, type_method, count_add, size_add):
     response = table.update_item(
         Key={
@@ -192,3 +214,18 @@ def create_single_put_request(dict_value):
             value[0]: value[1]
         }
     return dict_re
+
+def dydb_get_project_full(table, identity_id, project_name):
+    try:
+        response = table.get_item(
+            Key={
+                'identity_id': identity_id,
+                'project_name': project_name,
+            },
+        )
+    except Exception as e:
+        print('Error: ', repr(e))
+        raise
+    if response.get('Item', None):
+        return response['Item']
+    return None

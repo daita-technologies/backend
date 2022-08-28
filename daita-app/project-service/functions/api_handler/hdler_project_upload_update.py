@@ -39,6 +39,8 @@ class ProjectUploadUpdateCls(LambdaBaseClass):
 
     def parser(self, body):
         id_token = body["id_token"]
+        # self.client_events = boto3.client('events')  
+
         self.identity_id = aws_get_identity_id(
             id_token, USERPOOLID, IDENTITY_POOL)
 
@@ -65,7 +67,7 @@ class ProjectUploadUpdateCls(LambdaBaseClass):
             size_old = object.get('size_old', 0)
             self.total_size += (object['size']-size_old)
             if size_old <= 0:
-                count += 1
+                self.count += 1
 
             self.is_ori = object['is_ori']
             request = {
@@ -124,14 +126,18 @@ class ProjectUploadUpdateCls(LambdaBaseClass):
         # we use batch_write, it means that if key are existed in tables => overwrite
         db_client = boto3.client('dynamodb')
         db_resource = boto3.resource('dynamodb')
+        type = None
         try:
             if self.is_ori:
                 table = os.environ["T_DATA_ORI"]
+                type = os.environ["T_DATA_ORI"]
             else:
                 if self.type_method == 'PREPROCESS':
                     table = os.environ["T_DATA_PREPROCESS"]
+                    type = os.environ["T_DATA_PREPROCESS"]
                 elif self.type_method == 'AUGMENT':
                     table = os.environ["T_DATA_AUGMENT"]
+                    type =  os.environ["T_DATA_AUGMENT"]
                 else:
                     raise (Exception('Missing type_method parameters!'))
 
@@ -139,7 +145,6 @@ class ProjectUploadUpdateCls(LambdaBaseClass):
             with table_pr.batch_writer() as batch:
                 for item in self.ls_batch_request:
                     batch.put_item(Item=item)
-
             # response = db_client.batch_write_item(
             #     RequestItems = {
             #         table: ls_batch_request
@@ -151,7 +156,19 @@ class ProjectUploadUpdateCls(LambdaBaseClass):
                                     "success": False,
                                      "message": repr(e),
                                      "data": None})
-
+        # self.client_events.put_events(
+        #                 Entries=[
+        #                     {
+        #                         'Source': 'source.events',
+        #                         'DetailType': 'lambda.event',
+        #                         'Detail': json.dumps({
+        #                             'project_id':self.project_id,
+        #                             'type':type
+        #                         }),
+        #                         'EventBusName': os.environ["THUMBNAIL_EVENT_BUS"]
+        #                     },
+        #                 ]
+        #             )
         # update summary information
         try:
             if self.is_ori and thumbnail_key is None:

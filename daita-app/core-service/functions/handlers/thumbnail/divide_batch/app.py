@@ -33,6 +33,7 @@ class divdeThumbnailsImageCls(LambdaBaseClass):
         return batcher(generator(), 100)
 
     def handle(self, event, batch):
+        print(event)
         self.parser(event['body'])
         result = {'batches': [], 'project_id': self.project_id,
                   'data_type': self.type}

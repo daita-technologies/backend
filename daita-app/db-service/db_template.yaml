@@ -449,7 +449,25 @@ Resources:
           AttributeName: task_id
           KeyType: RANGE
       BillingMode: PAY_PER_REQUEST
-    
+  TableProjectDelete:
+    Type:  AWS::DynamoDB::Table
+    Properties:
+      TableName: !Sub "${StagePara}-Project-Delete"
+      AttributeDefinitions:
+        -
+          AttributeName: identity_id
+          AttributeType: S
+        -
+          AttributeName: project_name
+          AttributeType: S
+      KeySchema:
+        -
+          AttributeName: identity_id
+          KeyType: HASH
+        -
+          AttributeName: project_name
+          KeyType: RANGE
+      BillingMode: PAY_PER_REQUEST 
 Outputs:
   TableGenerateTaskName:
     Description: "Name of table generate task"

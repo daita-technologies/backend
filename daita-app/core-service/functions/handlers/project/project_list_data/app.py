@@ -58,7 +58,7 @@ class ProjectListCls(LambdaBaseClass):
                     Exception(f'type_method: {self.type_method} is not valid!'))
 
             table = dynamodb.Table(table_name)
-            if len(next_token) == 0:
+            if len(self.next_token) == 0:
                 response = table.query(
                     IndexName='index-created-sorted',
                     KeyConditionExpression=Key(
@@ -74,16 +74,16 @@ class ProjectListCls(LambdaBaseClass):
                     KeyConditionExpression=Key(
                         'project_id').eq(self.sproject_id),
                     ProjectionExpression='filename, s3_key, type_method, gen_id, created_date',
-                    ExclusiveStartKey=next_token,
+                    ExclusiveStartKey=self.next_token,
                     Limit=self.num_limit,
                     ScanIndexForward=False
                 )
                 print('___Response next: ___', response)
 
-            next_token = None
+            self.next_token = None
             # LastEvaluatedKey indicates that there are more results
             if 'LastEvaluatedKey' in response:
-                next_token = response['LastEvaluatedKey']
+                self.next_token = response['LastEvaluatedKey']
 
         except Exception as e:
             print('Error: ', repr(e))
@@ -94,7 +94,7 @@ class ProjectListCls(LambdaBaseClass):
 
         return convert_response({'data': {
             'items': response['Items'],
-            'next_token': next_token
+            'next_token': self.next_token
         },
             "error": False,
             "success": True,
