@@ -339,6 +339,7 @@ Resources:
         TableProjectSumName: !GetAtt DatabaseService.Outputs.TableProjectSumName
         TableDataPreprocess: !GetAtt DatabaseService.Outputs.TableDataPreprocessName
         TableDataAugment: !GetAtt DatabaseService.Outputs.TableDataAugmentName
+        StreamTableDataOriginalName: !GetAtt  DatabaseService.Outputs.StreamTableDataOriginalName
         ##### for project function
         FuncProjectUploadUpdateArn: !GetAtt ProjectService.Outputs.FuncProjectUploadUpdateArn
 
