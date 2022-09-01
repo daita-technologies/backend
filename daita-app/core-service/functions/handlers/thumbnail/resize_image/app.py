@@ -44,7 +44,6 @@ class ResizeImageCls(LambdaBaseClass):
         img = img.resize((720,1280), PIL.Image.ANTIALIAS)
         buffer = BytesIO()
         img.convert('RGB').save(buffer, 'JPEG')
-        print("Test IMAGEEE")
         buffer.seek(0)
         return buffer
 
@@ -72,7 +71,6 @@ class ResizeImageCls(LambdaBaseClass):
     def resize_image(self, queue):
         while True:
             item = queue.get()
-            print(f'Logs Debug Queue: {item.s3_url}')
             try:
                 ext = os.path.splitext(os.path.basename(item.s3_url))[-1]
                 image = self.get_image_from_s3(item.s3_url)
@@ -85,7 +83,7 @@ class ResizeImageCls(LambdaBaseClass):
                 print(f'ERROR :{e}')
                 queue.task_done()
                 return
-            print(f'Logs Check {item.thumbnail}')
+            # print(f'Logs Check {item.thumbnail}')
             self.update_thumbnail(item)
             queue.task_done()
 
@@ -104,7 +102,7 @@ class ResizeImageCls(LambdaBaseClass):
                 print(tempItem.s3_url)
                 listRecord.append(tempItem)
         enclosure_queue = Queue()
-        for _ in range(10):
+        for _ in range(5):
             worker = threading.Thread(
                 target=self.resize_image, args=(enclosure_queue,))
             worker.daemon = True
@@ -112,11 +110,8 @@ class ResizeImageCls(LambdaBaseClass):
         for item in listRecord:
             enclosure_queue.put(item)
         enclosure_queue.join()
+        print("END")
         return {"message": "Trigger Successfully"}
-        # for s3_url in self.images:
-        #     enclosure_queue.put(s3_url)
-
-        # enclosure_queue.join()
 
 
 @error_response

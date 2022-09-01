@@ -169,6 +169,7 @@ Resources:
     Type: AWS::Serverless::Function
     Properties:
       CodeUri: functions/handlers/thumbnail/resize_image
+      MemorySize: 512
       Role: !GetAtt LambdaExecutionRole.Arn
 
   DivideBatchImagesThumbnailFunction:
@@ -316,12 +317,12 @@ Resources:
   EventSourceMappingDatabaseOriginal:
     Type: AWS::Lambda::EventSourceMapping
     Properties:
-      BatchSize: 250
+      BatchSize: 50
       Enabled: True
       EventSourceArn: !Ref StreamTableDataOriginalName
       FunctionName: !Ref ResizeImageThumbnailFunction
       StartingPosition: LATEST
-      MaximumBatchingWindowInSeconds: 10
+      MaximumBatchingWindowInSeconds: 0
   #================ CALLER SERVICE HTTP API ===================================
 
   DaitaHttpApi:
