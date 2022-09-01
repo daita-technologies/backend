@@ -101,6 +101,8 @@ Resources:
           Projection:
             ProjectionType: ALL  
       BillingMode: PAY_PER_REQUEST
+      StreamSpecification:
+        StreamViewType: NEW_IMAGE
 
   DataAugmentDB:
     Type: AWS::DynamoDB::Table
@@ -522,3 +524,6 @@ Outputs:
     
   TableTask:
     Value: !Ref TableTask
+
+  StreamTableDataOriginalName:
+    Value: !GetAtt DataOriginalDB.StreamArn

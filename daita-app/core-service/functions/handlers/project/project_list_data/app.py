@@ -72,7 +72,7 @@ class ProjectListCls(LambdaBaseClass):
                 response = table.query(
                     IndexName='index-created-sorted',
                     KeyConditionExpression=Key(
-                        'project_id').eq(self.sproject_id),
+                        'project_id').eq(self.project_id),
                     ProjectionExpression='filename, s3_key, type_method, gen_id, created_date',
                     ExclusiveStartKey=self.next_token,
                     Limit=self.num_limit,
