@@ -24,7 +24,7 @@ class CreatePrebuildDatasetClass(LambdaBaseClass):
         self.client_step_func = boto3.client('stepfunctions')
         self.prebuild_dataset_model = PrebuildDatasetModel(os.environ["T_CONST_PREBUILD_DATASET"])
         self.sm_create_prj_prebuild = os.environ["SM_CREATE_PRJ_PREBUILD"]
-        self.project_model = ProjectModel(os.environ["TABLE_PROJECTS_NAME"])
+        self.project_model = ProjectModel(os.environ["TABLE_PROJECT"])
         self.bucket_name = os.environ["BUCKET_NAME"]
 
     @LambdaBaseClass.parse_body
