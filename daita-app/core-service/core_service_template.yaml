@@ -316,12 +316,12 @@ Resources:
   EventSourceMappingDatabaseOriginal:
     Type: AWS::Lambda::EventSourceMapping
     Properties:
-      BatchSize: 100
+      BatchSize: 250
       Enabled: True
       EventSourceArn: !Ref StreamTableDataOriginalName
       FunctionName: !Ref ResizeImageThumbnailFunction
       StartingPosition: LATEST
-      MaximumBatchingWindowInSeconds: 0
+      MaximumBatchingWindowInSeconds: 10
   #================ CALLER SERVICE HTTP API ===================================
 
   DaitaHttpApi:

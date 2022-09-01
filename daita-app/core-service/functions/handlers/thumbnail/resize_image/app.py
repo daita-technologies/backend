@@ -60,14 +60,14 @@ class ResizeImageCls(LambdaBaseClass):
                 'filename': item.filename,
             },
             ExpressionAttributeNames={
-                '#thumbnail' 'thumbnail',
+                '#thumbnail': 'thumbnail',
             },
             ExpressionAttributeValues={
                 ':thumbnail':  item.thumbnail,
             },
             UpdateExpression='SET #thumbnail = :thumbnail'
         )
-        print(response)
+        print(f'Response : {response}')
 
     def resize_image(self, queue):
         while True:
@@ -75,20 +75,16 @@ class ResizeImageCls(LambdaBaseClass):
             print(f'Logs Debug Queue: {item.s3_url}')
             try:
                 ext = os.path.splitext(os.path.basename(item.s3_url))[-1]
-                print(f'{ext}')
                 image = self.get_image_from_s3(item.s3_url)
-                print("DEBUGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGG")
                 bucket, filename = self.split(item.s3_url)
-                print(filename)
                 filenameSlice =  filename.split('/')
-                filenameSlice = filenameSlice.insert(len(filenameSlice)-1,'thumbnail')
-                print(filenameSlice)
+                filenameSlice.insert(len(filenameSlice)-1,'thumbnail')
                 newfilename = '/'.join(filenameSlice)
-                print(f'log new filename {newfilename}')
                 item.thumbnail=  self.upload_s3(image=image, ext=ext,bucket=bucket,filename=newfilename)
             except Exception as e:
                 print(f'ERROR :{e}')
-                pass
+                queue.task_done()
+                return
             print(f'Logs Check {item.thumbnail}')
             self.update_thumbnail(item)
             queue.task_done()
@@ -98,29 +94,29 @@ class ResizeImageCls(LambdaBaseClass):
         listRecord = []
         print(f'logs :{records}')
         for record in records:
-            print(f'Logs Debug : {record}')
-            # if record['NewImage']
-            tempItem =  DynamoDBNewImageUpdated({
-                'project_id': record['dynamodb']['Keys']['project_id']['S'],
-                'filename' : record['dynamodb']['Keys']['filename']['S'],
-                'table': record['eventSourceARN'].split(':')[5].split('/')[1],
-                's3_urls':record['dynamodb']['NewImage']['s3_key']['S']
-            })
-            print(tempItem.s3_url)
-            listRecord.append(tempItem)
-        
-        # self.parser(event)
+            if record['eventName'] == 'INSERT':
+                tempItem =  DynamoDBNewImageUpdated({
+                    'project_id': record['dynamodb']['Keys']['project_id']['S'],
+                    'filename' : record['dynamodb']['Keys']['filename']['S'],
+                    'table': record['eventSourceARN'].split(':')[5].split('/')[1],
+                    's3_urls':record['dynamodb']['NewImage']['s3_key']['S']
+                })
+                print(tempItem.s3_url)
+                listRecord.append(tempItem)
         enclosure_queue = Queue()
         for _ in range(10):
             worker = threading.Thread(
                 target=self.resize_image, args=(enclosure_queue,))
             worker.daemon = True
             worker.start()
-        print(listRecord)
         for item in listRecord:
             enclosure_queue.put(item)
         enclosure_queue.join()
         return {"message": "Trigger Successfully"}
+        # for s3_url in self.images:
+        #     enclosure_queue.put(s3_url)
+
+        # enclosure_queue.join()
 
 
 @error_response
