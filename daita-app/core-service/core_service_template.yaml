@@ -151,6 +151,8 @@ Parameters:
     Type: String
   TableDataAugment:
     Type: String
+  StreamTableDataOriginalName:
+    Type: String
 Resources:
   ThumbnailServiceEventBusRole:
     Type: "AWS::IAM::Role"
@@ -310,7 +312,16 @@ Resources:
                 Action:
                   - lambda:InvokeFunction
                 Resource: "*"
-
+#==============================================================================
+  EventSourceMappingDatabaseOriginal:
+    Type: AWS::Lambda::EventSourceMapping
+    Properties:
+      BatchSize: 100
+      Enabled: True
+      EventSourceArn: !Ref StreamTableDataOriginalName
+      FunctionName: !Ref ResizeImageThumbnailFunction
+      StartingPosition: LATEST
+      MaximumBatchingWindowInSeconds: 0
   #================ CALLER SERVICE HTTP API ===================================
 
   DaitaHttpApi:
@@ -479,7 +490,7 @@ Resources:
         Variables:
           TABLE_HEALTHCHECK_INFO: !Ref TableHealthCheckInfoName
           TABLE_PROJECT_SUMMARY: !Ref TableProjectSumName
-          T_DATA_ORI: !Ref DataOrigin
+          T_DATA_ORI: !Ref TableDataOriginalName
           TABLE_PROJECT: !Ref TableProjectsName
 
   DeleteProject:
@@ -492,7 +503,7 @@ Resources:
           TABLE_HEALTHCHECK_INFO: !Ref TableHealthCheckInfoName
           TABLE_HEALTHCHECK_TASK: !Ref TableHealthCheckTasksName
           TABLE_PROJECT_SUMMARY: !Ref TableProjectSumName
-          T_DATA_ORI: !Ref DataOrigin
+          T_DATA_ORI: !Ref TableDataOriginalName
           T_TASKS: !Ref TableGenerateTaskName
           TABLE_PROJECT: !Ref TableProjectsName
           T_PROJECT_DEL: !Ref TableProjectDel
@@ -751,9 +762,9 @@ Resources:
       Role: !GetAtt LambdaExecutionRole.Arn
       Environment:
         Variables:
-          T_DATA_ORI: !Ref DataOrigin
-          T_DATA_PREPROCESS: !Ref TableDataPreprocess
-          T_DATA_AUGMENT: !Ref TableDataAugment
+          T_DATA_ORI: !Ref TableDataOriginalName
+          T_DATA_PREPROCESS: !Ref TableDataPreprocessName
+          T_DATA_AUGMENT: !Ref TableDataAugmentName
 
   ProjectListInfoFunction:
     Type:  AWS::Serverless::Function
@@ -774,9 +785,9 @@ Resources:
       Role: !GetAtt LambdaExecutionRole.Arn
       Environment:
         Variables:
-          T_DATA_ORI: !Ref DataOrigin
-          T_DATA_PREPROCESS: !Ref TableDataPreprocess
-          T_DATA_AUGMENT: !Ref TableDataAugment
+          T_DATA_ORI: !Ref TableDataOriginalName
+          T_DATA_PREPROCESS: !Ref TableDataPreprocessName
+          T_DATA_AUGMENT: !Ref TableDataAugmentName
   ProjectUpdateCheckFunction:
     Type: AWS::Serverless::Function
     Properties:
@@ -784,9 +795,9 @@ Resources:
       Role: !GetAtt LambdaExecutionRole.Arn
       Environment:
         Variables:
-          T_DATA_ORI: !Ref DataOrigin
-          T_DATA_PREPROCESS: !Ref TableDataPreprocess
-          T_DATA_AUGMENT: !Ref TableDataAugment
+          T_DATA_ORI: !Ref TableDataOriginalName
+          T_DATA_PREPROCESS: !Ref TableDataPreprocessName
+          T_DATA_AUGMENT: !Ref TableDataAugmentName
 Outputs:
   CallerServiceHttpApiUrl:
     Description: "Url of the Caller service API"
