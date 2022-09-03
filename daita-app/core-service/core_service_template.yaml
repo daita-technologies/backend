@@ -153,6 +153,10 @@ Parameters:
     Type: String
   StreamTableDataOriginalName:
     Type: String
+  StreamTableDataPreprocessName:
+    Type: String
+  StreamTableDataAugmentName:
+    Type: String
 Resources:
   ThumbnailServiceEventBusRole:
     Type: "AWS::IAM::Role"
@@ -165,6 +169,25 @@ Resources:
               Service: "events.amazonaws.com"
             Action:
               - "sts:AssumeRole"
+      Policies:
+        - PolicyName: DirectlyInvokeStepFunctions
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              Action:
+              - "states:StartExecution"
+              Effect: Allow
+              Resource:
+                - !Ref ThumbnailStateMachine
+                
+  TriggerThumbnailFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: functions/handlers/thumbnail/trigger_thumbnail
+      Role: !GetAtt LambdaExecutionRole.Arn
+      Environment:
+        Variables:
+          EVENT_BUS_NAME: !Ref ThumbnailEventBus
   ResizeImageThumbnailFunction:
     Type: AWS::Serverless::Function
     Properties:
@@ -313,16 +336,34 @@ Resources:
                 Action:
                   - lambda:InvokeFunction
                 Resource: "*"
-#==============================================================================
+#============================Event Source Mapping========================================
   EventSourceMappingDatabaseOriginal:
     Type: AWS::Lambda::EventSourceMapping
     Properties:
-      BatchSize: 50
+      BatchSize: 1000
       Enabled: True
       EventSourceArn: !Ref StreamTableDataOriginalName
-      FunctionName: !Ref ResizeImageThumbnailFunction
+      FunctionName: !Ref TriggerThumbnailFunction
       StartingPosition: LATEST
-      MaximumBatchingWindowInSeconds: 0
+      MaximumBatchingWindowInSeconds: 120
+  EventSourceMappingDatabasePreprocess:
+    Type: AWS::Lambda::EventSourceMapping
+    Properties:
+      BatchSize: 1000
+      Enabled: True
+      EventSourceArn: !Ref StreamTableDataPreprocessName
+      FunctionName: !Ref TriggerThumbnailFunction
+      StartingPosition: LATEST
+      MaximumBatchingWindowInSeconds: 120
+  EventSourceMappingDatabaseAugment:
+    Type: AWS::Lambda::EventSourceMapping
+    Properties:
+      BatchSize: 1000
+      Enabled: True
+      EventSourceArn: !Ref StreamTableDataAugmentName
+      FunctionName: !Ref TriggerThumbnailFunction
+      StartingPosition: LATEST
+      MaximumBatchingWindowInSeconds: 120    
   #================ CALLER SERVICE HTTP API ===================================
 
   DaitaHttpApi:
@@ -345,7 +386,7 @@ Resources:
     Type: AWS::Serverless::StateMachine
     Properties:
       Type: STANDARD
-      Name: !Sub "${StagePara}-${ApplicationPara}-ThumbailStatemachine"
+      Name: !Sub "${StagePara}-${ApplicationPara}-ThumbnailStatemachine"
       Policies:
         - LambdaInvokePolicy:
             FunctionName: !Ref   ResizeImageThumbnailFunction

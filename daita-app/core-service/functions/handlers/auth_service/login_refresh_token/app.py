@@ -82,10 +82,11 @@ class RefreshTokenClass(LambdaBaseClass):
             identity = cog_identity_client.get_credentials_for_identity(
                 IdentityId=IdentityId,
                 Logins={
-                    f'cognito-idp.{cog_identity_client.meta.region_name}.amazonaws.com/{os.environ["USER_POOL_ID"]}': id_token
+                    f'cognito-idp.{cog_identity_client.meta.region_name}.amazonaws.com/{USERPOOLID}': id_token
                 }
             )
         except Exception as exc:
+            print(exc)
             raise Exception(MessageRefreshTokenError) from exc
         if 'github' in self.username or 'google' in self.username:
             name = getDisplayName(self.username)
