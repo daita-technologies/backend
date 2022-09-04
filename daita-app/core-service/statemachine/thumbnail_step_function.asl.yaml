@@ -8,24 +8,12 @@ States:
     Parameters:
       FunctionName: '${DivideBatchImagesThumbnailFunction}'
       Payload.$: $
-    # Catch:
-    #   - ErrorEquals:
-    #       - States.Timeout
-    #     Next: CatchErrorTaskDynamoDB
-    #   - ErrorEquals:
-    #       - States.ALL
-    #     Next: CatchErrorTaskDynamoDB
-    #     ResultPath: null
     Next: ResizeImageMap
   ResizeImageMap:
     Type: Map
     MaxConcurrency: 5
     InputPath: $
     ItemsPath: $.batches
-    Parameters:
-      images.$: $$.Map.Item.Value
-      project_id.$: $.project_id
-      data_type.$: $.data_type
     Iterator:
       StartAt: ResizeImage
       States:

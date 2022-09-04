@@ -1,3 +1,4 @@
+from http.client import responses
 from lambda_base_class import LambdaBaseClass
 import json
 import boto3
@@ -63,7 +64,7 @@ class ProjectListCls(LambdaBaseClass):
                     IndexName='index-created-sorted',
                     KeyConditionExpression=Key(
                         'project_id').eq(self.project_id),
-                    ProjectionExpression='filename, s3_key, type_method, gen_id, created_date',
+                    # ProjectionExpression='filename, s3_key, type_method, gen_id, created_date',
                     Limit=self.num_limit,
                     ScanIndexForward=False
                 )
@@ -73,7 +74,7 @@ class ProjectListCls(LambdaBaseClass):
                     IndexName='index-created-sorted',
                     KeyConditionExpression=Key(
                         'project_id').eq(self.project_id),
-                    ProjectionExpression='filename, s3_key, type_method, gen_id, created_date',
+                    # ProjectionExpression='filename, s3_key, type_method, gen_id, created_date',
                     ExclusiveStartKey=self.next_token,
                     Limit=self.num_limit,
                     ScanIndexForward=False
@@ -91,9 +92,21 @@ class ProjectListCls(LambdaBaseClass):
                                     "success": False,
                                      "message": repr(e),
                                      "data": None})
-
+        items =[]
+        for it in response['Items']:
+            tempItem = {
+                'created_date':it['created_date'],
+                'filename': it['filename'],
+                'gen_id':it['gen_id'],
+                'type_method':it['type_method']
+            }
+            if 'thumbnail' in it and  bool(it['thumbnail']):
+                tempItem['s3_key'] = it['thumbnail'].replace('s3://','')
+            else:
+                tempItem['s3_key'] = it['s3_key']
+            items.append(tempItem)
         return convert_response({'data': {
-            'items': response['Items'],
+            'items': items,
             'next_token': self.next_token
         },
             "error": False,

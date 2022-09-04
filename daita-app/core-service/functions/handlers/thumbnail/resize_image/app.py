@@ -10,6 +10,7 @@ from config import *
 from PIL import Image
 from io import BytesIO
 from lambda_base_class import LambdaBaseClass
+from thumbnail import Thumbnail
 
 
 class DynamoDBNewImageUpdated(object):
@@ -41,7 +42,7 @@ class ResizeImageCls(LambdaBaseClass):
         bucket, filename = self.split(url)
         obj_body = self.s3.get_object(Bucket=bucket, Key=filename)
         img = Image.open(BytesIO(obj_body["Body"].read()))
-        img = img.resize((720,1280), PIL.Image.ANTIALIAS)
+        img = img.resize((int(img.size[1]*0.4),int(img.size[0]*0.4)), PIL.Image.ANTIALIAS)
         buffer = BytesIO()
         img.convert('RGB').save(buffer, 'JPEG')
         buffer.seek(0)
@@ -88,19 +89,10 @@ class ResizeImageCls(LambdaBaseClass):
             queue.task_done()
 
     def handle(self, event, context):
-        records =  event['Records']
+        print(f'Log Debug {event}')
         listRecord = []
-        print(f'logs :{records}')
-        for record in records:
-            if record['eventName'] == 'INSERT':
-                tempItem =  DynamoDBNewImageUpdated({
-                    'project_id': record['dynamodb']['Keys']['project_id']['S'],
-                    'filename' : record['dynamodb']['Keys']['filename']['S'],
-                    'table': record['eventSourceARN'].split(':')[5].split('/')[1],
-                    's3_urls':record['dynamodb']['NewImage']['s3_key']['S']
-                })
-                print(tempItem.s3_url)
-                listRecord.append(tempItem)
+        for it in event:
+            listRecord.append(Thumbnail(it))
         enclosure_queue = Queue()
         for _ in range(5):
             worker = threading.Thread(
@@ -110,7 +102,6 @@ class ResizeImageCls(LambdaBaseClass):
         for item in listRecord:
             enclosure_queue.put(item)
         enclosure_queue.join()
-        print("END")
         return {"message": "Trigger Successfully"}
 
 
