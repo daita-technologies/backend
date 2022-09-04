@@ -533,7 +533,6 @@ Resources:
           TABLE_HEALTHCHECK_INFO: !Ref TableHealthCheckInfoName
           TABLE_PROJECT_SUMMARY: !Ref TableProjectSumName
           T_DATA_ORI: !Ref TableDataOriginalName
-          TABLE_PROJECT: !Ref TableProjectsName
 
   DeleteProject:
     Type: AWS::Serverless::Function
@@ -547,7 +546,6 @@ Resources:
           TABLE_PROJECT_SUMMARY: !Ref TableProjectSumName
           T_DATA_ORI: !Ref TableDataOriginalName
           T_TASKS: !Ref TableGenerateTaskName
-          TABLE_PROJECT: !Ref TableProjectsName
           T_PROJECT_DEL: !Ref TableProjectDel
           T_DATA_FLOW: !Ref ParaTableDataFlowTaskName
           T_REFERENCE_IMAGE: !Ref TableReferenceImageTasksName
