@@ -6,7 +6,8 @@ import uuid
 from config import *
 from response import *
 from error_messages import *
-from utils import convert_current_date_to_iso8601, aws_get_identity_id
+from utils import convert_current_date_to_iso8601, aws_get_identity_id, get_num_prj
+import const
 
 from system_parameter_store import SystemParameterStore
 from lambda_base_class import LambdaBaseClass
@@ -49,6 +50,17 @@ class CreatePrebuildDatasetClass(LambdaBaseClass):
         ### udpate the link to s3
         self.s3_key = prebuild_dataset[PrebuildDatasetModel.FIELD_S3_KEY]
         self.visual_name = prebuild_dataset[PrebuildDatasetModel.FIELD_VISUAL_NAME]
+
+        ###
+        try:
+            # check length of projectname and project info
+            if len(self.project_name) > const.MAX_LENGTH_PROJECT_NAME_INFO:
+                raise Exception(const.MES_LENGTH_OF_PROJECT_NAME)
+            if len(self.project_info) > const.MAX_LENGTH_PROJECT_NAME_INFO:
+                raise Exception(const.MES_LENGTH_OF_PROJECT_INFO)
+        except Exception as e:
+            print('Error: ', repr(e))
+            raise Exception(repr(e))
                  
         return        
 
@@ -59,6 +71,11 @@ class CreatePrebuildDatasetClass(LambdaBaseClass):
 
         ### check identity
         identity_id = self.get_identity(self.id_token)
+
+        ### check limit project
+        num_prj=get_num_prj(identity_id)
+        if num_prj >= const.MAX_NUM_PRJ_PER_USER:
+            raise Exception(const.MES_REACH_LIMIT_NUM_PRJ)
 
         ### create project on DB
         _uuid = uuid.uuid4().hex
