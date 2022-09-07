@@ -19,6 +19,7 @@ Globals:
         STAGE: !Ref StagePara
         TABLE_NAME: global-table
         LOGGING: !Ref minimumLogLevel
+        REGION: !Ref AWS::Region
         TABLE_GENERATE_TASK: !Ref TableGenerateTaskName
         TABLE_METHODS_NAME: !Ref TableMethodsName
         TABLE_HEALTHCHECK_TASK: !Ref TableHealthCheckTasksName
@@ -756,6 +757,12 @@ Resources:
     Type: AWS::Serverless::Function
     Properties:
       CodeUri: functions/handlers/auth_service/template_mail
+      Role: !GetAtt LambdaExecutionRole.Arn
+#########################################################################################
+  SlackWebhookFeedbackFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: functions/handlers/feedback/slack_webhook
       Role: !GetAtt LambdaExecutionRole.Arn
 ##########################Project Service################################################
 
