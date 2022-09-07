@@ -12,7 +12,7 @@ class SplitDataClass(LambdaBaseClass):
 
     def __init__(self) -> None:   
         super().__init__()     
-        self.project_model = ProjectModel(os.environ["TABLE_PROJECTS_NAME"])
+        self.project_model = ProjectModel(os.environ["TABLE_PROJECT"])
 
     @LambdaBaseClass.parse_body
     def parser(self, body):
