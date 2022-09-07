@@ -151,13 +151,13 @@ Resources:
     Type: AWS::Cognito::UserPool
     Properties:
       UserPoolName: !Ref AWS::StackName
-  CognitoUserPoolDomain:
-    Type: AWS::Cognito::UserPoolDomain
-    Properties:
-      CustomDomainConfig:
-        CertificateArn: arn:aws:acm:us-east-1:737589818430:certificate/c60ac68c-713e-44fe-bbe9-02e4234e0825 # TODO set enviroment variable
-      Domain: !Sub "auth${Mode}app.daita.tech"
-      UserPoolId: !Ref CognitoUserPool
+  # CognitoUserPoolDomain:
+  #   Type: AWS::Cognito::UserPoolDomain
+  #   Properties:
+  #     CustomDomainConfig:
+  #       CertificateArn: arn:aws:acm:us-east-1:737589818430:certificate/c60ac68c-713e-44fe-bbe9-02e4234e0825 # TODO set enviroment variable
+  #     Domain: !Sub "auth${StagePara}.daita.tech"
+  #     UserPoolId: !Ref CognitoUserPool
   GithubTokenWrapper:
     Type: AWS::Serverless::Function
     Properties:
