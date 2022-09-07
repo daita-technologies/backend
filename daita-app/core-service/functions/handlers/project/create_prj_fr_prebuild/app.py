@@ -84,7 +84,7 @@ class CreatePrebuildDatasetClass(LambdaBaseClass):
             
         except db_resource.meta.client.exceptions.ConditionalCheckFailedException as e:
             print('Error condition: ', e)
-            raise Exception(MES_DUPLICATE_PROJECT_NAME.format(self.visual_name))
+            raise Exception(MES_DUPLICATE_PROJECT_NAME.format(self.project_name))
             
         except Exception as e:
             print('Error: ', repr(e))
