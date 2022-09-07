@@ -97,6 +97,7 @@ class CreatePrebuildDatasetClass(LambdaBaseClass):
             "project_name": self.project_name,
             "bucket_name": self.bucket_name,
             "s3_prefix_create": s3_prefix,
+            "number_random": self.number_random,
             "s3_prefix_prebuild": self.s3_key if (f"s3://{self.bucket_name}" not in self.s3_key) else self.s3_key.replace(f"s3://{self.bucket_name}/", "")
         }
         response = self.client_step_func.start_execution(

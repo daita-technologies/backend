@@ -1,6 +1,7 @@
 import boto3
 import json
 import os
+import random
 
 from config import *
 from response import *
@@ -11,9 +12,8 @@ from system_parameter_store import SystemParameterStore
 from lambda_base_class import LambdaBaseClass
 from models.data_model import DataModel, DataItem
 from models.task_model import TaskModel
-from utils import create_unique_id, get_bucket_key_from_s3_uri, split_ls_into_batch
-# from s3_utils import move_data_s3
 
+from utils import create_unique_id, get_bucket_key_from_s3_uri, split_ls_into_batch
 
 class MoveS3DataClass(LambdaBaseClass):
 
@@ -32,16 +32,18 @@ class MoveS3DataClass(LambdaBaseClass):
         self.project_name = body["project_name"]
         self.identity_id = body["identity_id"]
         self.bucket_name = body["bucket_name"]
+        self.number_random = body["number_random"]
 
     def _check_input_value(self):
         pass
 
-    def move_data_s3(self, source, target, bucket_name):
+    def move_data_s3(self, source, target, bucket_name, number_random = -1):
         ls_info = []
         #list all data in s3
         s3 = boto3.resource('s3')
         bucket = s3.Bucket(bucket_name)
 
+        ls_task_params = []
         for obj in bucket.objects.filter(Prefix=source):
             if obj.key.endswith('/'):
                 continue
@@ -51,9 +53,26 @@ class MoveS3DataClass(LambdaBaseClass):
             # replace the prefix
             new_prefix = target.replace(f"{bucket_name}/", "")
             new_key = f'{new_prefix}/{obj.key.replace(source, "")}'
+
+            task_params = (old_source, new_key, obj.size)
+            ls_task_params.append(task_params)
+
+        if number_random>len(ls_task_params):
+            number_random = len(ls_task_params)
+
+        ### shuffle the list parameters
+        random.shuffle(ls_task_params)
+
+        for params in ls_task_params[:number_random]:
+            old_source = params[0]
+            new_key = params[1]
+            size = params[2]
+
+            ### copy data to new s3 folder
             s3.meta.client.copy(old_source, bucket_name, new_key)
 
-            ls_info.append((new_key.split('/')[-1], f"{bucket_name}/{new_key}", obj.size))
+            ## add to list info 
+            ls_info.append((new_key.split('/')[-1], f"{bucket_name}/{new_key}", size))
 
         return ls_info
 
@@ -64,7 +83,7 @@ class MoveS3DataClass(LambdaBaseClass):
         
         # move data in s3
         ls_info = self.move_data_s3(
-            self.s3_prefix_prebuild_store, self.s3_prefix_created_store, self.bucket_name)
+            self.s3_prefix_prebuild_store, self.s3_prefix_created_store, self.bucket_name, number_random = self.number_random)
 
         if len(ls_info)>0:
             bucket, folder = get_bucket_key_from_s3_uri(self.s3_prefix_created_store)
