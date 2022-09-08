@@ -98,12 +98,13 @@ class ProjectListCls(LambdaBaseClass):
                 'created_date':it['created_date'],
                 'filename': it['filename'],
                 'gen_id':it['gen_id'],
-                'type_method':it['type_method']
+                'type_method':it['type_method'],
+                's3_key':it['s3_key']
             }
             if 'thumbnail' in it and  bool(it['thumbnail']):
-                tempItem['s3_key'] = it['thumbnail'].replace('s3://','')
+                tempItem['thumbnail'] = it['thumbnail'].replace('s3://','')
             else:
-                tempItem['s3_key'] = it['s3_key']
+                tempItem['thumbnail'] = it['s3_key']
             items.append(tempItem)
         return convert_response({'data': {
             'items': items,
