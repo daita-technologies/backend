@@ -8,6 +8,19 @@ tags:
   x-amazon-apigateway-tag-value: "SAM"
 paths:
   #####################################################################################################################################################################
+  /auth/credential:
+    post:
+      responses:
+        default:
+          description: "Auth service transport"
+      x-amazon-apigateway-integration:
+        credentials:
+          Fn::GetAtt: [ApiGatewayCallLambdaRole, Arn]
+        uri:
+          Fn::Sub: arn:${AWS::Partition}:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${CredentialLoginFunction.Arn}/invocations
+        httpMethod: "POST"
+        type: "aws_proxy"
+        payloadFormatVersion: "2.0"  
   /auth/user_signup:
     post:
       responses:

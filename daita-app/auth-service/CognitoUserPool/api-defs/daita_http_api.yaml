@@ -7,8 +7,8 @@ tags:
 - name: "httpapi:createdBy"
   x-amazon-apigateway-tag-value: "SAM"
 paths:
-  /auth/login-social:
-    post:
+  /auth/login_social:
+    get:
       responses:
         default:
           description: "Auth service transport"

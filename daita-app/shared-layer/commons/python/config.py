@@ -1,4 +1,18 @@
 import os
+config_env = {
+    'CLIENTPOOLID': {'dev': '7v8h65t0d3elscfqll090acf9h', 'staging': '4cpbb5etp3q7grnnrhrc7irjoa'},
+    'USERPOOLID': {'dev': 'us-east-2_6Sc8AZij7', 'staging': 'us-east-2_ZbwpnYN4g'},
+    'IDENTITYPOOLID': {'dev': 'us-east-2:639788f0-a9b0-460d-9f50-23bbe5bc7140', 'staging': 'us-east-2:fa0b76bc-01fa-4bb8-b7cf-a5000954aafb'},
+    'LOCATION': {'dev': "https://dev.daita.tech/", 'staging': 'https://app.daita.tech/'},
+    'ENDPPOINTREDIRCTLOGINSOCIALOAUTH': {'dev': 'https://izugd01pv1.execute-api.us-east-2.amazonaws.com/dev/auth/login_social', 'staging': 'https://nzvw2zvu3d.execute-api.us-east-2.amazonaws.com/staging/auth/login_social'},
+    'OAUTHENPOINT': {'dev': 'https://authdev.daita.tech/oauth2/token', 'staging': 'https://auth.daita.tech/oauth2/token'},
+    'WEBHOOK': {'dev': 'https://hooks.slack.com/services/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', 'staging': 'https://hooks.slack.com/services/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'},
+    'CHANNELWEBHOOK': {'dev': '#feedback-daita', 'staging': '#user-feedback'},
+    'OAUTH2OFBOT': {'dev': 'xoxb-2966360820768-3760970933602-MoApe9duMpoO5KAa6HaCUzzY'}
+}
+OAUTH2BOT = config_env['OAUTH2OFBOT'][os.environ['MODE']]
+OAUTHENPOINT = config_env['OAUTHENPOINT'][os.environ['MODE']]
+
 CLIENT_POOL_ID = "7v8h65t0d3elscfqll090acf9h" if os.environ[
     'MODE'] == 'dev' else "4cpbb5etp3q7grnnrhrc7irjoa"
 USER_POOL_ID = "us-east-2_6Sc8AZij7" if os.environ['MODE'] == 'dev' else "us-east-2_ZbwpnYN4g"
@@ -7,6 +21,8 @@ IDENTITY_POOL_ID = "us-east-2:639788f0-a9b0-460d-9f50-23bbe5bc7140" if os.enviro
     'MODE'] == 'dev' else "us-east-2:fa0b76bc-01fa-4bb8-b7cf-a5000954aafb"
 URL = "https://uflt5029de.execute-api.us-east-2.amazonaws.com/devdaitabeapp/" if os.environ[
     'MODE'] == 'dev' else "https://119u2071ul.execute-api.us-east-2.amazonaws.com/dev/"
+LOCATION = config_env['LOCATION'][os.environ['MODE']]
+ENDPPOINTREDIRCTLOGINSOCIALOAUTH = config_env['ENDPPOINTREDIRCTLOGINSOCIALOAUTH'][os.environ['MODE']]
 ENDPOINTCAPTCHAVERIFY = "https://www.google.com/recaptcha/api/siteverify"
 SITEKEYGOOGLE = "6LcqEGMeAAAAAAEDnBue7fwR4pmvNO7JKWkHtAjl"
 SECRETKEYGOOGLE = "6LcqEGMeAAAAAOiJAMcg1NNfj6eA62gQPLJAtQMt"

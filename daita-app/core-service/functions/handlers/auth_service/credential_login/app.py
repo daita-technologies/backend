@@ -8,14 +8,13 @@ from http import HTTPStatus
 import os
 import boto3
 import cognitojwt
-from utils import create_secret_hash, aws_get_identity_id
+from utils import  aws_get_identity_id
 from urllib.parse import urlparse, quote
-from eventID import *
 from error_messages import *
 from response import *
 from config import *
 from utils import *
-
+from models.event_model import *
 import requests
 from urllib.parse import urlencode
 from lambda_base_class import LambdaBaseClass
@@ -24,7 +23,7 @@ ACCESS_TOKEN_EXPIRATION = 24 * 60 * 60
 USERPOOLID = os.environ['COGNITO_USER_POOL']
 CLIENTPOOLID = os.environ['COGNITO_CLIENT_ID']
 IDENTITY_POOL = os.environ['IDENTITY_POOL']
-
+REGION = os.environ['REGION']
 cog_provider_client = boto3.client('cognito-idp')
 cog_identity_client = boto3.client('cognito-identity')
 # endpoint = 'https://devdaitaloginsocial.auth.us-east-2.amazoncognito.com/oauth2/token'
@@ -102,7 +101,7 @@ def getCredentialsForIdentity(token_id):
 
 def Oauth2(code):
     params = {"code": code, "grant_type": "authorization_code", "redirect_uri": getRedirectURI(
-    ), 'client_id': client_id, 'scope': 'email+openid+phone+profile'}
+    ), 'client_id': CLIENTPOOLID, 'scope': 'email+openid+phone+profile'}
     headers = {"Content-Type": "application/x-www-form-urlencoded"}
     data = urlencode(params)
     result = requests.post(endpoint, data=data, headers=headers)
@@ -196,7 +195,7 @@ class CredentialSocialLoginClass(LambdaBaseClass):
         self.code = body['code']
 
     def handle(self, event, context):
-        self.parser(event, context)
+        self.parser(event)
         model = User()
         resq = Oauth2(self.code)
         if resq.status_code != 200:
@@ -260,4 +259,4 @@ class CredentialSocialLoginClass(LambdaBaseClass):
 
 @error_response
 def lambda_handler(event, context):
-    return CredentialSocialLoginClass.handle(event=event, context=context)
+    return CredentialSocialLoginClass().handle(event=event, context=context)

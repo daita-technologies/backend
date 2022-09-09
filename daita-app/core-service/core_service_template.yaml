@@ -158,6 +158,8 @@ Parameters:
     Type: String
   StreamTableDataAugmentName:
     Type: String
+  TableEventUser:
+    Type: String
 Resources:
   ThumbnailServiceEventBusRole:
     Type: "AWS::IAM::Role"
@@ -729,6 +731,9 @@ Resources:
     Properties:
       CodeUri: functions/handlers/auth_service/credential_login
       Role:  !GetAtt LambdaExecutionRole.Arn
+      Environment:
+        Variables:
+          TBL_EVENTUSER: !Ref TableEventUser
 
   ResendCodeAuthConfirmCodeFunction:
     Type: AWS::Serverless::Function

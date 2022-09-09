@@ -54,7 +54,7 @@ Resources:
         - !Sub https://${AuthHttpAPI}.execute-api.${AWS::Region}.amazonaws.com/${StagePara}/auth/login_social
       LogoutURLs:
         - http://localhost:3000
-        - !Sub  https://${DomainUserPool}
+        - !Ref  DomainUserPool
       AllowedOAuthFlows:
         - code
         - implicit

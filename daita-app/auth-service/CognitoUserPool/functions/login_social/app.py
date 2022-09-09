@@ -72,7 +72,6 @@ class LoginSocialClass(LambdaBaseClass):
     def __init__(self) -> None:
         super().__init__()
 
-    @LambdaBaseClass.parse_body
     def parser(self, body):
         self.code = body['code']
 
@@ -123,4 +122,4 @@ class LoginSocialClass(LambdaBaseClass):
 
 @error_response
 def lambda_handler(event, context):
-    return LoginSocialClass.handle(event=event, context=context)
+    return LoginSocialClass().handle(event=event, context=context)
