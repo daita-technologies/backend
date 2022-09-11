@@ -12,7 +12,8 @@ config_env = {
 }
 OAUTH2BOT = config_env['OAUTH2OFBOT'][os.environ['MODE']]
 OAUTHENPOINT = config_env['OAUTHENPOINT'][os.environ['MODE']]
-
+WEBHOOK = config_env['WEBHOOK'][os.environ['MODE']]
+CHANNELWEBHOOK = config_env['CHANNELWEBHOOK'][os.environ['MODE']]
 CLIENT_POOL_ID = "7v8h65t0d3elscfqll090acf9h" if os.environ[
     'MODE'] == 'dev' else "4cpbb5etp3q7grnnrhrc7irjoa"
 USER_POOL_ID = "us-east-2_6Sc8AZij7" if os.environ['MODE'] == 'dev' else "us-east-2_ZbwpnYN4g"

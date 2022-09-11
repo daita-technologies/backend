@@ -13,7 +13,12 @@ Resources:
     Properties:
       ProviderName: "Google"
       AttributeMapping:
-        email: email
+        email: "email"
+        username: sub
+        middle_name: middle_name
+        family_name: family_name
+        given_name: given_name
+        picture: picture
       ProviderDetails:
         client_id: 639730110991-9t82efunb20f6m4stek56f6ut9t0kjfu.apps.googleusercontent.com
         client_secret: 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
@@ -34,12 +39,13 @@ Resources:
         authorize_scopes: "openid read:user user:email"
         jwks_uri: !Sub "https://${AuthHttpAPI}.execute-api.${AWS::Region}.amazonaws.com/${StagePara}/auth/github-openid-token-wrapper"
         token_url: !Sub "https://${AuthHttpAPI}.execute-api.${AWS::Region}.amazonaws.com/${StagePara}/auth/github-openid-token-wrapper"
-        authorize_url: !Sub "https://${AuthHttpAPI}.execute-api.${AWS::Region}.amazonaws.com/${StagePara}/auth/github-openid-userinfo-wrapper"
-        attributes_url: https://github.com/login/oauth/authorize
+        attributes_url: !Sub "https://${AuthHttpAPI}.execute-api.${AWS::Region}.amazonaws.com/${StagePara}/auth/github-openid-userinfo-wrapper"
+        authorize_url: https://github.com/login/oauth/authorize
       ProviderType: "OIDC"
       AttributeMapping:
         email: "email"
         username: sub
+        name: "email"
   CognitoUserPoolClient:
     Type: AWS::Cognito::UserPoolClient
     DependsOn:

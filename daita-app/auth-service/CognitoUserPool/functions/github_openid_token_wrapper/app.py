@@ -10,6 +10,7 @@ OAUTH_TOKEN_URL = "login/oauth/access_token"
 
 @error_response
 def lambda_handler(event, context):
+    print(event['body'])
     response = requests.post(
         url=f"{GITHUB_LOGIN_URL}/{OAUTH_TOKEN_URL}",
         headers={
@@ -18,6 +19,7 @@ def lambda_handler(event, context):
         },
         data=event["body"],
     )
+    print(response.json())
     return {
         "body": json.dumps(response.json()),
         "isBase64Encoded": False

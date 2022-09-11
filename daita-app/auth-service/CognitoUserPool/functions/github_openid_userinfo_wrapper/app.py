@@ -38,6 +38,7 @@ def lambda_handler(event, context):
         primary_email = None
 
     body = userinfo_response.json()
+    print(body)
     body["email"] = primary_email
     return {
         "body": json.dumps(

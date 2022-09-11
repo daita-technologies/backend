@@ -7,6 +7,19 @@ tags:
 - name: "httpapi:createdBy"
   x-amazon-apigateway-tag-value: "SAM"
 paths:
+  /webhook/client-feedback:
+    post:
+      responses:
+        default:
+          description: "FeedBack"
+      x-amazon-apigateway-integration:
+        credentials:
+          Fn::GetAtt: [ApiGatewayCallLambdaRole, Arn]
+        uri:
+          Fn::Sub: arn:${AWS::Partition}:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${SlackWebhookFeedbackFunction.Arn}/invocations
+        httpMethod: "POST"
+        type: "aws_proxy"
+        payloadFormatVersion: "2.0"      
   #####################################################################################################################################################################
   /auth/credential:
     post:
