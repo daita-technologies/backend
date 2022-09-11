@@ -27,12 +27,15 @@ class PrebuildDatasetModel():
                 self.FILE_NAME_ID: name_id
             }
         )
-        return response.get("Item")
+        item = self.convert_item_to_json(response.get("Item", None))
+        
+        return item
 
     def convert_item_to_json(self, item):
-        for key, value in item.items():
-            if type(value) is Decimal:
-                item[key] = int(value)
+        if item:
+            for key, value in item.items():
+                if type(value) is Decimal:
+                    item[key] = int(value)
         
         return item
         
