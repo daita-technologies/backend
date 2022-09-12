@@ -88,7 +88,9 @@ class RefreshTokenClass(LambdaBaseClass):
         except Exception as exc:
             print(exc)
             raise Exception(MessageRefreshTokenError) from exc
-        if 'github' in self.username or 'google' in self.username:
+        tempusername = self.username
+        tempusername = tempusername.lower()
+        if 'github' in tempusername or 'google' in tempusername:
             name = getDisplayName(self.username)
         else:
             name = self.username

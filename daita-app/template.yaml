@@ -334,6 +334,7 @@ Resources:
         CognitoUserPoolClient: !GetAtt CognitoClient.Outputs.UserPoolClientId
         CognitoUserPool: !GetAtt CognitoUserPool.Outputs.UserPool
         CognitoIdentityPoolId: !GetAtt IdentityPool.Outputs.IdentityPool
+        TableEventUser: !GetAtt DatabaseService.Outputs.TableEventUser
         ### For project service
         CreateProjectPrebuildSMArn: !GetAtt ProjectService.Outputs.CreateProjectPrebuildSMArn
         TableConfirmCodeAuth: !GetAtt DatabaseService.Outputs.TableConfirmCodeAuth
@@ -342,6 +343,7 @@ Resources:
         TableProjectSumName: !GetAtt DatabaseService.Outputs.TableProjectSumName
         TableDataPreprocess: !GetAtt DatabaseService.Outputs.TableDataPreprocessName
         TableDataAugment: !GetAtt DatabaseService.Outputs.TableDataAugmentName
+        TableFeedback: !GetAtt DatabaseService.Outputs.TableFeedback
         StreamTableDataOriginalName: !GetAtt  DatabaseService.Outputs.StreamTableDataOriginalName
         StreamTableDataPreprocessName: !GetAtt  DatabaseService.Outputs.StreamTableDataPreprocessName
         StreamTableDataAugmentName:  !GetAtt  DatabaseService.Outputs.StreamTableDataAugmentName

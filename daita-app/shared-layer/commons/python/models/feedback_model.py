@@ -1,9 +1,10 @@
+import os
 import boto3
 
 class Feedback(object):
-    def __init__(self,TBL):
+    def __init__(self):
         self.db_client = boto3.resource('dynamodb')
-        self.TBL = TBL
+        self.TBL = os.environ['TABLE_FEEBACK']
 
     def CreateItem(self, info):
         self.db_client.Table(self.TBL).put_item(Item={

@@ -163,7 +163,8 @@ def lambda_handler(event, context):
     except Exception as e:
         print(e)
         raise Exception(e)
-    postMessageWithFiles(message, fileList, CHANNELWEBHOOK)
+    print(f'Debug Feedback{message}')
+    # postMessageWithFiles(message, fileList, CHANNELWEBHOOK)
     dir.cleanup()
     return generate_response(
         message=MessageSendFeedbackSuccessfully,

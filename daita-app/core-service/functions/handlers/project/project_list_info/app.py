@@ -58,8 +58,8 @@ class ProjectListInfoCls(LambdaBaseClass):
             group_project_id = {}
 
             # add general project info
-            for item_project in items_project['Items']:
-
+            for index, item_project in enumerate(items_project['Items']):
+                print(f'Log debug: Index {index}: {item_project}')
                 # update value for is_sample and gen_status
                 item_project["is_sample"] = item_project.get(
                     "is_sample", False)
@@ -67,7 +67,8 @@ class ProjectListInfoCls(LambdaBaseClass):
                     "gen_status", "FINISH")
                 item_project["description"] = item_project.get(
                     "project_info", "")
-
+                if not 'project_id' in item_project:
+                    continue
                 group_project_id[item_project['project_id']] = item_project
                 group_project_id[item_project['project_id']]['ls_task'] = []
 

@@ -158,6 +158,10 @@ Parameters:
     Type: String
   StreamTableDataAugmentName:
     Type: String
+  TableEventUser:
+    Type: String
+  TableFeedback:
+    Type: String
 Resources:
   ThumbnailServiceEventBusRole:
     Type: "AWS::IAM::Role"
@@ -729,6 +733,9 @@ Resources:
     Properties:
       CodeUri: functions/handlers/auth_service/credential_login
       Role:  !GetAtt LambdaExecutionRole.Arn
+      Environment:
+        Variables:
+          TBL_EVENTUSER: !Ref TableEventUser
 
   ResendCodeAuthConfirmCodeFunction:
     Type: AWS::Serverless::Function
@@ -764,6 +771,10 @@ Resources:
     Properties:
       CodeUri: functions/handlers/feedback/slack_webhook
       Role: !GetAtt LambdaExecutionRole.Arn
+      Environment:
+        Variables:
+          TABLE_FEEBACK: !Ref TableFeedback
+              
 ##########################Project Service################################################
 
   ProjectAsyCreateSampleFunction:

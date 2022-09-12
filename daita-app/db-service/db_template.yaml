@@ -471,6 +471,25 @@ Resources:
         -
           AttributeName: project_name
           KeyType: RANGE
+      BillingMode: PAY_PER_REQUEST
+  TableEventUser:
+    Type:  AWS::DynamoDB::Table
+    Properties:
+      TableName: !Sub "${StagePara}-EventUser"
+      AttributeDefinitions:
+        -
+          AttributeName: event_ID
+          AttributeType: S
+        -
+          AttributeName: type
+          AttributeType: S
+      KeySchema:
+        -
+          AttributeName: event_ID
+          KeyType: HASH
+        -
+          AttributeName: type
+          KeyType: RANGE
       BillingMode: PAY_PER_REQUEST 
 Outputs:
   TableGenerateTaskName:
@@ -526,7 +545,8 @@ Outputs:
     
   TableTask:
     Value: !Ref TableTask
-
+  TableEventUser:
+    Value: !Ref TableEventUser
   StreamTableDataOriginalName:
     Value: !GetAtt DataOriginalDB.StreamArn
   StreamTableDataPreprocessName:

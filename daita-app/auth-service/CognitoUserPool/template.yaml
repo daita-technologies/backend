@@ -11,6 +11,9 @@ Parameters:
     Type: String
   CommonCodeLayerName:
     Type: String
+  minimumLogLevel:
+    Type: String
+    Default: DEBUG
 Globals:
   Function:
     Timeout: 800
@@ -23,6 +26,7 @@ Globals:
         STAGE: !Ref StagePara
         MODE: !Ref Mode
         COGNITO_USER_POOL: !Ref CognitoUserPool
+        LOGGING: !Ref minimumLogLevel
     Layers:
         - !Ref CommonCodeLayerName
 Resources:
@@ -154,17 +158,18 @@ Resources:
   CognitoUserPoolDomain:
     Type: AWS::Cognito::UserPoolDomain
     Properties:
-      CustomDomainConfig:
-        CertificateArn: arn:aws:acm:us-east-1:737589818430:certificate/c60ac68c-713e-44fe-bbe9-02e4234e0825 # TODO set enviroment variable
       Domain: !Sub "auth${StagePara}.daita.tech"
       UserPoolId: !Ref CognitoUserPool
-  GithubTokenWrapper:
+      CustomDomainConfig:
+        CertificateArn: arn:aws:acm:us-east-1:737589818430:certificate/c60ac68c-713e-44fe-bbe9-02e4234e0825 # TODO set enviroment variable
+
+  GithubTokenWrapperFunc:
     Type: AWS::Serverless::Function
     Properties:
       CodeUri: functions/github_openid_token_wrapper
       Role:  !GetAtt LambdaExecutionRole.Arn
   
-  GithubUserinfoWrapper:
+  GithubUserinfoWrapperFunc:
     Type: AWS::Serverless::Function
     Properties:
       CodeUri: functions/github_openid_userinfo_wrapper
