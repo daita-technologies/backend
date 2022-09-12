@@ -177,7 +177,6 @@ Resources:
         - python3.8
       
 
-
   #================ APPLICATIONS  =============================================
   AICallerService:
     Type: AWS::Serverless::Application
@@ -382,6 +381,7 @@ Resources:
         MaxWidthResolutionImage: !Ref MaxWidthResolutionImage
         MaxHeightResolutionImage: !Ref MaxHeightResolutionImage
         Mode: !Ref Mode
+
 Outputs:
   ZZBC:
     Value: Stage
@@ -389,5 +389,14 @@ Outputs:
     Value: !Ref DecompressEcrRepository
   CompressDownloadEcrRepositoryName:
     Value: !Ref CompressDownloadEcrRepository
+
+  CognitoUserPoolRef:
+    Value: !GetAtt CognitoUserPool.Outputs.UserPool
+  CognitoIdentityPoolIdRef: 
+    Value: !GetAtt IdentityPool.Outputs.IdentityPool
+
+  CommonCodeLayerRef:
+    Value: !Ref CommonCodeLayer
+
   ABC:
     Value: !Ref Stage

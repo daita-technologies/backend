@@ -1,0 +1,10 @@
+AWS_REGION=us-east-2
+AWS_ACCOUNT_ID="737589818430"
+
+IS_BUILD_DAITA=no
+DAITA_STAGE="dev"
+OUTPUT_BUILD_DAITA=~/backend/output_daita.txt
+
+#-------config for annotation---------
+IS_BUILD_ANNOTATION=yes
+ANNOTATION_STAGE="dev"
