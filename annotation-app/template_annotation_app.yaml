@@ -1,0 +1,137 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: >
+  SAM Template for Annotation application
+
+## The general rule seems to be to use !Sub for in line substitutions and !ref for stand alone text
+Parameters:
+  Stage:
+    Type: String
+    Default: dev
+  Application:
+    Type: String
+    Default: anno
+  S3BucketName:
+    Type: String
+    Default: client-annotation-bucket
+  EFSFileSystemId:
+    Type:  String
+    Default: fs-0199771f2dfe97ace
+
+  CommonCodeLayerRef:
+    Type: String
+    Default: arn:aws:lambda:us-east-2:737589818430:layer:dev-CommonCodeLayer:38
+
+  CognitoUserPoolRef:
+    Type: String
+  CognitoIdentityPoolIdRef:
+    Type: String
+  
+  
+Resources:
+
+  #================ ROLES =====================================================
+  # lambda role
+  GeneralLambdaExecutionRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+        - Effect: "Allow"
+          Principal:
+            Service: "lambda.amazonaws.com"
+          Action:
+          - "sts:AssumeRole"
+      Policies:
+        - PolicyName: 'SecretsManagerParameterAccess'
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - ssm:GetParam*
+                  - ssm:DescribeParam*
+                Resource:
+                  - arn:aws:ssm:*:*:parameter/*
+        - PolicyName: 'CloudwatchPermission'
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              -
+                Effect: Allow
+                Action:
+                  - 'logs:CreateLogGroup'
+                  - 'logs:CreateLogStream'
+                  - 'logs:PutLogEvents'
+                Resource: '*'
+        - PolicyName: 'CognitoPermission'
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              -
+                Effect: Allow
+                Action:
+                  - cognito-identity:*
+                  - cognito-idp:*
+                Resource: '*'
+        - PolicyName: 'DynamoDBPermission'
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              -
+                Effect: Allow
+                Action:
+                  - dynamodb:*
+                Resource: "*"
+        - PolicyName: "OtherServicePermission"
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              -
+                Effect: Allow
+                Action:
+                  - events:PutEvents
+                  - s3:Get*
+                  - ecr:*
+                  - elasticfilesystem:*
+                  - states:*
+                  - s3:*
+                Resource: "*"
+
+  #================ APPLICATIONS  =============================================
+  APIService:
+    Type: AWS::Serverless::Application
+    Properties:
+      Location: api-service/template_api_service.yaml
+      Parameters:
+        StagePara: !Ref Stage
+        ApplicationPara: !Ref Application
+        ### function arn
+        ProjectCloneFunctionArn: !GetAtt ProjectService.Outputs.ProjectCloneFunctionArn
+
+  DatabaseService:
+    Type: AWS::Serverless::Application
+    Properties:
+      Location: db-service/db_template.yaml
+      Parameters:
+        StagePara: !Ref Stage
+        ApplicationPara: !Ref Application
+
+  ProjectService:
+    Type: AWS::Serverless::Application
+    Properties:
+      Location: project-service/template_project_service.yaml
+      Parameters:
+        StagePara: !Ref Stage
+        ApplicationPara: !Ref Application
+        CommonCodeLayerRef: !Ref CommonCodeLayerRef
+        LambdaRoleArn: !GetAtt GeneralLambdaExecutionRole.Arn
+        CognitoUserPoolRef: !Ref CognitoUserPoolRef
+        CognitoIdentityPoolIdRef: !Ref CognitoIdentityPoolIdRef
+  
+Outputs:
+  ZZBC:
+    Value: Stage
+  ABC:
+    Value: !Ref Stage

@@ -1,0 +1,90 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: >
+  SAM Template for Nested application resources
+
+Parameters:
+  StagePara:
+    Type: String
+  ApplicationPara:
+    Type: String
+
+Resources:
+    #================ DYNAMODB ==================================================
+
+  ###==== For Project ========
+  ProjectDB:
+    Type:  AWS::DynamoDB::Table
+    Properties:
+      TableName: !Sub "${StagePara}-${ApplicationPara}-project"
+      AttributeDefinitions:
+        -
+          AttributeName: identity_id
+          AttributeType: S
+        -
+          AttributeName: project_name
+          AttributeType: S
+      KeySchema:
+        -
+          AttributeName: identity_id
+          KeyType: HASH
+        -
+          AttributeName: project_name
+          KeyType: RANGE
+      BillingMode: PAY_PER_REQUEST
+
+  ProjectSummaryDB:
+    Type:  AWS::DynamoDB::Table
+    Properties:
+      TableName: !Sub "${StagePara}-${ApplicationPara}-prj-sum-all"
+      AttributeDefinitions:
+        -
+          AttributeName: project_id
+          AttributeType: S
+        -
+          AttributeName: type
+          AttributeType: S
+      KeySchema:
+        -
+          AttributeName: project_id
+          KeyType: HASH
+        -
+          AttributeName: type
+          KeyType: RANGE
+      BillingMode: PAY_PER_REQUEST
+
+  DataOriginalDB:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      AttributeDefinitions:
+        - 
+          AttributeName: project_id
+          AttributeType: S
+        - 
+          AttributeName: filename
+          AttributeType: S
+      KeySchema:
+        - 
+          AttributeName: project_id
+          KeyType: HASH
+        -
+          AttributeName: filename
+          KeyType: RANGE
+      TableName: !Sub "${StagePara}-${ApplicationPara}-data-original"
+      BillingMode: PAY_PER_REQUEST
+      StreamSpecification:
+        StreamViewType: NEW_IMAGE
+
+  
+Outputs:
+  TableProjectsName:
+    Description: "Name of table projects"
+    Value: !Ref ProjectDB
+
+  TableProjectSumName:
+    Description: "Name of table projects"
+    Value: !Ref ProjectSummaryDB
+
+  TableDataOriginalName:
+    Description: "Name of table data original"
+    Value: !Ref DataOriginalDB

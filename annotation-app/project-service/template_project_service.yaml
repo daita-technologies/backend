@@ -1,0 +1,80 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: >
+  daita-reference-image-service
+
+  Sample SAM Template for daita-reference-image-service
+
+
+Parameters:
+  minimumLogLevel:
+    Type: String
+    Default: DEBUG
+  Mode:
+    Type: String
+    Default: dev
+
+  StagePara:
+    Type: String
+  ApplicationPara:
+    Type: String
+
+  CommonCodeLayerRef:
+    Type: String
+  LambdaRoleArn:
+    Type: String
+
+  # TableDataOriginalName:
+  #   Type: String 
+  # TableProjectSumName:
+  #   Type: String
+  # TableProjectsName:
+  #   Type: String
+
+  CognitoUserPoolRef:
+    Type: String
+  CognitoIdentityPoolIdRef:
+    Type: String
+
+Globals:
+  Function:
+    Timeout: 800   
+    Runtime: python3.8
+    Architectures:
+      - x86_64 
+    Environment:
+      Variables:
+        STAGE: !Ref StagePara        
+        LOGGING: !Ref minimumLogLevel  
+        MODE: !Ref Mode
+
+        # TABLE_PROJECT_SUMMARY: !Ref TableProjectSumName
+        # TABLE_PROJECT: !Ref TableProjectsName
+        # T_DATA_ORI: !Ref TableDataOriginalName
+        
+        COGNITO_USER_POOL: !Ref CognitoUserPoolRef
+        IDENTITY_POOL: !Ref CognitoIdentityPoolIdRef
+Resources:
+
+  #================ LAMBDA FUNCTIONS ==========================================
+
+  ProjectCloneFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: api-handler-functions
+      Handler: hdler_project_upload_update.lambda_handler
+      Role: !Ref LambdaRoleArn
+      MemorySize: 256
+      Layers:
+        - !Ref CommonCodeLayerRef
+  
+
+Outputs:
+  # ServerlessRestApi is an implicit API created out of Events key under Serverless::Function
+  # Find out more about other implicit resources you can reference within SAM
+  # https://github.com/awslabs/serverless-application-model/blob/master/docs/internals/generated_resources.rst#api 
+  ProjectCloneFunctionArn:
+    Description: "ProjectCloneFunctionArn"
+    Value: !GetAtt ProjectCloneFunction.Arn
+  
+  
