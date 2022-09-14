@@ -2,12 +2,14 @@ import logging
 import os
 from identity_check import *
 import json
+from load_env_lambda_function import LambdaEnv
 
 class LambdaBaseClass(object):
     
     def __init__(self) -> None:
         self.logger = logging.getLogger(self.__class__.__name__)
         self.logger.setLevel(os.environ["LOGGING"])
+        self.env = LambdaEnv()
 
     def handle(self, event, context):        
         raise NotImplementedError

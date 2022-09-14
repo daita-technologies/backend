@@ -25,6 +25,9 @@ MES_PROJECT_NOT_FOUND = "Project {} is not found."
 MES_PROJECT_ALREADY_EXIST = "Project {} exists, please choose another name."
 MES_PROJECT_SAME = "New project name {} must different with current name."
 
+### For annotaion const
+FOLDER_RAW_DATA_NAME = "raw_data"
+
 
 def get_const_db(code):
     response = table.get_item(

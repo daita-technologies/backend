@@ -23,7 +23,7 @@ class GenerateImageClass(LambdaBaseClass):
         super().__init__()     
         self.client_events = boto3.client('events')    
         self.const = SystemParameterStore()   
-        self.project_model = ProjectModel(os.environ["TABLE_PROJECTS_NAME"])
+        self.project_model = ProjectModel(os.environ["TABLE_PROJECT"])
         self.generate_task_model = GenerateTaskModel(os.environ["TABLE_GENERATE_TASK"])
         self.project_sum_model = ProjectSumModel(os.environ["TABLE_PROJECT_SUMMARY"])
 

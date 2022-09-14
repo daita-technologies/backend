@@ -3,6 +3,7 @@ from boto3.dynamodb.conditions import Key, Attr
 from config import *
 from typing import List
 from utils import convert_current_date_to_iso8601
+from models.base_model import BaseModel
 
 class DataItem():
     
@@ -54,7 +55,7 @@ class DataItem():
             dict_info = {
                 self.FIELD_PROJECT_ID: self.project_id,  
                 self.FIELD_FILENAME: self.filename,
-                self.GEN_ID: self.gen_id,
+                self.FIELD_GEN_ID: self.gen_id,
                 self.FIELD_HASH: self.hash,
                 self.FIELD_IS_ORIGINAL: self.is_original,
                 self.FIELD_S3_KEY: self.s3_key,
@@ -66,7 +67,7 @@ class DataItem():
         return dict_info
 
 
-class DataModel():
+class DataModel(BaseModel):
     def __init__(self, table_name) -> None:
         self.table = boto3.resource('dynamodb').Table(table_name) 
         
@@ -114,13 +115,24 @@ class DataModel():
         return ls_s3_key
 
     def get_all_data_in_project(self, project_id):
+
         response = self.table.query (
                 KeyConditionExpression=Key(DataItem.FIELD_PROJECT_ID).eq(project_id),
-                ProjectionExpression=f"{DataItem.FIELD_FILENAME}, {DataItem.FIELD_S3_KEY}",
-            )
-        items = response.get("Items", [])
+                ProjectionExpression=f"{DataItem.FIELD_FILENAME}, {DataItem.FIELD_S3_KEY}, {DataItem.FIELD_SIZE}",
+        )
+        ls_items = response.get("Items", [])
 
-        return items
+        while 'LastEvaluatedKey' in response:
+            next_token = response['LastEvaluatedKey']
+            response = self.table.query (
+                KeyConditionExpression=Key(DataItem.FIELD_PROJECT_ID).eq(project_id),
+                ProjectionExpression=f"{DataItem.FIELD_FILENAME}, {DataItem.FIELD_S3_KEY}, {DataItem.FIELD_SIZE}",
+                ExclusiveStartKey=next_token
+            )
+
+            ls_items += response.get("Items", [])
+
+        return [self.convert_decimal_indb_item(item) for item in ls_items]
     
     def update_healthcheck_id(self, project_id, filename, healthcheck_id):
         self._update_healthcheck_id(project_id, filename, healthcheck_id)

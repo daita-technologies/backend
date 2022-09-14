@@ -11,12 +11,17 @@ Parameters:
   Application:
     Type: String
     Default: anno
-  S3BucketName:
+
+  S3AnnoBucketName:
     Type: String
     Default: client-annotation-bucket
   EFSFileSystemId:
     Type:  String
     Default: fs-0199771f2dfe97ace
+
+  ### references from daita
+  S3DaitaBucketName:
+    Type: String
 
   CommonCodeLayerRef:
     Type: String
@@ -25,6 +30,11 @@ Parameters:
   CognitoUserPoolRef:
     Type: String
   CognitoIdentityPoolIdRef:
+    Type: String
+
+  TableDaitaProjectsName:
+    Type: String
+  TableDaitaDataOriginalName:
     Type: String
   
   
@@ -125,10 +135,23 @@ Resources:
       Parameters:
         StagePara: !Ref Stage
         ApplicationPara: !Ref Application
+        ###_____ for common layer and role
         CommonCodeLayerRef: !Ref CommonCodeLayerRef
         LambdaRoleArn: !GetAtt GeneralLambdaExecutionRole.Arn
+        ###_____ for authorize
         CognitoUserPoolRef: !Ref CognitoUserPoolRef
         CognitoIdentityPoolIdRef: !Ref CognitoIdentityPoolIdRef
+        ###_____ for annotation project table
+        TableAnnoDataOriginalName: !GetAtt DatabaseService.Outputs.TableAnnoDataOriginalName
+        TableAnnoProjectSumName: !GetAtt DatabaseService.Outputs.TableAnnoProjectSumName
+        TableAnnoProjectsName: !GetAtt DatabaseService.Outputs.TableAnnoProjectsName
+        ###_____ for daita project table
+        TableDaitaProjectsName: !Ref TableDaitaProjectsName
+        TableDaitaDataOriginalName: !Ref TableDaitaDataOriginalName
+        ###_____ for s3 bucket
+        S3AnnoBucketName: !Ref S3AnnoBucketName
+        S3DaitaBucketName: !Ref S3DaitaBucketName
+
   
 Outputs:
   ZZBC:

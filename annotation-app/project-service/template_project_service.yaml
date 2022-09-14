@@ -24,16 +24,26 @@ Parameters:
   LambdaRoleArn:
     Type: String
 
-  # TableDataOriginalName:
-  #   Type: String 
-  # TableProjectSumName:
-  #   Type: String
-  # TableProjectsName:
-  #   Type: String
+  TableAnnoDataOriginalName:
+    Type: String 
+  TableAnnoProjectSumName:
+    Type: String
+  TableAnnoProjectsName:
+    Type: String
+
+  TableDaitaProjectsName:
+    Type: String
+  TableDaitaDataOriginalName:
+    Type: String
 
   CognitoUserPoolRef:
     Type: String
   CognitoIdentityPoolIdRef:
+    Type: String
+
+  S3AnnoBucketName:
+    Type: String
+  S3DaitaBucketName:
     Type: String
 
 Globals:
@@ -42,31 +52,122 @@ Globals:
     Runtime: python3.8
     Architectures:
       - x86_64 
+    Layers:
+      - !Ref CommonCodeLayerRef
     Environment:
       Variables:
         STAGE: !Ref StagePara        
         LOGGING: !Ref minimumLogLevel  
         MODE: !Ref Mode
 
-        # TABLE_PROJECT_SUMMARY: !Ref TableProjectSumName
-        # TABLE_PROJECT: !Ref TableProjectsName
-        # T_DATA_ORI: !Ref TableDataOriginalName
+        TABLE_ANNO_PROJECT_SUMMARY: !Ref TableAnnoProjectSumName
+        TABLE_ANNO_PROJECT: !Ref TableAnnoProjectsName
+        TABLE_ANNO_DATA_ORI: !Ref TableAnnoDataOriginalName
+
+        TABLE_DAITA_PROJECT: !Ref TableDaitaProjectsName
+        TABLE_DAITA_DATA_ORIGINAL: !Ref TableDaitaDataOriginalName
         
         COGNITO_USER_POOL: !Ref CognitoUserPoolRef
         IDENTITY_POOL: !Ref CognitoIdentityPoolIdRef
+
+        S3_ANNO_BUCKET_NAME: !Ref S3AnnoBucketName
+        S3_DAITA_BUCKET_NAME: !Ref S3DaitaBucketName
+
 Resources:
-
-  #================ LAMBDA FUNCTIONS ==========================================
-
+  #================ LAMBDA API FUNCTIONS ==========================================
   ProjectCloneFunction:
     Type: AWS::Serverless::Function
     Properties:
       CodeUri: api-handler-functions
-      Handler: hdler_project_upload_update.lambda_handler
+      Handler: hdler_project_clone.lambda_handler
       Role: !Ref LambdaRoleArn
       MemorySize: 256
-      Layers:
-        - !Ref CommonCodeLayerRef
+      Environment:
+        Variables:
+          SM_CLONE_PROJECT_ARN: !GetAtt CloneProjectSM.Arn
+          
+  #================ LAMBDA STEP FUNCTIONS ==========================================
+  FuncMoveS3Data:
+    Type: AWS::Serverless::Function 
+    Properties:
+      Timeout: 900
+      Handler: hdler_move_s3_data.lambda_handler
+      CodeUri: statemachine/clone_project_data/functions
+      Role: !Ref LambdaRoleArn
+      MemorySize: 256
+
+  FuncUpdateInputData:
+    Type: AWS::Serverless::Function 
+    Properties:
+      Handler: hdler_update_input_data.lambda_handler
+      CodeUri: statemachine/clone_project_data/functions
+      Role: !Ref LambdaRoleArn
+      MemorySize: 256
+
+  FuncUpdateSumaryDatabase:
+    Type: AWS::Serverless::Function 
+    Properties:
+      Handler: hdler_update_sumary_db.lambda_handler
+      CodeUri: statemachine/clone_project_data/functions
+      Role: !Ref LambdaRoleArn
+      MemorySize: 256
+
+  #================ PROCESSOR STATE MACHINE ===================================
+  CloneProjectSMLogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties: 
+      LogGroupName: !Sub "/aws/vendedlogs/states/${StagePara}-${ApplicationPara}-CloneProject"
+      RetentionInDays: 7
+
+  CloneProjectSM:
+    Type: AWS::Serverless::StateMachine
+    Properties:
+      Type: STANDARD
+      Name: !Sub "${StagePara}-${ApplicationPara}-CloneProjectSM"
+      Policies:
+        - LambdaInvokePolicy:
+            FunctionName: !Ref FuncMoveS3Data
+        - LambdaInvokePolicy:
+            FunctionName: !Ref FuncUpdateInputData
+        - LambdaInvokePolicy:
+            FunctionName: !Ref FuncUpdateSumaryDatabase
+        - Statement: 
+          - Sid: CloudWatchLogsPolicy
+            Effect: Allow
+            Action:
+            - "logs:CreateLogDelivery"
+            - "logs:GetLogDelivery"
+            - "logs:UpdateLogDelivery"
+            - "logs:DeleteLogDelivery"
+            - "logs:ListLogDeliveries"
+            - "logs:PutResourcePolicy"
+            - "logs:DescribeResourcePolicies"
+            - "logs:DescribeLogGroup"
+            - "logs:DescribeLogGroups"
+            Resource: "*"
+          - Sid: CloudWatchEventsFullAccess
+            Effect: Allow
+            Action:
+            - "events:*"
+            Resource: "*"
+          - Sid: IAMPassRoleForCloudWatchEvents
+            Effect: Allow
+            Action:
+            - "iam:PassRole"
+            Resource: "arn:aws:iam::*:role/AWS_Events_Invoke_Targets"
+      Tracing:
+        Enabled: true
+      DefinitionUri: ./statemachine/clone_project_data/sm_clone_project.asl.yaml
+      Logging:
+        Level: ALL
+        IncludeExecutionData: true
+        Destinations:
+        - CloudWatchLogsLogGroup:
+            LogGroupArn: !GetAtt CloneProjectSMLogGroup.Arn
+      DefinitionSubstitutions:
+        Arn_FuncMoveS3Data: !GetAtt FuncMoveS3Data.Arn
+        Arn_FuncUpdateInputData: !GetAtt FuncUpdateInputData.Arn
+        Arn_FuncUpdateSumaryDatabase: !GetAtt FuncUpdateSumaryDatabase.Arn
   
 
 Outputs:

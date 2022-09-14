@@ -5,66 +5,55 @@ from utils import *
 
 
 
-class ProjectItem():
+
+class AnnoProjectModel():
     FIELD_IDENTITY_ID           = "identity_id"
     FIELD_PROJECT_ID            = "project_id"
     FIELD_PROJECT_NAME          = "project_name"
-    FIELD_GEN_STATUS            = "gen_status"
+    FIELD_GEN_STATUS            = "gen_status"     ### status of generating progress
     FIELD_S3_PREFIX             = "s3_prefix"
+    FIELD_S3_PRJ_ROOT           = "s3_prj_root"
     FIELD_IS_SAMPLE             = "is_sample"
     FIELD_PROJECT_INFO          = "project_info"
     FIELD_TIMES_AUGMENT         = "times_generated"
     FIELD_TIMES_PREPRO          = "times_propr"
     FIELD_UPDATE_DATE           = "updated_date"
+    FIELD_CREATED_DATE          = "created_date"
+    FIELD_LINKED_PROJECT        = "link_daita_prj_id"
     FIELD_REFERENCE_IMAGES      = KEY_NAME_REFERENCE_IMAGES
     FIELD_DATANUM_ORIGINAL      = VALUE_TYPE_DATA_ORIGINAL
     FIELD_DATANUM_PREPROCESS    = VALUE_TYPE_DATA_PREPROCESSED
     FIELD_AUG_PARAMETERS        = KEY_NAME_AUG_PARAMS
 
-    def __init__(self, dict_info) -> None:        
-        print("start init")
-        for key, value in dict_info.items():
-            self.__dict__[key]=value
-        print("init success: ", self.__dict__)
+    VALUE_GEN_STATUS_GENERATING = "GENERATING"
+    VALUE_GEN_STATUS_FINISH     = "FINISH"
 
-    def get_value_w_default(self, name, default_value=None):
-        if self.__dict__.get(name, None):
-            return self.__dict__[name]
-        else:
-            self.__dict__[name] = default_value
-            return default_value
-
-
-class ProjectModel():
     def __init__(self, table_name) -> None:
+        print("table name: ", table_name)
         self.table = boto3.resource('dynamodb').Table(table_name)               
    
-    def get_project_info(self, identity_id, project_name) -> ProjectItem:            
+    def get_project_info(self, identity_id, project_name) -> dict:            
         response = self.table.get_item(
             Key={
-                ProjectItem.FIELD_IDENTITY_ID: identity_id,
-                ProjectItem.FIELD_PROJECT_NAME: project_name,
+                self.FIELD_IDENTITY_ID: identity_id,
+                self.FIELD_PROJECT_NAME: project_name,
             },
-            ProjectionExpression= f'{ProjectItem.FIELD_PROJECT_ID}, {ProjectItem.FIELD_S3_PREFIX}, {ProjectItem.FIELD_TIMES_AUGMENT}, {ProjectItem.FIELD_TIMES_PREPRO}'
+            ProjectionExpression= f'{self.FIELD_PROJECT_ID}, {self.FIELD_S3_PREFIX}, {self.FIELD_TIMES_AUGMENT}, {self.FIELD_TIMES_PREPRO}'
         )
         item = response.get('Item', None)
         print(item)
-        if item is None:
-            project_rec = None
-        else:
-            project_rec = ProjectItem(item)
-
-        return project_rec
+        
+        return item
 
     def update_project_info(self, identity_id, project_name, data_type, data_number):        
         response = self.table.update_item(
             Key={
-                ProjectItem.FIELD_IDENTITY_ID: identity_id,
-                ProjectItem.FIELD_PROJECT_NAME: project_name,
+                self.FIELD_IDENTITY_ID: identity_id,
+                self.FIELD_PROJECT_NAME: project_name,
             },
             ExpressionAttributeNames= {
                 '#DA_TY': data_type,
-                '#UP_DATE': ProjectItem.FIELD_UPDATE_DATE
+                '#UP_DATE': self.FIELD_UPDATE_DATE
             },
             ExpressionAttributeValues = {
                 ':va':  data_number,
@@ -75,19 +64,33 @@ class ProjectModel():
 
         return
 
+    def update_project_gen_status(self, identity_id, project_name, status):
+        response = self.table.update_item(
+            Key={
+                'identity_id': identity_id,
+                'project_name': project_name,
+            },
+            ExpressionAttributeValues={
+                ':st': status,
+            },
+            UpdateExpression='SET  gen_status = :st'
+        )
+
+        return
+
     def update_project_generate_times(self, identity_id, project_name, times_augment, times_preprocess,
                                      reference_images, aug_params):
         response = self.table.update_item(
             Key={
-                ProjectItem.FIELD_IDENTITY_ID: identity_id,
-                ProjectItem.FIELD_PROJECT_NAME: project_name,
+                self.FIELD_IDENTITY_ID: identity_id,
+                self.FIELD_PROJECT_NAME: project_name,
             },
             ExpressionAttributeNames= {
-                '#P_T': ProjectItem.FIELD_TIMES_PREPRO,
-                '#A_T': ProjectItem.FIELD_TIMES_AUGMENT,
-                '#UP_DATE': ProjectItem.FIELD_UPDATE_DATE,
-                "#RE_IM": ProjectItem.FIELD_REFERENCE_IMAGES,
-                "#AU_PA": ProjectItem.FIELD_AUG_PARAMETERS
+                '#P_T': self.FIELD_TIMES_PREPRO,
+                '#A_T': self.FIELD_TIMES_AUGMENT,
+                '#UP_DATE': self.FIELD_UPDATE_DATE,
+                "#RE_IM": self.FIELD_REFERENCE_IMAGES,
+                "#AU_PA": self.FIELD_AUG_PARAMETERS
             },
             ExpressionAttributeValues = {
                 ':vp_t': times_preprocess,
@@ -104,13 +107,13 @@ class ProjectModel():
     def update_generate_expert_mode_param(self, identity_id, project_name, reference_images, aug_params):
         response = self.table.update_item(
             Key={
-                ProjectItem.FIELD_IDENTITY_ID: identity_id,
-                ProjectItem.FIELD_PROJECT_NAME: project_name,
+                self.FIELD_IDENTITY_ID: identity_id,
+                self.FIELD_PROJECT_NAME: project_name,
             },
             ExpressionAttributeNames= {
-                '#UP_DATE': ProjectItem.FIELD_UPDATE_DATE,
-                "#RE_IM": ProjectItem.FIELD_REFERENCE_IMAGES,
-                "#AU_PA": ProjectItem.FIELD_AUG_PARAMETERS
+                '#UP_DATE': self.FIELD_UPDATE_DATE,
+                "#RE_IM": self.FIELD_REFERENCE_IMAGES,
+                "#AU_PA": self.FIELD_AUG_PARAMETERS
             },
             ExpressionAttributeValues = {
                 ':da': convert_current_date_to_iso8601(),   
@@ -128,12 +131,12 @@ class ProjectModel():
         """
         response = self.table.update_item(
             Key={
-                ProjectItem.FIELD_IDENTITY_ID: identity_id,
-                ProjectItem.FIELD_PROJECT_NAME: project_name,
+                self.FIELD_IDENTITY_ID: identity_id,
+                self.FIELD_PROJECT_NAME: project_name,
             },
             ExpressionAttributeNames= {
-                '#UP_DATE': ProjectItem.FIELD_UPDATE_DATE,
-                "#RE_IM": ProjectItem.FIELD_REFERENCE_IMAGES,
+                '#UP_DATE': self.FIELD_UPDATE_DATE,
+                "#RE_IM": self.FIELD_REFERENCE_IMAGES,
             },
             ExpressionAttributeValues = {
                 ':da': convert_current_date_to_iso8601(),   

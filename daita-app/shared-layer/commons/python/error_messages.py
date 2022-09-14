@@ -56,7 +56,7 @@ MessageErrorFeedbackLimitword = "Word limit for feedback!"
 MessageErrorFeedbackLimitImages = "Attachment file count limit!"
 MessageErrorInvalidExtension = "Invalid extension of file attachment!"
 
-###========== Error message for prohject ===================###
+###========== Error message for project ===================###
 ### Error create prebuild dataset
 MESS_ERR_INVALID_PREBUILD_DATASET_NAME = "The prebuild dataset {} is not valid now."
 
@@ -66,3 +66,6 @@ MES_REACH_LIMIT_NUM_PRJ = 'You have reached the threshold of {} custom projects 
 MES_DUPLICATE_PROJECT_NAME = "{} already exists. Please choose another name."
 MES_REACH_LIMIT_AUGMENT = "You have reached the threshold of {} augmentation runs per project."
 MES_REACH_LIMIT_PREPROCESS = "You have reached the threshold of {} preprocessing runs per project."
+
+### for project annotation
+MESS_PROJECT_NOT_EXIST = "Project {} does not exist in daita system."

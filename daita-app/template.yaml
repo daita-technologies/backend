@@ -383,8 +383,6 @@ Resources:
         Mode: !Ref Mode
 
 Outputs:
-  ZZBC:
-    Value: Stage
   DecompressEcrRepositoryName:
     Value: !Ref DecompressEcrRepository
   CompressDownloadEcrRepositoryName:
@@ -398,5 +396,7 @@ Outputs:
   CommonCodeLayerRef:
     Value: !Ref CommonCodeLayer
 
-  ABC:
-    Value: !Ref Stage
+  TableDaitaProjectsName:
+    Value: !GetAtt DatabaseService.Outputs.TableProjectsName
+  TableDaitaDataOriginalName:
+    Value: !GetAtt DatabaseService.Outputs.TableDataOriginalName

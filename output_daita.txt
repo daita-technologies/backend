@@ -1,3 +1,5 @@
 CognitoUserPoolRef=us-east-2_uhgw2VJAC
 CognitoIdentityPoolIdRef=us-east-2:4e0bc356-5337-4a76-87ad-988b88902271
-CommonCodeLayerRef=arn:aws:lambda:us-east-2:737589818430:layer:dev-CommonCodeLayer:38
+CommonCodeLayerRef=arn:aws:lambda:us-east-2:737589818430:layer:dev-CommonCodeLayer:52
+TableDaitaProjectsName=dev_daita-project
+TableDaitaDataOriginalName=dev_daita-data-original

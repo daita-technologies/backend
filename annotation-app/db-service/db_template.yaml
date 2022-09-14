@@ -77,14 +77,14 @@ Resources:
 
   
 Outputs:
-  TableProjectsName:
+  TableAnnoProjectsName:
     Description: "Name of table projects"
     Value: !Ref ProjectDB
 
-  TableProjectSumName:
+  TableAnnoProjectSumName:
     Description: "Name of table projects"
     Value: !Ref ProjectSummaryDB
 
-  TableDataOriginalName:
+  TableAnnoDataOriginalName:
     Description: "Name of table data original"
     Value: !Ref DataOriginalDB
