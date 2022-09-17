@@ -20,10 +20,12 @@ USER_POOL_ID = "us-east-2_6Sc8AZij7" if os.environ['MODE'] == 'dev' else "us-eas
 REGION = "us-east-2"
 IDENTITY_POOL_ID = "us-east-2:639788f0-a9b0-460d-9f50-23bbe5bc7140" if os.environ[
     'MODE'] == 'dev' else "us-east-2:fa0b76bc-01fa-4bb8-b7cf-a5000954aafb"
-URL = "https://uflt5029de.execute-api.us-east-2.amazonaws.com/devdaitabeapp/" if os.environ[
-    'MODE'] == 'dev' else "https://119u2071ul.execute-api.us-east-2.amazonaws.com/dev/"
+# TODO: refactor URL to configurable by env var or something
+# URL = "https://uflt5029de.execute-api.us-east-2.amazonaws.com/devdaitabeapp/" if os.environ[
+#     'MODE'] == 'dev' else "https://119u2071ul.execute-api.us-east-2.amazonaws.com/dev/"
 LOCATION = config_env['LOCATION'][os.environ['MODE']]
 ENDPPOINTREDIRCTLOGINSOCIALOAUTH = config_env['ENDPPOINTREDIRCTLOGINSOCIALOAUTH'][os.environ['MODE']]
+URL = "https://w9e3g3rjq2.execute-api.us-east-2.amazonaws.com/devbele/"
 ENDPOINTCAPTCHAVERIFY = "https://www.google.com/recaptcha/api/siteverify"
 SITEKEYGOOGLE = "6LcqEGMeAAAAAAEDnBue7fwR4pmvNO7JKWkHtAjl"
 SECRETKEYGOOGLE = "6LcqEGMeAAAAAOiJAMcg1NNfj6eA62gQPLJAtQMt"
@@ -115,6 +117,6 @@ LS_METHOD_ID_SUPPORT_REFERENCE_IMG = [
 LS_METHOD_KEEP_IF_EXIST_PRE001 = ["PRE-001", "PRE-000", "PRE-009"]
 
 
-### key defined of lambda env 
+### key defined of lambda env
 KEY_TABLE_PROJECT = "TABLE_PROJECT"
 KEY_TABLE_PROJECT_SUM = "TABLE_PROJECT_SUMMARY"

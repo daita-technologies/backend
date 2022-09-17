@@ -8,12 +8,12 @@ Parameters:
     Type: String
   ApplicationPara:
     Type: String
+
   SecurityGroupIds:
-    Type: String
-    Default: 'sg-af50cbde'
-  SubnetId:
-    Type: String
-    Default: subnet-31ff5b5a
+    Type: CommaDelimitedList
+  SubnetIds:
+    Type: CommaDelimitedList
+
   EFSFileSystemId:
     Type:  String
     Default: fs-0199771f2dfe97ace
@@ -138,7 +138,7 @@ Resources:
       DefinitionSubstitutions:
         DecompressTaskCluster: !GetAtt DecompressTaskCluster.Arn
         DecompressTask: !Ref DecompressTask
-        SubnetId: !Ref SubnetId
+        SubnetIds: !Join [',', !Ref SubnetIds]
         DivideDecompressChunksFunction: !GetAtt DivideDecompressChunksFunction.Arn
         UploadDecompressedFunction: !GetAtt UploadDecompressedFunction.Arn
         FinishDecompressTaskFunction: !GetAtt FinishDecompressTaskFunction.Arn
@@ -210,10 +210,8 @@ Resources:
     Properties:
       CodeUri: functions/divide_decompressed_chunks
       VpcConfig:
-        SecurityGroupIds:
-          - !Ref SecurityGroupIds
-        SubnetIds:
-          - !Ref SubnetId
+        SecurityGroupIds: !Split [',', !Join [',', !Ref SecurityGroupIds]] 
+        SubnetIds:  !Split [',', !Join [',', !Ref SubnetIds]]
       FileSystemConfigs:
         - Arn: !GetAtt EFSAccessPoint.Arn
           LocalMountPath: !Ref EFSMountPath
@@ -248,10 +246,8 @@ Resources:
       CodeUri: functions/upload_decompressed
       Timeout: 30
       VpcConfig:
-        SecurityGroupIds:
-          - !Ref SecurityGroupIds
-        SubnetIds:
-          - !Ref SubnetId
+        SecurityGroupIds: !Split [',', !Join [',', !Ref SecurityGroupIds]] 
+        SubnetIds:  !Split [',', !Join [',', !Ref SubnetIds]]
       FileSystemConfigs:
         - Arn: !GetAtt EFSAccessPoint.Arn
           LocalMountPath: !Ref EFSMountPath
@@ -290,10 +286,8 @@ Resources:
               - elasticfilesystem:ClientMount
             Resource: "*"
       VpcConfig:
-        SecurityGroupIds:
-          - !Ref SecurityGroupIds
-        SubnetIds:
-          - !Ref SubnetId
+        SecurityGroupIds: !Split [',', !Join [',', !Ref SecurityGroupIds]] 
+        SubnetIds: !Split [',', !Join [',', !Ref SubnetIds]]
       FileSystemConfigs:
         - Arn: !GetAtt EFSAccessPoint.Arn
           LocalMountPath: !Ref EFSMountPath

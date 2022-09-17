@@ -69,9 +69,14 @@ Parameters:
     Type: String
   TableDataPreprocessName:
     Type: String
+  TableProjectsName:
+    Type: String
   Mode:
     Type: String
+
+
 Resources:
+
   LambdaExecutionRole:
     Type: AWS::IAM::Role
     Properties:
@@ -209,8 +214,22 @@ Resources:
               Resource:
                 - !Ref CallerServiceStateMachine
 
+  # Sub service
+  ECSTasks:
+    Type: AWS::Serverless::Application
+    Properties:
+      Location: ./ecs-tasks/template.yaml
+      Parameters:
+        SecurityGroupIds: !Join [",", !Ref SecurityGroupIdsPara]
+        SubnetIds: !Join [",", !Ref SubnetIDsPara]
+        StagePara: !Ref StagePara
+        EFSFileSystemId: !Ref EFSFileSystemId
+        EFSAccessPoint: !Ref EFSAccessPoint
+        StagePara: !Ref StagePara
+        ApplicationPara: !Ref ApplicationPara
+
   #================ LAMBDA FUNCTIONS ==========================================
-  
+
   ReferenceImageCalculateFunction:
     Type: AWS::Serverless::Function
     Properties:
@@ -524,6 +543,45 @@ Resources:
             - s3:PutObjectAcl
           Resource: "*"
 
+  GlobOutputFiles:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: functions/handlers/generate_step/glob_output_files
+      VpcConfig:
+        SecurityGroupIds: !Split [',', !Join [',', !Ref SecurityGroupIdsPara]]
+        SubnetIds: !Split [',', !Join [',', !Ref SubnetIDsPara]]
+      FileSystemConfigs:
+        - Arn: !GetAtt EFSAccessPoint.Arn
+          LocalMountPath: !Ref EFSStorageAI
+      Policies:
+      - Statement:
+        - Sid: CloudWatchLogsPolicy
+          Effect: Allow
+          Action:
+            - "logs:CreateLogDelivery"
+            - "logs:GetLogDelivery"
+            - "logs:UpdateLogDelivery"
+            - "logs:DeleteLogDelivery"
+            - "logs:ListLogDeliveries"
+            - "logs:PutResourcePolicy"
+            - "logs:DescribeResourcePolicies"
+            - "logs:DescribeLogGroup"
+            - "logs:DescribeLogGroups"
+          Resource: "*"
+        - Sid: CloudWatchEventsFullAccess
+          Effect: Allow
+          Action:
+            - "events:*"
+          Resource: "*"
+        - Sid: AmazonElasticFileSystemClientFullAccess
+          Effect: Allow
+          Action:
+          - elasticfilesystem:ClientMount
+          - elasticfilesystem:ClientRootAccess
+          - elasticfilesystem:ClientWrite
+          - elasticfilesystem:DescribeMountTargets
+          Resource: "*"
+
   HandleMergeResultRequestAI:
     Type: AWS::Serverless::Function
     Properties:
@@ -588,6 +646,19 @@ Resources:
     Type: AWS::Serverless::Function
     Properties:
       CodeUri: functions/handlers/generate_step/RequestAI
+      VpcConfig:
+        SecurityGroupIds: !Split [',', !Join [',', !Ref SecurityGroupIdsPara]]
+        SubnetIds: !Split [',', !Join [',', !Ref SubnetIDsPara]]
+      FileSystemConfigs:
+        - Arn: !GetAtt EFSAccessPoint.Arn
+          LocalMountPath: !Ref EFSStorageAI
+      Environment:
+        Variables:
+          PREPROCESSING_TASK_DEFINITION: !GetAtt ECSTasks.Outputs.AIPreprocessingTask
+          CLUSTER_NAME: !GetAtt ECSTasks.Outputs.ECSCluster
+          SECURITY_GROUP_IDs: !Join [",", !Ref SecurityGroupIdsPara]
+          SUBNET_IDs : !Join [",", !Ref SubnetIDsPara]
+          EFSLocalMountPath: !Ref EFSStorageAI
       Policies:
       - Statement:
         - Effect: Allow
@@ -656,13 +727,65 @@ Resources:
           Action:
           - s3:*
           Resource: "*"
+        - Effect: Allow
+          Action:
+            - ecs:RunTask
+            # - ec2:DescribeNetworkInterfaces
+            # - ec2:CreateNetworkInterface
+            # - ec2:DeleteNetworkInterface
+            # - ec2:DescribeInstances
+            # - ec2:AttachNetworkInterface
+            - ec2:*
+            - elasticfilesystem:ClientMount
+            - elasticfilesystem:ClientRootAccess
+            - elasticfilesystem:ClientWrite
+            - elasticfilesystem:DescribeMountTargets
+          Resource: "*"
+        # - Sid: AmazonElasticFileSystemClientFullAccess
+        #   Effect: Allow
+        #   Action:
+        #   - elasticfilesystem:ClientMount
+        #   - elasticfilesystem:ClientRootAccess
+        #   - elasticfilesystem:ClientWrite
+        #   - elasticfilesystem:DescribeMountTargets
+        #   Resource: "*"
+        # - PolicyName: "ECSRunTaskPermission"
+        #   PolicyDocument:
+        #     Statement:
+        #       -
+        #         Effect: Allow
+        #         Action:
+        #           - ecs:RunTask
+        #         Resource: "*"
+        # - PolicyName: "IAMPassRolePermission"
+        #   PolicyDocument:
+        #     Statement:
+        #       -
+        #         Effect: Allow
+        #         Action:
+        #           - iam:PassRole
+        #         Resource: "*"
+        # - PolicyName: 'AllowEC2NetworkInterface'
+        #   PolicyDocument:
+        #     Version: '2012-10-17'
+        #     Statement:
+        #     - Effect: Allow
+        #       Action:
+        #         - ec2:DescribeNetworkInterfaces
+        #         - ec2:CreateNetworkInterface
+        #         - ec2:DeleteNetworkInterface
+        #         - ec2:DescribeInstances
+        #         - ec2:AttachNetworkInterface
+        #       Resource:
+        #         - "*"
+
   UpdateStatusTask:
     Type: AWS::Serverless::Function
     Properties:
       CodeUri: functions/handlers/generate_step/updateStatusTask
       VpcConfig:
-        SecurityGroupIds: !Split [',', !Join [',', !Ref SecurityGroupIdsPara]] 
-        SubnetIds: !Split [',', !Join [',', !Ref SubnetIDsPara]] 
+        SecurityGroupIds: !Split [',', !Join [',', !Ref SecurityGroupIdsPara]]
+        SubnetIds: !Split [',', !Join [',', !Ref SubnetIDsPara]]
       FileSystemConfigs:
         - Arn: !GetAtt EFSAccessPoint.Arn
           LocalMountPath: !Ref EFSStorageAI
@@ -692,6 +815,11 @@ Resources:
     Type: AWS::Serverless::Function
     Properties:
       CodeUri: functions/handlers/preprocess_generate_batch/generate_batch
+      Environment:
+        Variables:
+          TableProjectsName: !Ref TableProjectsName
+          TableDataOriginalName: !Ref TableDataOriginalName
+          TableDataPreprocessName: !Ref TableDataPreprocessName
       Policies:
       - Statement:
         - Sid: ALLOWCRUDDynamoDB
@@ -713,8 +841,8 @@ Resources:
     Type: AWS::Serverless::Function
     Properties:
       VpcConfig:
-        SecurityGroupIds: !Split [',', !Join [',', !Ref SecurityGroupIdsPara]] 
-        SubnetIds: !Split [',', !Join [',', !Ref SubnetIDsPara]] 
+        SecurityGroupIds: !Split [',', !Join [',', !Ref SecurityGroupIdsPara]]
+        SubnetIds: !Split [',', !Join [',', !Ref SubnetIDsPara]]
       FileSystemConfigs:
         - Arn: !GetAtt EFSAccessPoint.Arn
           LocalMountPath: !Ref EFSStorageAI
@@ -963,7 +1091,7 @@ Resources:
           MAX_CONCURRENCY_TASKS : !Ref MaxConcurrencyTasks
           TABLE_DATA_AUGMENT: !Ref TableDataAugmentName
           TABLE_DATA_PREPROCESS: !Ref TableDataPreprocessName
-          TABLE_PROJECT_SUMMARY: !Ref TableProjectSumName 
+          TABLE_PROJECT_SUMMARY: !Ref TableProjectSumName
       Events:
         ScheduledEvent:
           Type: Schedule
@@ -1036,7 +1164,7 @@ Resources:
     Type: AWS::Events::EventBus
     Properties:
       Name: !Sub "${StagePara}-${ApplicationPara}-StopProcessEventBus"
-  
+
   ProcessAITaskEventBus:
     Type: AWS::Events::EventBus
     Properties:
@@ -1260,6 +1388,14 @@ Resources:
     Properties:
       Type: STANDARD
       Name: !Sub "${StagePara}-${ApplicationPara}-GenerateSM"
+      DefinitionSubstitutions:
+        HandleGenerateStep: !GetAtt HandleGenerateStep.Arn
+        WorkerRequestAI: !GetAtt WorkerRequestAI.Arn
+        HandleMergeResultRequestAI: !GetAtt HandleMergeResultRequestAI.Arn
+        HandleCompleteRequestAI: !GetAtt HandleCompleteRequestAI.Arn
+        HandlerUploadBatchToS3: !GetAtt HandlerUploadBatchToS3.Arn
+        UpdateStatusTask: !GetAtt UpdateStatusTask.Arn
+        GlobOutputFilesTask: !GetAtt GlobOutputFiles.Arn
       Policies:
         - LambdaInvokePolicy:
             FunctionName: !Ref HandleGenerateStep
@@ -1267,6 +1403,7 @@ Resources:
             FunctionName: !Ref HandleMergeResultRequestAI
             FunctionName: !Ref HandlerUploadBatchToS3
             FunctionName: !Ref HandleCompleteRequestAI
+            FunctionName: !Ref GlobOutputFiles
         - Statement:
           - Sid: CloudWatchLogsPolicy
             Effect: Allow
@@ -1319,13 +1456,7 @@ Resources:
         Destinations:
         - CloudWatchLogsLogGroup:
             LogGroupArn: !GetAtt CallerServiceStateMachineLogGroup.Arn
-      DefinitionSubstitutions:
-        HandleGenerateStep: !GetAtt HandleGenerateStep.Arn
-        WorkerRequestAI: !GetAtt WorkerRequestAI.Arn
-        HandleMergeResultRequestAI: !GetAtt HandleMergeResultRequestAI.Arn
-        HandleCompleteRequestAI: !GetAtt HandleCompleteRequestAI.Arn
-        HandlerUploadBatchToS3: !GetAtt HandlerUploadBatchToS3.Arn
-        UpdateStatusTask: !GetAtt UpdateStatusTask.Arn
+
 
 
   UploadStateMachine:
@@ -1335,7 +1466,7 @@ Resources:
       Name: !Sub "${StagePara}-${ApplicationPara}-UploadSM"
       Policies:
         - LambdaInvokePolicy:
-            FunctionName: !Ref PreprocessGenerateTask  
+            FunctionName: !Ref PreprocessGenerateTask
         - Statement:
           - Sid: ALLOWCRUDDynamoDB
             Effect: Allow

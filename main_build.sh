@@ -1,8 +1,11 @@
 #! /bin/bash
 
+SCRIPT_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
+echo $SCRIPT_DIR
+
 ###===== read from config file
 echo ==1==. Read the configure file
-configfile=~/backend/main_config.cnf
+configfile=$SCRIPT_DIR/main_config.cnf
 
 keys=( $(grep -oP '\w+(?==)' "$configfile") )
 . "$configfile"
@@ -26,18 +29,20 @@ then
     exit
 fi
 
+### output data path
+output_data=$SCRIPT_DIR/$OUTPUT_BUILD_DAITA_NAME
 
 ### build daita app
 
 if [[ $IS_BUILD_DAITA == "y" ]] || [[ $IS_BUILD_DAITA == "Y" ]]
 then
     echo ==============Building:  DAITA ==========================
-    bash ./daita-app/build_daita.sh $AWS_REGION $AWS_ACCOUNT_ID $DAITA_STAGE $OUTPUT_BUILD_DAITA
+    bash ./daita-app/build_daita.sh "$configfile" "$output_data"
 fi
 
 
 if [[ $IS_BUILD_ANNOTATION == "y" ]] || [[ $IS_BUILD_ANNOTATION == "Y" ]]
 then
     echo ==============Building:  ANNOTATION ==========================
-    bash ./annotation-app/build_annotation.sh "$configfile"
+    bash ./annotation-app/build_annotation.sh "$configfile" "$output_data"
 fi

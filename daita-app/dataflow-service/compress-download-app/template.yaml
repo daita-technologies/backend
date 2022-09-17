@@ -8,12 +8,12 @@ Parameters:
     Type: String
   ApplicationPara:
     Type: String
+
   SecurityGroupIds:
-    Type: String
-    Default: 'sg-af50cbde'
-  SubnetId:
-    Type: String
-    Default: subnet-31ff5b5a
+    Type: CommaDelimitedList
+  SubnetIds:
+    Type: CommaDelimitedList
+
   EFSFileSystemId:
     Type:  String
     Default: fs-0199771f2dfe97ace
@@ -108,7 +108,7 @@ Resources:
       DefinitionSubstitutions:
         CompressDownloadTaskCluster: !GetAtt CompressDownloadTaskCluster.Arn
         CompressDownloadTask: !Ref CompressDownloadTask
-        SubnetId: !Ref SubnetId
+        SubnetIds: !Join [',', !Ref SubnetIds]
         SendCompletedMailFunction: !GetAtt SendCompletedMailFunction.Arn
         DivideDownloadKeysFunction: !GetAtt DivideDownloadKeysFunction.Arn
         DownloadFilesFunction: !GetAtt DownloadFilesFunction.Arn
@@ -208,10 +208,8 @@ Resources:
       CodeUri: functions/download_files
       Timeout: 120
       VpcConfig:
-        SecurityGroupIds:
-          - !Ref SecurityGroupIds
-        SubnetIds:
-          - !Ref SubnetId
+        SecurityGroupIds: !Split [',', !Join [',', !Ref SecurityGroupIds]] 
+        SubnetIds: !Split [',', !Join [',', !Ref SubnetIds]] 
       FileSystemConfigs:
         - Arn: !GetAtt EFSAccessPoint.Arn
           LocalMountPath: !Ref EFSMountPath
@@ -229,10 +227,8 @@ Resources:
       CodeUri: functions/compress
       Timeout: 600
       VpcConfig:
-        SecurityGroupIds:
-          - !Ref SecurityGroupIds
-        SubnetIds:
-          - !Ref SubnetId
+        SecurityGroupIds: !Split [',', !Join [',', !Ref SecurityGroupIds]] 
+        SubnetIds: !Split [',', !Join [',', !Ref SubnetIds]] 
       FileSystemConfigs:
         - Arn: !GetAtt EFSAccessPoint.Arn
           LocalMountPath: !Ref EFSMountPath

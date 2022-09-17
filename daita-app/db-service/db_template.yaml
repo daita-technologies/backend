@@ -36,7 +36,7 @@ Resources:
   ProjectDB:
     Type:  AWS::DynamoDB::Table
     Properties:
-      TableName: !Sub "${StagePara}_${ApplicationPara}-project"
+      TableName: !Sub "${StagePara}-${ApplicationPara}-project"
       AttributeDefinitions:
         -
           AttributeName: identity_id
@@ -56,7 +56,7 @@ Resources:
   ProjectSummaryDB:
     Type:  AWS::DynamoDB::Table
     Properties:
-      TableName: !Sub "${StagePara}_${ApplicationPara}-prj-sum-all"
+      TableName: !Sub "${StagePara}-${ApplicationPara}-prj-sum-all"
       AttributeDefinitions:
         -
           AttributeName: project_id
@@ -90,7 +90,7 @@ Resources:
         -
           AttributeName: filename
           KeyType: RANGE
-      TableName: !Sub "${StagePara}_${ApplicationPara}-data-original"
+      TableName: !Sub "${StagePara}-${ApplicationPara}-data-original"
       GlobalSecondaryIndexes:
         -
           IndexName: !Ref IndexDataName
@@ -121,7 +121,7 @@ Resources:
         -
           AttributeName: filename
           KeyType: RANGE
-      TableName: !Sub "${StagePara}_${ApplicationPara}-data-augment"
+      TableName: !Sub "${StagePara}-${ApplicationPara}-data-augment"
       GlobalSecondaryIndexes:
         -
           IndexName: !Ref IndexDataName
@@ -151,7 +151,7 @@ Resources:
         -
           AttributeName: filename
           KeyType: RANGE
-      TableName: !Sub "${StagePara}_${ApplicationPara}-data-preprocess"
+      TableName: !Sub "${StagePara}-${ApplicationPara}-data-preprocess"
       GlobalSecondaryIndexes:
         -
           IndexName: !Ref IndexDataName

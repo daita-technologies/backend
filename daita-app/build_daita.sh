@@ -1,34 +1,32 @@
 #!/bin/bash
 
 
-AWS_REGION=$1
-AWS_ACCOUNT_ID=$2
-STAGE=$3
-OUTPUT_BUILD_DAITA=$4
+### load config file
+. "$1"
 
-# func_extract_value_of_key () {
-#     output_para=$1
-#     keyname_find=$2
-#     keyname_prev_pos=$3
-    
-#     a=$output_para
-#     [[ $a =~ Key[[:space:]]$keyname_find[[:space:]].+$keyname_prev_pos ]]
-#     a=${BASH_REMATCH[0]}
-#     [[ $a =~ Value.+Key ]]
-#     a=${BASH_REMATCH[0]}
-#     [[ $a =~ [[:space:]].+[[:space:]] ]]
-#     a=${BASH_REMATCH[0]}
-#     ### strip space
-#     a=${a##*( )}
-#     a=${a%%*( )}
-    
-#     echo "$a"
-# }
+OUTPUT_BUILD_DAITA=$2
+
 
 cd daita-app
 
+
+parameters_override="Mode=${MODE} Stage=${DAITA_STAGE} Application=${DAITA_APPLICATION} 
+                    SecurityGroupIds=${SECURITY_GROUP_IDS} SubnetIDs=${SUB_NET_IDS} 
+                    S3BucketName=${DAITA_S3_BUCKET} 
+                    EFSFileSystemId=${EFS_ID} 
+                    MaxConcurrencyTasks=${MAX_CONCURRENCY_TASK} 
+                    ROOTEFS=${ROOT_EFS} 
+                    DomainUserPool=${DOMAIN_USER_POOL}
+                    VPCid=${VPC_ID}
+                    LogoutUrl=${LOG_OUT_URL}"
+
 sam build
-sam deploy --no-confirm-changeset --disable-rollback --config-env $STAGE | tee output.txt
+sam deploy --no-confirm-changeset --disable-rollback \
+        --resolve-image-repos --config-env $DAITA_STAGE \
+        --stack-name "$DAITA_STAGE-${DAITA_APPLICATION}-app" \
+        --s3-prefix "$DAITA_STAGE-${DAITA_APPLICATION}-app" \
+        --region $AWS_REGION \
+        --parameter-overrides $parameters_override | tee output.txt
 
 
 echo @@@@@@@@@@@@@@@@@@@@@@@@ Upload docker to ECR ==========

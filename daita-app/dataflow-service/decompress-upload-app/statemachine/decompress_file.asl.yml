@@ -9,8 +9,7 @@ States:
       NetworkConfiguration:
         AwsvpcConfiguration:
           AssignPublicIp: ENABLED # Needed when pulling public Docker image
-          Subnets:
-            - ${SubnetId}
+          Subnets: !Split [',',  "${SubnetIds}" ]
       Overrides:
         ContainerOverrides:
           -

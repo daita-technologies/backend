@@ -88,7 +88,7 @@ Parameters:
     Type: String
   TableConstPrebuildDatasetName:
     Type: String
-  
+
   MaxConcurrencyTasks:
     Type: String
   CommonCodeLayerName:
@@ -163,28 +163,28 @@ Parameters:
   TableFeedback:
     Type: String
 Resources:
-  ThumbnailServiceEventBusRole:
-    Type: "AWS::IAM::Role"
-    Properties:
-      AssumeRolePolicyDocument:
-        Version: "2012-10-17"
-        Statement:
-          - Effect: "Allow"
-            Principal:
-              Service: "events.amazonaws.com"
-            Action:
-              - "sts:AssumeRole"
-      Policies:
-        - PolicyName: DirectlyInvokeStepFunctions
-          PolicyDocument:
-            Version: "2012-10-17"
-            Statement:
-              Action:
-              - "states:StartExecution"
-              Effect: Allow
-              Resource:
-                - !Ref ThumbnailStateMachine
-                
+  # ThumbnailServiceEventBusRole:
+  #   Type: "AWS::IAM::Role"
+  #   Properties:
+  #     AssumeRolePolicyDocument:
+  #       Version: "2012-10-17"
+  #       Statement:
+  #         - Effect: "Allow"
+  #           Principal:
+  #             Service: "events.amazonaws.com"
+  #           Action:
+  #             - "sts:AssumeRole"
+  #     Policies:
+  #       - PolicyName: DirectlyInvokeStepFunctions
+  #         PolicyDocument:
+  #           Version: "2012-10-17"
+  #           Statement:
+  #             Action:
+  #             - "states:StartExecution"
+  #             Effect: Allow
+  #             Resource:
+  #               - !Ref ThumbnailStateMachine
+
   TriggerThumbnailFunction:
     Type: AWS::Serverless::Function
     Properties:
@@ -209,22 +209,22 @@ Resources:
     Type: AWS::Events::EventBus
     Properties:
       Name: !Sub "${StagePara}-${ApplicationPara}-ThumbnailEventBus"
-  ThumbnailServiceEventBusDefaultRule:
-    Type: AWS::Events::Rule
-    Properties:
-      Description: "Default Rule for Any event"
-      State: ENABLED
-      EventBusName: !Ref ThumbnailEventBus
-      EventPattern:
-        source:
-          - "source.events"
-        detail-type:
-          - "lambda.event"
-      Targets:
-        -
-          Arn: !GetAtt ThumbnailStateMachine.Arn
-          Id: "ThumbnailStateMachine"
-          RoleArn: !GetAtt ThumbnailServiceEventBusRole.Arn
+  # ThumbnailServiceEventBusDefaultRule:
+  #   Type: AWS::Events::Rule
+  #   Properties:
+  #     Description: "Default Rule for Any event"
+  #     State: ENABLED
+  #     EventBusName: !Ref ThumbnailEventBus
+  #     EventPattern:
+  #       source:
+  #         - "source.events"
+  #       detail-type:
+  #         - "lambda.event"
+  #     Targets:
+  #       -
+  #         Arn: !GetAtt ThumbnailStateMachine.Arn
+  #         Id: "ThumbnailStateMachine"
+  #         RoleArn: !GetAtt ThumbnailServiceEventBusRole.Arn
   #================ ROLES =====================================================
 
   # use this role for apigateway access lambda
@@ -368,7 +368,7 @@ Resources:
       EventSourceArn: !Ref StreamTableDataAugmentName
       FunctionName: !Ref TriggerThumbnailFunction
       StartingPosition: LATEST
-      MaximumBatchingWindowInSeconds: 120    
+      MaximumBatchingWindowInSeconds: 120
   #================ CALLER SERVICE HTTP API ===================================
 
   DaitaHttpApi:
@@ -387,39 +387,39 @@ Resources:
     Properties:
       LogGroupName: !Sub "/aws/vendedlogs/states/${StagePara}-${ApplicationPara}-Thumbnail"
       RetentionInDays: 7
-  ThumbnailStateMachine:
-    Type: AWS::Serverless::StateMachine
-    Properties:
-      Type: STANDARD
-      Name: !Sub "${StagePara}-${ApplicationPara}-ThumbnailStatemachine"
-      Policies:
-        - LambdaInvokePolicy:
-            FunctionName: !Ref   ResizeImageThumbnailFunction
-            FunctionName: !Ref DivideBatchImagesThumbnailFunction
-        - Statement:
-          - Sid: ALLOWCRUDDynamoDB
-            Effect: Allow
-            Action:
-            - "dynamodb:*"
-            - "lambda:InvokeFunction"
-            Resource: "*"
-          - Sid: CloudWatchLogsPolicy
-            Effect: Allow
-            Action:
-            - "logs:*"
-            Resource: "*"
-      Tracing:
-        Enabled: true
-      DefinitionUri: statemachine/thumbnail_step_function.asl.yaml
-      Logging:
-        Level: ALL
-        IncludeExecutionData: true
-        Destinations:
-        - CloudWatchLogsLogGroup:
-            LogGroupArn: !GetAtt ThumbnaiServiceStateMachineLogGroup.Arn
-      DefinitionSubstitutions:
-        ResizeImageThumbnailFunction: !GetAtt ResizeImageThumbnailFunction.Arn
-        DivideBatchImagesThumbnailFunction: !GetAtt DivideBatchImagesThumbnailFunction.Arn
+  # ThumbnailStateMachine:
+  #   Type: AWS::Serverless::StateMachine
+  #   Properties:
+  #     Type: STANDARD
+  #     Name: !Sub "${StagePara}-${ApplicationPara}-ThumbnailStatemachine"
+  #     Policies:
+  #       - LambdaInvokePolicy:
+  #           FunctionName: !Ref   ResizeImageThumbnailFunction
+  #           FunctionName: !Ref DivideBatchImagesThumbnailFunction
+  #       - Statement:
+  #         - Sid: ALLOWCRUDDynamoDB
+  #           Effect: Allow
+  #           Action:
+  #           - "dynamodb:*"
+  #           - "lambda:InvokeFunction"
+  #           Resource: "*"
+  #         - Sid: CloudWatchLogsPolicy
+  #           Effect: Allow
+  #           Action:
+  #           - "logs:*"
+  #           Resource: "*"
+  #     Tracing:
+  #       Enabled: true
+  #     DefinitionUri: statemachine/thumbnail_step_function.asl.yaml
+  #     Logging:
+  #       Level: ALL
+  #       IncludeExecutionData: true
+  #       Destinations:
+  #       - CloudWatchLogsLogGroup:
+  #           LogGroupArn: !GetAtt ThumbnaiServiceStateMachineLogGroup.Arn
+  #     DefinitionSubstitutions:
+  #       ResizeImageThumbnailFunction: !GetAtt ResizeImageThumbnailFunction.Arn
+  #       DivideBatchImagesThumbnailFunction: !GetAtt DivideBatchImagesThumbnailFunction.Arn
 
   #================ LAMBDA FUNCTIONS ==========================================
   CreatePresignUrlForImageFeedbackFunction:
@@ -700,7 +700,7 @@ Resources:
     Properties:
       CodeUri: functions/handlers/auth_service/login
       Role: !GetAtt LambdaExecutionRole.Arn
-      
+
   RegisterFunction:
     Type:  AWS::Serverless::Function
     Properties:
@@ -782,37 +782,37 @@ Resources:
     Properties:
       CodeUri: functions/handlers/project/project_asy_create_sample
       Role: !GetAtt LambdaExecutionRole.Arn
-  
+
   ProjectCreateSampleFunction:
     Type:  AWS::Serverless::Function
     Properties:
       CodeUri: functions/handlers/project/project_create
       Role: !GetAtt LambdaExecutionRole.Arn
-  
+
   ProjectDownloadCreateFunction:
     Type:  AWS::Serverless::Function
     Properties:
       CodeUri: functions/handlers/project/project_download_create
       Role: !GetAtt LambdaExecutionRole.Arn
-  
+
   ProjectDownloadUpdateFunction:
     Type:  AWS::Serverless::Function
     Properties:
       CodeUri: functions/handlers/project/project_download_update
       Role: !GetAtt LambdaExecutionRole.Arn
-  
+
   ProjectInfoFunction:
     Type:  AWS::Serverless::Function
     Properties:
       CodeUri: functions/handlers/project/project_info
       Role: !GetAtt LambdaExecutionRole.Arn
-  
+
   ProjectListFunction:
     Type:  AWS::Serverless::Function
     Properties:
       CodeUri: functions/handlers/project/project_list
       Role: !GetAtt LambdaExecutionRole.Arn
-  
+
   ProjectListDataFunction:
     Type:  AWS::Serverless::Function
     Properties:
@@ -829,13 +829,13 @@ Resources:
     Properties:
       CodeUri: functions/handlers/project/project_list_info
       Role: !GetAtt LambdaExecutionRole.Arn
-  
+
   ProjectSampleFunction:
     Type:  AWS::Serverless::Function
     Properties:
       CodeUri: functions/handlers/project/project_sample
       Role: !GetAtt LambdaExecutionRole.Arn
-  
+
   ProjectUpdateInfoFunction:
     Type: AWS::Serverless::Function
     Properties:

@@ -1,12 +1,42 @@
 AWS_REGION=us-east-2
 AWS_ACCOUNT_ID="737589818430"
 
-IS_BUILD_DAITA=yes
-DAITA_STAGE="dev"
-OUTPUT_BUILD_DAITA=~/backend/output_daita.txt
-DAITA_S3_BUCKET=client-data-test
 
-#-------config for annotation---------
-IS_BUILD_ANNOTATION=yes
-ANNOTATION_STAGE="dev"
+
+###--------------- parameter value ---------------
+###____ do not change this config when you change the env_______
+
+SUB_NET_IDS=subnet-019da2a6738756f88,subnet-0642064673fd68d2e
+SECURITY_GROUP_IDS=sg-0c9a0ca7844d7b128,sg-00d8b4ca79ee1e42f,sg-007caf776eee9bd32,sg-04b9c865721337372,sg-0b411b5391db8d7a3
+VPC_ID=vpc-057803c925fd8138a
+
+
+EFS_ID=fs-01115862a24b75423
+ROOT_EFS=/efs
+
+DAITA_S3_BUCKET=client-data-test
 ANNO_S3_BUCKET=client-annotation-bucket
+DAITA_APPLICATION=daita
+ANNO_APPLICATION=anno
+
+MODE=dev
+OUTPUT_BUILD_DAITA_NAME=output_daita.txt
+
+###__________________________________
+###__________________________________
+
+###-------config for dev env--------------------------------------
+###---------------------------------------------------------------
+IS_BUILD_DAITA=yes
+IS_BUILD_ANNOTATION=yes
+
+DAITA_STAGE=dev
+ANNOTATION_STAGE=dev
+CAPABILITIES="CAPABILITY_IAM CAPABILITY_AUTO_EXPAND CAPABILITY_NAMED_IAM"
+
+MAX_CONCURRENCY_TASK=2
+
+DOMAIN_USER_POOL=authdev.daita.tech
+LOG_OUT_URL=http://localhost:3000,https://dev.daita.tech
+
+####-------------------------------------------------------------

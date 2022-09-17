@@ -1,10 +1,6 @@
 version = 0.1
 
 [dev.deploy.parameters]
-stack_name = "dev-annotation-app"
-s3_bucket = "aws-sam-cli-managed-default-samclisourcebucket-eu58g5l8is1s"
-s3_prefix = "dev-annotation-app"
-region = "us-east-2"
 confirm_changeset = true
 capabilities = "CAPABILITY_IAM CAPABILITY_AUTO_EXPAND CAPABILITY_NAMED_IAM"
 disable_rollback = true

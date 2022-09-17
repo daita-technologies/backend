@@ -8,15 +8,16 @@ Parameters:
     Type: String
   ApplicationPara:
     Type: String
-  SecurityGroupIds:
-    Type: String
-    Default: 'sg-af50cbde'
+
   VpcId:
     Type: String
     Default: vpc-53239e38
-  SubnetId:
+
+  SecurityGroupIds:   ### could not pass string over the nested app, so use string here
+    Type: String      
+  SubnetIds:
     Type: String
-    Default: subnet-31ff5b5a
+
   EFSFileSystemId:
     Type:  String
     Default: fs-0199771f2dfe97ace
@@ -156,7 +157,7 @@ Resources:
         StagePara: !Ref StagePara
         ApplicationPara: !Ref ApplicationPara
         SecurityGroupIds: !Ref SecurityGroupIds
-        SubnetId: !Ref SubnetId
+        SubnetIds: !Ref SubnetIds
         EFSMountPath: !Ref EFSMountPath
         EFSAccessPointRootPath: !Ref EFSAccessPointRootPath
         S3BucketName: !Ref S3BucketName
@@ -180,7 +181,7 @@ Resources:
         StagePara: !Ref StagePara
         ApplicationPara: !Ref ApplicationPara
         SecurityGroupIds: !Ref SecurityGroupIds
-        SubnetId: !Ref SubnetId
+        SubnetIds: !Ref SubnetIds
         EFSMountPath: !Ref EFSMountPath
         EFSAccessPointRootPath: !Ref EFSAccessPointRootPath
         S3BucketName: !Ref S3BucketName
