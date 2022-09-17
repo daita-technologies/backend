@@ -39,7 +39,7 @@ Resources:
             Effect: Allow
             Resource: "*"
   
-  DaitaHttpApi:
+  AnnotationHttpApi:
     Type: AWS::Serverless::HttpApi
     Properties:
       StageName: !Ref StagePara
@@ -48,3 +48,7 @@ Resources:
           Name: AWS::Include
           Parameters:
             Location: './api_route_define.yaml'
+
+Outputs:
+  AnnoHttpApiURL:
+    Value: !Sub "https://${AnnotationHttpApi}.execute-api.${AWS::Region}.amazonaws.com/${StagePara}"

@@ -273,6 +273,7 @@ Resources:
       Parameters:
         UserPoolClientId: !GetAtt CognitoClient.Outputs.UserPoolClientId
         ProviderNameUserPool: !GetAtt CognitoUserPool.Outputs.ProviderNameUserPool
+
   RoleIdentityS3:
     Type: AWS::Serverless::Application
     Properties:
@@ -398,3 +399,11 @@ Outputs:
     Value: !GetAtt DatabaseService.Outputs.TableProjectsName
   TableDaitaDataOriginalName:
     Value: !GetAtt DatabaseService.Outputs.TableDataOriginalName
+
+  ApiDaitaAppUrl:
+    Value: !GetAtt CoreService.Outputs.CallerServiceHttpApiUrl
+  ApiAuthDaitaUrl:
+    Value: !GetAtt CognitoUserPool.Outputs.AuthApiURL
+  CognitoAppIntegrateID:
+    Value: !GetAtt CognitoClient.Outputs.UserPoolClientId
+  

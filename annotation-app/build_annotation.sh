@@ -2,6 +2,7 @@
 . "$1"
 
 OUTPUT_BUILD_DAITA=$2
+OUTPUT_FE_CONFIG=$3
 
 ### load output of daita-app 
 . "$OUTPUT_BUILD_DAITA"
@@ -25,4 +26,35 @@ sam deploy --template-file template_annotation_app.yaml --no-confirm-changeset -
             --stack-name "$ANNOTATION_STAGE-$ANNO_APPLICATION-app" \
             --s3-prefix "$ANNOTATION_STAGE-$ANNO_APPLICATION-app" \
             --region $AWS_REGION \
-            --parameter-overrides $parameters_override | tee output.txt
+            --parameter-overrides $parameters_override | tee output_anno.txt
+
+### Read output from template
+shopt -s extglob
+
+declare -A dict_output
+filename="output_anno.txt"
+
+while read line; do
+    # reading each line
+    if [[ "$line" =~ "Key".+ ]]; then
+
+        [[ "$line" =~ [[:space:]].+ ]]
+        a=${BASH_REMATCH[0]}
+        a=${a##*( )}
+        a=${a%%*( )}
+        key=$a
+    fi
+    if [[ "$line" =~ "Value".+ ]]; then
+        [[ "$line" =~ [[:space:]].+ ]]
+        value=${BASH_REMATCH[0]}
+        value=${value##*( )}
+        value=${value%%*( )}
+        dict_output[$key]=$value
+    fi
+done < $filename
+
+ApiAnnoAppUrl=${dict_output["ApiAnnoAppUrl"]}
+
+
+###========= SAVE FE CONFIG ===============
+echo "REACT_APP_ANNOTATION_PROJECT_API=$ApiAnnoAppUrl" >> $OUTPUT_FE_CONFIG

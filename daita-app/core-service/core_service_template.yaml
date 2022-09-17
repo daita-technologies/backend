@@ -859,7 +859,7 @@ Resources:
 Outputs:
   CallerServiceHttpApiUrl:
     Description: "Url of the Caller service API"
-    Value: !Sub "https://${DaitaHttpApi}.execute-api.${AWS::Region}.amazonaws.com"
+    Value: !Sub "https://${DaitaHttpApi}.execute-api.${AWS::Region}.amazonaws.com/${StagePara}"
   LambdaRoleArn:
     Value: !GetAtt LambdaExecutionRole.Arn
   # ThumbnailEventBus:

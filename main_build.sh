@@ -31,18 +31,25 @@ fi
 
 ### output data path
 output_data=$SCRIPT_DIR/$OUTPUT_BUILD_DAITA_NAME
+output_fe_config=$SCRIPT_DIR/$OUTPUT_FOR_FE
 
-### build daita app
+
+### save FE config
+echo "### config for daita_env: $DAITA_STAGE   annotation_env: $ANNOTATION_STAGE  ###" > $output_fe_config
+echo "REACT_APP_ENV=development" >> $output_fe_config
+
+
+### build daita app and annotation app
 
 if [[ $IS_BUILD_DAITA == "y" ]] || [[ $IS_BUILD_DAITA == "Y" ]]
 then
     echo ==============Building:  DAITA ==========================
-    bash ./daita-app/build_daita.sh "$configfile" "$output_data"
+    bash ./daita-app/build_daita.sh "$configfile" "$output_data" "$output_fe_config"
 fi
 
 
 if [[ $IS_BUILD_ANNOTATION == "y" ]] || [[ $IS_BUILD_ANNOTATION == "Y" ]]
 then
     echo ==============Building:  ANNOTATION ==========================
-    bash ./annotation-app/build_annotation.sh "$configfile" "$output_data"
+    bash ./annotation-app/build_annotation.sh "$configfile" "$output_data" "$output_fe_config"
 fi

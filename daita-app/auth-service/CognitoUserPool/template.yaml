@@ -187,5 +187,7 @@ Outputs:
     Value: !Ref CognitoUserPool
   AuthHttpAPI:
     Value: !Ref AuthSocialHttpAPI
+  AuthApiURL:
+    Value: !Sub "https://${AuthSocialHttpAPI}.execute-api.${AWS::Region}.amazonaws.com/${StagePara}"
   ProviderNameUserPool:
     Value: !GetAtt CognitoUserPool.ProviderName

@@ -1,7 +1,8 @@
 AWS_REGION=us-east-2
 AWS_ACCOUNT_ID="737589818430"
 
-
+OUTPUT_BUILD_DAITA_NAME=output_daita.txt
+OUTPUT_FOR_FE=output_fe_config.txt
 
 ###--------------- parameter value ---------------
 ###____ do not change this config when you change the env_______
@@ -20,7 +21,7 @@ DAITA_APPLICATION=daita
 ANNO_APPLICATION=anno
 
 MODE=dev
-OUTPUT_BUILD_DAITA_NAME=output_daita.txt
+
 
 ###__________________________________
 ###__________________________________

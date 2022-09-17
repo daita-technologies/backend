@@ -5,6 +5,7 @@
 . "$1"
 
 OUTPUT_BUILD_DAITA=$2
+OUTPUT_FE_CONFIG=$3
 
 
 cd daita-app
@@ -62,6 +63,11 @@ CognitoIdentityPoolIdRef=${dict_output["CognitoIdentityPoolIdRef"]}
 CommonCodeLayerRef=${dict_output["CommonCodeLayerRef"]}
 TableDaitaProjectsName=${dict_output["TableDaitaProjectsName"]}
 TableDaitaDataOriginalName=${dict_output["TableDaitaDataOriginalName"]}
+### export for FE config
+ApiDaitaAppUrl=${dict_output["ApiDaitaAppUrl"]}
+ApiAuthDaitaUrl=${dict_output["ApiAuthDaitaUrl"]}
+CognitoAppIntegrateID=${dict_output["CognitoAppIntegrateID"]}
+
 
 ###=== ECR config=========
 IMAGE_REPO_NAME=$DecompressEcrRepositoryName
@@ -101,3 +107,29 @@ echo "CognitoIdentityPoolIdRef=$CognitoIdentityPoolIdRef" >> $OUTPUT_BUILD_DAITA
 echo "CommonCodeLayerRef=$CommonCodeLayerRef" >> $OUTPUT_BUILD_DAITA
 echo "TableDaitaProjectsName=$TableDaitaProjectsName" >> $OUTPUT_BUILD_DAITA
 echo "TableDaitaDataOriginalName=$TableDaitaDataOriginalName" >> $OUTPUT_BUILD_DAITA
+
+
+
+###========= SAVE FE CONFIG ===============
+echo "REACT_APP_AUTH_API_URL=$ApiDaitaAppUrl" >> $OUTPUT_FE_CONFIG
+echo "REACT_APP_INVITE_API_URL=$ApiDaitaAppUrl" >> $OUTPUT_FE_CONFIG
+echo "REACT_APP_PROJECT_API_URL=$ApiDaitaAppUrl" >> $OUTPUT_FE_CONFIG
+echo "REACT_APP_GENERATE_API_URL=$ApiDaitaAppUrl" >> $OUTPUT_FE_CONFIG
+echo "REACT_APP_HEALTH_CHECK_API_URL=$ApiDaitaAppUrl" >> $OUTPUT_FE_CONFIG
+echo "REACT_APP_DOWNLOAD_ZIP_API=$ApiDaitaAppUrl" >> $OUTPUT_FE_CONFIG
+echo "REACT_APP_UPLOAD_ZIP_API=$ApiDaitaAppUrl" >> $OUTPUT_FE_CONFIG
+echo "REACT_APP_TASK_API_URL=$ApiDaitaAppUrl" >> $OUTPUT_FE_CONFIG
+echo "REACT_APP_CREATE_PROJECT_SAMPLE=$ApiDaitaAppUrl" >> $OUTPUT_FE_CONFIG
+
+echo "REACT_APP_S3_BUCKET_NAME=$DAITA_S3_BUCKET" >> $OUTPUT_FE_CONFIG
+echo "REACT_APP_S3_REGION=$AWS_REGION" >> $OUTPUT_FE_CONFIG
+
+echo "REACT_APP_RECAPTCHA_SITE_KEY=6LcqEGMeAAAAAAEDnBue7fwR4pmvNO7JKWkHtAjl" >> $OUTPUT_FE_CONFIG
+echo "REACT_APP_API_AMAZON_COGNITO=https://${DOMAIN_USER_POOL}/oauth2/authorize" >> $OUTPUT_FE_CONFIG
+echo "REACT_APP_COGNITO_REDIRECT_URI=${ApiAuthDaitaUrl}/auth/login_social" >> $OUTPUT_FE_CONFIG
+echo "REACT_APP_COGNITO_CLIENTID=${CognitoAppIntegrateID}" >> $OUTPUT_FE_CONFIG
+echo "REACT_APP_API_LOGOUT_SOCIAL=https://${DOMAIN_USER_POOL}/logout?client_id=${CognitoAppIntegrateID}" >> $OUTPUT_FE_CONFIG
+echo "REACT_APP_GITHUB_IDENTITY_PROVIDER=github" >> $OUTPUT_FE_CONFIG
+
+echo "REACT_APP_FEEDBACK_SLACK=${ApiDaitaAppUrl}/webhook/client-feedback" >> $OUTPUT_FE_CONFIG
+echo "REACT_APP_PRESIGN_URL_UPLOAD_FEEDBACK_IMAGE=${ApiDaitaAppUrl}/feedback/presign_url_image" >> $OUTPUT_FE_CONFIG

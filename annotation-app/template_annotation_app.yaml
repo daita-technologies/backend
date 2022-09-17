@@ -154,7 +154,5 @@ Resources:
 
   
 Outputs:
-  ZZBC:
-    Value: Stage
-  ABC:
-    Value: !Ref Stage
+  ApiAnnoAppUrl:
+    Value: !GetAtt APIService.Outputs.AnnoHttpApiURL
