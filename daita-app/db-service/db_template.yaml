@@ -540,8 +540,10 @@ Outputs:
     Value: !Ref TableUser
   TableFeedback:
     Value: !Ref TableFeedback
+
+  ### For const DB, we will create by code
   TableConstPrebuildDatasetName:
-    Value: !Ref TableConstPrebuildDataset
+    Value: const-prebuild_dataset  ##!Ref TableConstPrebuildDataset
     
   TableTask:
     Value: !Ref TableTask
