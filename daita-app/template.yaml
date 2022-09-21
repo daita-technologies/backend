@@ -47,9 +47,10 @@ Parameters:
   DomainDaita:
     Type: String
     Default: https://dev.daita.tech
-  # CallbackUrl:
-  #   Type: String
-  #   Default: https://nzvw2zvu3d.execute-api.us-east-2.amazonaws.com/staging/auth/login_social
+
+  CertificateUserpoolDomain:
+    Type: String
+    
 Resources:
   #=============== SYSTEM PARAMETER CONFIGURATON ==============================
   LimitPreprocessTimes:
@@ -256,6 +257,7 @@ Resources:
         StagePara: !Ref Stage
         Mode: !Ref Mode
         CommonCodeLayerName: !Ref CommonCodeLayer
+        CertificateUserpoolDomain: !Ref CertificateUserpoolDomain
 
   CognitoClient:
     Type: AWS::Serverless::Application
