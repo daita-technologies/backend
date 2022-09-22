@@ -22,7 +22,7 @@ Resources:
       ProviderDetails:
         client_id: 639730110991-9t82efunb20f6m4stek56f6ut9t0kjfu.apps.googleusercontent.com
         client_secret: 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
-        authorize_scopes: profile email openid aws.cognito.signin.user.admin
+        authorize_scopes: profile email openid 
       ProviderType: Google
       UserPoolId:
         Ref : CognitoUserPool
