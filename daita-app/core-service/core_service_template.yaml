@@ -16,6 +16,7 @@ Globals:
       - x86_64
     Environment:
       Variables:
+        AUTH_ENDPOINT: !Ref AuthEndpoint
         STAGE: !Ref StagePara
         TABLE_NAME: global-table
         LOGGING: !Ref minimumLogLevel
@@ -161,6 +162,8 @@ Parameters:
   TableEventUser:
     Type: String
   TableFeedback:
+    Type: String
+  AuthEndpoint:
     Type: String
 Resources:
   # ThumbnailServiceEventBusRole:
