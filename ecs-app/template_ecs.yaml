@@ -1,0 +1,445 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: >
+  AI-workers-app
+
+
+
+Parameters:
+
+  EC2KeyPair:
+    Type: String
+    Default: code_server_dev
+
+  SecurityGroupIds:
+    Type: CommaDelimitedList
+    Default: 'sg-0c9a0ca7844d7b128,sg-00d8b4ca79ee1e42f,sg-007caf776eee9bd32,sg-04b9c865721337372,sg-0b411b5391db8d7a3'
+
+  SubnetIds:
+    Type: CommaDelimitedList
+    Default: 'subnet-019da2a6738756f88,subnet-0642064673fd68d2e'
+
+  VPCId:
+    Type: String
+    Default: vpc-057803c925fd8138a
+
+    
+  StagePara:
+    Type: String
+    Default: test
+  ApplicationPara:
+    Type: String
+    Default: ecstask
+
+  # EFSAccessPointRootPath:
+  #   Type: String
+  #   Default: /ai-prepocessing-app
+
+  EFSFileSystemId:
+    Type:  String
+    Deafult: fs-01115862a24b75423
+
+  # EFSAccessPoint:
+  #   Type: String
+
+  ### Amid config: https://docs.aws.amazon.com/AmazonECS/latest/developerguide/ecs-optimized_AMI.html
+  AMIID:
+    Type: String
+    Default: ami-0693a7971cd761811
+  InstanceType:
+    Type: String
+    Default: t3a.small
+
+  AIWaitTaskImage:
+    Type: String
+    Default: 737589818430.dkr.ecr.us-east-2.amazonaws.com/ai-services-repo:wait-task
+
+Mappings:
+  # Hard values for the subnet masks. These masks define
+  # the range of internal IP addresses that can be assigned.
+  # The VPC can have all IP's from 10.0.0.0 to 10.0.255.255
+  # There are four subnets which cover the ranges:
+  #
+  # 10.0.0.0 - 10.0.0.255
+  # 10.0.1.0 - 10.0.1.255
+  # 10.0.2.0 - 10.0.2.255
+  # 10.0.3.0 - 10.0.3.255
+  #
+  # If you need more IP addresses (perhaps you have so many
+  # instances that you run out) then you can customize these
+  # ranges to add more
+  SubnetConfig:
+    VPC:
+      CIDR: '10.0.0.0/16'
+    PublicOne:
+      CIDR: '10.0.0.0/24'
+    PublicTwo:
+      CIDR: '10.0.1.0/24'
+    PrivateOne:
+      CIDR: '10.0.2.0/24'
+    PrivateTwo:
+      CIDR: '10.0.3.0/24'
+
+Resources:
+  # Roles
+  ECSInstanceRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: "Allow"
+            Principal:
+              Service: "ec2.amazonaws.com"
+            Action:
+              - "sts:AssumeRole"
+      Policies:
+        - PolicyName: "AmazonEC2ContainerServiceforEC2Role"
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - "ec2:DescribeTags"
+                  - "ecs:CreateCluster"
+                  - "ecs:DeregisterContainerInstance"
+                  - "ecs:DiscoverPollEndpoint"
+                  - "ecs:Poll"
+                  - "ecs:RegisterContainerInstance"
+                  - "ecs:StartTelemetrySession"
+                  - "ecs:UpdateContainerInstancesState"
+                  - "ecs:Submit*"
+                  - "ecr:GetAuthorizationToken"
+                  - "ecr:BatchCheckLayerAvailability"
+                  - "ecr:GetDownloadUrlForLayer"
+                  - "ecr:BatchGetImage"
+                  - "logs:CreateLogStream"
+                  - "logs:PutLogEvents"
+                Resource: '*'
+
+  MyECSTaskExecutionRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+        - Effect: "Allow"
+          Principal:
+            Service: "ecs-tasks.amazonaws.com"
+          Action:
+          - "sts:AssumeRole"
+      Policies:
+        - PolicyName: 'AmazonECSTaskExecutionRolePolicy'
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - ecr:GetAuthorizationToken
+                  - ecr:BatchCheckLayerAvailability
+                  - ecr:GetDownloadUrlForLayer
+                  - ecr:BatchGetImage
+                  - logs:CreateLogStream
+                  - logs:PutLogEvents
+                Resource:
+                  - "*"
+
+  MyECSTaskRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+        - Effect: "Allow"
+          Principal:
+            Service: "ecs-tasks.amazonaws.com"
+          Action:
+          - "sts:AssumeRole"
+      Policies:
+        - PolicyName: 'AmazonS3FullAccess'
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - s3:*
+                  - s3-object-lambda:*
+                Resource:
+                  - "*"
+
+  ###_____________ CREATE PRIVATE SUBNET __________________
+  # Two private subnets where containers will only have private
+  # IP addresses, and will only be reachable by other members of the
+  # VPC
+  PrivateSubnetOne:
+    Type: AWS::EC2::Subnet
+    Properties:
+      AvailabilityZone:
+         Fn::Select:
+         - 0
+         - Fn::GetAZs: {Ref: 'AWS::Region'}
+      VpcId: !Ref VPCId
+      CidrBlock: !FindInMap ['SubnetConfig', 'PrivateOne', 'CIDR']
+  PrivateSubnetTwo:
+    Type: AWS::EC2::Subnet
+    Properties:
+      AvailabilityZone:
+         Fn::Select:
+         - 1
+         - Fn::GetAZs: {Ref: 'AWS::Region'}
+      VpcId: !Ref VPCId
+      CidrBlock: !FindInMap ['SubnetConfig', 'PrivateTwo', 'CIDR']
+
+  ###___________________ NETWORKING SETUP FOR PRIVATE SUBNET ___________________
+  # Setup networking resources for the private subnets. Containers
+  # in these subnets have only private IP addresses, and must use a NAT
+  # gateway to talk to the internet. We launch two NAT gateways, one for
+  # each private subnet.
+  NatGatewayOneAttachment:
+    Type: AWS::EC2::EIP
+    DependsOn: GatewayAttachement
+    Properties:
+        Domain: vpc
+  NatGatewayTwoAttachment:
+    Type: AWS::EC2::EIP
+    DependsOn: GatewayAttachement
+    Properties:
+        Domain: vpc
+  NatGatewayOne:
+    Type: AWS::EC2::NatGateway
+    Properties:
+      AllocationId: !GetAtt NatGatewayOneAttachment.AllocationId
+      SubnetId: !Ref PublicSubnetOne
+  NatGatewayTwo:
+    Type: AWS::EC2::NatGateway
+    Properties:
+      AllocationId: !GetAtt NatGatewayTwoAttachment.AllocationId
+      SubnetId: !Ref PublicSubnetTwo
+  PrivateRouteTableOne:
+    Type: AWS::EC2::RouteTable
+    Properties:
+      VpcId: !Ref VPCId
+  PrivateRouteOne:
+    Type: AWS::EC2::Route
+    Properties:
+      RouteTableId: !Ref PrivateRouteTableOne
+      DestinationCidrBlock: 0.0.0.0/0
+      NatGatewayId: !Ref NatGatewayOne
+  PrivateRouteTableOneAssociation:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      RouteTableId: !Ref PrivateRouteTableOne
+      SubnetId: !Ref PrivateSubnetOne
+  PrivateRouteTableTwo:
+    Type: AWS::EC2::RouteTable
+    Properties:
+      VpcId: !Ref VPCId
+  PrivateRouteTwo:
+    Type: AWS::EC2::Route
+    Properties:
+      RouteTableId: !Ref PrivateRouteTableTwo
+      DestinationCidrBlock: 0.0.0.0/0
+      NatGatewayId: !Ref NatGatewayTwo
+  PrivateRouteTableTwoAssociation:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      RouteTableId: !Ref PrivateRouteTableTwo
+      SubnetId: !Ref PrivateSubnetTwo
+
+
+  ###______________ CONFIG VPC ENDPOINT ________________
+  # VPC Endpoint for DynamoDB
+  # If a container needs to access DynamoDB this allows a container in the private subnet
+  # to talk to DynamoDB directly without needing to go via the NAT gateway. This reduces
+  # the amount of bandwidth through the gateway, meaning that the gateway is free to serve
+  # your other traffic.
+  # link: https://aws.amazon.com/blogs/containers/using-vpc-endpoint-policies-to-control-amazon-ecr-access/
+  DynamoDBEndpoint:
+    Type: AWS::EC2::VPCEndpoint
+    Properties:
+      PolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Action: "*"
+            Principal: "*"
+            Resource: "*"
+      RouteTableIds:
+        - !Ref 'PrivateRouteTableOne'
+        - !Ref 'PrivateRouteTableTwo'
+      ServiceName: !Sub com.amazonaws.${AWS::Region}.dynamodb
+      VpcId: !Ref VPCId
+  S3VPCEndpoint:
+    Type: AWS::EC2::VPCEndpoint
+    Properties:
+      PolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Action: "*"
+            Principal: "*"
+            Resource: "*"
+      RouteTableIds:
+        - !Ref 'PrivateRouteTableOne'
+        - !Ref 'PrivateRouteTableTwo'
+      ServiceName: !Sub com.amazonaws.${AWS::Region}.s3
+      VpcId: !Ref VPCId
+  ECRPullImageEndpoint:
+    Type: AWS::EC2::VPCEndpoint
+    Properties:
+      PolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Action: "*"
+            Principal: "*"
+            Resource: "*"
+      RouteTableIds:
+        - !Ref 'PrivateRouteTableOne'
+        - !Ref 'PrivateRouteTableTwo'
+      ServiceName: !Sub com.amazonaws.${AWS::Region}.ecr.dkr
+      VpcId: !Ref VPCId
+
+
+  ###_____________ CLUSTER CONFIG ______________________
+  # Create cluster and capacity for cluster
+  ## docj: #https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-properties-ecs-capacityprovider-managedscaling.html
+  AITaskECSCluster:
+    Type: AWS::ECS::Cluster
+    Properties:
+      ClusterName: !Sub "${StagePara}-${ApplicationPara}-Cluster-AI-tasks"
+
+
+  ###________ CAPACITY CONFIG FOR CLUSTER ______________
+  ###### doc: https://docs.aws.amazon.com/autoscaling/application/userguide/application-auto-scaling-target-tracking.html
+  CapacityProvider:
+    Type: AWS::ECS::CapacityProvider
+    DependsOn: AITaskECSCluster
+    Properties: !Sub "${StagePara}-${ApplicationPara}-capacity-provider"
+      Name: 
+      AutoScalingGroupProvider:
+        AutoScalingGroupArn: !Ref AutoScalingGroup
+        ManagedScaling: 
+          # InstanceWarmupPeriod: 300
+          MaximumScalingStepSize: 1
+          MinimumScalingStepSize: 1
+          Status: ENABLED
+          TargetCapacity: 90 
+        ManagedTerminationProtection: ENABLED 
+  ClusterCapacityProviderAssociation:
+    Type: AWS::ECS::ClusterCapacityProviderAssociations
+    Properties:
+      Cluster: !Ref AITaskECSCluster
+      CapacityProviders:
+        - !Ref CapacityProvider
+      DefaultCapacityProviderStrategy:
+        - CapacityProvider: !Ref CapacityProvider
+          Weight: 1
+
+
+  #_________________ CONFIG AUTO SCALING GROUP _____________
+  # Auto scaling template
+  # https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/quickref-autoscaling.html
+  # for now we only create a one instance scaling group, the scaling base on SQS part might need to be done by cli as below
+  AutoScalingGroup:
+    Type: AWS::AutoScaling::AutoScalingGroup
+    DependsOn: AITaskECSCluster
+    Properties:
+      AutoScalingGroupName: !Sub "${StagePara}-${ApplicationPara}-ai-task-autoscaling"
+      VPCZoneIdentifier: 
+        - !Ref PrivateSubnetOne
+        - !Ref PrivateSubnetTwo
+      LaunchTemplate:
+        LaunchTemplateId: !Ref EC2LaunchTemplate
+        Version: !GetAtt EC2LaunchTemplate.LatestVersionNumber
+      NewInstancesProtectedFromScaleIn: false #if true this block scale in termination completely
+      MaxSize: 1
+      MinSize: 0
+      DesiredCapacity: 0
+
+
+  #_____________ EC2 CONFIG LAUNCH TEMPLATE ________________
+  # A security group for the EC2 hosts that will run the containers.
+  # Rules are added based on what ingress you choose to add to the cluster.
+  ContainerSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Access to the ECS hosts that run containers
+      VpcId: !Ref 'VPC'
+  ### config role for ec2
+  EC2InstanceProfile:
+    Type: AWS::IAM::InstanceProfile
+    Properties:
+      Path: /
+      Roles: [!Ref 'EC2Role']
+  ## template config
+  EC2LaunchTemplate:
+    Type: AWS::EC2::LaunchTemplate
+    Properties:
+      LaunchTemplateName: !Sub "${StagePara}-${ApplicationPara}-Ec2-Launch-template"
+      LaunchTemplateData:
+        DisableApiTermination: false
+        ImageId: !Ref AMIID
+        InstanceType: !Ref InstanceType
+        KeyName: !Ref EC2KeyPair
+        SecurityGroupIds: [!Ref 'ContainerSecurityGroup']
+        IamInstanceProfile: !Ref EC2InstanceProfile
+        UserData:
+          Fn::Base64: !Sub | 
+            #!/bin/bash -xe
+            echo ECS_CLUSTER=${AITaskECSCluster} >> /etc/ecs/ecs.config
+            yum install -y aws-cfn-bootstrap
+            /opt/aws/bin/cfn-signal -e $? --stack ${AWS::StackName} --resource ECSAutoScalingGroup --region ${AWS::Region}
+
+  #____________________ TASK DEFINITION ________________
+  # The task definition. This is a simple metadata description of what
+  # container to run, and what resource requirements it has.
+  MyWaitTaskDefinition:
+    Type: AWS::ECS::TaskDefinition
+    Properties:
+      ExecutionRoleArn: !Ref MyECSTaskExecutionRole
+      TaskRoleArn: !GetAtt MyECSTaskRole.Arn 
+      NetworkMode: awsvpc
+      ContainerDefinitions:
+        -
+          Name: !Sub "${StagePara}-${ApplicationPara}-AI-wait-task"
+          Image: !Ref AIWaitTaskImage
+          Cpu: 256
+          Memory: 256
+          LogConfiguration:
+            LogDriver: 'awslogs'
+            Options:
+              awslogs-group: !Sub ${StagePara}-service-${ApplicationPara}
+              awslogs-region: !Ref 'AWS::Region'
+              awslogs-stream-prefix: !Ref 'ApplicationPara'
+
+  # AITaskECSLogGroup:
+  #   Type: AWS::Logs::LogGroup
+  #   Properties:
+  #     LogGroupName: !Sub "/aws/vendedlogs/states/${AWS::StackName}-AITaskECSLogGroup"
+  #     RetentionInDays: 7
+
+  # # EFS
+  # EFSAccessPoint:  # subnet must be one of EFSFileSystemId's Mount targets
+  #   Type: AWS::EFS::AccessPoint
+  #   Properties:
+  #     FileSystemId: !Ref EFSFileSystemId
+  #     PosixUser:
+  #       Gid: "1000"
+  #       Uid: "1000"
+  #     RootDirectory:
+  #       CreationInfo:
+  #         OwnerGid: "1000"
+  #         OwnerUid: "1000"
+  #         Permissions: "777"
+  #       Path: !Ref EFSAccessPointRootPath
+
+  # ECS
+
+Outputs:
+  # ServerlessRestApi is an implicit API created out of Events key under Serverless::Function
+  # Find out more about other implicit resources you can reference within SAM
+  # https://github.com/awslabs/serverless-application-model/blob/master/docs/internals/generated_resources.rst#api
+  AITaskECSCluster:
+    Description: "ECS Cluster with EC2 provider"
+    Value: !GetAtt AITaskECSCluster.Arn
