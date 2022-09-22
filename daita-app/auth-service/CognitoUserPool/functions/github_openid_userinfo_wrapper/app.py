@@ -11,7 +11,8 @@ OAUTH_USER_EMAIL_URL = "user/emails"
 
 @error_response
 def lambda_handler(event, context):
-    oauth_token = event["headers"].get("Authorization").split("Bearer ")[1]
+    print(event)
+    oauth_token = event["headers"].get("authorization").split("Bearer ")[1]
     userinfo_response = requests.get(
         url=f"{GITHUB_API_URL}/{OAUTH_USERINFO_URL}",
         headers={
@@ -40,12 +41,9 @@ def lambda_handler(event, context):
     body = userinfo_response.json()
     print(body)
     body["email"] = primary_email
-    return {
-        "body": json.dumps(
+    return json.dumps(
             {
                 **body,
                 "sub": body["id"]
             }
-        ),
-        "isBase64Encoded": False
-    }
+        )
