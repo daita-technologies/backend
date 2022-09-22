@@ -160,13 +160,13 @@ Resources:
     Properties:
       UserPoolName: !Ref AWS::StackName
 
-  # CognitoUserPoolDomain:
-  #   Type: AWS::Cognito::UserPoolDomain
-  #   Properties:
-  #     Domain: !Sub "auth${StagePara}.daita.tech"
-  #     UserPoolId: !Ref CognitoUserPool
-  #     CustomDomainConfig:
-  #       CertificateArn: !Ref CertificateUserpoolDomain
+  CognitoUserPoolDomain:
+    Type: AWS::Cognito::UserPoolDomain
+    Properties:
+      Domain: !Sub "auth${StagePara}.daita.tech"
+      UserPoolId: !Ref CognitoUserPool
+      CustomDomainConfig:
+        CertificateArn: !Ref CertificateUserpoolDomain
 
   GithubTokenWrapperFunc:
     Type: AWS::Serverless::Function
