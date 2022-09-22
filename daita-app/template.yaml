@@ -349,6 +349,7 @@ Resources:
         StreamTableDataAugmentName:  !GetAtt  DatabaseService.Outputs.StreamTableDataAugmentName
         ##### for project function
         FuncProjectUploadUpdateArn: !GetAtt ProjectService.Outputs.FuncProjectUploadUpdateArn
+        AuthEndpoint: !GetAtt CognitoUserPool.Outputs.AuthHttpAPI
 
   HealthCheckService:
     Type: AWS::Serverless::Application

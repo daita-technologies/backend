@@ -23,7 +23,9 @@ ACCESS_TOKEN_EXPIRATION = 24 * 60 * 60
 USERPOOLID = os.environ['COGNITO_USER_POOL']
 CLIENTPOOLID = os.environ['COGNITO_CLIENT_ID']
 IDENTITY_POOL = os.environ['IDENTITY_POOL']
+AUTH_ENDPOINT = os.environ['AUTH_ENDPOINT']
 REGION = os.environ['REGION']
+STAGE = os.environ['STAGE']
 cog_provider_client = boto3.client('cognito-idp')
 cog_identity_client = boto3.client('cognito-identity')
 # endpoint = 'https://devdaitaloginsocial.auth.us-east-2.amazoncognito.com/oauth2/token'
@@ -32,7 +34,7 @@ TableUser = os.environ['TABLE_USER']
 
 
 def getRedirectURI():
-    return ENDPPOINTREDIRCTLOGINSOCIALOAUTH
+    return f'https://{AUTH_ENDPOINT}.execute-api.{REGION}.amazonaws.com/{STAGE}/auth/login_social'
 
 #############################################################################################################################################################
 
@@ -100,6 +102,7 @@ def getCredentialsForIdentity(token_id):
 
 
 def Oauth2(code):
+    print(f'check {code} {getRedirectURI()}')
     params = {"code": code, "grant_type": "authorization_code", "redirect_uri": getRedirectURI(
     ), 'client_id': CLIENTPOOLID, 'scope': 'email+openid+phone+profile'}
     headers = {"Content-Type": "application/x-www-form-urlencoded"}
