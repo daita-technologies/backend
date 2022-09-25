@@ -27,8 +27,8 @@ LOCATION = config_env['LOCATION'][os.environ['MODE']]
 ENDPPOINTREDIRCTLOGINSOCIALOAUTH = config_env['ENDPPOINTREDIRCTLOGINSOCIALOAUTH'][os.environ['MODE']]
 URL = "https://w9e3g3rjq2.execute-api.us-east-2.amazonaws.com/devbele/"
 ENDPOINTCAPTCHAVERIFY = "https://www.google.com/recaptcha/api/siteverify"
-SITEKEYGOOGLE = "6LcqEGMeAAAAAAEDnBue7fwR4pmvNO7JKWkHtAjl"
-SECRETKEYGOOGLE = "6LcqEGMeAAAAAOiJAMcg1NNfj6eA62gQPLJAtQMt"
+SITEKEYGOOGLE = "6LfR4ioiAAAAAH7RrdcoRQLiNbKFpFMNH2nqG8fv" if os.environ['MODE'] == 'dev' else "6LcqEGMeAAAAAAEDnBue7fwR4pmvNO7JKWkHtAjl"
+SECRETKEYGOOGLE = "6LfR4ioiAAAAAPR6AwPkkg3xAENhqK83hr1caBk7" if os.environ['MODE'] == 'dev' else "6LcqEGMeAAAAAOiJAMcg1NNfj6eA62gQPLJAtQMt" 
 ENDPOINTCAPTCHAVERIFY = "https://www.google.com/recaptcha/api/siteverify"
 # Github OpenID wrapper
 # Change these if used with GitHub Enterprise (see below)

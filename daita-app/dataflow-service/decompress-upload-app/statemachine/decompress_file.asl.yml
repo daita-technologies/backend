@@ -77,7 +77,7 @@ States:
           Resource: arn:aws:states:::lambda:invoke
           InputPath: $.Payload
           Parameters:
-            FunctionName: "${ProjectUploadUpdateFunction}"
+            FunctionName: "${FuncProjectUploadUpdate}"
             Payload:
               body.$: $.body
           Next: PostUploadFunction
