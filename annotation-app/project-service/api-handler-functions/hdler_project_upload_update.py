@@ -16,10 +16,11 @@ from lambda_base_class import LambdaBaseClass
 class ProjectAnnotationUploadUpdate(LambdaBaseClass):
     def __init__(self) -> None:
         super().__init__()
-    
-
+    def parser(self,body):
+        self.id_token = body['id_token']
+        
     def handle(self,event,context):
-        return
+        
 
 @error_response
 def lambda_handler(event, context):
