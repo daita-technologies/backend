@@ -215,18 +215,18 @@ Resources:
                 - !Ref CallerServiceStateMachine
 
   # Sub service
-  ECSTasks:
-    Type: AWS::Serverless::Application
-    Properties:
-      Location: ./ecs-tasks/template.yaml
-      Parameters:
-        SecurityGroupIds: !Join [",", !Ref SecurityGroupIdsPara]
-        SubnetIds: !Join [",", !Ref SubnetIDsPara]
-        StagePara: !Ref StagePara
-        EFSFileSystemId: !Ref EFSFileSystemId
-        EFSAccessPoint: !Ref EFSAccessPoint
-        StagePara: !Ref StagePara
-        ApplicationPara: !Ref ApplicationPara
+  # ECSTasks:
+  #   Type: AWS::Serverless::Application
+  #   Properties:
+  #     Location: ./ecs-tasks/template.yaml
+  #     Parameters:
+  #       SecurityGroupIds: !Join [",", !Ref SecurityGroupIdsPara]
+  #       SubnetIds: !Join [",", !Ref SubnetIDsPara]
+  #       StagePara: !Ref StagePara
+  #       EFSFileSystemId: !Ref EFSFileSystemId
+  #       EFSAccessPoint: !Ref EFSAccessPoint
+  #       StagePara: !Ref StagePara
+  #       ApplicationPara: !Ref ApplicationPara
 
   #================ LAMBDA FUNCTIONS ==========================================
 
@@ -654,8 +654,8 @@ Resources:
           LocalMountPath: !Ref EFSStorageAI
       Environment:
         Variables:
-          PREPROCESSING_TASK_DEFINITION: !GetAtt ECSTasks.Outputs.AIPreprocessingTask
-          CLUSTER_NAME: !GetAtt ECSTasks.Outputs.ECSCluster
+          PREPROCESSING_TASK_DEFINITION: abc #!GetAtt ECSTasks.Outputs.AIPreprocessingTask
+          CLUSTER_NAME: abc #!GetAtt ECSTasks.Outputs.ECSCluster
           SECURITY_GROUP_IDs: !Join [",", !Ref SecurityGroupIdsPara]
           SUBNET_IDs : !Join [",", !Ref SubnetIDsPara]
           EFSLocalMountPath: !Ref EFSStorageAI

@@ -143,7 +143,7 @@ Resources:
         UploadDecompressedFunction: !GetAtt UploadDecompressedFunction.Arn
         FinishDecompressTaskFunction: !GetAtt FinishDecompressTaskFunction.Arn
         DecompressTaskTable: !Ref TableDataFlowTaskName
-        ProjectUploadUpdateFunction: staging-project-upload-update
+        FuncProjectUploadUpdate: !Ref FuncProjectUploadUpdate  #staging-project-upload-update
         PostUploadFunction: !Ref PostUploadFunction
         TableDataFlowTaskName: !Ref TableDataFlowTaskName
       Logging:
@@ -162,7 +162,7 @@ Resources:
         - LambdaInvokePolicy:
             FunctionName: !Ref FinishDecompressTaskFunction
         - LambdaInvokePolicy:
-            FunctionName: staging-project-upload-update
+            FunctionName: !Ref FuncProjectUploadUpdate
         - LambdaInvokePolicy:
             FunctionName: !Ref PostUploadFunction
         - DynamoDBCrudPolicy:
