@@ -145,11 +145,7 @@ class ProjectUploadUpdateCls(LambdaBaseClass):
             with table_pr.batch_writer() as batch:
                 for item in self.ls_batch_request:
                     batch.put_item(Item=item)
-            # response = db_client.batch_write_item(
-            #     RequestItems = {
-            #         table: ls_batch_request
-            #     }
-            # )
+
         except Exception as e:
             print('Error: ', repr(e))
             return convert_response({"error": True,

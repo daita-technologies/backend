@@ -32,8 +32,8 @@ Parameters:
     Type: String
   CognitoIdentityPoolId:
     Type: String
-  # ThumbnailEventBus:
-  #   Type: String
+  ThumbnailEventBus:
+    Type: String
 Globals:
   Function:
     Timeout: 800   
@@ -51,7 +51,7 @@ Globals:
         COGNITO_USER_POOL: !Ref CognitoUserPool
         COGNITO_CLIENT_ID: !Ref CognitoUserPoolClient
         IDENTITY_POOL: !Ref CognitoIdentityPoolId
-        # THUMBNAIL_EVENT_BUS: !Ref ThumbnailEventBus
+        THUMBNAIL_EVENT_BUS: !Ref ThumbnailEventBus
 Resources:
 
   #================ LAMBDA FUNCTIONS ==========================================

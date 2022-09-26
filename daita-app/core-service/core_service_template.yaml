@@ -166,27 +166,27 @@ Parameters:
   AuthEndpoint:
     Type: String
 Resources:
-  # ThumbnailServiceEventBusRole:
-  #   Type: "AWS::IAM::Role"
-  #   Properties:
-  #     AssumeRolePolicyDocument:
-  #       Version: "2012-10-17"
-  #       Statement:
-  #         - Effect: "Allow"
-  #           Principal:
-  #             Service: "events.amazonaws.com"
-  #           Action:
-  #             - "sts:AssumeRole"
-  #     Policies:
-  #       - PolicyName: DirectlyInvokeStepFunctions
-  #         PolicyDocument:
-  #           Version: "2012-10-17"
-  #           Statement:
-  #             Action:
-  #             - "states:StartExecution"
-  #             Effect: Allow
-  #             Resource:
-  #               - !Ref ThumbnailStateMachine
+  ThumbnailServiceEventBusRole:
+    Type: "AWS::IAM::Role"
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: "Allow"
+            Principal:
+              Service: "events.amazonaws.com"
+            Action:
+              - "sts:AssumeRole"
+      Policies:
+        - PolicyName: DirectlyInvokeStepFunctions
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              Action:
+              - "states:StartExecution"
+              Effect: Allow
+              Resource:
+                - !Ref ThumbnailStateMachine
 
   TriggerThumbnailFunction:
     Type: AWS::Serverless::Function
@@ -212,22 +212,22 @@ Resources:
     Type: AWS::Events::EventBus
     Properties:
       Name: !Sub "${StagePara}-${ApplicationPara}-ThumbnailEventBus"
-  # ThumbnailServiceEventBusDefaultRule:
-  #   Type: AWS::Events::Rule
-  #   Properties:
-  #     Description: "Default Rule for Any event"
-  #     State: ENABLED
-  #     EventBusName: !Ref ThumbnailEventBus
-  #     EventPattern:
-  #       source:
-  #         - "source.events"
-  #       detail-type:
-  #         - "lambda.event"
-  #     Targets:
-  #       -
-  #         Arn: !GetAtt ThumbnailStateMachine.Arn
-  #         Id: "ThumbnailStateMachine"
-  #         RoleArn: !GetAtt ThumbnailServiceEventBusRole.Arn
+  ThumbnailServiceEventBusDefaultRule:
+    Type: AWS::Events::Rule
+    Properties:
+      Description: "Default Rule for Any event"
+      State: ENABLED
+      EventBusName: !Ref ThumbnailEventBus
+      EventPattern:
+        source:
+          - "source.events"
+        detail-type:
+          - "lambda.event"
+      Targets:
+        -
+          Arn: !GetAtt ThumbnailStateMachine.Arn
+          Id: "ThumbnailStateMachine"
+          RoleArn: !GetAtt ThumbnailServiceEventBusRole.Arn
   #================ ROLES =====================================================
 
   # use this role for apigateway access lambda
@@ -390,39 +390,39 @@ Resources:
     Properties:
       LogGroupName: !Sub "/aws/vendedlogs/states/${StagePara}-${ApplicationPara}-Thumbnail"
       RetentionInDays: 7
-  # ThumbnailStateMachine:
-  #   Type: AWS::Serverless::StateMachine
-  #   Properties:
-  #     Type: STANDARD
-  #     Name: !Sub "${StagePara}-${ApplicationPara}-ThumbnailStatemachine"
-  #     Policies:
-  #       - LambdaInvokePolicy:
-  #           FunctionName: !Ref   ResizeImageThumbnailFunction
-  #           FunctionName: !Ref DivideBatchImagesThumbnailFunction
-  #       - Statement:
-  #         - Sid: ALLOWCRUDDynamoDB
-  #           Effect: Allow
-  #           Action:
-  #           - "dynamodb:*"
-  #           - "lambda:InvokeFunction"
-  #           Resource: "*"
-  #         - Sid: CloudWatchLogsPolicy
-  #           Effect: Allow
-  #           Action:
-  #           - "logs:*"
-  #           Resource: "*"
-  #     Tracing:
-  #       Enabled: true
-  #     DefinitionUri: statemachine/thumbnail_step_function.asl.yaml
-  #     Logging:
-  #       Level: ALL
-  #       IncludeExecutionData: true
-  #       Destinations:
-  #       - CloudWatchLogsLogGroup:
-  #           LogGroupArn: !GetAtt ThumbnaiServiceStateMachineLogGroup.Arn
-  #     DefinitionSubstitutions:
-  #       ResizeImageThumbnailFunction: !GetAtt ResizeImageThumbnailFunction.Arn
-  #       DivideBatchImagesThumbnailFunction: !GetAtt DivideBatchImagesThumbnailFunction.Arn
+  ThumbnailStateMachine:
+    Type: AWS::Serverless::StateMachine
+    Properties:
+      Type: STANDARD
+      Name: !Sub "${StagePara}-${ApplicationPara}-ThumbnailStatemachine"
+      Policies:
+        - LambdaInvokePolicy:
+            FunctionName: !Ref   ResizeImageThumbnailFunction
+            FunctionName: !Ref DivideBatchImagesThumbnailFunction
+        - Statement:
+          - Sid: ALLOWCRUDDynamoDB
+            Effect: Allow
+            Action:
+            - "dynamodb:*"
+            - "lambda:InvokeFunction"
+            Resource: "*"
+          - Sid: CloudWatchLogsPolicy
+            Effect: Allow
+            Action:
+            - "logs:*"
+            Resource: "*"
+      Tracing:
+        Enabled: true
+      DefinitionUri: statemachine/thumbnail_step_function.asl.yaml
+      Logging:
+        Level: ALL
+        IncludeExecutionData: true
+        Destinations:
+        - CloudWatchLogsLogGroup:
+            LogGroupArn: !GetAtt ThumbnaiServiceStateMachineLogGroup.Arn
+      DefinitionSubstitutions:
+        ResizeImageThumbnailFunction: !GetAtt ResizeImageThumbnailFunction.Arn
+        DivideBatchImagesThumbnailFunction: !GetAtt DivideBatchImagesThumbnailFunction.Arn
 
   #================ LAMBDA FUNCTIONS ==========================================
   CreatePresignUrlForImageFeedbackFunction:
@@ -865,5 +865,5 @@ Outputs:
     Value: !Sub "https://${DaitaHttpApi}.execute-api.${AWS::Region}.amazonaws.com/${StagePara}"
   LambdaRoleArn:
     Value: !GetAtt LambdaExecutionRole.Arn
-  # ThumbnailEventBus:
-  #   Value: !GetAtt ThumbnailServiceEventBusRole
+  ThumbnailEventBus:
+    Value: !GetAtt ThumbnailServiceEventBusRole
