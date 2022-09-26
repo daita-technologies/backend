@@ -865,5 +865,3 @@ Outputs:
     Value: !Sub "https://${DaitaHttpApi}.execute-api.${AWS::Region}.amazonaws.com/${StagePara}"
   LambdaRoleArn:
     Value: !GetAtt LambdaExecutionRole.Arn
-  ThumbnailEventBus:
-    Value: !GetAtt ThumbnailServiceEventBusRole

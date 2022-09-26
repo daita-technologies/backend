@@ -247,7 +247,7 @@ Resources:
         CognitoUserPoolClient: !GetAtt CognitoClient.Outputs.UserPoolClientId
         CognitoUserPool: !GetAtt CognitoUserPool.Outputs.UserPool
         CognitoIdentityPoolId: !GetAtt IdentityPool.Outputs.IdentityPool
-        ThumbnailEventBus: !GetAtt  CoreService.Outputs.ThumbnailEventBus
+        ThumbnailEventBus: temp #!GetAtt  CoreService.Outputs.ThumbnailEventBus
 
   CognitoUserPool:
     Type: AWS::Serverless::Application
