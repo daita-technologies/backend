@@ -543,44 +543,44 @@ Resources:
             - s3:PutObjectAcl
           Resource: "*"
 
-  GlobOutputFiles:
-    Type: AWS::Serverless::Function
-    Properties:
-      CodeUri: functions/handlers/generate_step/glob_output_files
-      VpcConfig:
-        SecurityGroupIds: !Split [',', !Join [',', !Ref SecurityGroupIdsPara]]
-        SubnetIds: !Split [',', !Join [',', !Ref SubnetIDsPara]]
-      FileSystemConfigs:
-        - Arn: !GetAtt EFSAccessPoint.Arn
-          LocalMountPath: !Ref EFSStorageAI
-      Policies:
-      - Statement:
-        - Sid: CloudWatchLogsPolicy
-          Effect: Allow
-          Action:
-            - "logs:CreateLogDelivery"
-            - "logs:GetLogDelivery"
-            - "logs:UpdateLogDelivery"
-            - "logs:DeleteLogDelivery"
-            - "logs:ListLogDeliveries"
-            - "logs:PutResourcePolicy"
-            - "logs:DescribeResourcePolicies"
-            - "logs:DescribeLogGroup"
-            - "logs:DescribeLogGroups"
-          Resource: "*"
-        - Sid: CloudWatchEventsFullAccess
-          Effect: Allow
-          Action:
-            - "events:*"
-          Resource: "*"
-        - Sid: AmazonElasticFileSystemClientFullAccess
-          Effect: Allow
-          Action:
-          - elasticfilesystem:ClientMount
-          - elasticfilesystem:ClientRootAccess
-          - elasticfilesystem:ClientWrite
-          - elasticfilesystem:DescribeMountTargets
-          Resource: "*"
+  # GlobOutputFiles:
+  #   Type: AWS::Serverless::Function
+  #   Properties:
+  #     CodeUri: functions/handlers/generate_step/glob_output_files
+  #     VpcConfig:
+  #       SecurityGroupIds: !Split [',', !Join [',', !Ref SecurityGroupIdsPara]]
+  #       SubnetIds: !Split [',', !Join [',', !Ref SubnetIDsPara]]
+  #     FileSystemConfigs:
+  #       - Arn: !GetAtt EFSAccessPoint.Arn
+  #         LocalMountPath: !Ref EFSStorageAI
+  #     Policies:
+  #     - Statement:
+  #       - Sid: CloudWatchLogsPolicy
+  #         Effect: Allow
+  #         Action:
+  #           - "logs:CreateLogDelivery"
+  #           - "logs:GetLogDelivery"
+  #           - "logs:UpdateLogDelivery"
+  #           - "logs:DeleteLogDelivery"
+  #           - "logs:ListLogDeliveries"
+  #           - "logs:PutResourcePolicy"
+  #           - "logs:DescribeResourcePolicies"
+  #           - "logs:DescribeLogGroup"
+  #           - "logs:DescribeLogGroups"
+  #         Resource: "*"
+  #       - Sid: CloudWatchEventsFullAccess
+  #         Effect: Allow
+  #         Action:
+  #           - "events:*"
+  #         Resource: "*"
+  #       - Sid: AmazonElasticFileSystemClientFullAccess
+  #         Effect: Allow
+  #         Action:
+  #         - elasticfilesystem:ClientMount
+  #         - elasticfilesystem:ClientRootAccess
+  #         - elasticfilesystem:ClientWrite
+  #         - elasticfilesystem:DescribeMountTargets
+  #         Resource: "*"
 
   HandleMergeResultRequestAI:
     Type: AWS::Serverless::Function
@@ -646,19 +646,19 @@ Resources:
     Type: AWS::Serverless::Function
     Properties:
       CodeUri: functions/handlers/generate_step/RequestAI
-      VpcConfig:
-        SecurityGroupIds: !Split [',', !Join [',', !Ref SecurityGroupIdsPara]]
-        SubnetIds: !Split [',', !Join [',', !Ref SubnetIDsPara]]
-      FileSystemConfigs:
-        - Arn: !GetAtt EFSAccessPoint.Arn
-          LocalMountPath: !Ref EFSStorageAI
-      Environment:
-        Variables:
-          PREPROCESSING_TASK_DEFINITION: abc #!GetAtt ECSTasks.Outputs.AIPreprocessingTask
-          CLUSTER_NAME: abc #!GetAtt ECSTasks.Outputs.ECSCluster
-          SECURITY_GROUP_IDs: !Join [",", !Ref SecurityGroupIdsPara]
-          SUBNET_IDs : !Join [",", !Ref SubnetIDsPara]
-          EFSLocalMountPath: !Ref EFSStorageAI
+      # VpcConfig:
+      #   SecurityGroupIds: !Split [',', !Join [',', !Ref SecurityGroupIdsPara]]
+      #   SubnetIds: !Split [',', !Join [',', !Ref SubnetIDsPara]]
+      # FileSystemConfigs:
+      #   - Arn: !GetAtt EFSAccessPoint.Arn
+      #     LocalMountPath: !Ref EFSStorageAI
+      # Environment:
+      #   Variables:
+      #     PREPROCESSING_TASK_DEFINITION: abc #!GetAtt ECSTasks.Outputs.AIPreprocessingTask
+      #     CLUSTER_NAME: abc #!GetAtt ECSTasks.Outputs.ECSCluster
+      #     SECURITY_GROUP_IDs: !Join [",", !Ref SecurityGroupIdsPara]
+      #     SUBNET_IDs : !Join [",", !Ref SubnetIDsPara]
+      #     EFSLocalMountPath: !Ref EFSStorageAI
       Policies:
       - Statement:
         - Effect: Allow
@@ -1395,7 +1395,6 @@ Resources:
         HandleCompleteRequestAI: !GetAtt HandleCompleteRequestAI.Arn
         HandlerUploadBatchToS3: !GetAtt HandlerUploadBatchToS3.Arn
         UpdateStatusTask: !GetAtt UpdateStatusTask.Arn
-        GlobOutputFilesTask: !GetAtt GlobOutputFiles.Arn
       Policies:
         - LambdaInvokePolicy:
             FunctionName: !Ref HandleGenerateStep
@@ -1403,7 +1402,6 @@ Resources:
             FunctionName: !Ref HandleMergeResultRequestAI
             FunctionName: !Ref HandlerUploadBatchToS3
             FunctionName: !Ref HandleCompleteRequestAI
-            FunctionName: !Ref GlobOutputFiles
         - Statement:
           - Sid: CloudWatchLogsPolicy
             Effect: Allow
