@@ -390,39 +390,39 @@ Resources:
     Properties:
       LogGroupName: !Sub "/aws/vendedlogs/states/${StagePara}-${ApplicationPara}-Thumbnail"
       RetentionInDays: 7
-  # ThumbnailStateMachine:
-  #   Type: AWS::Serverless::StateMachine
-  #   Properties:
-  #     Type: STANDARD
-  #     Name: !Sub "${StagePara}-${ApplicationPara}-ThumbnailStatemachine"
-  #     Policies:
-  #       - LambdaInvokePolicy:
-  #           FunctionName: !Ref   ResizeImageThumbnailFunction
-  #           FunctionName: !Ref DivideBatchImagesThumbnailFunction
-  #       - Statement:
-  #         - Sid: ALLOWCRUDDynamoDB
-  #           Effect: Allow
-  #           Action:
-  #           - "dynamodb:*"
-  #           - "lambda:InvokeFunction"
-  #           Resource: "*"
-  #         - Sid: CloudWatchLogsPolicy
-  #           Effect: Allow
-  #           Action:
-  #           - "logs:*"
-  #           Resource: "*"
-  #     Tracing:
-  #       Enabled: true
-  #     DefinitionUri: statemachine/thumbnail_step_function.asl.yaml
-  #     Logging:
-  #       Level: ALL
-  #       IncludeExecutionData: true
-  #       Destinations:
-  #       - CloudWatchLogsLogGroup:
-  #           LogGroupArn: !GetAtt ThumbnaiServiceStateMachineLogGroup.Arn
-  #     DefinitionSubstitutions:
-  #       ResizeImageThumbnailFunction: !GetAtt ResizeImageThumbnailFunction.Arn
-  #       DivideBatchImagesThumbnailFunction: !GetAtt DivideBatchImagesThumbnailFunction.Arn
+  ThumbnailStateMachine:
+    Type: AWS::Serverless::StateMachine
+    Properties:
+      Type: STANDARD
+      Name: !Sub "${StagePara}-${ApplicationPara}-ThumbnailStatemachine"
+      Policies:
+        - LambdaInvokePolicy:
+            FunctionName: !Ref   ResizeImageThumbnailFunction
+            FunctionName: !Ref DivideBatchImagesThumbnailFunction
+        - Statement:
+          - Sid: ALLOWCRUDDynamoDB
+            Effect: Allow
+            Action:
+            - "dynamodb:*"
+            - "lambda:InvokeFunction"
+            Resource: "*"
+          - Sid: CloudWatchLogsPolicy
+            Effect: Allow
+            Action:
+            - "logs:*"
+            Resource: "*"
+      Tracing:
+        Enabled: true
+      DefinitionUri: statemachine/thumbnail_step_function.asl.yaml
+      Logging:
+        Level: ALL
+        IncludeExecutionData: true
+        Destinations:
+        - CloudWatchLogsLogGroup:
+            LogGroupArn: !GetAtt ThumbnaiServiceStateMachineLogGroup.Arn
+      DefinitionSubstitutions:
+        ResizeImageThumbnailFunction: !GetAtt ResizeImageThumbnailFunction.Arn
+        DivideBatchImagesThumbnailFunction: !GetAtt DivideBatchImagesThumbnailFunction.Arn
 
   #================ LAMBDA FUNCTIONS ==========================================
   CreatePresignUrlForImageFeedbackFunction:

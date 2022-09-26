@@ -85,7 +85,21 @@ Resources:
       Environment:
         Variables:
           SM_CLONE_PROJECT_ARN: !GetAtt CloneProjectSM.Arn
-          
+  ProjectUploadUpdate:
+    Type:  AWS::Serverless::Function
+    Properties:
+      CodeUri: api-handler-functions
+      Handler: hdler_project_upload_update.lambda_handler
+      Role: !Ref LambdaRoleArn
+      MemorySize: 256
+
+  ProjectInfo:
+    Type:  AWS::Serverless::Function
+    Properties:
+      CodeUri: api-handler-functions
+      Handler: hdler_project_info.lambda_handler
+      Role: !Ref LambdaRoleArn
+      MemorySize: 256       
   #================ LAMBDA STEP FUNCTIONS ==========================================
   FuncMoveS3Data:
     Type: AWS::Serverless::Function 
@@ -95,7 +109,7 @@ Resources:
       CodeUri: statemachine/clone_project_data/functions
       Role: !Ref LambdaRoleArn
       MemorySize: 256
-
+  
   FuncUpdateInputData:
     Type: AWS::Serverless::Function 
     Properties:
@@ -177,5 +191,7 @@ Outputs:
   ProjectCloneFunctionArn:
     Description: "ProjectCloneFunctionArn"
     Value: !GetAtt ProjectCloneFunction.Arn
-  
-  
+  ProjectUploadUpdateArn:
+    Value: !GetAtt ProjectUploadUpdate.Arn
+  ProjectInfoArn:
+    Value: !GetAtt ProjectInfo.Arn

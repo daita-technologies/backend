@@ -119,6 +119,8 @@ Resources:
         ApplicationPara: !Ref Application
         ### function arn
         ProjectCloneFunctionArn: !GetAtt ProjectService.Outputs.ProjectCloneFunctionArn
+        ProjectUploadUpdateArn: !GetAtt ProjectService.Outputs.ProjectUploadUpdateArn
+        ProjectInfoArn: !GetAtt ProjectService.Outputs.ProjectInfoArn
 
   DatabaseService:
     Type: AWS::Serverless::Application
