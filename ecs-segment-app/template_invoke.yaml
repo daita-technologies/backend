@@ -1,0 +1,248 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: >
+  daita-caller-service-app
+
+  Sample SAM Template for daita-caller-service-app
+
+## The general rule seems to be to use !Sub for in line substitutions and !ref for stand alone text
+Parameters:
+  StagePara:
+    Type: String
+    Default: test
+  ApplicationPara:
+    Type: String
+    Default: ecstask
+
+  AITaskECSClusterArn:
+    Type: String
+  AITaskDefinitionArn:
+    Type: String
+
+  SecurityGroupIds:
+    Type: CommaDelimitedList
+    Default: 'sg-0c9a0ca7844d7b128,sg-00d8b4ca79ee1e42f,sg-007caf776eee9bd32,sg-04b9c865721337372,sg-0b411b5391db8d7a3'
+
+  LsPrivateSubnetIDs:
+    Type: CommaDelimitedList
+
+Globals:
+  Function:
+    Timeout: 800   
+    Runtime: python3.8
+    Architectures:
+      - x86_64 
+    Environment:
+      Variables:
+        STAGE: !Ref StagePara     
+
+Resources:
+  #================ ROLES =====================================================
+  #-- use this role for apigateway access lambda
+  ApiGatewayCallLambdaRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+        - Effect: "Allow"
+          Principal:
+            Service: "apigateway.amazonaws.com"
+          Action:
+          - "sts:AssumeRole"
+      Policies:
+      - PolicyName: RestApiDirectInvokeLambda
+        PolicyDocument:
+          Version: "2012-10-17"
+          Statement:
+            Action:
+            - "lambda:InvokeFunction"
+            Effect: Allow
+            Resource: "*"
+  
+  GeneralLambdaExecutionRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+        - Effect: "Allow"
+          Principal:
+            Service: "lambda.amazonaws.com"
+          Action:
+          - "sts:AssumeRole"
+      Policies:
+        - PolicyName: 'SecretsManagerParameterAccess'
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - ssm:GetParam*
+                  - ssm:DescribeParam*
+                Resource:
+                  - arn:aws:ssm:*:*:parameter/*
+        - PolicyName: 'CloudwatchPermission'
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              -
+                Effect: Allow
+                Action:
+                  - 'logs:CreateLogGroup'
+                  - 'logs:CreateLogStream'
+                  - 'logs:PutLogEvents'
+                Resource: '*'
+        - PolicyName: 'CognitoPermission'
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              -
+                Effect: Allow
+                Action:
+                  - cognito-identity:*
+                  - cognito-idp:*
+                Resource: '*'
+        - PolicyName: 'DynamoDBPermission'
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              -
+                Effect: Allow
+                Action:
+                  - dynamodb:*
+                Resource: "*"
+        - PolicyName: "OtherServicePermission"
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              -
+                Effect: Allow
+                Action:
+                  - events:PutEvents
+                  - s3:Get*
+                  - ecr:*
+                  - elasticfilesystem:*
+                  - states:*
+                  - s3:*
+                Resource: "*"
+
+  TestWaitHttpApi:
+    Type: AWS::Serverless::HttpApi
+    Properties:
+      StageName: !Ref StagePara
+      DefinitionBody:
+        Fn::Transform:
+          Name: AWS::Include
+          Parameters:
+            Location: './api_route_define.yaml'
+
+
+  ###============== STATE MACHINE ==================
+  #================ PROCESSOR STATE MACHINE ===================================
+  TestWaitSMLogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties: 
+      LogGroupName: !Sub "/aws/vendedlogs/states/${StagePara}-${ApplicationPara}-TestWait"
+      RetentionInDays: 7
+
+  TestWaitSM:
+    Type: AWS::Serverless::StateMachine
+    Properties:
+      Type: STANDARD
+      Name: !Sub "${StagePara}-${ApplicationPara}-TestWaitSM"
+      Policies:
+        - LambdaInvokePolicy:
+            FunctionName: !Ref FuncMoveS3Data
+        - LambdaInvokePolicy:
+            FunctionName: !Ref FuncUpdateInputData
+        - LambdaInvokePolicy:
+            FunctionName: !Ref FuncUpdateSumaryDatabase
+        - Statement: 
+          - Sid: CloudWatchLogsPolicy
+            Effect: Allow
+            Action:
+            - "logs:CreateLogDelivery"
+            - "logs:GetLogDelivery"
+            - "logs:UpdateLogDelivery"
+            - "logs:DeleteLogDelivery"
+            - "logs:ListLogDeliveries"
+            - "logs:PutResourcePolicy"
+            - "logs:DescribeResourcePolicies"
+            - "logs:DescribeLogGroup"
+            - "logs:DescribeLogGroups"
+            Resource: "*"
+          - Sid: CloudWatchEventsFullAccess
+            Effect: Allow
+            Action:
+              - "events:*"
+              - "ecs:*"
+              - "iam:PassRole"
+            Resource: "*"
+          - Sid: IAMPassRoleForCloudWatchEvents
+            Effect: Allow
+            Action:
+              - "iam:PassRole"
+            Resource: "arn:aws:iam::*:role/AWS_Events_Invoke_Targets"
+      Tracing:
+        Enabled: true
+      DefinitionUri: ./statemachine/clone_project_data/sm_clone_project.asl.yaml
+      Logging:
+        Level: ALL
+        IncludeExecutionData: true
+        Destinations:
+        - CloudWatchLogsLogGroup:
+            LogGroupArn: !GetAtt TestWaitSMLogGroup.Arn
+      DefinitionSubstitutions:
+        Arn_FuncMoveS3Data: !GetAtt FuncMoveS3Data.Arn
+        Arn_FuncUpdateInputData: !GetAtt FuncUpdateInputData.Arn
+        Arn_FuncUpdateSumaryDatabase: !GetAtt FuncUpdateSumaryDatabase.Arn
+        AITaskECSClusterArn: !Ref AITaskECSClusterArn
+        AITaskDefinitionArn: !Ref AITaskDefinitionArn
+        SecurityGroupIds: !Join [',', !Ref SecurityGroupIds]  
+        LsPrivateSubnetIDs: !Join [',', !Ref LsPrivateSubnetIDs] 
+
+
+
+
+  ###========= LAMBDA API FUNCTION ==============
+  TestLambdaAPIFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: api-handler-functions
+      Handler: hdler_project_clone.lambda_handler
+      Role: !GetAtt GeneralLambdaExecutionRole.Arn
+      MemorySize: 256
+      Environment:
+        Variables:
+          SM_CLONE_PROJECT_ARN: !GetAtt TestWaitSM.Arn
+
+  ###======= LAMBDA STATE MACHINE ===============
+  FuncMoveS3Data:
+    Type: AWS::Serverless::Function 
+    Properties:
+      Timeout: 900
+      Handler: hdler_move_s3_data.lambda_handler
+      CodeUri: statemachine/clone_project_data/functions
+      Role: !GetAtt GeneralLambdaExecutionRole.Arn
+      MemorySize: 256
+
+  FuncUpdateInputData:
+    Type: AWS::Serverless::Function 
+    Properties:
+      Handler: hdler_update_input_data.lambda_handler
+      CodeUri: statemachine/clone_project_data/functions
+      Role: !GetAtt GeneralLambdaExecutionRole.Arn
+      MemorySize: 256
+
+  FuncUpdateSumaryDatabase:
+    Type: AWS::Serverless::Function 
+    Properties:
+      Handler: hdler_update_sumary_db.lambda_handler
+      CodeUri: statemachine/clone_project_data/functions
+      Role: !GetAtt GeneralLambdaExecutionRole.Arn
+      MemorySize: 256
+
+Outputs:
+  TestWaitHttpApi:
+    Value: !Sub "https://${TestWaitHttpApi}.execute-api.${AWS::Region}.amazonaws.com/${StagePara}"
