@@ -118,7 +118,14 @@ Resources:
         StagePara: !Ref Stage
         ApplicationPara: !Ref Application
         ### function arn
+        FunctionGetFileInfoNLabelArn: !GetAtt AnnotationService.Outputs.FunctionGetFileInfoNLabelArn
+        FunctionCreateLabelCategoryArn: !GetAtt AnnotationService.Outputs.FunctionCreateLabelCategoryArn
+        FunctionSaveLabelArn: !GetAtt AnnotationService.Outputs.FunctionSaveLabelArn
+        FunctionGetProjectInfoArn: !GetAtt ProjectService.Outputs.FunctionGetProjectInfoArn
+        FunctionProjectListDataArn: !GetAtt ProjectService.Outputs.FunctionProjectListDataArn
         ProjectCloneFunctionArn: !GetAtt ProjectService.Outputs.ProjectCloneFunctionArn
+        FunctionListProjectArn: !GetAtt ProjectService.Outputs.FunctionListProjectArn
+        
 
   DatabaseService:
     Type: AWS::Serverless::Application
@@ -145,6 +152,32 @@ Resources:
         TableAnnoDataOriginalName: !GetAtt DatabaseService.Outputs.TableAnnoDataOriginalName
         TableAnnoProjectSumName: !GetAtt DatabaseService.Outputs.TableAnnoProjectSumName
         TableAnnoProjectsName: !GetAtt DatabaseService.Outputs.TableAnnoProjectsName
+        TableLabelInfoName: !GetAtt DatabaseService.Outputs.TableLabelInfoName
+        ###_____ for daita project table
+        TableDaitaProjectsName: !Ref TableDaitaProjectsName
+        TableDaitaDataOriginalName: !Ref TableDaitaDataOriginalName
+        ###_____ for s3 bucket
+        S3AnnoBucketName: !Ref S3AnnoBucketName
+        S3DaitaBucketName: !Ref S3DaitaBucketName
+
+  AnnotationService:
+    Type: AWS::Serverless::Application
+    Properties:
+      Location: annotation-service/template_annotaion_service.yaml
+      Parameters:
+        StagePara: !Ref Stage
+        ApplicationPara: !Ref Application
+        ###_____ for common layer and role
+        CommonCodeLayerRef: !Ref CommonCodeLayerRef
+        LambdaRoleArn: !GetAtt GeneralLambdaExecutionRole.Arn
+        ###_____ for authorize
+        CognitoUserPoolRef: !Ref CognitoUserPoolRef
+        CognitoIdentityPoolIdRef: !Ref CognitoIdentityPoolIdRef
+        ###_____ for annotation project table
+        TableAnnoDataOriginalName: !GetAtt DatabaseService.Outputs.TableAnnoDataOriginalName
+        TableAnnoProjectSumName: !GetAtt DatabaseService.Outputs.TableAnnoProjectSumName
+        TableAnnoProjectsName: !GetAtt DatabaseService.Outputs.TableAnnoProjectsName
+        TableLabelInfoName: !GetAtt DatabaseService.Outputs.TableLabelInfoName
         ###_____ for daita project table
         TableDaitaProjectsName: !Ref TableDaitaProjectsName
         TableDaitaDataOriginalName: !Ref TableDaitaDataOriginalName

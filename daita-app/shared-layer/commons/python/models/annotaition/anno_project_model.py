@@ -30,15 +30,43 @@ class AnnoProjectModel():
 
     def __init__(self, table_name) -> None:
         print("table name: ", table_name)
-        self.table = boto3.resource('dynamodb').Table(table_name)               
+        self.table = boto3.resource('dynamodb').Table(table_name)     
+
+    def get_all_project(self, identity_id):
+
+        ls_fields_projection = [self.FIELD_PROJECT_ID, self.FIELD_PROJECT_NAME, 
+                                self.FIELD_GEN_STATUS, self.FIELD_CREATED_DATE]
+
+        response = self.table.query (
+                KeyConditionExpression=Key(self.FIELD_IDENTITY_ID).eq(identity_id),
+                ProjectionExpression= ",".join(ls_fields_projection),
+        )
+        ls_items = response.get("Items", [])
+
+        while 'LastEvaluatedKey' in response:
+            next_token = response['LastEvaluatedKey']
+            response = self.table.query (
+                KeyConditionExpression=Key(self.FIELD_IDENTITY_ID).eq(identity_id),
+                ProjectionExpression = ",".join(ls_fields_projection),
+                ExclusiveStartKey=next_token
+            )
+
+            ls_items += response.get("Items", [])
+
+        return ls_items          
    
-    def get_project_info(self, identity_id, project_name) -> dict:            
+    def get_project_info(self, identity_id, project_name, ls_projection_fields = []) -> dict:      
+        ### set default fields for projection      
+        if len(ls_projection_fields) == 0:
+            ls_projection_fields = [self.FIELD_PROJECT_ID, self.FIELD_PROJECT_NAME, self.FIELD_GEN_STATUS]
+
+        ### query
         response = self.table.get_item(
             Key={
                 self.FIELD_IDENTITY_ID: identity_id,
                 self.FIELD_PROJECT_NAME: project_name,
             },
-            ProjectionExpression= f'{self.FIELD_PROJECT_ID}, {self.FIELD_S3_PREFIX}, {self.FIELD_TIMES_AUGMENT}, {self.FIELD_TIMES_PREPRO}'
+            ProjectionExpression= ",".join(ls_projection_fields)
         )
         item = response.get('Item', None)
         print(item)

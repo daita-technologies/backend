@@ -69,3 +69,10 @@ class AnnoProjectSumModel():
         elif 'ResponseMetadata' in response and response['ResponseMetadata']['HTTPStatusCode'] == 200:
             return {'count': 0}
         return None
+
+    def query_data_project_id(self, project_id):
+        response = self.table.query(
+                KeyConditionExpression=Key(self.FIELD_PROJECT_ID).eq(project_id),
+            )
+        
+        return response.get("Items", [])

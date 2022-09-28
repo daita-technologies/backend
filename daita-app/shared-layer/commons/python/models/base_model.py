@@ -14,3 +14,10 @@ class BaseModel():
                     item[key] = int(value)
         
         return item
+
+    def put_item_w_condition(self, item, condition):
+        self.table.put_item(
+                    Item = item,
+                    ConditionExpression = condition
+                )
+        return

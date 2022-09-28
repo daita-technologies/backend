@@ -10,20 +10,38 @@ class AnnoDataModel(BaseModel):
     FIELD_PROJECT_ID        = "project_id"
     FIELD_FILENAME          = "filename"  
     FIELD_FILE_ID           = "file_id"  
-    FIELD_CREATE_TIME       = "created_time"
-    FIELD_UPDATE_TIME       = "updated_time"
+    FIELD_CREATED_TIME       = "created_time"
+    FIELD_UPDATED_TIME       = "updated_time"
     FIELD_GEN_ID            = "gen_id"
     FIELD_HASH              = "hash"    
     FIELD_IS_ORIGINAL       = "is_ori"
     FIELD_S3_KEY            = "s3_key"
     FIELD_TYPE_METHOD       = "type_method"
     FIELD_SIZE              = "size"
-    FIELD_HEALTHCHECK_ID    = "healthcheck_id"      
+    FIELD_S3_SEGME_LABEL    = "s3_key_segm"     
 
     REQUEST_TYPE_ALL    = "all"
 
     def __init__(self, table_name) -> None:
         self.table = boto3.resource('dynamodb').Table(table_name) 
+
+    def get_item(self, project_id, filename, ls_fields = []):
+        if len(ls_fields)==0:
+            ls_fields = [self.FIELD_FILENAME, self.FIELD_FILE_ID, self.FIELD_S3_KEY, self.FIELD_S3_SEGME_LABEL,
+                        self.FIELD_SIZE, self.FIELD_CREATED_TIME]
+        response = self.table.get_item(
+            Key={
+                self.FIELD_PROJECT_ID: project_id,
+                self.FIELD_FILENAME: filename,
+            },
+            ProjectionExpression= ",".join(ls_fields)
+        )
+        item = response.get('Item', None)
+
+        if item:
+            item[self.FIELD_SIZE] = int(item[self.FIELD_SIZE])
+        
+        return item
         
     def _query_project_wo_healthcheck_id(self, project_id):
         response = self.table.query (
@@ -42,7 +60,7 @@ class AnnoDataModel(BaseModel):
             },
             ExpressionAttributeNames= {
                 '#HC': self.FIELD_HEALTHCHECK_ID,
-                '#UP_DATE': self.FIELD_UPDATE_TIME
+                '#UP_DATE': self.FIELD_UPDATED_TIME
             },
             ExpressionAttributeValues = {
                 ':hc':  healthcheck_id,
@@ -99,6 +117,40 @@ class AnnoDataModel(BaseModel):
         except Exception as e:
             print('Error: ', repr(e))
             raise Exception(repr(e))
+
+    def query_data_follow_batch(self, project_id, next_token, num_limit, ls_fields_projection=[]):
+        if len(ls_fields_projection) == 0:
+            ls_fields_projection = [self.FIELD_CREATED_TIME, self.FIELD_FILENAME, 
+                                    self.FIELD_S3_KEY, self.FIELD_S3_SEGME_LABEL, self.FIELD_SIZE]
+
+        if len(next_token) == 0:
+            response = self.table.query(
+                # IndexName='index-created-sorted',
+                KeyConditionExpression=Key(self.FIELD_PROJECT_ID).eq(project_id),
+                ProjectionExpression= ",".join(ls_fields_projection),
+                Limit = num_limit,
+                ScanIndexForward = False
+            )
+            print('___Response first: ___', response)
+        else:
+            response = self.table.query(
+                # IndexName='index-created-sorted',
+                KeyConditionExpression = Key(self.FIELD_PROJECT_ID).eq(project_id),
+                ProjectionExpression = ",".join(ls_fields_projection),
+                ExclusiveStartKey=next_token,
+                Limit=num_limit,
+                ScanIndexForward=False
+            )
+            print('___Response next: ___', response)
+
+        next_token = None
+        # LastEvaluatedKey indicates that there are more results
+        if 'LastEvaluatedKey' in response:
+            next_token = response['LastEvaluatedKey']
+
+        ls_items = response.get("Items", [])
+
+        return next_token, [self.convert_decimal_indb_item(item) for item in ls_items]
         
 
     

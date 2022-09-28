@@ -74,6 +74,27 @@ Resources:
       BillingMode: PAY_PER_REQUEST
       StreamSpecification:
         StreamViewType: NEW_IMAGE
+  
+  LabelInfoDB:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: !Sub "${StagePara}-${ApplicationPara}-label-info"
+      AttributeDefinitions:
+        - 
+          AttributeName: file_id
+          AttributeType: S
+        - 
+          AttributeName: category_id
+          AttributeType: S
+      KeySchema:
+        - 
+          AttributeName: file_id
+          KeyType: HASH
+        -
+          AttributeName: category_id
+          KeyType: RANGE
+      BillingMode: PAY_PER_REQUEST
+
 
   
 Outputs:
@@ -88,3 +109,6 @@ Outputs:
   TableAnnoDataOriginalName:
     Description: "Name of table data original"
     Value: !Ref DataOriginalDB
+
+  TableLabelInfoName:
+    Value: !Ref LabelInfoDB

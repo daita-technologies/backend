@@ -37,7 +37,11 @@ class LambdaBaseClass(object):
         pass
         return
 
-    def get_identity(self, id_token):
-        identity = aws_get_identity_id(id_token)
+    def get_identity(self, id_token, user_pool_id=None, identity_pool_id=None):
+        if user_pool_id is None or identity_pool_id is None:
+            identity = aws_get_identity_id(id_token)
+        else:
+            identity = aws_get_identity_id(id_token=id_token,
+                                 USER_POOL_ID=user_pool_id, IDENTITY_POOL_ID=identity_pool_id)
         self.logger.info(f"identity: {identity}")
         return identity

@@ -14,6 +14,18 @@ Parameters:
 
   ProjectCloneFunctionArn:
     Type: String
+  FunctionGetFileInfoNLabelArn:
+    Type: String
+  FunctionCreateLabelCategoryArn:
+    Type: String
+  FunctionGetProjectInfoArn:
+    Type: String
+  FunctionSaveLabelArn:
+    Type: String
+  FunctionProjectListDataArn:
+    Type: String
+  FunctionListProjectArn:
+    Type: String
 
 Resources:
   #================ ROLES =====================================================

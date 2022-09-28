@@ -30,6 +30,8 @@ Parameters:
     Type: String
   TableAnnoProjectsName:
     Type: String
+  TableLabelInfoName:
+    Type: String
 
   TableDaitaProjectsName:
     Type: String
@@ -78,13 +80,37 @@ Resources:
   ProjectCloneFunction:
     Type: AWS::Serverless::Function
     Properties:
-      CodeUri: api-handler-functions
+      CodeUri: api-handler-functions/clone-project
       Handler: hdler_project_clone.lambda_handler
       Role: !Ref LambdaRoleArn
       MemorySize: 256
       Environment:
         Variables:
           SM_CLONE_PROJECT_ARN: !GetAtt CloneProjectSM.Arn
+  
+  FunctionGetProjectInfo:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: api-handler-functions/get-project-info
+      Handler: hdler_get_project_info.lambda_handler
+      Role: !Ref LambdaRoleArn
+      MemorySize: 256
+
+  FunctionProjectListData:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: api-handler-functions/list-data
+      Handler: hdler_list_data.lambda_handler
+      Role: !Ref LambdaRoleArn
+      MemorySize: 256
+  
+  FunctionListProject:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: api-handler-functions/list-project
+      Handler: hdler_list_project.lambda_handler
+      Role: !Ref LambdaRoleArn
+      MemorySize: 256
           
   #================ LAMBDA STEP FUNCTIONS ==========================================
   FuncMoveS3Data:
@@ -177,5 +203,14 @@ Outputs:
   ProjectCloneFunctionArn:
     Description: "ProjectCloneFunctionArn"
     Value: !GetAtt ProjectCloneFunction.Arn
+  
+  FunctionGetProjectInfoArn:
+    Value: !GetAtt FunctionGetProjectInfo.Arn
+
+  FunctionProjectListDataArn:
+    Value: !GetAtt FunctionProjectListData.Arn
+
+  FunctionListProjectArn:
+    Value: !GetAtt FunctionListProject.Arn
   
   
