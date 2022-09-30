@@ -26,6 +26,8 @@ Parameters:
     Type: String
   FunctionListProjectArn:
     Type: String
+  FunctionAddClassArn:
+    Type: String
 
 Resources:
   #================ ROLES =====================================================

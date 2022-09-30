@@ -65,6 +65,20 @@ paths:
         type: "aws_proxy"
         payloadFormatVersion: "2.0"
 
+  /annotation/category/add_class:
+    post:
+      responses:
+        default:
+          description: "add class anme list to category"
+      x-amazon-apigateway-integration:
+        credentials:
+          Fn::GetAtt: [ApiGatewayCallLambdaRole, Arn]
+        uri:
+          Fn::Sub: arn:${AWS::Partition}:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${FunctionAddClassArn}/invocations
+        httpMethod: "POST"
+        type: "aws_proxy"
+        payloadFormatVersion: "2.0"
+  
   ### create category of label task
   /annotation/file/create_lable_category:
     post:

@@ -121,11 +121,11 @@ Resources:
         FunctionGetFileInfoNLabelArn: !GetAtt AnnotationService.Outputs.FunctionGetFileInfoNLabelArn
         FunctionCreateLabelCategoryArn: !GetAtt AnnotationService.Outputs.FunctionCreateLabelCategoryArn
         FunctionSaveLabelArn: !GetAtt AnnotationService.Outputs.FunctionSaveLabelArn
+        FunctionAddClassArn: !GetAtt AnnotationService.Outputs.FunctionAddClassArn
         FunctionGetProjectInfoArn: !GetAtt ProjectService.Outputs.FunctionGetProjectInfoArn
         FunctionProjectListDataArn: !GetAtt ProjectService.Outputs.FunctionProjectListDataArn
         ProjectCloneFunctionArn: !GetAtt ProjectService.Outputs.ProjectCloneFunctionArn
         FunctionListProjectArn: !GetAtt ProjectService.Outputs.FunctionListProjectArn
-        
 
   DatabaseService:
     Type: AWS::Serverless::Application

@@ -111,6 +111,14 @@ Resources:
       Role: !Ref LambdaRoleArn
       MemorySize: 256
 
+  FunctionAddClass:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: api-handler-functions/add-class
+      Handler: hdler_add_class.lambda_handler
+      Role: !Ref LambdaRoleArn
+      MemorySize: 256
+
   
 
 Outputs:
@@ -124,5 +132,7 @@ Outputs:
     Value: !GetAtt FunctionCreateLabelCategory.Arn
   FunctionSaveLabelArn:
     Value: !GetAtt FunctionSaveLabel.Arn
+  FunctionAddClassArn:
+    Value: !GetAtt FunctionAddClass.Arn
   
   
