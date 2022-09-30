@@ -81,6 +81,7 @@ class ProjectCloneClass(LambdaBaseClass):
         project_id = f'{self.anno_project_name}_{_uuid}'
         s3_prj_root = f'{self.env.S3_ANNO_BUCKET_NAME}/{identity_id}/{project_id}'
         s3_prefix = f'{self.env.S3_ANNO_BUCKET_NAME}/{identity_id}/{project_id}/{const.FOLDER_RAW_DATA_NAME}'
+        s3_label = f'{self.env.S3_ANNO_BUCKET_NAME}/{identity_id}/{project_id}/{const.FOLDER_LABEL_NAME}'
         db_resource = boto3.resource('dynamodb')
         try:
             gen_status = AnnoProjectModel.VALUE_GEN_STATUS_GENERATING
@@ -89,6 +90,7 @@ class ProjectCloneClass(LambdaBaseClass):
                         AnnoProjectModel.FIELD_IDENTITY_ID: identity_id,
                         AnnoProjectModel.FIELD_PROJECT_NAME: self.anno_project_name,
                         AnnoProjectModel.FIELD_S3_PREFIX: s3_prefix,
+                        AnnoProjectModel.FIELD_S3_LABEL: s3_label,
                         AnnoProjectModel.FIELD_S3_PRJ_ROOT: s3_prj_root,
                         AnnoProjectModel.FIELD_PROJECT_INFO: self.project_info,
                         AnnoProjectModel.FIELD_CREATED_DATE: convert_current_date_to_iso8601(),
@@ -126,6 +128,7 @@ class ProjectCloneClass(LambdaBaseClass):
                     "project_id": project_id,
                     "s3_prefix": s3_prefix,
                     "s3_prj_root": s3_prj_root,
+                    "s3_label": s3_label,
                     "gen_status": gen_status,
                     "project_name": self.anno_project_name,
                     "link_daita_prj_id": project_rec.get_value_w_default(ProjectItem.FIELD_PROJECT_ID)

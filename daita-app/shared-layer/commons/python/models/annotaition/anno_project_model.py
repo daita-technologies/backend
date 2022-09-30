@@ -12,6 +12,7 @@ class AnnoProjectModel():
     FIELD_PROJECT_NAME          = "project_name"
     FIELD_GEN_STATUS            = "gen_status"     ### status of generating progress
     FIELD_S3_PREFIX             = "s3_prefix"
+    FIELD_S3_LABEL              = "s3_label"
     FIELD_S3_PRJ_ROOT           = "s3_prj_root"
     FIELD_IS_SAMPLE             = "is_sample"
     FIELD_PROJECT_INFO          = "project_info"
@@ -20,6 +21,7 @@ class AnnoProjectModel():
     FIELD_UPDATE_DATE           = "updated_date"
     FIELD_CREATED_DATE          = "created_date"
     FIELD_LINKED_PROJECT        = "link_daita_prj_id"
+    FIELD_CATEGORY_DEFAULT      = "defa_category_id"    ### the default category of project, remove it after has category logic
     FIELD_REFERENCE_IMAGES      = KEY_NAME_REFERENCE_IMAGES
     FIELD_DATANUM_ORIGINAL      = VALUE_TYPE_DATA_ORIGINAL
     FIELD_DATANUM_PREPROCESS    = VALUE_TYPE_DATA_PREPROCESSED
@@ -105,6 +107,41 @@ class AnnoProjectModel():
         )
 
         return
+
+    def update_project_gen_status_category_default(self, identity_id, project_name, status, category_id):
+        response = self.table.update_item(
+            Key={
+                'identity_id': identity_id,
+                'project_name': project_name,
+            },
+            ExpressionAttributeValues={
+                ':st': status,
+                ':cat': category_id,
+                ':up': convert_current_date_to_iso8601()
+            },
+            ExpressionAttributeNames= {
+                '#GEN': self.FIELD_GEN_STATUS,
+                '#CAT': self.FIELD_CATEGORY_DEFAULT,
+                '#UP': self.FIELD_UPDATE_DATE,
+            },
+            UpdateExpression='SET  #GEN = :st, #CAT = :cat, #UP = :up'
+        )
+
+        return
+
+    # def update_project_attributes(self, identity_id, project_name, ls_attributes_info):
+    #     """
+    #     update the attributes of project in general input parameters, the update expression default will be set
+
+    #     params:
+    #     - ls_attributes_info: should be in format [[<attr_name_1>, <value_1>], [<attr_name_2>, <value_2>], ...]
+    #     """
+    #     ex_attri_name = {}
+    #     ex_value = {}
+    #     ls_update_ex = []
+    #     for name, value in ls_attributes_info:
+    #         ex_attri_name
+
 
     def update_project_generate_times(self, identity_id, project_name, times_augment, times_preprocess,
                                      reference_images, aug_params):

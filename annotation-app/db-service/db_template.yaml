@@ -95,6 +95,46 @@ Resources:
           KeyType: RANGE
       BillingMode: PAY_PER_REQUEST
 
+  CategoryInfoDB:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: !Sub "${StagePara}-${ApplicationPara}-category-info"
+      AttributeDefinitions:
+        - 
+          AttributeName: project_id
+          AttributeType: S
+        - 
+          AttributeName: category_id
+          AttributeType: S
+      KeySchema:
+        - 
+          AttributeName: project_id
+          KeyType: HASH
+        -
+          AttributeName: category_id
+          KeyType: RANGE
+      BillingMode: PAY_PER_REQUEST
+
+  ClassInfoDB:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: !Sub "${StagePara}-${ApplicationPara}-class-info"
+      AttributeDefinitions:
+        - 
+          AttributeName: category_id
+          AttributeType: S
+        - 
+          AttributeName: class_name
+          AttributeType: S
+      KeySchema:
+        - 
+          AttributeName: category_id
+          KeyType: HASH
+        -
+          AttributeName: class_name
+          KeyType: RANGE
+      BillingMode: PAY_PER_REQUEST
+
 
   
 Outputs:
@@ -112,3 +152,12 @@ Outputs:
 
   TableLabelInfoName:
     Value: !Ref LabelInfoDB
+
+  TableCategoryInfoName:
+    Value: !Ref CategoryInfoDB
+
+  TableClassInfoName:
+    Value: !Ref ClassInfoDB
+
+  TableAIDefaultClassInfoName:
+    Value: const-ai-class-info

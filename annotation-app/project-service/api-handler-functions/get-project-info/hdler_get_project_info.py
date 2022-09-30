@@ -29,7 +29,9 @@ class GetProjectInfoClass(LambdaBaseClass):
         identity_id = self.get_identity(self.id_token, self.env.USER_POOL_ID, self.env.IDENTITY_POOL_ID)
 
         ### get project_id
-        project_info = self.anno_project_model.get_project_info(identity_id, self.project_name, [AnnoProjectModel.FIELD_PROJECT_ID])
+        project_info = self.anno_project_model.get_project_info(identity_id, self.project_name, 
+                                                                [AnnoProjectModel.FIELD_PROJECT_ID, AnnoProjectModel.FIELD_CATEGORY_DEFAULT, AnnoProjectModel.FIELD_S3_PREFIX,
+                                                                AnnoProjectModel.FIELD_S3_LABEL])
         if project_info is None:
             raise Exception(MESS_PROJECT_NOT_EXIST.format(self.project_name))
         project_id = project_info[AnnoProjectModel.FIELD_PROJECT_ID]
@@ -51,6 +53,9 @@ class GetProjectInfoClass(LambdaBaseClass):
                                         "identity_id": identity_id,
                                         "project_name": self.project_name,
                                         "project_id": project_id,
+                                        "s3_raw_data": project_info[AnnoProjectModel.FIELD_S3_PREFIX],
+                                        "s3_label": project_info[AnnoProjectModel.FIELD_S3_LABEL],
+                                        "default_category_id": project_info[AnnoProjectModel.FIELD_CATEGORY_DEFAULT],
                                         "groups": groups,
                                     },
                                 "error": False,

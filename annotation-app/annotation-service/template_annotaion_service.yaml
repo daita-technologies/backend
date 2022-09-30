@@ -32,6 +32,12 @@ Parameters:
     Type: String
   TableLabelInfoName:
     Type: String
+  TableCategoryInfoName:
+    Type: String
+  TableClassInfoName:
+    Type: String
+  TableAIDefaultClassInfoName:
+    Type: String
 
   TableDaitaProjectsName:
     Type: String
@@ -66,6 +72,9 @@ Globals:
         TABLE_ANNO_PROJECT: !Ref TableAnnoProjectsName
         TABLE_ANNO_DATA_ORI: !Ref TableAnnoDataOriginalName
         TABLE_ANNO_LABEL_INFO: !Ref TableLabelInfoName
+        TABLE_ANNO_CATEGORY_INFO: !Ref TableCategoryInfoName
+        TABLE_ANNO_CLASS_INFO: !Ref TableClassInfoName
+        TABLE_ANNO_AI_DEFAULT_CLASS: !Ref TableAIDefaultClassInfoName
 
         TABLE_DAITA_PROJECT: !Ref TableDaitaProjectsName
         TABLE_DAITA_DATA_ORIGINAL: !Ref TableDaitaDataOriginalName
