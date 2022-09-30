@@ -67,7 +67,7 @@ class MoveUpdateDataClass(LambdaBaseClass):
                 AnnoDataModel.FIELD_HASH: '',      # we use function get it mean that this field is optional in body
                 AnnoDataModel.FIELD_SIZE: object[2],              # size must be in Byte unit
                 AnnoDataModel.FIELD_IS_ORIGINAL:  True,
-                AnnoDataModel.FIELD_CREATE_TIME: convert_current_date_to_iso8601()
+                AnnoDataModel.FIELD_CREATED_TIME: convert_current_date_to_iso8601()
             }
             ls_item_request.append(item_request)
 
