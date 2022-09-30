@@ -76,9 +76,13 @@ class AnnoClassInfoModel(BaseModel):
         
         return ls_ok, ls_fail
 
-    def query_all_class_of_category(self, category_id):
+    def query_all_class_of_category(self, category_id, ls_fields_projection=[]):
+        if len(ls_fields_projection) == 0:
+            ls_fields_projection = [self.FIELD_CLASS_NAME, self.FIELD_CLASS_ID]
+
         response = self.table.query(
                 KeyConditionExpression=Key(self.FIELD_CATEGORY_ID).eq(category_id),
+                ProjectionExpression= ",".join(ls_fields_projection),
             )
         
         return response.get("Items", [])

@@ -11,6 +11,7 @@ from error_messages import *
 
 from models.annotaition.anno_project_model import AnnoProjectModel
 from models.annotaition.anno_project_sum_model import AnnoProjectSumModel
+from models.annotaition.anno_class_info import AnnoClassInfoModel
 
 
 class GetProjectInfoClass(LambdaBaseClass):
@@ -18,6 +19,7 @@ class GetProjectInfoClass(LambdaBaseClass):
         super().__init__()
         self.anno_project_model = AnnoProjectModel(self.env.TABLE_ANNO_PROJECT)
         self.anno_project_sum_model = AnnoProjectSumModel(self.env.TABLE_ANNO_PROJECT_SUMMARY)
+        self.model_class_info = AnnoClassInfoModel(self.env.TABLE_ANNO_CLASS_INFO)
 
     def parser(self, body):
         self.id_token = body["id_token"]
@@ -55,7 +57,12 @@ class GetProjectInfoClass(LambdaBaseClass):
                                         "project_id": project_id,
                                         "s3_raw_data": project_info[AnnoProjectModel.FIELD_S3_PREFIX],
                                         "s3_label": project_info[AnnoProjectModel.FIELD_S3_LABEL],
-                                        "default_category_id": project_info[AnnoProjectModel.FIELD_CATEGORY_DEFAULT],
+                                        "ls_category": [
+                                            {
+                                                "category_id": project_info[AnnoProjectModel.FIELD_CATEGORY_DEFAULT],
+                                                "ls_class": self.model_class_info.query_all_class_of_category(project_info[AnnoProjectModel.FIELD_CATEGORY_DEFAULT])
+                                            }
+                                        ],
                                         "groups": groups,
                                     },
                                 "error": False,
