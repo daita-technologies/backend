@@ -2,7 +2,7 @@ version = 0.1
 [default]
 [default.deploy]
 [default.deploy.parameters]
-stack_name = "test-ecstask"
+stack_name = "segment-ecstask"
 s3_bucket = "aws-sam-cli-managed-default-samclisourcebucket-eu58g5l8is1s"
 s3_prefix = "test-ecstask"
 region = "us-east-2"

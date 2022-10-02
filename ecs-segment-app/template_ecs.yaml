@@ -1,10 +1,6 @@
 AWSTemplateFormatVersion: '2010-09-09'
-Transform: AWS::Serverless-2016-10-31
 Description: >
   AI-workers-app
-
-
-
 Parameters:
 
   EC2KeyPair:
@@ -23,7 +19,7 @@ Parameters:
     Type: String
     Default: vpc-057803c925fd8138a
 
-    
+
   StagePara:
     Type: String
     Default: test
@@ -31,59 +27,44 @@ Parameters:
     Type: String
     Default: ecstask
 
-  # EFSAccessPointRootPath:
-  #   Type: String
-  #   Default: /ai-prepocessing-app
+  EFSAccessPointRootPath:
+    Type: String
+    Default: /ai-prepocessing-app-test
 
   EFSFileSystemId:
     Type:  String
     Default: fs-01115862a24b75423
 
-  # EFSAccessPoint:
-  #   Type: String
-
+  EFSAccessPoint:
+    Type: String
+    Default: fsap-0e97652d5a9ca4892
   ### Amid config: https://docs.aws.amazon.com/AmazonECS/latest/developerguide/ecs-optimized_AMI.html
   AMIID:
     Type: String
     Default: ami-0693a7971cd761811
   InstanceType:
     Type: String
-    Default: t3a.small
+    Default: t3.medium
 
-  AIWaitTaskImage:
+  SegmentTaskImage:
     Type: String
     Default: 737589818430.dkr.ecr.us-east-2.amazonaws.com/ai-services-repo:test-dowload-lib
-  
+
   InternetGatewayID:
     Type: String
     Default: igw-05a5a3a33c9cfa1fc
-
-Mappings:
-  # Hard values for the subnet masks. These masks define
-  # the range of internal IP addresses that can be assigned.
-  # The VPC can have all IP's from 10.0.0.0 to 10.0.255.255
-  # There are four subnets which cover the ranges:
-  #
-  # 10.0.0.0 - 10.0.0.255
-  # 10.0.1.0 - 10.0.1.255
-  # 10.0.2.0 - 10.0.2.255
-  # 10.0.3.0 - 10.0.3.255
-  #
-  # If you need more IP addresses (perhaps you have so many
-  # instances that you run out) then you can customize these
-  # ranges to add more
-  SubnetConfig:
-    VPC:
-      CIDR: '10.0.0.0/16'
-    PublicOne:
-      CIDR: '172.31.80.0/20'
-    # PublicTwo:
-    #   CIDR: '10.0.1.0/24'
-    PrivateOne:
-      CIDR: '172.31.48.0/20'
-    PrivateTwo:
-      CIDR: '172.31.64.0/20'
-
+  PrivateSubnetTwo:
+    Type: String
+    Default: subnet-0ea9f572789e618e8
+  PrivateSubnetOne:
+    Type: String
+    Default: subnet-0f41b17e36f814ac5
+  # EC2InstanceRole:
+  #   Type: String
+  #   Default: 
+  CapacityProvider:
+    Type: String
+    Default: test-ecstask-capacity-provider
 Resources:
   # Roles
   MyECSTaskExecutionRole:
@@ -176,19 +157,19 @@ Resources:
 
 
   # Two public subnets, where containers can have public IP addresses
-  PublicSubnetOne:
-    Type: AWS::EC2::Subnet
-    Properties:
-      Tags: 
-        - Key: "Name"
-          Value: !Sub "${StagePara}_${ApplicationPara}_public_1"
-      AvailabilityZone:
-         Fn::Select:
-         - 0
-         - Fn::GetAZs: {Ref: 'AWS::Region'}
-      VpcId: !Ref VPCId
-      CidrBlock: !FindInMap ['SubnetConfig', 'PublicOne', 'CIDR']
-      MapPublicIpOnLaunch: true
+  # PublicSubnetOne:
+  #   Type: AWS::EC2::Subnet
+  #   Properties:
+  #     Tags:
+  #       - Key: "Name"
+  #         Value: !Sub "${StagePara}_${ApplicationPara}_public_1"
+  #     AvailabilityZone:
+  #        Fn::Select:
+  #        - 0
+  #        - Fn::GetAZs: {Ref: 'AWS::Region'}
+  #     VpcId: !Ref VPCId
+  #     CidrBlock: !FindInMap ['SubnetConfig', 'PublicOne', 'CIDR']
+  #     MapPublicIpOnLaunch: true
 
   # PublicSubnetTwo:
   #   Type: AWS::EC2::Subnet
@@ -205,97 +186,97 @@ Resources:
   # Two private subnets where containers will only have private
   # IP addresses, and will only be reachable by other members of the
   # VPC
-  PrivateSubnetOne:
-    Type: AWS::EC2::Subnet
-    Properties:
-      Tags: 
-        - Key: "Name"
-          Value: !Sub "${StagePara}_${ApplicationPara}_private_sn_1"
-      AvailabilityZone:
-         Fn::Select:
-         - 0
-         - Fn::GetAZs: {Ref: 'AWS::Region'}
-      VpcId: !Ref VPCId
-      CidrBlock: !FindInMap ['SubnetConfig', 'PrivateOne', 'CIDR']
-  PrivateSubnetTwo:
-    Type: AWS::EC2::Subnet
-    Properties:
-      Tags: 
-        - Key: "Name"
-          Value: !Sub "${StagePara}_${ApplicationPara}_private_sn_2"
-      AvailabilityZone:
-         Fn::Select:
-         - 1
-         - Fn::GetAZs: {Ref: 'AWS::Region'}
-      VpcId: !Ref VPCId
-      CidrBlock: !FindInMap ['SubnetConfig', 'PrivateTwo', 'CIDR']
+  # PrivateSubnetOne:
+  #   Type: AWS::EC2::Subnet
+  #   Properties:
+  #     Tags:
+  #       - Key: "Name"
+  #         Value: !Sub "${StagePara}_${ApplicationPara}_private_sn_1"
+  #     AvailabilityZone:
+  #        Fn::Select:
+  #        - 0
+  #        - Fn::GetAZs: {Ref: 'AWS::Region'}
+  #     VpcId: !Ref VPCId
+  #     CidrBlock: !FindInMap ['SubnetConfig', 'PrivateOne', 'CIDR']
+  # PrivateSubnetTwo:
+  #   Type: AWS::EC2::Subnet
+  #   Properties:
+  #     Tags:
+  #       - Key: "Name"
+  #         Value: !Sub "${StagePara}_${ApplicationPara}_private_sn_2"
+  #     AvailabilityZone:
+  #        Fn::Select:
+  #        - 1
+  #        - Fn::GetAZs: {Ref: 'AWS::Region'}
+  #     VpcId: !Ref VPCId
+  #     CidrBlock: !FindInMap ['SubnetConfig', 'PrivateTwo', 'CIDR']
 
   ###___________________ NETWORKING SETUP FOR PRIVATE SUBNET ___________________
   # Setup networking resources for the private subnets. Containers
   # in these subnets have only private IP addresses, and must use a NAT
   # gateway to talk to the internet. We launch two NAT gateways, one for
   # each private subnet.
-  NatGatewayOneAttachment:
-    Type: AWS::EC2::EIP
-    Properties:
-        Domain: vpc
-        Tags: 
-          - Key: "Name"
-            Value: !Sub "${StagePara}_${ApplicationPara}_eip_natgw_1"
+  # NatGatewayOneAttachment:
+  #   Type: AWS::EC2::EIP
+  #   Properties:
+  #       Domain: vpc
+  #       Tags:
+  #         - Key: "Name"
+  #           Value: !Sub "${StagePara}_${ApplicationPara}_eip_natgw_1_segment_nat"
   # NatGatewayTwoAttachment:
   #   Type: AWS::EC2::EIP
   #   Properties:
   #       Domain: vpc
-  NatGatewayOne:
-    Type: AWS::EC2::NatGateway
-    Properties:
-      AllocationId: !GetAtt NatGatewayOneAttachment.AllocationId
-      SubnetId: !Ref PublicSubnetOne
+  # NatGatewayOne:
+  #   Type: AWS::EC2::NatGateway
+  #   Properties:
+  #     AllocationId: !GetAtt NatGatewayOneAttachment.AllocationId
+  #     SubnetId: !Ref PublicSubnetOne
   # NatGatewayTwo:
   #   Type: AWS::EC2::NatGateway
   #   Properties:
   #     AllocationId: !GetAtt NatGatewayTwoAttachment.AllocationId
   #     SubnetId: !Ref PublicSubnetTwo
-  PrivateRouteTableOne:
-    Type: AWS::EC2::RouteTable
-    Properties:
-      VpcId: !Ref VPCId
-  PrivateRouteOne:
-    Type: AWS::EC2::Route
-    Properties:
-      RouteTableId: !Ref PrivateRouteTableOne
-      DestinationCidrBlock: 0.0.0.0/0
-      NatGatewayId: !Ref NatGatewayOne
-  PrivateRouteTableOneAssociation:
-    Type: AWS::EC2::SubnetRouteTableAssociation
-    Properties:
-      RouteTableId: !Ref PrivateRouteTableOne
-      SubnetId: !Ref PrivateSubnetOne
-  PrivateRouteTableTwo:
-    Type: AWS::EC2::RouteTable
-    Properties:
-      VpcId: !Ref VPCId
-  PrivateRouteTwo:
-    Type: AWS::EC2::Route
-    Properties:
-      RouteTableId: !Ref PrivateRouteTableTwo
-      DestinationCidrBlock: 0.0.0.0/0
-      NatGatewayId: !Ref NatGatewayOne
-  PrivateRouteTableTwoAssociation:
-    Type: AWS::EC2::SubnetRouteTableAssociation
-    Properties:
-      RouteTableId: !Ref PrivateRouteTableTwo
-      SubnetId: !Ref PrivateSubnetTwo
+  # PrivateRouteTableOne:
+  #   Type: AWS::EC2::RouteTable
+  #   Properties:
+  #     VpcId: !Ref VPCId
+  # PrivateRouteOne:
+  #   Type: AWS::EC2::Route
+  #   Properties:
+  #     RouteTableId: !Ref PrivateRouteTableOne
+  #     DestinationCidrBlock: 0.0.0.0/0
+  #     NatGatewayId: !Ref NatGatewayOne
+  # PrivateRouteTableOneAssociation:
+  #   Type: AWS::EC2::SubnetRouteTableAssociation
+  #   Properties:
+  #     RouteTableId: !Ref PrivateRouteTableOne
+  #     SubnetId: !Ref PrivateSubnetOne
+  # PrivateRouteTableTwo:
+  #   Type: AWS::EC2::RouteTable
+  #   Properties:
+  #     VpcId: !Ref VPCId
+  # PrivateRouteTwo:
+  #   Type: AWS::EC2::Route
+  #   Properties:
+  #     RouteTableId: !Ref PrivateRouteTableTwo
+  #     DestinationCidrBlock: 0.0.0.0/0
+  #     NatGatewayId: !Ref NatGatewayOne
+  # PrivateRouteTableTwoAssociation:
+  #   Type: AWS::EC2::SubnetRouteTableAssociation
+  #   Properties:
+  #     RouteTableId: !Ref PrivateRouteTableTwo
+  #     SubnetId: !Ref PrivateSubnetTwo
 
 
-  ###______________ CONFIG VPC ENDPOINT ________________
+  ##______________ CONFIG VPC ENDPOINT ________________
   # VPC Endpoint for DynamoDB
   # If a container needs to access DynamoDB this allows a container in the private subnet
   # to talk to DynamoDB directly without needing to go via the NAT gateway. This reduces
   # the amount of bandwidth through the gateway, meaning that the gateway is free to serve
   # your other traffic.
   # link: https://aws.amazon.com/blogs/containers/using-vpc-endpoint-policies-to-control-amazon-ecr-access/
-  DynamoDBEndpoint:
+  # DynamoDBEndpoint:
     Type: AWS::EC2::VPCEndpoint
     Properties:
       PolicyDocument:
@@ -310,7 +291,7 @@ Resources:
         - !Ref 'PrivateRouteTableTwo'
       ServiceName: !Sub com.amazonaws.${AWS::Region}.dynamodb
       VpcId: !Ref VPCId
-  S3VPCEndpoint:
+  # S3VPCEndpoint:
     Type: AWS::EC2::VPCEndpoint
     Properties:
       PolicyDocument:
@@ -325,7 +306,7 @@ Resources:
         - !Ref 'PrivateRouteTableTwo'
       ServiceName: !Sub com.amazonaws.${AWS::Region}.s3
       VpcId: !Ref VPCId
-  ECRPullImageEndpoint:
+  # ECRPullImageEndpoint:
     Type: AWS::EC2::VPCEndpoint
     Properties:
       VpcEndpointType: Interface
@@ -346,25 +327,25 @@ Resources:
   AITaskECSCluster:
     Type: AWS::ECS::Cluster
     Properties:
-      ClusterName: !Sub "${StagePara}-${ApplicationPara}-Cluster-AI-tasks"
+      ClusterName: !Sub "${StagePara}-${ApplicationPara}-Cluster-AI-segment-tasks"
 
 
   ###________ CAPACITY CONFIG FOR CLUSTER ______________
   ###### doc: https://docs.aws.amazon.com/autoscaling/application/userguide/application-auto-scaling-target-tracking.html
-  CapacityProvider:
-    Type: AWS::ECS::CapacityProvider
-    DependsOn: AITaskECSCluster
-    Properties: 
-      Name: !Sub "${StagePara}-${ApplicationPara}-capacity-provider"
-      AutoScalingGroupProvider:
-        AutoScalingGroupArn: !Ref TestAutoScalingGroup
-        ManagedScaling: 
-          # InstanceWarmupPeriod: 300
-          MaximumScalingStepSize: 2
-          MinimumScalingStepSize: 1
-          Status: ENABLED
-          TargetCapacity: 100 
-        # ManagedTerminationProtection: ENABLED 
+  # CapacityProvider:
+  #   Type: AWS::ECS::CapacityProvider
+  #   DependsOn: AITaskECSCluster
+  #   Properties:
+  #     Name: !Sub "${StagePara}-${ApplicationPara}-capacity-provider"
+  #     AutoScalingGroupProvider:
+  #       AutoScalingGroupArn: !Ref TestAutoScalingGroup
+  #       ManagedScaling:
+  #         # InstanceWarmupPeriod: 300
+  #         MaximumScalingStepSize: 2
+  #         MinimumScalingStepSize: 1
+  #         Status: ENABLED
+  #         TargetCapacity: 100
+        # ManagedTerminationProtection: ENABLED
   ClusterCapacityProviderAssociation:
     Type: AWS::ECS::ClusterCapacityProviderAssociations
     Properties:
@@ -379,22 +360,22 @@ Resources:
   #_________________ CONFIG AUTO SCALING GROUP _____________
   # Auto scaling template
   # https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/quickref-autoscaling.html
-  # for now we only create a one instance scaling group, the scaling base on SQS part might need to be done by cli as below
-  TestAutoScalingGroup:
-    Type: AWS::AutoScaling::AutoScalingGroup
-    DependsOn: AITaskECSCluster
-    Properties:
-      AutoScalingGroupName: !Sub "${StagePara}-${ApplicationPara}-ai-task-autoscaling"
-      VPCZoneIdentifier: 
-        - !Ref PrivateSubnetOne
-        - !Ref PrivateSubnetTwo
-      LaunchTemplate:
-        LaunchTemplateId: !Ref EC2LaunchTemplate
-        Version: !GetAtt EC2LaunchTemplate.LatestVersionNumber
-      NewInstancesProtectedFromScaleIn: false #if true this block scale in termination completely
-      MaxSize: 4
-      MinSize: 0
-      DesiredCapacity: 0  ### check link: https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-properties-as-group.html#cfn-as-group-desiredcapacity
+  # # for now we only create a one instance scaling group, the scaling base on SQS part might need to be done by cli as below
+  # TestAutoScalingGroup:
+  #   Type: AWS::AutoScaling::AutoScalingGroup
+  #   DependsOn: AITaskECSCluster
+  #   Properties:
+  #     AutoScalingGroupName: !Sub "${StagePara}-${ApplicationPara}-ai-task-seg-autoscaling"
+  #     VPCZoneIdentifier:
+  #       - !Ref PrivateSubnetOne
+  #       - !Ref PrivateSubnetTwo
+  #     LaunchTemplate:
+  #       LaunchTemplateId: !Ref EC2LaunchTemplate
+  #       Version: !GetAtt EC2LaunchTemplate.LatestVersionNumber
+  #     NewInstancesProtectedFromScaleIn: false #if true this block scale in termination completely
+  #     MaxSize: 4
+  #     MinSize: 0
+  #     DesiredCapacity: 0  ### check link: https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-properties-as-group.html#cfn-as-group-desiredcapacity
 
 
   #_____________ EC2 CONFIG LAUNCH TEMPLATE ________________
@@ -406,61 +387,32 @@ Resources:
       GroupDescription: Access to the ECS hosts that run containers
       VpcId: !Ref VPCId
   ### config role for ec2
-  EC2InstanceProfile:
-    Type: AWS::IAM::InstanceProfile
-    Properties:
-      Path: /
-      Roles: [!Ref EC2InstanceRole]
-  ## template config
-  EC2LaunchTemplate:
-    Type: AWS::EC2::LaunchTemplate
-    Properties:
-      LaunchTemplateName: !Sub "${StagePara}-${ApplicationPara}-Ec2-Launch-template"
-      LaunchTemplateData:
-        DisableApiTermination: false
-        ImageId: !Ref AMIID
-        InstanceType: !Ref InstanceType
-        KeyName: !Ref EC2KeyPair
-        SecurityGroupIds: [!Ref 'ContainerSecurityGroup']
-        IamInstanceProfile: 
-          Arn: !GetAtt EC2InstanceProfile.Arn
-        UserData:
-          Fn::Base64: !Sub | 
-            #!/bin/bash -xe
-            echo ECS_CLUSTER=${AITaskECSCluster} >> /etc/ecs/ecs.config
-            yum install -y aws-cfn-bootstrap
-            /opt/aws/bin/cfn-signal -e $? --stack ${AWS::StackName} --resource TestAutoScalingGroup --region ${AWS::Region}
-
-  #____________________ TASK DEFINITION ________________
-  # The task definition. This is a simple metadata description of what
-  # container to run, and what resource requirements it has.
-  MyWaitTaskDefinition:
-    Type: AWS::ECS::TaskDefinition
-    Properties:
-      ExecutionRoleArn: !Ref MyECSTaskExecutionRole
-      TaskRoleArn: !GetAtt MyECSTaskRole.Arn 
-      NetworkMode: awsvpc
-      ContainerDefinitions:
-        -
-          Name: !Sub "${StagePara}-${ApplicationPara}-AI-wait-task"
-          Image: !Ref AIWaitTaskImage
-          Cpu: 256
-          Memory: 256
-          LogConfiguration:
-            LogDriver: 'awslogs'
-            Options:
-              awslogs-group: !Sub ${StagePara}-service-${ApplicationPara}
-              awslogs-region: !Ref 'AWS::Region'
-              awslogs-create-group: true
-              awslogs-stream-prefix: !Ref 'ApplicationPara'
-
-  # AITaskECSLogGroup:
-  #   Type: AWS::Logs::LogGroup
+  # EC2InstanceProfile:
+  #   Type: AWS::IAM::InstanceProfile
   #   Properties:
-  #     LogGroupName: !Sub "/aws/vendedlogs/states/${AWS::StackName}-AITaskECSLogGroup"
-  #     RetentionInDays: 7
+  #     Path: /
+  #     Roles: [!Ref EC2InstanceRole]
+  # ## template config
+  # EC2LaunchTemplate:
+  #   Type: AWS::EC2::LaunchTemplate
+  #   Properties:
+  #     LaunchTemplateName: !Sub "${StagePara}-${ApplicationPara}-Ec2-Launch-template-segmentation-task"
+  #     LaunchTemplateData:
+  #       DisableApiTermination: false
+  #       ImageId: !Ref AMIID
+  #       InstanceType: !Ref InstanceType
+  #       KeyName: !Ref EC2KeyPair
+  #       SecurityGroupIds: [!Ref 'ContainerSecurityGroup']
+  #       IamInstanceProfile:
+  #         Arn: !GetAtt EC2InstanceProfile.Arn
+  #       UserData:
+  #         Fn::Base64: !Sub |
+  #           #!/bin/bash -xe
+  #           echo ECS_CLUSTER=${AITaskECSCluster} >> /etc/ecs/ecs.config
+  #           yum install -y aws-cfn-bootstrap
+  #           /opt/aws/bin/cfn-signal -e $? --stack ${AWS::StackName} --resource TestAutoScalingGroup --region ${AWS::Region}
 
-  # # EFS
+  # # # EFS
   # EFSAccessPoint:  # subnet must be one of EFSFileSystemId's Mount targets
   #   Type: AWS::EFS::AccessPoint
   #   Properties:
@@ -475,6 +427,75 @@ Resources:
   #         Permissions: "777"
   #       Path: !Ref EFSAccessPointRootPath
 
+  #____________________ TASK DEFINITION ________________
+  # The task definition. This is a simple metadata description of what
+  # container to run, and what resource requirements it has.
+  MyWaitTaskDefinition:
+    Type: AWS::ECS::TaskDefinition
+    Properties:
+      ExecutionRoleArn: !Ref MyECSTaskExecutionRole
+      TaskRoleArn: !GetAtt MyECSTaskRole.Arn
+      NetworkMode: awsvpc
+      ContainerDefinitions:
+        -
+          Name: !Sub "${StagePara}-${ApplicationPara}-AI-wait-task"
+          Image: !Ref SegmentTaskImage
+          Cpu: 256
+          Memory: 256
+          LogConfiguration:
+            LogDriver: 'awslogs'
+            Options:
+              awslogs-group: !Sub ${StagePara}-service-${ApplicationPara}
+              awslogs-region: !Ref 'AWS::Region'
+              awslogs-create-group: true
+              awslogs-stream-prefix: !Ref 'ApplicationPara'
+
+  MyECSTaskLogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: !Sub "/aws/vendedlogs/states/${StagePara}-MyECSTaskLogGroup-${AWS::StackName}"
+      RetentionInDays: 7
+
+  AISegmentTask:
+    Type: AWS::ECS::TaskDefinition
+    Properties:
+      ExecutionRoleArn: !Ref MyECSTaskExecutionRole
+      TaskRoleArn: !GetAtt MyECSTaskRole.Arn #TODO: create this in template
+      NetworkMode: awsvpc
+      ContainerDefinitions:
+        -
+          Name: "ai-segment"
+          Image: 737589818430.dkr.ecr.us-east-2.amazonaws.com/ai-services-repo:segformer
+          Cpu: 2048
+          Memory: 3072
+          Command:
+            - --json_path
+            - data/sample/preprocessing.json  # move this override to trigger function
+          LogConfiguration:
+            LogDriver: awslogs
+            Options:
+              awslogs-region: !Sub "${AWS::Region}"
+              awslogs-group: !Ref MyECSTaskLogGroup
+              awslogs-stream-prefix: ai-preprocessing
+          MountPoints:
+            -
+              SourceVolume: "my-vol"
+              ContainerPath: /app/data
+      Volumes:
+        -
+          EFSVolumeConfiguration:
+            AuthorizationConfig:
+              AccessPointId: !Ref EFSAccessPoint
+            FilesystemId: !Ref EFSFileSystemId
+            TransitEncryption: ENABLED # enable this so maybe we don't need to config a access point https://docs.aws.amazon.com/pt_br/AWSCloudFormation/latest/UserGuide/aws-properties-ecs-taskdefinition-authorizationconfig.html
+          Name: "my-vol"
+
+  # AITaskECSLogGroup:
+  #   Type: AWS::Logs::LogGroup
+  #   Properties:
+  #     LogGroupName: !Sub "/aws/vendedlogs/states/${AWS::StackName}-AITaskECSLogGroup"
+  #     RetentionInDays: 7
+
   # ECS
 
 Outputs:
@@ -487,7 +508,7 @@ Outputs:
 
   AITaskDefinitionArn:
     Description: "Task definition"
-    Value: !Ref MyWaitTaskDefinition
-  
-  LsPrivateSubnetIDs:
-    Value: !Join [ ",", [!Ref PrivateSubnetOne, !Ref PrivateSubnetTwo ] ]
+    Value: !Ref AISegmentTask
+
+  # LsPrivateSubnetIDs:
+  #   Value: !Join [ ",", [!Ref PrivateSubnetOne, !Ref PrivateSubnetTwo ] ]
