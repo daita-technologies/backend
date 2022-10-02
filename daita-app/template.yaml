@@ -383,7 +383,14 @@ Resources:
         MaxWidthResolutionImage: !Ref MaxWidthResolutionImage
         MaxHeightResolutionImage: !Ref MaxHeightResolutionImage
         Mode: !Ref Mode
-
+  # InvokeServiceApp:
+  #   Type: AWS::Serverless::Application
+  #   Properties:
+  #     Location: ./template_invoke.yaml
+  #     Parameters:
+  #       StagePara: !Ref Stage
+  #       AITaskECSClusterArn: !GetAtt ECSServiceApp.Outputs.AITaskECSClusterArn
+  #       AITaskDefinitionArn: !GetAtt ECSServiceApp.Outputs.AITaskDefinitionArn
 Outputs:
   DecompressEcrRepositoryName:
     Value: !Ref DecompressEcrRepository

@@ -32,7 +32,8 @@ Resources:
           AttributeName: project_name
           KeyType: RANGE
       BillingMode: PAY_PER_REQUEST
-
+      StreamSpecification:
+        StreamViewType: NEW_IMAGE
   ProjectSummaryDB:
     Type:  AWS::DynamoDB::Table
     Properties:
@@ -112,3 +113,5 @@ Outputs:
 
   TableLabelInfoName:
     Value: !Ref LabelInfoDB
+  StreamTableAnnoProjectName:
+    Value: !GetAtt ProjectDB.StreamArn

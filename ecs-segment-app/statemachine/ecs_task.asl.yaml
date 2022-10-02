@@ -1,0 +1,16 @@
+StartAt: RunECSTask
+States:
+  RunECSTask:
+    Type: Task
+    Resource: arn:aws:states:::ecs:runTask.sync
+    Parameters:
+      # LaunchType: EC2    ### we use capacity provider to manage container instance
+      Cluster: ${AITaskECSClusterArn}
+      TaskDefinition: ${AITaskDefinitionArn}
+      NetworkConfiguration:
+        AwsvpcConfiguration:
+          Subnets: !Join [ ${LsPrivateSubnetIDs} ]
+          SecurityGroups: !Join [ ${SecurityGroupIds} ]
+          # AssignPublicIp: ENABLED
+    End: true
+TimeoutSeconds: 6000
