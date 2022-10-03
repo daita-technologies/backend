@@ -46,7 +46,7 @@ Parameters:
     Type: String
     Default: t3.medium
 
-  SegmentTaskImage:
+  SampleImage:
     Type: String
     Default: 737589818430.dkr.ecr.us-east-2.amazonaws.com/ai-services-repo:test-dowload-lib
 
@@ -443,7 +443,7 @@ Resources:
       ContainerDefinitions:
         -
           Name: !Sub "${StagePara}-${ApplicationPara}-AI-wait-task"
-          Image: !Ref SegmentTaskImage
+          Image: !Ref SampleImage
           Cpu: 256
           Memory: 256
           LogConfiguration:
