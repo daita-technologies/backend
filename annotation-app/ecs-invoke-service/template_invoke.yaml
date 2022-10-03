@@ -3,9 +3,15 @@ Transform: AWS::Serverless-2016-10-31
 Description: >
   daita-segmentation-image-service
 Parameters:
+  Mode:
+    Type: String
+    Default: dev
   StagePara:
     Type: String
     Default: test
+  minimumLogLevel:
+    Type: String
+    Default: DEBUG
   AITaskECSClusterArn:
     Type: String
   AITaskDefinitionArn:
@@ -33,8 +39,10 @@ Globals:
       - !Ref CommonCodeLayerRef
     Environment:
       Variables:
-        STAGE: !Ref StagePara     
-
+        STAGE: !Ref StagePara
+        MODE: !Ref Mode 
+        LOGGING: !Ref minimumLogLevel
+        REGION: !Ref AWS::Region
 Resources:
   #================ ROLES =====================================================
   #-- use this role for apigateway access lambda
@@ -194,7 +202,7 @@ Resources:
       EventSourceArn: !Ref TableAnnoDataOriginalNameStream
       FunctionName: !Ref StreamDataOriginalAnnotationFunction
       StartingPosition: LATEST
-      MaximumBatchingWindowInSeconds: 120
+      MaximumBatchingWindowInSeconds: 10
 
 
   ###========= LAMBDA API FUNCTION ==============

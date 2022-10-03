@@ -113,5 +113,5 @@ Outputs:
 
   TableLabelInfoName:
     Value: !Ref LabelInfoDB
-  StreamTableAnnoProjectName:
-    Value: !GetAtt ProjectDB.StreamArn
+  StreamTableAnnoDataOrginal:
+    Value: !GetAtt DataOriginalDB.StreamArn

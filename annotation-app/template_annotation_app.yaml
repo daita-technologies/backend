@@ -201,7 +201,7 @@ Resources:
         StagePara: !Ref Stage
         AITaskECSClusterArn: !GetAtt ECSSegmentationServiceApp.Outputs.AITaskECSClusterArn
         AITaskDefinitionArn: !GetAtt ECSSegmentationServiceApp.Outputs.AITaskDefinitionArn      
-        TableAnnoDataOriginalNameStream:  !GetAtt DatabaseService.Outputs.StreamTableAnnoProjectName
+        TableAnnoDataOriginalNameStream:  !GetAtt DatabaseService.Outputs.StreamTableAnnoDataOrginal
         CommonCodeLayerRef: !Ref CommonCodeLayerRef
         LsPrivateSubnetIDs: !Ref LsPrivateSubnetIDs
 Outputs:
