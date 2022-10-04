@@ -33,7 +33,7 @@ class GetProjectInfoClass(LambdaBaseClass):
         ### get project_id
         project_info = self.anno_project_model.get_project_info(identity_id, self.project_name, 
                                                                 [AnnoProjectModel.FIELD_PROJECT_ID, AnnoProjectModel.FIELD_CATEGORY_DEFAULT, AnnoProjectModel.FIELD_S3_PREFIX,
-                                                                AnnoProjectModel.FIELD_S3_LABEL])
+                                                                AnnoProjectModel.FIELD_S3_LABEL, AnnoProjectModel.FIELD_GEN_STATUS])
         if project_info is None:
             raise Exception(MESS_PROJECT_NOT_EXIST.format(self.project_name))
         project_id = project_info[AnnoProjectModel.FIELD_PROJECT_ID]
@@ -51,18 +51,22 @@ class GetProjectInfoClass(LambdaBaseClass):
         else:
             groups = None
 
+        gen_status = project_info[AnnoProjectModel.FIELD_GEN_STATUS]
+        if gen_status == AnnoProjectModel.VALUE_GEN_STATUS_FINISH:
+            ls_categorys = {
+                                "category_id": project_info.get(AnnoProjectModel.FIELD_CATEGORY_DEFAULT, ""),
+                                "ls_class": self.model_class_info.query_all_class_of_category(project_info[AnnoProjectModel.FIELD_CATEGORY_DEFAULT])
+                            }
+        else:
+            ls_categorys = []
         return convert_response({'data': {
                                         "identity_id": identity_id,
                                         "project_name": self.project_name,
                                         "project_id": project_id,
                                         "s3_raw_data": project_info[AnnoProjectModel.FIELD_S3_PREFIX],
                                         "s3_label": project_info[AnnoProjectModel.FIELD_S3_LABEL],
-                                        "ls_category": [
-                                            {
-                                                "category_id": project_info[AnnoProjectModel.FIELD_CATEGORY_DEFAULT],
-                                                "ls_class": self.model_class_info.query_all_class_of_category(project_info[AnnoProjectModel.FIELD_CATEGORY_DEFAULT])
-                                            }
-                                        ],
+                                        "gen_status": project_info[AnnoProjectModel.FIELD_GEN_STATUS],
+                                        "ls_category": ls_categorys,
                                         "groups": groups,
                                     },
                                 "error": False,
