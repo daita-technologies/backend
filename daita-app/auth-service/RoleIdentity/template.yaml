@@ -7,6 +7,8 @@ Parameters:
     Type: String
   ApplicationPara: 
     Type: String
+  AnnoBucket:
+    Type: String
 
 Resources:
   CognitoUnAuthorizedRole:
@@ -63,12 +65,24 @@ Resources:
                 Action:
                   - 's3:*'
                 Resource:
-                  - !Join [ "", [ "arn:aws:s3:::", !Ref Bucket, "/${cognito-identity.amazonaws.com:sub}" ] ] # TODO check enviorment app
-                  - !Join [ "", [ "arn:aws:s3:::", !Ref Bucket, "/${cognito-identity.amazonaws.com:sub}/*" ] ]   ##"arn:aws:s3:::client-data-test/${cognito-identity.amazonaws.com:sub}/*"  # TODO check enviorment app
+                  - !Join [ "", [ "arn:aws:s3:::", !Ref Bucket, "/${cognito-identity.amazonaws.com:sub}" ] ] 
+                  - !Join [ "", [ "arn:aws:s3:::", !Ref Bucket, "/${cognito-identity.amazonaws.com:sub}/*" ] ] 
+                  - !Join [ "", [ "arn:aws:s3:::", !Ref AnnoBucket, "/${cognito-identity.amazonaws.com:sub}" ] ] 
+                  - !Join [ "", [ "arn:aws:s3:::", !Ref AnnoBucket, "/${cognito-identity.amazonaws.com:sub}/*" ] ]   
               - Sid: VisualEditor1
                 Effect: Allow
                 Action: 's3:ListBucket'
                 Resource:   !Join [ "", [ "arn:aws:s3:::", !Ref Bucket ] ] ###"arn:aws:s3:::${Bucket}"
+                Condition:
+                  StringLike:
+                    's3:prefix':
+                      - ''
+                      - /
+                      - '${cognito-identity.amazonaws.com:sub}/*'
+              - Sid: VisualEditor4
+                Effect: Allow
+                Action: 's3:ListBucket'
+                Resource:   !Join [ "", [ "arn:aws:s3:::", !Ref AnnoBucket ] ] ###"arn:aws:s3:::${Bucket}"
                 Condition:
                   StringLike:
                     's3:prefix':
@@ -84,12 +98,12 @@ Resources:
                   - "cognito-sync:*"
                   - "cognito-identity:*"
                 Resource: '*'
-              - Sid: VisualEditor3
-                Effect: Allow
-                Action: 's3:*'
-                Resource:
-                  - !Join [ "", [ "arn:aws:s3:::", !Ref Bucket, "/${cognito-identity.amazonaws.com:sub}" ] ] # TODO check enviorment app
-                  - !Join [ "", [ "arn:aws:s3:::", !Ref Bucket, "/${cognito-identity.amazonaws.com:sub}/*" ] ]   ##"arn:aws:s3:::client-data-test/${cognito-identity.amazonaws.com:sub}/*"  # TODO check enviorment app
+              # - Sid: VisualEditor3
+              #   Effect: Allow
+              #   Action: 's3:*'
+              #   Resource:
+              #     - !Join [ "", [ "arn:aws:s3:::", !Ref Bucket, "/${cognito-identity.amazonaws.com:sub}" ] ] # TODO check enviorment app
+              #     - !Join [ "", [ "arn:aws:s3:::", !Ref Bucket, "/${cognito-identity.amazonaws.com:sub}/*" ] ]   ##"arn:aws:s3:::client-data-test/${cognito-identity.amazonaws.com:sub}/*"  # TODO check enviorment app
   CognitoIdentityPoolRoles:
     Type: AWS::Cognito::IdentityPoolRoleAttachment
     Properties:
