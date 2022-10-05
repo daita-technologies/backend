@@ -60,5 +60,21 @@ class AnnoLabelInfoModel(BaseModel):
         
         return response.get("Items", [])
 
+    def get_label_info_of_category(self, file_id, category_id,  ls_fields = []):
+        if len(ls_fields)==0:
+            ls_fields = [self.FIELD_S3_KEY_JSON_LABEL]
+
+        response = self.table.get_item(
+            Key={
+                self.FIELD_FILE_ID: file_id,
+                self.FIELD_CATEGORY_ID: category_id,
+            },
+            ProjectionExpression= ",".join(ls_fields)
+        )
+        item = response.get('Item', None)
+        
+        return item
+
+
     
         
