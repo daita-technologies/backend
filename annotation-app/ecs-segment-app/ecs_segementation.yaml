@@ -34,7 +34,6 @@ Parameters:
 
   ApplicationPara:
     Type: String
-    Default: ecs-task
 
   EC2Role:
     Type: String
@@ -55,18 +54,24 @@ Parameters:
   AIWaitTaskImage:
     Type: String
     Default: 737589818430.dkr.ecr.us-east-2.amazonaws.com/ai-services-repo:test-dowload-lib
+
 Resources:
 
   ECSCluster:
     Type: AWS::ECS::Cluster
+    Properties:
+      ClusterName: !Sub "${StagePara}-${ApplicationPara}-ECS-Segmentation-Cluster"
 
   ECSAutoScalingGroup:
     Type: AWS::AutoScaling::AutoScalingGroup
+    DependsOn: ECSCluster
     Properties:
+      AutoScalingGroupName: !Sub  "${StagePara}-${ApplicationPara}-Segementation-ECS"
       VPCZoneIdentifier:
         - !Ref PublicSubnetOne
         - !Ref PublicSubnetTwo
       LaunchConfigurationName: !Ref 'ContainerInstances'
+      NewInstancesProtectedFromScaleIn: false #if true this block scale in termination completely
       MinSize: '1'
       MaxSize: !Ref 'MaxSize'
       DesiredCapacity: !Ref 'DesiredCapacity'
@@ -121,6 +126,33 @@ Resources:
               awslogs-region: !Ref 'AWS::Region'
               awslogs-create-group: true
               awslogs-stream-prefix: !Ref 'ApplicationPara'
+
+  ###________ CAPACITY CONFIG FOR CLUSTER ______________
+  ###### doc: https://docs.aws.amazon.com/autoscaling/application/userguide/application-auto-scaling-target-tracking.html
+  CapacityProvider:
+    Type: AWS::ECS::CapacityProvider
+    DependsOn: ECSCluster
+    Properties:
+      Name: !Sub "${StagePara}-${ApplicationPara}-capacity-provider-segmentation"
+      AutoScalingGroupProvider:
+        AutoScalingGroupArn: !Ref ECSAutoScalingGroup
+        ManagedScaling:
+          # InstanceWarmupPeriod: 300
+          MaximumScalingStepSize: 2
+          MinimumScalingStepSize: 1
+          Status: ENABLED
+          TargetCapacity: 100
+        # ManagedTerminationProtection: ENABLED
+
+  ClusterCapacityProviderAssociation:
+    Type: AWS::ECS::ClusterCapacityProviderAssociations
+    Properties:
+      Cluster: !Ref ECSCluster
+      CapacityProviders:
+        - !Ref CapacityProvider
+      DefaultCapacityProviderStrategy:
+        - CapacityProvider: !Ref CapacityProvider
+          Weight: 1
 
 Outputs:
   TaskAISegmenationDefinition:

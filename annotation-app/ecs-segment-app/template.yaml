@@ -6,41 +6,65 @@ Description: >
 ## The general rule seems to be to use !Sub for in line substitutions and !ref for stand alone text
 Parameters:
  
-  Stage:
+  StagePara:
     Type: String
-    Default: test
   
   ImageSegmentUrl:
     Type: String
     Default: 737589818430.dkr.ecr.us-east-2.amazonaws.com/ai-services-repo:segformer
+  
+  ApplicationPara:
+    Type: String
 
+  TableAnnoDataOriginalNameStream:
+    Type: String
+
+  LambdaRoleArn:
+    Type: String
+
+  CommonCodeLayerRef:
+    Type: String
 Resources:
 
 
   #================ APPLICATIONS  =============================================
+  RoleApplication:
+    Type: AWS::Serverless::Application
+    Properties:
+      Location: ./role.yaml 
+
   NetworkLayerApplication:
     Type: AWS::Serverless::Application
     Properties:
       Location: ./network.yaml
       Parameters:
-        StagePara: !Ref Stage
-
-  RoleApplication:
-    Type: AWS::Serverless::Application
-    Properties:
-      Location: ./role.yaml 
+        StagePara: !Ref StagePara
+        ApplicationPara: !Ref ApplicationPara
   
-  ServiceApplication:
+  ECSServiceApplication:
     Type: AWS::Serverless::Application
     Properties:
-      Location: ./service.yaml
+      Location: ./ecs_segementation.yaml
       Parameters:
+        StagePara: !Ref StagePara
+        ApplicationPara: !Ref ApplicationPara
         EC2Role: !GetAtt RoleApplication.Outputs.EC2Role
         PublicSubnetOne: !GetAtt NetworkLayerApplication.Outputs.PublicSubnetOne
         PublicSubnetTwo: !GetAtt NetworkLayerApplication.Outputs.PublicSubnetTwo
         ContainerSecurityGroup: !GetAtt NetworkLayerApplication.Outputs.ContainerSecurityGroup
         ExecuteArn: !GetAtt RoleApplication.Outputs.ECSTask
-        StagePara: !Ref Stage
         TaskRole: !GetAtt RoleApplication.Outputs.ECSRole
         ImageUrl: !Ref ImageSegmentUrl
   
+  ECSControllerApplication:
+    Type: AWS::Serverless::Application
+    Properties:
+      Location: ./controller.yaml
+      Parameters:
+        StagePara: !Ref StagePara
+        ApplicationPara: !Ref ApplicationPara
+        LambdaRoleArn:  !Ref LambdaRoleArn
+        CommonCodeLayerRef: !Ref CommonCodeLayerRef
+        TableAnnoDataOriginalNameStream: !Ref TableAnnoDataOriginalNameStream
+        AITaskDefinitionArn: !GetAtt ECSServiceApplication.Outputs.TaskAISegmenationDefinition
+        AITaskECSClusterArn: !GetAtt ECSServiceApplication.Outputs.ECSCluster

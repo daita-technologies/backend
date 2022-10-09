@@ -1,0 +1,65 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: >
+  daita-caller-service-app
+  Sample SAM Template for daita-caller-service-app
+## The general rule seems to be to use !Sub for in line substitutions and !ref for stand alone text
+Parameters:
+  StagePara:
+    Type: String
+    Default: test
+
+  ApplicationPara:
+    Type: String
+    Default: ecstask
+
+  AITaskECSClusterArn:
+    Type: String
+
+  AITaskDefinitionArn:
+    Type: String
+  
+  TableAnnoDataOriginalNameStream:
+    Type: String
+
+  CommonCodeLayerRef:
+    Type: String
+
+  LambdaRoleArn:
+    Type: String
+Globals:
+  Function:
+    Timeout: 800   
+    Runtime: python3.8
+    Architectures:
+      - x86_64
+    Layers:
+      - !Ref CommonCodeLayerRef
+    Environment:
+      Variables:
+        STAGE: !Ref StagePara     
+
+Resources:
+#################Lambda function###############################
+  StreamDataOriginalAnnotationFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: api-handler-functions
+      Handler: hdler_stream_data_annotation.lambda_handler
+      Role: !Ref LambdaRoleArn
+      MemorySize: 256
+      Environment:
+        Variables:
+          CLUSTER: !Ref AITaskECSClusterArn
+          ECS_TASK: !Ref AITaskDefinitionArn
+
+##################### Event ##################################
+  EventSourceMappingDatabaseOriginal:
+    Type: AWS::Lambda::EventSourceMapping
+    Properties:
+      BatchSize: 1000
+      Enabled: True
+      EventSourceArn: !Ref TableAnnoDataOriginalNameStream
+      FunctionName: !Ref StreamDataOriginalAnnotationFunction
+      StartingPosition: LATEST
+      MaximumBatchingWindowInSeconds: 10

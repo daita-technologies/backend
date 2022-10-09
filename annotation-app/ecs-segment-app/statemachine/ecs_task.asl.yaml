@@ -1,5 +1,13 @@
-StartAt: RunECSTask
+StartAt: StartDebugFunction
 States:
+  StartDebugFunction:
+    Type: Task
+    Resource: 'arn:aws:states:::lambda:invoke'
+    InputPath: $
+    Parameters:
+      FunctionName: '${StartDebugFunction}'
+      Payload.$: $
+    Next: RunECSTask
   RunECSTask:
     Type: Task
     Resource: arn:aws:states:::ecs:runTask.sync

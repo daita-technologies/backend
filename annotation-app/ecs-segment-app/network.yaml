@@ -11,11 +11,9 @@ Parameters:
     
   StagePara:
     Type: String
-    Default: test
 
   ApplicationPara:
     Type: String
-    Default: ecstask
 
 Mappings:
   # Hard values for the subnet masks. These masks define
