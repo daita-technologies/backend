@@ -39,12 +39,13 @@ Parameters:
     Type: String
     Default: fsap-0e97652d5a9ca4892
   ### Amid config: https://docs.aws.amazon.com/AmazonECS/latest/developerguide/ecs-optimized_AMI.html
-  AMIID:
+  AMIID: # for GPU 
     Type: String
-    Default: ami-0693a7971cd761811
+    Default: ami-09cb4bc2dcc083845 #GPU
+
   InstanceType:
     Type: String
-    Default: t3.medium
+    Default: t3.xlarge
 
   SampleImage:
     Type: String
@@ -58,7 +59,7 @@ Parameters:
     Default: subnet-0ea9f572789e618e8
   PrivateSubnetOne:
     Type: String
-    Default: subnet-0f41b17e36f814ac5
+    Default: subnet-0c813a62097b52004
   # TestAutoScalingGroup:
   #   Type: String
   #   Default: dev1-daita-app-AICallerService-1VQZ8DN8SCKEI-ECSTasks-6USZ8DPRY96U-AutoScalingGroup-12CXKZ3AZAH65
@@ -241,10 +242,10 @@ Resources:
   #   Properties:
   #     AllocationId: !GetAtt NatGatewayTwoAttachment.AllocationId
   #     SubnetId: !Ref PublicSubnetTwo
-  PrivateRouteTableOne:
-    Type: AWS::EC2::RouteTable
-    Properties:
-      VpcId: !Ref VPCId
+  # PrivateRouteTableOne:
+  #   Type: AWS::EC2::RouteTable
+  #   Properties:
+  #     VpcId: !Ref VPCId
   # PrivateRouteOne:
   #   Type: AWS::EC2::Route
   #   Properties:
@@ -256,10 +257,10 @@ Resources:
   #   Properties:
   #     RouteTableId: !Ref PrivateRouteTableOne
   #     SubnetId: !Ref PrivateSubnetOne
-  PrivateRouteTableTwo:
-    Type: AWS::EC2::RouteTable
-    Properties:
-      VpcId: !Ref VPCId
+  # PrivateRouteTableTwo:
+  #   Type: AWS::EC2::RouteTable
+  #   Properties:
+  #     VpcId: !Ref VPCId
   # PrivateRouteTwo:
   #   Type: AWS::EC2::Route
   #   Properties:
@@ -280,49 +281,49 @@ Resources:
   # the amount of bandwidth through the gateway, meaning that the gateway is free to serve
   # your other traffic.
   # link: https://aws.amazon.com/blogs/containers/using-vpc-endpoint-policies-to-control-amazon-ecr-access/
-  DynamoDBEndpoint:
-    Type: AWS::EC2::VPCEndpoint
-    Properties:
-      PolicyDocument:
-        Version: "2012-10-17"
-        Statement:
-          - Effect: Allow
-            Action: "*"
-            Principal: "*"
-            Resource: "*"
-      RouteTableIds:
-        - !Ref 'PrivateRouteTableOne'
-        - !Ref 'PrivateRouteTableTwo'
-      ServiceName: !Sub com.amazonaws.${AWS::Region}.dynamodb
-      VpcId: !Ref VPCId
-  S3VPCEndpoint:
-    Type: AWS::EC2::VPCEndpoint
-    Properties:
-      PolicyDocument:
-        Version: "2012-10-17"
-        Statement:
-          - Effect: Allow
-            Action: "*"
-            Principal: "*"
-            Resource: "*"
-      RouteTableIds:
-        - !Ref 'PrivateRouteTableOne'
-        - !Ref 'PrivateRouteTableTwo'
-      ServiceName: !Sub com.amazonaws.${AWS::Region}.s3
-      VpcId: !Ref VPCId
-  ECRPullImageEndpoint:
-    Type: AWS::EC2::VPCEndpoint
-    Properties:
-      VpcEndpointType: Interface
-      PolicyDocument:
-        Version: "2012-10-17"
-        Statement:
-          - Effect: Allow
-            Action: "*"
-            Principal: "*"
-            Resource: "*"
-      ServiceName: !Sub com.amazonaws.${AWS::Region}.ecr.dkr
-      VpcId: !Ref VPCId
+  # DynamoDBEndpoint:
+  #   Type: AWS::EC2::VPCEndpoint
+  #   Properties:
+  #     PolicyDocument:
+  #       Version: "2012-10-17"
+  #       Statement:
+  #         - Effect: Allow
+  #           Action: "*"
+  #           Principal: "*"
+  #           Resource: "*"
+  #     RouteTableIds:
+  #       - !Ref 'PrivateRouteTableOne'
+  #       - !Ref 'PrivateRouteTableTwo'
+  #     ServiceName: !Sub com.amazonaws.${AWS::Region}.dynamodb
+  #     VpcId: !Ref VPCId
+  # S3VPCEndpoint:
+  #   Type: AWS::EC2::VPCEndpoint
+  #   Properties:
+  #     PolicyDocument:
+  #       Version: "2012-10-17"
+  #       Statement:
+  #         - Effect: Allow
+  #           Action: "*"
+  #           Principal: "*"
+  #           Resource: "*"
+  #     RouteTableIds:
+  #       - !Ref 'PrivateRouteTableOne'
+  #       - !Ref 'PrivateRouteTableTwo'
+  #     ServiceName: !Sub com.amazonaws.${AWS::Region}.s3
+  #     VpcId: !Ref VPCId
+  # ECRPullImageEndpoint:
+  #   Type: AWS::EC2::VPCEndpoint
+  #   Properties:
+  #     VpcEndpointType: Interface
+  #     PolicyDocument:
+  #       Version: "2012-10-17"
+  #       Statement:
+  #         - Effect: Allow
+  #           Action: "*"
+  #           Principal: "*"
+  #           Resource: "*"
+  #     ServiceName: !Sub com.amazonaws.${AWS::Region}.ecr.dkr
+  #     VpcId: !Ref VPCId
 
 
   ###_____________ CLUSTER CONFIG ______________________

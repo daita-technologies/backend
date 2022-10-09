@@ -9,34 +9,38 @@ Parameters:
   Stage:
     Type: String
     Default: test
-    
+  
+  ImageSegmentUrl:
+    Type: String
+    Default: 737589818430.dkr.ecr.us-east-2.amazonaws.com/ai-services-repo:segformer
+
 Resources:
 
 
   #================ APPLICATIONS  =============================================
-  # InternetLayerApplication:
-  #   Type: AWS::Serverless::Application
-  #   Properties:
-  #     Location: ./template_internet_layer.yaml
-  #     Parameters:
-  #       StagePara: !Ref Stage    
-  ECSServiceApp:
+  NetworkLayerApplication:
     Type: AWS::Serverless::Application
     Properties:
-      Location: ./template_ecs.yaml
+      Location: ./network.yaml
       Parameters:
         StagePara: !Ref Stage
 
-  InvokeServiceApp:
+  RoleApplication:
     Type: AWS::Serverless::Application
     Properties:
-      Location: ./template_invoke.yaml
-      Parameters:
-        StagePara: !Ref Stage
-        AITaskECSClusterArn: !GetAtt ECSServiceApp.Outputs.AITaskECSClusterArn
-        AITaskDefinitionArn: !GetAtt ECSServiceApp.Outputs.AITaskDefinitionArn
-  #       LsPrivateSubnetIDs: !GetAtt ECSServiceApp.Outputs.LsPrivateSubnetIDs
+      Location: ./role.yaml 
   
-
-
+  ServiceApplication:
+    Type: AWS::Serverless::Application
+    Properties:
+      Location: ./service.yaml
+      Parameters:
+        EC2Role: !GetAtt RoleApplication.Outputs.EC2Role
+        PublicSubnetOne: !GetAtt NetworkLayerApplication.Outputs.PublicSubnetOne
+        PublicSubnetTwo: !GetAtt NetworkLayerApplication.Outputs.PublicSubnetTwo
+        ContainerSecurityGroup: !GetAtt NetworkLayerApplication.Outputs.ContainerSecurityGroup
+        ExecuteArn: !GetAtt RoleApplication.Outputs.ECSTask
+        StagePara: !Ref Stage
+        TaskRole: !GetAtt RoleApplication.Outputs.ECSRole
+        ImageUrl: !Ref ImageSegmentUrl
   

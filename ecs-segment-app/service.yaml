@@ -1,0 +1,130 @@
+AWSTemplateFormatVersion: '2010-09-09'
+
+Parameters:
+  ECSAMI:
+    Type: String
+    Default: ami-09cb4bc2dcc083845
+
+  ContainerSecurityGroup:
+    Type: String
+
+  InstanceType:
+    Type: String
+    Default: c4.xlarge
+    AllowedValues: [t2.micro, t2.small, t2.medium, t2.large, m3.medium, m3.large,
+      m3.xlarge, m3.2xlarge, m4.large, m4.xlarge, m4.2xlarge, m4.4xlarge, m4.10xlarge,
+      c4.large, c4.xlarge, c4.2xlarge, c4.4xlarge, c4.8xlarge, c3.large, c3.xlarge,
+      c3.2xlarge, c3.4xlarge, c3.8xlarge, r3.large, r3.xlarge, r3.2xlarge, r3.4xlarge,
+      r3.8xlarge, i2.xlarge, i2.2xlarge, i2.4xlarge, i2.8xlarge]
+    ConstraintDescription: Please choose a valid instance type.
+
+  PublicSubnetOne:
+    Type: String
+  
+  PublicSubnetTwo:
+    Type: String
+
+  DesiredCapacity:
+    Type: Number
+    Default: '2'
+    Description: Number of EC2 instances to launch in your ECS cluster.
+
+  StagePara:
+    Type: String
+
+  ApplicationPara:
+    Type: String
+    Default: ecs-task
+
+  EC2Role:
+    Type: String
+
+  MaxSize:
+    Type: Number
+    Default: '6'
+
+  ExecuteArn:
+    Type: String
+  
+  ImageUrl:
+    Type: String
+  
+  TaskRole:
+    Type: String
+
+  AIWaitTaskImage:
+    Type: String
+    Default: 737589818430.dkr.ecr.us-east-2.amazonaws.com/ai-services-repo:test-dowload-lib
+Resources:
+
+  ECSCluster:
+    Type: AWS::ECS::Cluster
+
+  ECSAutoScalingGroup:
+    Type: AWS::AutoScaling::AutoScalingGroup
+    Properties:
+      VPCZoneIdentifier:
+        - !Ref PublicSubnetOne
+        - !Ref PublicSubnetTwo
+      LaunchConfigurationName: !Ref 'ContainerInstances'
+      MinSize: '1'
+      MaxSize: !Ref 'MaxSize'
+      DesiredCapacity: !Ref 'DesiredCapacity'
+    CreationPolicy:
+      ResourceSignal:
+        Timeout: PT15M
+    UpdatePolicy:
+      AutoScalingReplacingUpdate:
+        WillReplace: 'true'
+
+  EC2InstanceProfile:
+    Type: AWS::IAM::InstanceProfile
+    Properties:
+      Path: /
+      Roles: [!Ref 'EC2Role']  
+
+  ContainerInstances:
+    Type: AWS::AutoScaling::LaunchConfiguration
+    Properties:
+      ImageId: !Ref ECSAMI
+      SecurityGroups: [!Ref ContainerSecurityGroup]
+      InstanceType: !Ref InstanceType
+      IamInstanceProfile: !Ref 'EC2InstanceProfile'
+      UserData:
+        Fn::Base64: !Sub |
+          #!/bin/bash -xe
+          echo ECS_CLUSTER=${ECSCluster} >> /etc/ecs/ecs.config
+          yum install -y aws-cfn-bootstrap
+          /opt/aws/bin/cfn-signal -e $? --stack ${AWS::StackName} --resource ECSAutoScalingGroup --region ${AWS::Region}
+  
+  ECSTaskLogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: !Sub "/aws/vendedlogs/states/${StagePara}-MyECSTaskLogGroup-${AWS::StackName}"
+      RetentionInDays: 7
+
+  TaskAISegmenationDefinition:
+    Type: AWS::ECS::TaskDefinition
+    Properties:
+      ExecutionRoleArn: !Ref ExecuteArn
+      TaskRoleArn: !Ref TaskRole
+      ContainerDefinitions:
+        -
+          Name: !Sub "${StagePara}-${ApplicationPara}-ecs-segmentations"
+          Image: !Ref ImageUrl
+          Cpu: 4092
+          Memory: 4092
+          LogConfiguration:
+            LogDriver: 'awslogs'
+            Options:
+              awslogs-group: !Ref ECSTaskLogGroup
+              awslogs-region: !Ref 'AWS::Region'
+              awslogs-create-group: true
+              awslogs-stream-prefix: !Ref 'ApplicationPara'
+
+Outputs:
+  TaskAISegmenationDefinition:
+    Value: !Ref TaskAISegmenationDefinition
+  
+  ECSCluster:
+    Value: !Ref ECSCluster
