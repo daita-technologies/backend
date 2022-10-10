@@ -64,3 +64,6 @@ Outputs:
 
   AccessPoint:
     Value: !Ref AccessPoint
+  
+  AccessPointARN:
+    Value: !GetAtt AccessPoint.Arn

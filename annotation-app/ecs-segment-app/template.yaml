@@ -81,4 +81,7 @@ Resources:
         TableAnnoDataOriginalNameStream: !Ref TableAnnoDataOriginalNameStream
         AITaskDefinitionArn: !GetAtt ECSServiceApplication.Outputs.TaskAISegmenationDefinition
         AITaskECSClusterArn: !GetAtt ECSServiceApplication.Outputs.ECSCluster
-
+        SecurityGroup: !GetAtt  NetworkLayerApplication.Outputs.ContainerSecurityGroup
+        PublicSubnetOne: !GetAtt NetworkLayerApplication.Outputs.PublicSubnetOne
+        PublicSubnetTwo: !GetAtt NetworkLayerApplication.Outputs.PublicSubnetTwo
+        EFSAccessPoint: !GetAtt StorageLayerApplication.Outputs.AccessPointARN

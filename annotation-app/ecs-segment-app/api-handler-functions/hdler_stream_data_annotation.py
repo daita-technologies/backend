@@ -12,7 +12,7 @@ class HandleStreamDataOriginAnnotation(LambdaBaseClass):
     def __init__(self) -> None:   
         super().__init__()     
         self.client_events = boto3.client('events')   
-        self.client_step_func = boto3.client('stepfunctions')
+        self.ecs_task = boto3.client('ecs')
 
     def handle(self, event, context):
     

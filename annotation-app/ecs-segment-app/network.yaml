@@ -110,7 +110,6 @@ Resources:
       GroupDescription: Access container
       VpcId: !Ref VPC
 
-
   EcsSecurityGroupIngressFromSelf:
     Type: AWS::EC2::SecurityGroupIngress
     Properties:
@@ -119,6 +118,63 @@ Resources:
       IpProtocol: -1
       SourceSecurityGroupId: !Ref ContainerSecurityGroup
 
+  DynamoDBEndpoint:
+    Type: AWS::EC2::VPCEndpoint
+    Properties:
+      PolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Action: "*"
+            Principal: "*"
+            Resource: "*"
+      RouteTableIds:
+        - !Ref 'PublicRouteTable'
+      ServiceName: !Sub com.amazonaws.${AWS::Region}.dynamodb
+      VpcId: !Ref VPC
+
+  S3VPCEndpoint:
+    Type: AWS::EC2::VPCEndpoint
+    Properties:
+      PolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Action: "*"
+            Principal: "*"
+            Resource: "*"
+      RouteTableIds:
+        - !Ref 'PublicRouteTable'
+      ServiceName: !Sub com.amazonaws.${AWS::Region}.s3
+      VpcId: !Ref VPC
+
+  ECRPullImageEndpoint:
+    Type: AWS::EC2::VPCEndpoint
+    Properties:
+      VpcEndpointType: Interface
+      PolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Action: "*"
+            Principal: "*"
+            Resource: "*"
+      ServiceName: !Sub com.amazonaws.${AWS::Region}.ecr.dkr
+      VpcId: !Ref VPC
+
+  SQSEndpoint:
+    Type: AWS::EC2::VPCEndpoint
+    Properties:
+      VpcEndpointType: Interface
+      VpcId: !Ref VPC
+      PolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Action: "*"
+            Principal: "*"
+            Resource: "*"
+      ServiceName: !Sub com.amazonaws.${AWS::Region}.sqs
 
 Outputs:
   PublicSubnetOne:

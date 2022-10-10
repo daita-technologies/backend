@@ -27,6 +27,24 @@ Parameters:
 
   LambdaRoleArn:
     Type: String
+
+  SecurityGroup:
+    Type: String
+
+  PublicSubnetOne:
+    Type: String
+
+  PublicSubnetTwo:
+    Type: String
+
+  EFSAccessPoint:
+    Type: String
+
+  EFSAccessPointRootPath:
+    Type: String
+    Default: /mnt/data
+
+
 Globals:
   Function:
     Timeout: 800   
@@ -47,6 +65,14 @@ Resources:
       CodeUri: api-handler-functions
       Handler: hdler_stream_data_annotation.lambda_handler
       Role: !Ref LambdaRoleArn
+      VpcConfig:
+        SecurityGroupIds: [!Ref SecurityGroup]
+        SubnetIds:
+        - !Ref PublicSubnetOne
+        - !Ref PublicSubnetTwo
+      FileSystemConfigs:
+        - Arn : !Ref EFSAccessPoint
+          LocalMountPath: !Ref EFSAccessPointRootPath
       MemorySize: 256
       Environment:
         Variables:

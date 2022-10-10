@@ -109,6 +109,7 @@ Resources:
                   - elasticfilesystem:*
                   - states:*
                   - s3:*
+                  - ec2:*
                 Resource: "*"
 
   #================ APPLICATIONS  =============================================
