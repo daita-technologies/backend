@@ -129,3 +129,6 @@ Outputs:
     
   ContainerSecurityGroup:
     Value: !Ref ContainerSecurityGroup
+    
+  VPC:
+    Value: !Ref VPC

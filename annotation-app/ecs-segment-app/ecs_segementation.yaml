@@ -55,6 +55,12 @@ Parameters:
     Type: String
     Default: 737589818430.dkr.ecr.us-east-2.amazonaws.com/ai-services-repo:test-dowload-lib
 
+  EFSAccessPoint:
+    Type: String
+
+  EFSFileSystemId:
+    Type: String
+    
 Resources:
 
   ECSCluster:
@@ -126,6 +132,41 @@ Resources:
               awslogs-region: !Ref 'AWS::Region'
               awslogs-create-group: true
               awslogs-stream-prefix: !Ref 'ApplicationPara'
+          MountPoints:
+            -
+              SourceVolume:  "my-vol"
+              ContainerPath: /app/data
+      Volumes:
+        -
+          EFSVolumeConfiguration:
+            AuthorizationConfig:
+              AccessPointId: !Ref EFSAccessPoint
+            FilesystemId: !Ref EFSFileSystemId
+            TransitEncryption: ENABLED  # enable this so maybe we don't need to config a access point https://docs.aws.amazon.com/pt_br/AWSCloudFormation/latest/UserGuide/aws-properties-ecs-taskdefinition-authorizationconfig.html
+          Name: "my-vol"
+
+  # AITaskECSLogGroup:
+  #   Type: AWS::Logs::LogGroup
+  #   Properties:
+  #     LogGroupName: !Sub "/aws/vendedlogs/states/${AWS::StackName}-AITaskECSLogGroup"
+  #     RetentionInDays: 7
+
+  # ECS
+
+Outputs:
+  # ServerlessRestApi is an implicit API created out of Events key under Serverless::Function
+  # Find out more about other implicit resources you can reference within SAM
+  # https://github.com/awslabs/serverless-application-model/blob/master/docs/internals/generated_resources.rst#api
+  AITaskECSClusterArn:
+    Description: "ECS Cluster with EC2 provider"
+    Value: !GetAtt AITaskECSCluster.Arn
+
+  AITaskDefinitionArn:
+    Description: "Task definition"
+    Value: !Ref AIPreprocessingTask
+
+  LsPrivateSubnetIDs:
+    Value: !Join [ ",", [!Ref PrivateSubnetOne, !Ref PrivateSubnetTwo ] ]
 
   ###________ CAPACITY CONFIG FOR CLUSTER ______________
   ###### doc: https://docs.aws.amazon.com/autoscaling/application/userguide/application-auto-scaling-target-tracking.html

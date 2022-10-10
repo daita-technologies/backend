@@ -24,6 +24,7 @@ Parameters:
 
   CommonCodeLayerRef:
     Type: String
+
 Resources:
 
 
@@ -40,7 +41,17 @@ Resources:
       Parameters:
         StagePara: !Ref StagePara
         ApplicationPara: !Ref ApplicationPara
-  
+
+  StorageLayerApplication:
+    Type: AWS::Serverless::Application
+    Properties:
+      Location: ./storage.yaml
+      Parameters:
+         VPC: !GetAtt NetworkLayerApplication.Outputs.VPC
+         PublicSubnetOne: !GetAtt NetworkLayerApplication.Outputs.PublicSubnetOne
+         PublicSubnetTwo: !GetAtt NetworkLayerApplication.Outputs.PublicSubnetTwo
+         SecurityGroup: !GetAtt NetworkLayerApplication.Outputs.ContainerSecurityGroup
+
   ECSServiceApplication:
     Type: AWS::Serverless::Application
     Properties:
@@ -55,7 +66,9 @@ Resources:
         ExecuteArn: !GetAtt RoleApplication.Outputs.ECSTask
         TaskRole: !GetAtt RoleApplication.Outputs.ECSRole
         ImageUrl: !Ref ImageSegmentUrl
-  
+        EFSAccessPoint: !GetAtt StorageLayerApplication.Outputs.AccessPoint
+        EFSFileSystemId: !GetAtt StorageLayerApplication.Outputs.EFSFileSystem
+        
   ECSControllerApplication:
     Type: AWS::Serverless::Application
     Properties:
@@ -68,3 +81,4 @@ Resources:
         TableAnnoDataOriginalNameStream: !Ref TableAnnoDataOriginalNameStream
         AITaskDefinitionArn: !GetAtt ECSServiceApplication.Outputs.TaskAISegmenationDefinition
         AITaskECSClusterArn: !GetAtt ECSServiceApplication.Outputs.ECSCluster
+

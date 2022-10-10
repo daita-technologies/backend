@@ -1,0 +1,66 @@
+AWSTemplateFormatVersion: '2010-09-09'
+
+Parameters:
+  VPC:
+    Type: String
+
+  PublicSubnetOne:
+    Type: String
+
+  PublicSubnetTwo:
+    Type: String
+
+  SecurityGroup:
+    Type: String
+  
+  EFSAccessPointRootPath:
+    Type: String
+    Default: /app/data
+
+Resources:
+  
+  EFSFileSystem:
+    Type: AWS::EFS::FileSystem
+
+  MountTargeSubnetOne:
+    Type:  AWS::EFS::MountTarget
+    Properties:
+      FileSystemId: !Ref EFSFileSystem
+      SubnetId: !Ref PublicSubnetOne
+      SecurityGroups:
+        - !Ref SecurityGroup
+
+  MountTargeSubnetTwo:
+    Type:  AWS::EFS::MountTarget
+    Properties:
+      FileSystemId: !Ref EFSFileSystem
+      SubnetId: !Ref PublicSubnetTwo
+      SecurityGroups:
+        - !Ref SecurityGroup
+
+  AccessPoint:
+    Type: AWS::EFS::AccessPoint
+    Properties:
+      FileSystemId: !Ref EFSFileSystem
+      PosixUser:
+        Gid: "1000"
+        Uid: "1000"
+      RootDirectory:
+        Path: !Ref EFSAccessPointRootPath
+        CreationInfo:
+          OwnerGid: "1000"
+          OwnerUid: "1000"
+          Permissions: "777"    
+
+Outputs:
+  EFSFileSystem:
+    Value: !Ref EFSFileSystem
+
+  MountTargeSubnetOne:
+    Value: !Ref MountTargeSubnetOne
+  
+  MountTargeSubnetTwo:
+    Value: !Ref MountTargeSubnetTwo
+
+  AccessPoint:
+    Value: !Ref AccessPoint
