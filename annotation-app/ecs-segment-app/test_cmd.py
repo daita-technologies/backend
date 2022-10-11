@@ -1,10 +1,11 @@
 import boto3
 
-cluster = "segment-ecstask-ServiceApplication-1OPTNXI2VFIW7-ECSCluster-20iFW6ZFwY3Q"
-ecsTask = "arn:aws:ecs:us-east-2:737589818430:task-definition/segment-ecstask-ServiceApplication-1OPTNXI2VFIW7-TaskAISegmenationDefinition-4uPNYxdUAF3n:1"
-ecs = boto3.client('ecs')
+cluster = "dev1-anno-ECS-Segmentation-Cluster"
+ecsTask = "arn:aws:ecs:us-east-2:737589818430:task-definition/dev1-anno-app-ECSSegmentationServiceApp-1OF75PXKFBI7A-ECSServiceApplication-Y4FTFIB8BLOJ-TaskAISegmenationDefinition-4zw3aVmMbvLt:1"
+client = boto3.client('ecs')
 command = ["--input_json_path","data/sample/input.json","--output_folder","data/sample/output"]
-response = ecs.run_task(
+
+response = client.run_task(
     cluster = cluster,
     taskDefinition= ecsTask,
     count=1,
@@ -19,4 +20,3 @@ response = ecs.run_task(
 )
 # waiter = ecs.get_waiter('tasks_stopped')
 print(response['tasks'])
-

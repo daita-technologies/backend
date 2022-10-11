@@ -26,7 +26,7 @@ Parameters:
 
   DesiredCapacity:
     Type: Number
-    Default: '2'
+    Default: '0'
     Description: Number of EC2 instances to launch in your ECS cluster.
 
   StagePara:
@@ -73,20 +73,16 @@ Resources:
     DependsOn: ECSCluster
     Properties:
       AutoScalingGroupName: !Sub  "${StagePara}-${ApplicationPara}-Segementation-ECS"
+      # HealthCheckGracePeriod: 60
+      # HealthCheckType: EC2
       VPCZoneIdentifier:
         - !Ref PublicSubnetOne
         - !Ref PublicSubnetTwo
       LaunchConfigurationName: !Ref 'ContainerInstances'
       NewInstancesProtectedFromScaleIn: false #if true this block scale in termination completely
-      MinSize: '1'
+      MinSize: '0'
       MaxSize: !Ref 'MaxSize'
-      DesiredCapacity: !Ref 'DesiredCapacity'
-    CreationPolicy:
-      ResourceSignal:
-        Timeout: PT15M
-    UpdatePolicy:
-      AutoScalingReplacingUpdate:
-        WillReplace: 'true'
+      DesiredCapacity: 0
 
   EC2InstanceProfile:
     Type: AWS::IAM::InstanceProfile
@@ -119,6 +115,7 @@ Resources:
     Properties:
       ExecutionRoleArn: !Ref ExecuteArn
       TaskRoleArn: !Ref TaskRole
+      NetworkMode: awsvpc
       ContainerDefinitions:
         -
           Name: !Sub "${StagePara}-${ApplicationPara}-ecs-segmentations"
@@ -201,3 +198,6 @@ Outputs:
   
   ECSCluster:
     Value: !Ref ECSCluster
+
+  ContainerName:
+    Value: !Sub "${StagePara}-${ApplicationPara}-ecs-segmentations"

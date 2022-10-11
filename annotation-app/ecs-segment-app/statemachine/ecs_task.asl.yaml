@@ -1,24 +1,27 @@
-StartAt: StartDebugFunction
+StartAt: DownloadS3toEFSFunction
 States:
-  StartDebugFunction:
+  DownloadS3toEFSFunction:
     Type: Task
     Resource: 'arn:aws:states:::lambda:invoke'
     InputPath: $
     Parameters:
-      FunctionName: '${StartDebugFunction}'
+      FunctionName: '${DownloadS3toEFSFunction}'
       Payload.$: $
     Next: RunECSTask
   RunECSTask:
     Type: Task
     Resource: arn:aws:states:::ecs:runTask.sync
     Parameters:
-      # LaunchType: EC2    ### we use capacity provider to manage container instance
       Cluster: ${AITaskECSClusterArn}
       TaskDefinition: ${AITaskDefinitionArn}
       NetworkConfiguration:
         AwsvpcConfiguration:
-          Subnets: !Join [ ${LsPrivateSubnetIDs} ]
+          Subnets: !Join [ ${Subnets} ]
           SecurityGroups: !Join [ ${SecurityGroupIds} ]
           # AssignPublicIp: ENABLED
+      Overrides:
+        ContainerOverrides:
+          - Name.$ : "$.Payload.Name"
+            Command.$: "$.Payload.Command"
     End: true
 TimeoutSeconds: 6000

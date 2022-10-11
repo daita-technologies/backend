@@ -85,3 +85,4 @@ Resources:
         PublicSubnetOne: !GetAtt NetworkLayerApplication.Outputs.PublicSubnetOne
         PublicSubnetTwo: !GetAtt NetworkLayerApplication.Outputs.PublicSubnetTwo
         EFSAccessPoint: !GetAtt StorageLayerApplication.Outputs.AccessPointARN
+        ContainerName: !GetAtt ECSServiceApplication.Outputs.ContainerName

@@ -59,7 +59,21 @@ Resources:
       VpcId: !Ref VPC      
       CidrBlock: !FindInMap ['SubnetConfig', 'PublicOne', 'CIDR']
       MapPublicIpOnLaunch: true
-  
+
+  NatGatewayOneAttachment:
+    Type: AWS::EC2::EIP
+    Properties:
+        Domain: vpc
+        Tags:
+          - Key: "Name"
+            Value: !Sub "${StagePara}_${ApplicationPara}_eip_natgw_1"
+
+  NatGatewayOne:
+    Type: AWS::EC2::NatGateway
+    Properties:
+      AllocationId: !GetAtt NatGatewayOneAttachment.AllocationId
+      SubnetId: !Ref PublicSubnetOne
+
   PublicSubnetTwo:
     Type: AWS::EC2::Subnet
     Properties:
