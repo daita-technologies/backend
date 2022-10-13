@@ -26,7 +26,7 @@ Parameters:
 
   DesiredCapacity:
     Type: Number
-    Default: '0'
+    Default: '1'
     Description: Number of EC2 instances to launch in your ECS cluster.
 
   StagePara:
@@ -90,6 +90,16 @@ Resources:
       Path: /
       Roles: [!Ref 'EC2Role']  
 
+  # Waitconditionhandle:                                            # handlecondition require.
+  #   Type: AWS::CloudFormation::WaitConditionHandle
+  # WaitCondition:
+  #   Type: AWS::CloudFormation::WaitCondition
+  #   DependsOn: ECSAutoScalingGroup
+  #   Properties:
+  #     Count: 3
+  #     Timeout: '600'
+  #     Handle: !Ref Waitconditionhandle
+  
   ContainerInstances:
     Type: AWS::AutoScaling::LaunchConfiguration
     Properties:
@@ -103,6 +113,8 @@ Resources:
           echo ECS_CLUSTER=${ECSCluster} >> /etc/ecs/ecs.config
           yum install -y aws-cfn-bootstrap
           /opt/aws/bin/cfn-signal -e $? --stack ${AWS::StackName} --resource ECSAutoScalingGroup --region ${AWS::Region}
+          # Start cfn-signal to the wait condition
+          # /opt/aws/bin/cfn-signal -e $? -d "message data" -r "reason as completed" '${Waitconditionhandle}'
   
   ECSTaskLogGroup:
     Type: AWS::Logs::LogGroup
