@@ -89,16 +89,6 @@ Resources:
     Properties:
       Path: /
       Roles: [!Ref 'EC2Role']  
-
-  # Waitconditionhandle:                                            # handlecondition require.
-  #   Type: AWS::CloudFormation::WaitConditionHandle
-  # WaitCondition:
-  #   Type: AWS::CloudFormation::WaitCondition
-  #   DependsOn: ECSAutoScalingGroup
-  #   Properties:
-  #     Count: 3
-  #     Timeout: '600'
-  #     Handle: !Ref Waitconditionhandle
   
   ContainerInstances:
     Type: AWS::AutoScaling::LaunchConfiguration
@@ -113,8 +103,6 @@ Resources:
           echo ECS_CLUSTER=${ECSCluster} >> /etc/ecs/ecs.config
           yum install -y aws-cfn-bootstrap
           /opt/aws/bin/cfn-signal -e $? --stack ${AWS::StackName} --resource ECSAutoScalingGroup --region ${AWS::Region}
-          # Start cfn-signal to the wait condition
-          # /opt/aws/bin/cfn-signal -e $? -d "message data" -r "reason as completed" '${Waitconditionhandle}'
   
   ECSTaskLogGroup:
     Type: AWS::Logs::LogGroup
@@ -153,29 +141,6 @@ Resources:
             FilesystemId: !Ref EFSFileSystemId
             TransitEncryption: ENABLED  # enable this so maybe we don't need to config a access point https://docs.aws.amazon.com/pt_br/AWSCloudFormation/latest/UserGuide/aws-properties-ecs-taskdefinition-authorizationconfig.html
           Name: "my-vol"
-
-  # AITaskECSLogGroup:
-  #   Type: AWS::Logs::LogGroup
-  #   Properties:
-  #     LogGroupName: !Sub "/aws/vendedlogs/states/${AWS::StackName}-AITaskECSLogGroup"
-  #     RetentionInDays: 7
-
-  # ECS
-
-Outputs:
-  # ServerlessRestApi is an implicit API created out of Events key under Serverless::Function
-  # Find out more about other implicit resources you can reference within SAM
-  # https://github.com/awslabs/serverless-application-model/blob/master/docs/internals/generated_resources.rst#api
-  AITaskECSClusterArn:
-    Description: "ECS Cluster with EC2 provider"
-    Value: !GetAtt AITaskECSCluster.Arn
-
-  AITaskDefinitionArn:
-    Description: "Task definition"
-    Value: !Ref AIPreprocessingTask
-
-  LsPrivateSubnetIDs:
-    Value: !Join [ ",", [!Ref PrivateSubnetOne, !Ref PrivateSubnetTwo ] ]
 
   ###________ CAPACITY CONFIG FOR CLUSTER ______________
   ###### doc: https://docs.aws.amazon.com/autoscaling/application/userguide/application-auto-scaling-target-tracking.html

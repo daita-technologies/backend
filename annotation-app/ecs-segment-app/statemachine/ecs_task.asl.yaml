@@ -23,5 +23,13 @@ States:
         ContainerOverrides:
           - Name.$ : "$.Payload.Name"
             Command.$: "$.Payload.Command"
+    Retry:
+      - ErrorEquals:
+          - RetriableCallerServiceError
+      - ErrorEquals:
+          - States.ALL
+        IntervalSeconds: 3
+        MaxAttempts: 5
+        BackoffRate: 1
     End: true
 TimeoutSeconds: 6000
