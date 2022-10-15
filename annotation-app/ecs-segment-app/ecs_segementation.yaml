@@ -170,6 +170,7 @@ Resources:
           Weight: 1
 
 Outputs:
+
   TaskAISegmenationDefinition:
     Value: !Ref TaskAISegmenationDefinition
   

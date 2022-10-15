@@ -199,17 +199,6 @@ Resources:
         CommonCodeLayerRef: !Ref CommonCodeLayerRef
         LambdaRoleArn: !GetAtt GeneralLambdaExecutionRole.Arn
 
-  # ECSInvokeServiceApp:
-  #   Type: AWS::Serverless::Application
-  #   Properties:
-  #     Location: ./ecs-invoke-service/template_invoke.yaml
-  #     Parameters:
-  #       StagePara: !Ref Stage
-  #       AITaskECSClusterArn: !GetAtt ECSSegmentationServiceApp.Outputs.AITaskECSClusterArn
-  #       AITaskDefinitionArn: !GetAtt ECSSegmentationServiceApp.Outputs.MyWaitTaskDefinition      
-  #       TableAnnoDataOriginalNameStream:  !GetAtt DatabaseService.Outputs.StreamTableAnnoDataOrginal
-  #       CommonCodeLayerRef: !Ref CommonCodeLayerRef
-  #       LsPrivateSubnetIDs: !Ref LsPrivateSubnetIDs
 Outputs:
   ApiAnnoAppUrl:
     Value: !GetAtt APIService.Outputs.AnnoHttpApiURL

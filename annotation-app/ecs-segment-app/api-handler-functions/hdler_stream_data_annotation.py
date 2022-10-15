@@ -7,30 +7,7 @@ import re
 from response import *
 
 from lambda_base_class import LambdaBaseClass
-# {
-#     "images": [
-#         {
-#             "file_name": "20180810150607_camera_frontcenter_000000083.png",
-#             "file_path": "data/sample/images/20180810150607_camera_frontcenter_000000083.png",
-#             "id": 0
-#         },
-#         {
-#             "file_name": "20181016125231_camera_frontcenter_000183553.png",
-#             "file_path": "data/sample/images/20181016125231_camera_frontcenter_000183553.png",
-#             "id": 1
-#         }
-#     ]
-# }
-def split(uri):
-    if not 's3' in uri[:2]:
-        temp = uri.split('/')
-        bucket = temp[0]
-        filename = '/'.join([temp[i] for i in range(1,len(temp))])
-    else:
-        match =  re.match(r's3:\/\/(.+?)\/(.+)', uri)
-        bucket = match.group(1)
-        filename = match.group(2)
-    return bucket, filename 
+
 
 class HandleStreamDataOriginAnnotation(LambdaBaseClass):
     def __init__(self) -> None:   
@@ -49,8 +26,7 @@ class HandleStreamDataOriginAnnotation(LambdaBaseClass):
             tempItem =  {
                 'project_id': record['dynamodb']['Keys']['project_id']['S'],
                 'filename' : record['dynamodb']['Keys']['filename']['S'],
-                'table': record['eventSourceARN'].split(':')[5].split('/')[1],
-                's3_urls':record['dynamodb']['NewImage']['s3_key']['S']
+                's3_key':record['dynamodb']['NewImage']['s3_key']['S']
             }
             listRecord.append(tempItem)    
             ## need handle download s3 to efs

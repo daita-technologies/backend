@@ -100,6 +100,7 @@ Resources:
               - "events:*"
               - "ecs:*"
               - "iam:PassRole"
+              - "s3:*"
             Resource: "*"
           - Sid: IAMPassRoleForCloudWatchEvents
             Effect: Allow
@@ -133,12 +134,26 @@ Resources:
       Environment:
         Variables:
           ECS_TASK_ARN: !GetAtt HandleECSTaskStatemachine.Arn
+          
   
   DownloadS3toEFSFunction:
     Type: AWS::Serverless::Function
     Properties:
       CodeUri: statemachine/functions
       Handler: hdler_download_image_to_efs.lambda_handler
+      Role: !Ref LambdaRoleArn
+      VpcConfig:
+        SecurityGroupIds:
+          - !Ref SecurityGroup
+        SubnetIds:
+          - !Ref PublicSubnetOne
+          - !Ref PublicSubnetTwo
+      FileSystemConfigs:
+        - Arn: !Ref EFSAccessPoint
+          LocalMountPath: !Ref EFSAccessPointRootPath
+      Environment:
+        Variables:
+          EFSPATH: !Ref EFSAccessPointRootPath
 
 ##################### Event ##################################
   EventSourceMappingDatabaseOriginal:
