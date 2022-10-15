@@ -20,7 +20,8 @@ parameters_override="Mode=${MODE} Stage=${DAITA_STAGE} Application=${DAITA_APPLI
                     DomainUserPool=${DOMAIN_USER_POOL}
                     VPCid=${VPC_ID}
                     LogoutUrl=${LOG_OUT_URL}
-                    CertificateUserpoolDomain=${CERTIFICATE_USERPOLL_DOMAIN}"
+                    CertificateUserpoolDomain=${CERTIFICATE_USERPOLL_DOMAIN}
+                    S3AnnoBucket=${ANNO_S3_BUCKET}"
 
 sam build
 sam deploy --no-confirm-changeset --disable-rollback \

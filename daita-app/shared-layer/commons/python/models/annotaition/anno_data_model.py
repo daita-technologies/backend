@@ -109,15 +109,6 @@ class AnnoDataModel(BaseModel):
     def update_healthcheck_id(self, project_id, filename, healthcheck_id):
         self._update_healthcheck_id(project_id, filename, healthcheck_id)
 
-    def bad_write(self, ls_item_request):
-        try:
-            with self.table.batch_writer() as batch:
-                for item in ls_item_request:
-                    batch.put_item(Item=item)
-        except Exception as e:
-            print('Error: ', repr(e))
-            raise Exception(repr(e))
-
     def query_data_follow_batch(self, project_id, next_token, num_limit, ls_fields_projection=[]):
         if len(ls_fields_projection) == 0:
             ls_fields_projection = [self.FIELD_CREATED_TIME, self.FIELD_FILENAME, 

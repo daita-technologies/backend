@@ -124,11 +124,11 @@ Resources:
         FunctionGetFileInfoNLabelArn: !GetAtt AnnotationService.Outputs.FunctionGetFileInfoNLabelArn
         FunctionCreateLabelCategoryArn: !GetAtt AnnotationService.Outputs.FunctionCreateLabelCategoryArn
         FunctionSaveLabelArn: !GetAtt AnnotationService.Outputs.FunctionSaveLabelArn
+        FunctionAddClassArn: !GetAtt AnnotationService.Outputs.FunctionAddClassArn
         FunctionGetProjectInfoArn: !GetAtt ProjectService.Outputs.FunctionGetProjectInfoArn
         FunctionProjectListDataArn: !GetAtt ProjectService.Outputs.FunctionProjectListDataArn
         ProjectCloneFunctionArn: !GetAtt ProjectService.Outputs.ProjectCloneFunctionArn
         FunctionListProjectArn: !GetAtt ProjectService.Outputs.FunctionListProjectArn
-        
 
   DatabaseService:
     Type: AWS::Serverless::Application
@@ -155,7 +155,9 @@ Resources:
         TableAnnoDataOriginalName: !GetAtt DatabaseService.Outputs.TableAnnoDataOriginalName
         TableAnnoProjectSumName: !GetAtt DatabaseService.Outputs.TableAnnoProjectSumName
         TableAnnoProjectsName: !GetAtt DatabaseService.Outputs.TableAnnoProjectsName
-        TableLabelInfoName: !GetAtt DatabaseService.Outputs.TableLabelInfoName
+        TableCategoryInfoName: !GetAtt DatabaseService.Outputs.TableCategoryInfoName
+        TableAIDefaultClassInfoName: !GetAtt DatabaseService.Outputs.TableAIDefaultClassInfoName
+        TableClassInfoName: !GetAtt DatabaseService.Outputs.TableClassInfoName
         ###_____ for daita project table
         TableDaitaProjectsName: !Ref TableDaitaProjectsName
         TableDaitaDataOriginalName: !Ref TableDaitaDataOriginalName
@@ -181,6 +183,9 @@ Resources:
         TableAnnoProjectSumName: !GetAtt DatabaseService.Outputs.TableAnnoProjectSumName
         TableAnnoProjectsName: !GetAtt DatabaseService.Outputs.TableAnnoProjectsName
         TableLabelInfoName: !GetAtt DatabaseService.Outputs.TableLabelInfoName
+        TableCategoryInfoName: !GetAtt DatabaseService.Outputs.TableCategoryInfoName
+        TableClassInfoName: !GetAtt DatabaseService.Outputs.TableClassInfoName
+        TableAIDefaultClassInfoName: !GetAtt DatabaseService.Outputs.TableAIDefaultClassInfoName
         ###_____ for daita project table
         TableDaitaProjectsName: !Ref TableDaitaProjectsName
         TableDaitaDataOriginalName: !Ref TableDaitaDataOriginalName

@@ -25,6 +25,9 @@ Parameters:
   S3BucketName:
     Type: String
     Default: daita-client-data
+  S3AnnoBucket:
+    Type: String
+
   VPCid:
     Type: String
     Default: vpc-53239e38
@@ -285,6 +288,8 @@ Resources:
         IdentityPool: !GetAtt IdentityPool.Outputs.IdentityPool
         StagePara: !Ref Stage
         ApplicationPara: !Ref Application
+        AnnoBucket: !Ref S3AnnoBucket
+        
   CoreService:
     Type: AWS::Serverless::Application
     Properties:

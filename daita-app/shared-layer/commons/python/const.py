@@ -27,6 +27,7 @@ MES_PROJECT_SAME = "New project name {} must different with current name."
 
 ### For annotaion const
 FOLDER_RAW_DATA_NAME = "raw_data"
+FOLDER_LABEL_NAME = "labels"
 
 
 def get_const_db(code):

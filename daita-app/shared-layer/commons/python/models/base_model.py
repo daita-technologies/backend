@@ -21,3 +21,12 @@ class BaseModel():
                     ConditionExpression = condition
                 )
         return
+
+    def batch_write(self, ls_item_request):
+        try:
+            with self.table.batch_writer() as batch:
+                for item in ls_item_request:
+                    batch.put_item(Item=item)
+        except Exception as e:
+            print('Error: ', repr(e))
+            raise Exception(repr(e))

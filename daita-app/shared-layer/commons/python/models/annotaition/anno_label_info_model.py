@@ -19,6 +19,7 @@ class AnnoLabelInfoModel(BaseModel):
     def __init__(self, table_name) -> None:
         self.table = boto3.resource('dynamodb').Table(table_name) 
         
+    ### move to category model
     def create_new_category(self, file_id, category_id, category_name, category_des):
         item = {
             self.FIELD_CREATED_TIME: convert_current_date_to_iso8601(),
@@ -58,6 +59,22 @@ class AnnoLabelInfoModel(BaseModel):
             )
         
         return response.get("Items", [])
+
+    def get_label_info_of_category(self, file_id, category_id,  ls_fields = []):
+        if len(ls_fields)==0:
+            ls_fields = [self.FIELD_S3_KEY_JSON_LABEL]
+
+        response = self.table.get_item(
+            Key={
+                self.FIELD_FILE_ID: file_id,
+                self.FIELD_CATEGORY_ID: category_id,
+            },
+            ProjectionExpression= ",".join(ls_fields)
+        )
+        item = response.get('Item', None)
+        
+        return item
+
 
     
         

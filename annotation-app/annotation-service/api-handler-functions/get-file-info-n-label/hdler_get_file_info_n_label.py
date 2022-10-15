@@ -30,6 +30,7 @@ class GetFileInfoClass(LambdaBaseClass):
         self.id_token = body[KEY_NAME_ID_TOKEN] 
         self.project_id = body["project_id"]
         self.file_name = body["filename"]
+        self.category_id = body.get("category_id", "")
 
     def _check_input_value(self): 
         return        
@@ -47,7 +48,10 @@ class GetFileInfoClass(LambdaBaseClass):
         file_id = file_info[AnnoDataModel.FIELD_FILE_ID]
 
         ### get label json info: label with category and  json label
-        label_info = self.model_label_info.query_all_category_label(file_id)
+        if len(self.category_id)==0:
+            label_info = self.model_label_info.query_all_category_label(file_id)
+        else:
+            label_info = self.model_label_info.get_label_info_of_category(file_id, self.category_id)
                 
         return generate_response(
             message="OK",
