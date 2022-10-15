@@ -15,7 +15,7 @@ def save_image_to_efs(s3_key,folder=os.environ['EFSPATH']):
     new_image = os.path.join(folder,basename)
     s3.download_file(bucket,filename,new_image)
     
-    return ''
+    return new_image
 
 def parse_json_ecs_segmentation(records):
     newJson = {'images':[]}
