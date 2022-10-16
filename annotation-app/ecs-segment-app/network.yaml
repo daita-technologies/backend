@@ -66,7 +66,7 @@ Resources:
   #       Domain: vpc
   #       Tags:
   #         - Key: "Name"
-  #           Value: !Sub "${StagePara}_${ApplicationPara}_eip_natgw_1"
+  #           Value: !Sub "${StagePara}_${ApplicationPara}_eip_natgw_1_ecs"
 
   # NatGatewayOne:
   #   Type: AWS::EC2::NatGateway
@@ -159,6 +159,11 @@ Resources:
             Resource: "*"
       RouteTableIds:
         - !Ref 'PublicRouteTable'
+      # SecurityGroupIds:
+      #   - !Ref ContainerSecurityGroup
+      # SubnetIds:
+      #   - !Ref PublicSubnetOne
+      #   - !Ref PublicSubnetTwo
       ServiceName: !Sub com.amazonaws.${AWS::Region}.s3
       VpcId: !Ref VPC
 
@@ -175,12 +180,31 @@ Resources:
             Resource: "*"
       ServiceName: !Sub com.amazonaws.${AWS::Region}.ecr.dkr
       VpcId: !Ref VPC
+  EC2Endpoint:
+    Type: AWS::EC2::VPCEndpoint
+    Properties:
+      VpcEndpointType: Interface
+      PolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Action: "*"
+            Principal: "*"
+            Resource: "*"
+      ServiceName: !Sub com.amazonaws.${AWS::Region}.ec2
+      VpcId: !Ref VPC
+
 
   SQSEndpoint:
     Type: AWS::EC2::VPCEndpoint
     Properties:
       VpcEndpointType: Interface
       VpcId: !Ref VPC
+      SecurityGroupIds:
+        - !Ref ContainerSecurityGroup
+      SubnetIds:
+        - !Ref PublicSubnetOne
+        - !Ref PublicSubnetTwo
       PolicyDocument:
         Version: "2012-10-17"
         Statement:
@@ -202,3 +226,12 @@ Outputs:
     
   VPC:
     Value: !Ref VPC
+
+  VpcEndointSQS:
+    Value: !Ref SQSEndpoint
+
+  S3VPCEndpoint:
+    Value: !Ref S3VPCEndpoint
+  
+  VPCSQSEndpointDnsEntries:
+    Value: !Select [0, !GetAtt SQSEndpoint.DnsEntries]

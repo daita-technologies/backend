@@ -25,6 +25,9 @@ Parameters:
   CommonCodeLayerRef:
     Type: String
 
+  ContainerPath:
+    Type: String
+    Default: /app/data
 Resources:
 
 
@@ -68,7 +71,7 @@ Resources:
         ImageUrl: !Ref ImageSegmentUrl
         EFSAccessPoint: !GetAtt StorageLayerApplication.Outputs.AccessPoint
         EFSFileSystemId: !GetAtt StorageLayerApplication.Outputs.EFSFileSystem
-        
+        ContainerPath: !Ref ContainerPath
   ECSControllerApplication:
     Type: AWS::Serverless::Application
     Properties:
@@ -86,3 +89,5 @@ Resources:
         PublicSubnetTwo: !GetAtt NetworkLayerApplication.Outputs.PublicSubnetTwo
         EFSAccessPoint: !GetAtt StorageLayerApplication.Outputs.AccessPointARN
         ContainerName: !GetAtt ECSServiceApplication.Outputs.ContainerName
+        ContainerMount: !Ref ContainerPath
+        VpcEndointSQS: !GetAtt NetworkLayerApplication.Outputs.VPCSQSEndpointDnsEntries

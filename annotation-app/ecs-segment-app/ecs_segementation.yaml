@@ -60,7 +60,10 @@ Parameters:
 
   EFSFileSystemId:
     Type: String
-    
+
+  ContainerPath:
+    Type: String
+        
 Resources:
 
   ECSCluster:
@@ -132,7 +135,7 @@ Resources:
           MountPoints:
             -
               SourceVolume:  "my-vol"
-              ContainerPath: /app/data
+              ContainerPath:  !Ref ContainerPath
       Volumes:
         -
           EFSVolumeConfiguration:

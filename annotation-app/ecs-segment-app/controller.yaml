@@ -56,6 +56,12 @@ Parameters:
   ContainerName:
     Type: String
 
+  ContainerMount:
+    Type: String
+
+  VpcEndointSQS:
+    Type: String
+    
 Globals:
   Function:
     Timeout: 800   
@@ -70,6 +76,8 @@ Globals:
         MODE: !Ref Mode
         LOGGING: !Ref minimumLogLevel
         CONTAINER_NAME: !Ref ContainerName
+        CONTAINER_MOUNT: !Ref ContainerMount
+        SQS_VPC_ENDPOINT: !Ref VpcEndointSQS
 
 
 Resources:
@@ -133,9 +141,9 @@ Resources:
       MemorySize: 256
       Environment:
         Variables:
-          ECS_TASK_ARN: !GetAtt HandleECSTaskStatemachine.Arn
-          
-  
+          ECS_TASK_ARN: !GetAtt HandleECSTaskStatemachine.Arn          
+          QUEUE:  !GetAtt SqsQueueUpdateTaskSegementation.QueueName
+
   DownloadS3toEFSFunction:
     Type: AWS::Serverless::Function
     Properties:
@@ -154,6 +162,36 @@ Resources:
       Environment:
         Variables:
           EFSPATH: !Ref EFSAccessPointRootPath
+          QUEUE:  !GetAtt SqsQueueUpdateTaskSegementation.QueueName
+
+
+  UpdateSegmentationTaskFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: api-handler-functions
+      Handler: hdler_task_segmentation.lambda_handler
+      MemorySize: 256
+      Role: !Ref LambdaRoleArn
+      VpcConfig:
+        SecurityGroupIds:
+          - !Ref SecurityGroup
+        SubnetIds:
+          - !Ref PublicSubnetOne
+          - !Ref PublicSubnetTwo
+      FileSystemConfigs:
+        - Arn: !Ref EFSAccessPoint
+          LocalMountPath: !Ref EFSAccessPointRootPath
+      Environment:
+        Variables:
+          EFSPATH: !Ref EFSAccessPointRootPath
+          QUEUE:  !GetAtt SqsQueueUpdateTaskSegementation.QueueName
+          QUEUE_URL: !Ref SqsQueueUpdateTaskSegementation
+      Events:
+        SQSQueueEvent:
+          Type: SQS
+          Properties:
+            BatchSize: 10
+            Queue: !GetAtt SqsQueueUpdateTaskSegementation.Arn
 
 ##################### Event ##################################
   EventSourceMappingDatabaseOriginal:
@@ -165,3 +203,21 @@ Resources:
       FunctionName: !Ref StreamDataOriginalAnnotationFunction
       StartingPosition: LATEST
       MaximumBatchingWindowInSeconds: 10
+
+  SqsQueueUpdateTaskSegementation:
+    Type: AWS::SQS::Queue
+    Properties:
+      FifoQueue: True
+      VisibilityTimeout: 900
+      ContentBasedDeduplication: true
+      QueueName: !Sub "${StagePara}-${ApplicationPara}-Task-Segmentation.fifo"
+      RedrivePolicy:
+        deadLetterTargetArn: !GetAtt DeadLetterQueue.Arn
+        maxReceiveCount: 10
+
+  DeadLetterQueue:
+    Type: AWS::SQS::Queue
+    Properties:
+      FifoQueue: True
+      VisibilityTimeout: 900
+      ContentBasedDeduplication: true    

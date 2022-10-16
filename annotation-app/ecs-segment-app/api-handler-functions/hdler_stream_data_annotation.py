@@ -3,10 +3,14 @@ import json
 import os
 import uuid
 import re
+import base64
+from datetime import datetime 
 
 from response import *
 
 from lambda_base_class import LambdaBaseClass
+
+
 
 
 class HandleStreamDataOriginAnnotation(LambdaBaseClass):
@@ -15,6 +19,7 @@ class HandleStreamDataOriginAnnotation(LambdaBaseClass):
         self.client_events = boto3.client('events')   
         self.client_step_func= boto3.client('stepfunctions')
         self.s3 =  boto3.client('s3')
+        self.sqsResourse = boto3.resource('sqs')
 
     def handle(self, event, context):
         print(os.listdir('/'))
@@ -33,15 +38,28 @@ class HandleStreamDataOriginAnnotation(LambdaBaseClass):
 
             ### push task to sqs to  tracking
         print(listRecord)
-
+        input_folder=  str(base64.b64encode(str(datetime.now()).encode()).decode("ascii"))
         if len(listRecord) == 0:
             print('Nothing to generate')
             return {"message":"ok"}
+        
         self.client_step_func.start_execution(
             stateMachineArn=os.environ["ECS_TASK_ARN"],
-            input=json.dumps(listRecord)
+            input=json.dumps(
+                {
+                    'input_folder': input_folder,
+                    'records': listRecord
+                }
+                )
         )        
-                
+        queue = self.sqsResourse.get_queue_by_name(QueueName=os.environ['QUEUE'])
+        request_queue = {'records' :listRecord }
+        request_queue['output_directory'] = os.path.join(input_folder,'output')
+        queue.send_message(
+                            MessageBody=json.dumps(request_queue),
+                            MessageGroupId="push-task-segement-queue",
+                            DelaySeconds=0,
+                        )
         return generate_response(
             message="OK",
             status_code=HTTPStatus.OK,

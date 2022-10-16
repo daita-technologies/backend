@@ -1,5 +1,6 @@
 StartAt: DownloadS3toEFSFunction
 States:
+  
   DownloadS3toEFSFunction:
     Type: Task
     Resource: 'arn:aws:states:::lambda:invoke'
@@ -8,6 +9,7 @@ States:
       FunctionName: '${DownloadS3toEFSFunction}'
       Payload.$: $
     Next: RunECSTask
+
   RunECSTask:
     Type: Task
     Resource: arn:aws:states:::ecs:runTask.sync
