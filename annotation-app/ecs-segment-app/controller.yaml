@@ -225,12 +225,12 @@ Resources:
   EventSourceMappingDatabaseOriginal:
     Type: AWS::Lambda::EventSourceMapping
     Properties:
-      BatchSize: 1000
+      BatchSize: 500
       Enabled: True
       EventSourceArn: !Ref TableAnnoDataOriginalNameStream
       FunctionName: !Ref StreamDataOriginalAnnotationFunction
       StartingPosition: LATEST
-      MaximumBatchingWindowInSeconds: 10
+      MaximumBatchingWindowInSeconds: 360
 
   # SqsQueueUpdateTaskSegementation:
   #   Type: AWS::SQS::Queue
