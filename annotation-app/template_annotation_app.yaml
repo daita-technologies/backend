@@ -204,6 +204,7 @@ Resources:
         TableAnnoDataOriginalNameStream: !GetAtt DatabaseService.Outputs.StreamTableAnnoDataOrginal
         CommonCodeLayerRef: !Ref CommonCodeLayerRef
         LambdaRoleArn: !GetAtt GeneralLambdaExecutionRole.Arn
+        TableAnnoDataOriginalName: !GetAtt  DatabaseService.Outputs.TableAnnoDataOriginalName
 
 Outputs:
   ApiAnnoAppUrl:

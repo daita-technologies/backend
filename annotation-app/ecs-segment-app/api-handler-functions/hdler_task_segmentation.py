@@ -32,6 +32,7 @@ class EventTaskQueueSegmentationClass(LambdaBaseClass):
                 nbReplay = 0
                 if 'sqs-dlq-replay-nb' in record['messageAttributes']:
                      nbReplay = int(record['messageAttributes']['sqs-dlq-replay-nb']["stringValue"])
+                print("nb_replay ",nbReplay)
                 nbReplay += 1
                 if nbReplay > 40:
                     continue

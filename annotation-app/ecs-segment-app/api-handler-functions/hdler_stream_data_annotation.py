@@ -22,22 +22,19 @@ class HandleStreamDataOriginAnnotation(LambdaBaseClass):
         self.sqsResourse = boto3.resource('sqs')
 
     def handle(self, event, context):
-        print(os.listdir('/'))
         records =  event['Records']
         listRecord = []
         print(f'logs :{records}')
         for record in records:
-            # if record['eventName'] == 'INSERT':
-            tempItem =  {
-                'project_id': record['dynamodb']['Keys']['project_id']['S'],
-                'filename' : record['dynamodb']['Keys']['filename']['S'],
-                's3_key':record['dynamodb']['NewImage']['s3_key']['S']
-            }
-            listRecord.append(tempItem)    
-            ## need handle download s3 to efs
+            if record['eventName'] == 'INSERT':
+                tempItem =  {
+                    'project_id': record['dynamodb']['Keys']['project_id']['S'],
+                    'filename' : record['dynamodb']['Keys']['filename']['S'],
+                    's3_key':record['dynamodb']['NewImage']['s3_key']['S']
+                }
+                listRecord.append(tempItem)    
 
             ### push task to sqs to  tracking
-        print(listRecord)
         input_folder=  str(base64.b64encode(str(datetime.now()).encode()).decode("ascii"))
         if len(listRecord) == 0:
             print('Nothing to generate')
@@ -52,14 +49,14 @@ class HandleStreamDataOriginAnnotation(LambdaBaseClass):
                 }
                 )
         )        
-        queue = self.sqsResourse.get_queue_by_name(QueueName=os.environ['QUEUE'])
-        request_queue = {'records' :listRecord }
-        request_queue['output_directory'] = os.path.join(input_folder,'output')
-        queue.send_message(
-                            MessageBody=json.dumps(request_queue),
-                            MessageGroupId="push-task-segement-queue",
-                            DelaySeconds=0,
-                        )
+        # queue = self.sqsResourse.get_queue_by_name(QueueName=os.environ['QUEUE'])
+        # request_queue = {'records' :listRecord }
+        # request_queue['output_directory'] = os.path.join(input_folder,'output')
+        # queue.send_message(
+        #                     MessageBody=json.dumps(request_queue),
+        #                     MessageGroupId="push-task-segement-queue",
+        #                     DelaySeconds=0,
+        #                 )
         return generate_response(
             message="OK",
             status_code=HTTPStatus.OK,

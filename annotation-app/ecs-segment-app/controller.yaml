@@ -61,7 +61,9 @@ Parameters:
 
   VpcEndointSQS:
     Type: String
-    
+
+  TableAnnoDataOriginalName:
+    Type: String
 Globals:
   Function:
     Timeout: 800   
@@ -96,6 +98,7 @@ Resources:
       Policies:
         - LambdaInvokePolicy:
             FunctionName: !Ref DownloadS3toEFSFunction
+            FunctionName: !Ref UploadImage
         - Statement: 
           - Sid: CloudWatchLogsPolicy
             Effect: Allow
@@ -109,6 +112,7 @@ Resources:
               - "ecs:*"
               - "iam:PassRole"
               - "s3:*"
+              - "lambda:InvokeFunction"
             Resource: "*"
           - Sid: IAMPassRoleForCloudWatchEvents
             Effect: Allow
@@ -130,6 +134,7 @@ Resources:
         SecurityGroupIds:  !Join [",", [!Ref SecurityGroup]]  
         Subnets:  !Join [ ",", [!Ref PublicSubnetOne, !Ref PublicSubnetTwo ] ]
         DownloadS3toEFSFunction: !Ref DownloadS3toEFSFunction
+        UploadImage: !Ref UploadImage
 
 #################Lambda function###############################
   StreamDataOriginalAnnotationFunction:
@@ -142,7 +147,27 @@ Resources:
       Environment:
         Variables:
           ECS_TASK_ARN: !GetAtt HandleECSTaskStatemachine.Arn          
-          QUEUE:  !GetAtt SqsQueueUpdateTaskSegementation.QueueName
+          # QUEUE:  !GetAtt SqsQueueUpdateTaskSegementation.QueueName
+
+  UploadImage:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: statemachine/functions
+      Handler: hdler_updoad_image.lambda_handler    
+      Role: !Ref LambdaRoleArn
+      VpcConfig:
+        SecurityGroupIds:
+          - !Ref SecurityGroup
+        SubnetIds:
+          - !Ref PublicSubnetOne
+          - !Ref PublicSubnetTwo
+      FileSystemConfigs:
+        - Arn: !Ref EFSAccessPoint
+          LocalMountPath: !Ref EFSAccessPointRootPath
+      Environment:
+        Variables:
+          EFSPATH: !Ref EFSAccessPointRootPath
+          TABLE: !Ref TableAnnoDataOriginalName
 
   DownloadS3toEFSFunction:
     Type: AWS::Serverless::Function
@@ -162,36 +187,39 @@ Resources:
       Environment:
         Variables:
           EFSPATH: !Ref EFSAccessPointRootPath
-          QUEUE:  !GetAtt SqsQueueUpdateTaskSegementation.QueueName
+          # QUEUE:  !GetAtt SqsQueueUpdateTaskSegementation.QueueName
 
 
-  UpdateSegmentationTaskFunction:
-    Type: AWS::Serverless::Function
-    Properties:
-      CodeUri: api-handler-functions
-      Handler: hdler_task_segmentation.lambda_handler
-      MemorySize: 256
-      Role: !Ref LambdaRoleArn
-      VpcConfig:
-        SecurityGroupIds:
-          - !Ref SecurityGroup
-        SubnetIds:
-          - !Ref PublicSubnetOne
-          - !Ref PublicSubnetTwo
-      FileSystemConfigs:
-        - Arn: !Ref EFSAccessPoint
-          LocalMountPath: !Ref EFSAccessPointRootPath
-      Environment:
-        Variables:
-          EFSPATH: !Ref EFSAccessPointRootPath
-          QUEUE:  !GetAtt SqsQueueUpdateTaskSegementation.QueueName
-          QUEUE_URL: !Ref SqsQueueUpdateTaskSegementation
-      Events:
-        SQSQueueEvent:
-          Type: SQS
-          Properties:
-            BatchSize: 10
-            Queue: !GetAtt SqsQueueUpdateTaskSegementation.Arn
+  # UpdateSegmentationTaskFunction:
+  #   Type: AWS::Serverless::Function
+  #   Properties:
+  #     CodeUri: api-handler-functions
+  #     Handler: hdler_task_segmentation.lambda_handler
+  #     MemorySize: 256
+  #     Role: !Ref LambdaRoleArn
+  #     VpcConfig:
+  #       SecurityGroupIds:
+  #         - !Ref SecurityGroup
+  #       SubnetIds:
+  #         - !Ref PublicSubnetOne
+  #         - !Ref PublicSubnetTwo
+  #     FileSystemConfigs:
+  #       - Arn: !Ref EFSAccessPoint
+  #         LocalMountPath: !Ref EFSAccessPointRootPath
+  #     Environment:
+  #       Variables:
+  #         EFSPATH: !Ref EFSAccessPointRootPath
+  #         QUEUE:  !GetAtt SqsQueueUpdateTaskSegementation.QueueName
+  #         QUEUE_URL: !Ref SqsQueueUpdateTaskSegementation
+  #     Policies:
+  #       - SQSSendMessagePolicy:
+  #           QueueName: !GetAtt SqsQueueUpdateTaskSegementation.QueueName
+  #     Events:
+  #       SQSQueueEvent:
+  #         Type: SQS
+  #         Properties:
+  #           BatchSize: 10
+  #           Queue: !GetAtt DeadLetterQueue.Arn
 
 ##################### Event ##################################
   EventSourceMappingDatabaseOriginal:
@@ -204,20 +232,20 @@ Resources:
       StartingPosition: LATEST
       MaximumBatchingWindowInSeconds: 10
 
-  SqsQueueUpdateTaskSegementation:
-    Type: AWS::SQS::Queue
-    Properties:
-      FifoQueue: True
-      VisibilityTimeout: 900
-      ContentBasedDeduplication: true
-      QueueName: !Sub "${StagePara}-${ApplicationPara}-Task-Segmentation.fifo"
-      RedrivePolicy:
-        deadLetterTargetArn: !GetAtt DeadLetterQueue.Arn
-        maxReceiveCount: 10
+  # SqsQueueUpdateTaskSegementation:
+  #   Type: AWS::SQS::Queue
+  #   Properties:
+  #     FifoQueue: True
+  #     VisibilityTimeout: 900
+  #     ContentBasedDeduplication: true
+  #     QueueName: !Sub "${StagePara}-${ApplicationPara}-Task-Segmentation.fifo"
+  #     RedrivePolicy:
+  #       deadLetterTargetArn: !GetAtt DeadLetterQueue.Arn
+  #       maxReceiveCount: 10
 
-  DeadLetterQueue:
-    Type: AWS::SQS::Queue
-    Properties:
-      FifoQueue: True
-      VisibilityTimeout: 900
-      ContentBasedDeduplication: true    
+  # DeadLetterQueue:
+  #   Type: AWS::SQS::Queue
+  #   Properties:
+  #     FifoQueue: True
+  #     VisibilityTimeout: 900
+  #     ContentBasedDeduplication: true    

@@ -55,6 +55,7 @@ class DownloadImageEFSClass(LambdaBaseClass):
         output_folder = os.path.join(input_folder,'output')
         os.makedirs(os.path.join(str(os.environ['EFSPATH']),output_folder),exist_ok=True)
         return {
+                "output_directory": output_folder,
                 "Name": os.environ['CONTAINER_NAME'],
                 "Command": ["--input_json_path",inputJsonContainerVolume,"--output_folder",os.path.join(str(os.environ['CONTAINER_MOUNT']),output_folder)]
         }

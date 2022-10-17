@@ -28,6 +28,9 @@ Parameters:
   ContainerPath:
     Type: String
     Default: /app/data
+
+  TableAnnoDataOriginalName:
+    Type: String
 Resources:
 
 
@@ -91,3 +94,4 @@ Resources:
         ContainerName: !GetAtt ECSServiceApplication.Outputs.ContainerName
         ContainerMount: !Ref ContainerPath
         VpcEndointSQS: !GetAtt NetworkLayerApplication.Outputs.VPCSQSEndpointDnsEntries
+        TableAnnoDataOriginalName: !Ref TableAnnoDataOriginalName

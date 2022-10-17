@@ -33,5 +33,16 @@ States:
         IntervalSeconds: 3
         MaxAttempts: 5
         BackoffRate: 1
-    End: true
+    Next: UploadImage
+
+  UploadImage:
+    Type: Task
+    Resource: 'arn:aws:states:::lambda:invoke'
+    InputPath: $
+    Parameters:
+      FunctionName: '${UploadImage}'
+      Payload:
+        input_folder.$ : $$.Execution.Input.input_folder
+        records.$: $$.Execution.Input.records
+    End: true   
 TimeoutSeconds: 6000
