@@ -26,7 +26,9 @@ Parameters:
   CommonCodeLayerRef:
     Type: String
     Default: arn:aws:lambda:us-east-2:737589818430:layer:dev-CommonCodeLayer:38
-
+  LsPrivateSubnetIDs:
+    Type: String
+    Default: 'subnet-0c813a62097b52004,subnet-0ea9f572789e618e8'
   CognitoUserPoolRef:
     Type: String
   CognitoIdentityPoolIdRef:
@@ -107,6 +109,8 @@ Resources:
                   - elasticfilesystem:*
                   - states:*
                   - s3:*
+                  - ec2:*
+                  - sqs:*
                 Resource: "*"
 
   #================ APPLICATIONS  =============================================
@@ -189,8 +193,19 @@ Resources:
         ###_____ for s3 bucket
         S3AnnoBucketName: !Ref S3AnnoBucketName
         S3DaitaBucketName: !Ref S3DaitaBucketName
+        
+  ECSSegmentationServiceApp:
+    Type: AWS::Serverless::Application
+    Properties:
+      Location: ecs-segment-app/template.yaml
+      Parameters:
+        StagePara: !Ref Stage
+        ApplicationPara: !Ref Application
+        TableAnnoDataOriginalNameStream: !GetAtt DatabaseService.Outputs.StreamTableAnnoDataOrginal
+        CommonCodeLayerRef: !Ref CommonCodeLayerRef
+        LambdaRoleArn: !GetAtt GeneralLambdaExecutionRole.Arn
+        TableAnnoDataOriginalName: !GetAtt  DatabaseService.Outputs.TableAnnoDataOriginalName
 
-  
 Outputs:
   ApiAnnoAppUrl:
     Value: !GetAtt APIService.Outputs.AnnoHttpApiURL

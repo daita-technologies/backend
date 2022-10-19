@@ -1,0 +1,251 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: >
+  daita-caller-service-app
+  Sample SAM Template for daita-caller-service-app
+## The general rule seems to be to use !Sub for in line substitutions and !ref for stand alone text
+Parameters:
+
+  StagePara:
+    Type: String
+    Default: test
+
+  ApplicationPara:
+    Type: String
+    Default: ecstask
+
+  AITaskECSClusterArn:
+    Type: String
+
+  AITaskDefinitionArn:
+    Type: String
+  
+  TableAnnoDataOriginalNameStream:
+    Type: String
+
+  CommonCodeLayerRef:
+    Type: String
+
+  LambdaRoleArn:
+    Type: String
+
+  SecurityGroup:
+    Type: String
+
+  PublicSubnetOne:
+    Type: String
+
+  PublicSubnetTwo:
+    Type: String
+
+  EFSAccessPoint:
+    Type: String
+
+  EFSAccessPointRootPath:
+    Type: String
+    Default: /mnt/data
+  
+  Mode:
+    Type: String
+    Default: dev
+ 
+  minimumLogLevel:
+    Type: String
+    Default: DEBUG
+
+  ContainerName:
+    Type: String
+
+  ContainerMount:
+    Type: String
+
+  VpcEndointSQS:
+    Type: String
+
+  TableAnnoDataOriginalName:
+    Type: String
+Globals:
+  Function:
+    Timeout: 800   
+    Runtime: python3.8
+    Architectures:
+      - x86_64
+    Layers:
+      - !Ref CommonCodeLayerRef
+    Environment:
+      Variables:
+        STAGE: !Ref StagePara
+        MODE: !Ref Mode
+        LOGGING: !Ref minimumLogLevel
+        CONTAINER_NAME: !Ref ContainerName
+        CONTAINER_MOUNT: !Ref ContainerMount
+        SQS_VPC_ENDPOINT: !Ref VpcEndointSQS
+
+
+Resources:
+##############################################################
+  LogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties: 
+      LogGroupName: !Sub "/aws/vendedlogs/states/${StagePara}-${ApplicationPara}-ecs-segmentation-logs"
+      RetentionInDays: 7
+
+  HandleECSTaskStatemachine:
+    Type: AWS::Serverless::StateMachine
+    Properties:
+      Type: STANDARD
+      Name: !Sub "${StagePara}-${ApplicationPara}-Run-ECS-task-Segment"
+      Policies:
+        - LambdaInvokePolicy:
+            FunctionName: !Ref DownloadS3toEFSFunction
+            FunctionName: !Ref UploadImage
+        - Statement: 
+          - Sid: CloudWatchLogsPolicy
+            Effect: Allow
+            Action:
+            - "logs:*"
+            Resource: "*"
+          - Sid: CloudWatchEventsFullAccess
+            Effect: Allow
+            Action:
+              - "events:*"
+              - "ecs:*"
+              - "iam:PassRole"
+              - "s3:*"
+              - "lambda:InvokeFunction"
+            Resource: "*"
+          - Sid: IAMPassRoleForCloudWatchEvents
+            Effect: Allow
+            Action:
+              - "iam:PassRole"
+            Resource: "arn:aws:iam::*:role/AWS_Events_Invoke_Targets"
+      Tracing:
+        Enabled: true
+      DefinitionUri: ./statemachine/ecs_task.asl.yaml
+      Logging:
+        Level: ALL
+        IncludeExecutionData: true
+        Destinations:
+        - CloudWatchLogsLogGroup:
+            LogGroupArn: !GetAtt LogGroup.Arn
+      DefinitionSubstitutions:
+        AITaskECSClusterArn: !Ref AITaskECSClusterArn
+        AITaskDefinitionArn: !Ref AITaskDefinitionArn
+        SecurityGroupIds:  !Join [",", [!Ref SecurityGroup]]  
+        Subnets:  !Join [ ",", [!Ref PublicSubnetOne, !Ref PublicSubnetTwo ] ]
+        DownloadS3toEFSFunction: !Ref DownloadS3toEFSFunction
+        UploadImage: !Ref UploadImage
+
+#################Lambda function###############################
+  StreamDataOriginalAnnotationFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: api-handler-functions
+      Handler: hdler_stream_data_annotation.lambda_handler
+      Role: !Ref LambdaRoleArn
+      MemorySize: 256
+      Environment:
+        Variables:
+          ECS_TASK_ARN: !GetAtt HandleECSTaskStatemachine.Arn          
+          # QUEUE:  !GetAtt SqsQueueUpdateTaskSegementation.QueueName
+
+  UploadImage:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: statemachine/functions
+      Handler: hdler_updoad_image.lambda_handler    
+      Role: !Ref LambdaRoleArn
+      VpcConfig:
+        SecurityGroupIds:
+          - !Ref SecurityGroup
+        SubnetIds:
+          - !Ref PublicSubnetOne
+          - !Ref PublicSubnetTwo
+      FileSystemConfigs:
+        - Arn: !Ref EFSAccessPoint
+          LocalMountPath: !Ref EFSAccessPointRootPath
+      Environment:
+        Variables:
+          EFSPATH: !Ref EFSAccessPointRootPath
+          TABLE: !Ref TableAnnoDataOriginalName
+
+  DownloadS3toEFSFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: statemachine/functions
+      Handler: hdler_download_image_to_efs.lambda_handler
+      Role: !Ref LambdaRoleArn
+      VpcConfig:
+        SecurityGroupIds:
+          - !Ref SecurityGroup
+        SubnetIds:
+          - !Ref PublicSubnetOne
+          - !Ref PublicSubnetTwo
+      FileSystemConfigs:
+        - Arn: !Ref EFSAccessPoint
+          LocalMountPath: !Ref EFSAccessPointRootPath
+      Environment:
+        Variables:
+          EFSPATH: !Ref EFSAccessPointRootPath
+          # QUEUE:  !GetAtt SqsQueueUpdateTaskSegementation.QueueName
+
+
+  # UpdateSegmentationTaskFunction:
+  #   Type: AWS::Serverless::Function
+  #   Properties:
+  #     CodeUri: api-handler-functions
+  #     Handler: hdler_task_segmentation.lambda_handler
+  #     MemorySize: 256
+  #     Role: !Ref LambdaRoleArn
+  #     VpcConfig:
+  #       SecurityGroupIds:
+  #         - !Ref SecurityGroup
+  #       SubnetIds:
+  #         - !Ref PublicSubnetOne
+  #         - !Ref PublicSubnetTwo
+  #     FileSystemConfigs:
+  #       - Arn: !Ref EFSAccessPoint
+  #         LocalMountPath: !Ref EFSAccessPointRootPath
+  #     Environment:
+  #       Variables:
+  #         EFSPATH: !Ref EFSAccessPointRootPath
+  #         QUEUE:  !GetAtt SqsQueueUpdateTaskSegementation.QueueName
+  #         QUEUE_URL: !Ref SqsQueueUpdateTaskSegementation
+  #     Policies:
+  #       - SQSSendMessagePolicy:
+  #           QueueName: !GetAtt SqsQueueUpdateTaskSegementation.QueueName
+  #     Events:
+  #       SQSQueueEvent:
+  #         Type: SQS
+  #         Properties:
+  #           BatchSize: 10
+  #           Queue: !GetAtt DeadLetterQueue.Arn
+
+##################### Event ##################################
+  EventSourceMappingDatabaseOriginal:
+    Type: AWS::Lambda::EventSourceMapping
+    Properties:
+      BatchSize: 500
+      Enabled: True
+      EventSourceArn: !Ref TableAnnoDataOriginalNameStream
+      FunctionName: !Ref StreamDataOriginalAnnotationFunction
+      StartingPosition: LATEST
+      MaximumBatchingWindowInSeconds: 360
+
+  # SqsQueueUpdateTaskSegementation:
+  #   Type: AWS::SQS::Queue
+  #   Properties:
+  #     FifoQueue: True
+  #     VisibilityTimeout: 900
+  #     ContentBasedDeduplication: true
+  #     QueueName: !Sub "${StagePara}-${ApplicationPara}-Task-Segmentation.fifo"
+  #     RedrivePolicy:
+  #       deadLetterTargetArn: !GetAtt DeadLetterQueue.Arn
+  #       maxReceiveCount: 10
+
+  # DeadLetterQueue:
+  #   Type: AWS::SQS::Queue
+  #   Properties:
+  #     FifoQueue: True
+  #     VisibilityTimeout: 900
+  #     ContentBasedDeduplication: true    
