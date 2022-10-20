@@ -145,7 +145,14 @@ Resources:
       CodeUri: statemachine/clone_project_data/functions
       Role: !Ref LambdaRoleArn
       MemorySize: 256
-
+  
+  FuncDeleteProject:
+    Type: AWS::Serverless::Function 
+    Properties:
+      Handler: hdler_delete_project.lambda_handler
+      CodeUri: api-handler-functions/delete-project
+      Role: !Ref LambdaRoleArn
+      MemorySize: 256
   #================ PROCESSOR STATE MACHINE ===================================
   CloneProjectSMLogGroup:
     Type: AWS::Logs::LogGroup
@@ -220,5 +227,6 @@ Outputs:
 
   FunctionListProjectArn:
     Value: !GetAtt FunctionListProject.Arn
-  
+  FuncDeleteProject:
+    Value: !GetAtt  FuncDeleteProject.Arn
   

@@ -218,3 +218,9 @@ class AnnoProjectModel():
                     ConditionExpression = condition
                 )
         return
+    def delete_project(self,identity_id,project_name):
+        self.table.put_item(Key={
+            self.FIELD_IDENTITY_ID: identity_id,
+            self.FIELD_PROJECT_NAME: project_name,
+        })
+        return 
