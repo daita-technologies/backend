@@ -53,10 +53,12 @@ Resources:
     Properties:
       Location: ./storage.yaml
       Parameters:
-         VPC: !GetAtt NetworkLayerApplication.Outputs.VPC
-         PublicSubnetOne: !GetAtt NetworkLayerApplication.Outputs.PublicSubnetOne
-         PublicSubnetTwo: !GetAtt NetworkLayerApplication.Outputs.PublicSubnetTwo
-         SecurityGroup: !GetAtt NetworkLayerApplication.Outputs.ContainerSecurityGroup
+        VPC: !GetAtt NetworkLayerApplication.Outputs.VPC
+        PublicSubnetOne: !GetAtt NetworkLayerApplication.Outputs.PublicSubnetOne
+        PublicSubnetTwo: !GetAtt NetworkLayerApplication.Outputs.PublicSubnetTwo
+        SecurityGroup: !GetAtt NetworkLayerApplication.Outputs.ContainerSecurityGroup
+        StagePara: !Ref StagePara
+        ApplicationPara: !Ref ApplicationPara
 
   ECSServiceApplication:
     Type: AWS::Serverless::Application

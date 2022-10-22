@@ -147,7 +147,6 @@ Resources:
       Environment:
         Variables:
           ECS_TASK_ARN: !GetAtt HandleECSTaskStatemachine.Arn          
-          # QUEUE:  !GetAtt SqsQueueUpdateTaskSegementation.QueueName
 
   UploadImage:
     Type: AWS::Serverless::Function
@@ -187,65 +186,15 @@ Resources:
       Environment:
         Variables:
           EFSPATH: !Ref EFSAccessPointRootPath
-          # QUEUE:  !GetAtt SqsQueueUpdateTaskSegementation.QueueName
 
-
-  # UpdateSegmentationTaskFunction:
-  #   Type: AWS::Serverless::Function
-  #   Properties:
-  #     CodeUri: api-handler-functions
-  #     Handler: hdler_task_segmentation.lambda_handler
-  #     MemorySize: 256
-  #     Role: !Ref LambdaRoleArn
-  #     VpcConfig:
-  #       SecurityGroupIds:
-  #         - !Ref SecurityGroup
-  #       SubnetIds:
-  #         - !Ref PublicSubnetOne
-  #         - !Ref PublicSubnetTwo
-  #     FileSystemConfigs:
-  #       - Arn: !Ref EFSAccessPoint
-  #         LocalMountPath: !Ref EFSAccessPointRootPath
-  #     Environment:
-  #       Variables:
-  #         EFSPATH: !Ref EFSAccessPointRootPath
-  #         QUEUE:  !GetAtt SqsQueueUpdateTaskSegementation.QueueName
-  #         QUEUE_URL: !Ref SqsQueueUpdateTaskSegementation
-  #     Policies:
-  #       - SQSSendMessagePolicy:
-  #           QueueName: !GetAtt SqsQueueUpdateTaskSegementation.QueueName
-  #     Events:
-  #       SQSQueueEvent:
-  #         Type: SQS
-  #         Properties:
-  #           BatchSize: 10
-  #           Queue: !GetAtt DeadLetterQueue.Arn
 
 ##################### Event ##################################
-  EventSourceMappingDatabaseOriginal:
+  ESMappingDBOriginal:
     Type: AWS::Lambda::EventSourceMapping
     Properties:
-      BatchSize: 500
+      BatchSize: 30
       Enabled: True
       EventSourceArn: !Ref TableAnnoDataOriginalNameStream
       FunctionName: !Ref StreamDataOriginalAnnotationFunction
       StartingPosition: LATEST
-      MaximumBatchingWindowInSeconds: 360
-
-  # SqsQueueUpdateTaskSegementation:
-  #   Type: AWS::SQS::Queue
-  #   Properties:
-  #     FifoQueue: True
-  #     VisibilityTimeout: 900
-  #     ContentBasedDeduplication: true
-  #     QueueName: !Sub "${StagePara}-${ApplicationPara}-Task-Segmentation.fifo"
-  #     RedrivePolicy:
-  #       deadLetterTargetArn: !GetAtt DeadLetterQueue.Arn
-  #       maxReceiveCount: 10
-
-  # DeadLetterQueue:
-  #   Type: AWS::SQS::Queue
-  #   Properties:
-  #     FifoQueue: True
-  #     VisibilityTimeout: 900
-  #     ContentBasedDeduplication: true    
+      MaximumBatchingWindowInSeconds: 120
