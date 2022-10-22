@@ -130,7 +130,7 @@ Resources:
         FunctionProjectListDataArn: !GetAtt ProjectService.Outputs.FunctionProjectListDataArn
         ProjectCloneFunctionArn: !GetAtt ProjectService.Outputs.ProjectCloneFunctionArn
         FunctionListProjectArn: !GetAtt ProjectService.Outputs.FunctionListProjectArn
-
+        FuncDeleteProject: !GetAtt ProjectService.Outputs.FuncDeleteProject
   DatabaseService:
     Type: AWS::Serverless::Application
     Properties:

@@ -142,7 +142,16 @@ class AnnoDataModel(BaseModel):
         ls_items = response.get("Items", [])
 
         return next_token, [self.convert_decimal_indb_item(item) for item in ls_items]
-        
-
     
-        
+    def delete_project(self,project_id):
+        queryResp = self.table.query(
+        KeyConditionExpression=Key(self.FIELD_PROJECT_ID).eq(project_id))
+        if len(queryResp['Items']) == 0:
+            return
+        with queryResp.batch_writer() as batch:
+            for each in queryResp['Items']:
+                self.table.delete_item(Key={
+                    self.FIELD_PROJECT_ID: each['project_id'],
+                    'filename':each['filename']
+                })
+        return
