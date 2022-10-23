@@ -17,10 +17,19 @@ Parameters:
     Type: String
     Default: /app/data
 
+  StagePara:
+    Type: String
+
+  ApplicationPara:
+    Type: String
+
 Resources:
   
   EFSFileSystem:
     Type: AWS::EFS::FileSystem
+    # FileSystemTags:
+    #   - Key: "Name"
+    #     Value: !Sub "${StagePara}_${ApplicationPara}_efs_ecs_segmentation"   
 
   MountTargeSubnetOne:
     Type:  AWS::EFS::MountTarget

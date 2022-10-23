@@ -47,7 +47,10 @@ Resources:
     Properties:
       EnableDnsSupport: true
       EnableDnsHostnames: true
-      CidrBlock: !FindInMap ['SubnetConfig', 'VPC', 'CIDR']      
+      CidrBlock: !FindInMap ['SubnetConfig', 'VPC', 'CIDR']   
+      Tags:
+        - Key: "Name"
+          Value: !Sub "${StagePara}_${ApplicationPara}_vpc_ecs_segment"
   
   PublicSubnetOne:
     Type: AWS::EC2::Subnet
@@ -59,6 +62,9 @@ Resources:
       VpcId: !Ref VPC      
       CidrBlock: !FindInMap ['SubnetConfig', 'PublicOne', 'CIDR']
       MapPublicIpOnLaunch: true
+      Tags:
+        - Key: "Name"
+          Value: !Sub "${StagePara}_${ApplicationPara}_pb_subnet_1"
 
   # NatGatewayOneAttachment:
   #   Type: AWS::EC2::EIP
@@ -83,7 +89,10 @@ Resources:
         - Fn::GetAZs: {Ref: 'AWS::Region'}   
       VpcId: !Ref VPC      
       CidrBlock: !FindInMap ['SubnetConfig', 'PublicTwo', 'CIDR']
-      MapPublicIpOnLaunch: true      
+      MapPublicIpOnLaunch: true   
+      Tags:
+        - Key: "Name"
+          Value: !Sub "${StagePara}_${ApplicationPara}_pb_subnet_2"   
 
   InternetGateway:
     Type: AWS::EC2::InternetGateway 
@@ -97,7 +106,10 @@ Resources:
   PublicRouteTable:
     Type: AWS::EC2::RouteTable
     Properties:
-      VpcId: !Ref VPC 
+      VpcId: !Ref VPC
+      Tags:
+        - Key: "Name"
+          Value: !Sub "${StagePara}_${ApplicationPara}_pb_route_table"   
       
   PublicRoute:
     Type: AWS::EC2::Route 
@@ -123,6 +135,9 @@ Resources:
     Properties:
       GroupDescription: Access container
       VpcId: !Ref VPC
+      Tags:
+        - Key: "Name"
+          Value: !Sub "${StagePara}_${ApplicationPara}_security_group"
 
   EcsSecurityGroupIngressFromSelf:
     Type: AWS::EC2::SecurityGroupIngress

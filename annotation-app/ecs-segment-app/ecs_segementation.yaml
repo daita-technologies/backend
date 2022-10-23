@@ -24,10 +24,11 @@ Parameters:
   PublicSubnetTwo:
     Type: String
 
-  DesiredCapacity:
-    Type: Number
-    Default: '1'
-    Description: Number of EC2 instances to launch in your ECS cluster.
+  ### currently, set directly in template
+  # DesiredCapacity:
+  #   Type: Number
+  #   Default: '1'
+  #   Description: Number of EC2 instances to launch in your ECS cluster.
 
   StagePara:
     Type: String
@@ -50,10 +51,6 @@ Parameters:
   
   TaskRole:
     Type: String
-
-  AIWaitTaskImage:
-    Type: String
-    Default: 737589818430.dkr.ecr.us-east-2.amazonaws.com/ai-services-repo:test-dowload-lib
 
   EFSAccessPoint:
     Type: String

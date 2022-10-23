@@ -34,4 +34,10 @@ class DeleteProjectAnnotation(LambdaBaseClass):
         identity_id = self.get_identity(self.id_token, self.env.USER_POOL_ID, self.env.IDENTITY_POOL_ID)
         self.anno_project_model.delete_project(identity_id,self.project_name)
         self.model_data.delete_project(self.project_id)
-        return 
+        return generate_response(
+            message="OK",
+            status_code=HTTPStatus.OK,
+            data ={})
+
+def lambda_handler(event, context):
+    return DeleteProjectAnnotation().handle(event=event,context=context)
