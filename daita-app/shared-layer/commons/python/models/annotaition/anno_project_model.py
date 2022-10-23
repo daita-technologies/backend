@@ -26,6 +26,7 @@ class AnnoProjectModel():
     FIELD_DATANUM_ORIGINAL      = VALUE_TYPE_DATA_ORIGINAL
     FIELD_DATANUM_PREPROCESS    = VALUE_TYPE_DATA_PREPROCESSED
     FIELD_AUG_PARAMETERS        = KEY_NAME_AUG_PARAMS
+    FIELD_IS_DELETED            = "is_dele"
 
     VALUE_GEN_STATUS_GENERATING = "GENERATING"
     VALUE_GEN_STATUS_FINISH     = "FINISH"
@@ -218,9 +219,21 @@ class AnnoProjectModel():
                     ConditionExpression = condition
                 )
         return
-    def delete_project(self,identity_id,project_name):
-        self.table.put_item(Key={
-            self.FIELD_IDENTITY_ID: identity_id,
-            self.FIELD_PROJECT_NAME: project_name,
-        })
+        
+    def update_deleted_status(self, identity_id, project_name):
+        response = self.table.update_item(
+            Key={
+                self.FIELD_IDENTITY_ID: identity_id,
+                self.FIELD_PROJECT_NAME: project_name,
+            },
+            ExpressionAttributeNames={
+                '#IS_DE': self.FIELD_IS_DELETED,
+                '#UP_DATE': self.FIELD_UPDATE_DATE
+            },
+            ExpressionAttributeValues={
+                ':is_de': True,  
+                ':da': convert_current_date_to_iso8601(), 
+            },
+            UpdateExpression='SET #UP_DATE = :da, #IS_DE = :is_de'
+        )
         return 
