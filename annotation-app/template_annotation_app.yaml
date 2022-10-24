@@ -131,6 +131,8 @@ Resources:
         ProjectCloneFunctionArn: !GetAtt ProjectService.Outputs.ProjectCloneFunctionArn
         FunctionListProjectArn: !GetAtt ProjectService.Outputs.FunctionListProjectArn
         FuncDeleteProject: !GetAtt ProjectService.Outputs.FuncDeleteProject
+        FunctionUploadCheckArn: !GetAtt ProjectService.Outputs.FunctionUploadCheckArn
+        FunctionUploadUpdateArn: !GetAtt ProjectService.Outputs.FunctionUploadUpdateArn
   DatabaseService:
     Type: AWS::Serverless::Application
     Properties:
@@ -159,9 +161,12 @@ Resources:
         TableCategoryInfoName: !GetAtt DatabaseService.Outputs.TableCategoryInfoName
         TableAIDefaultClassInfoName: !GetAtt DatabaseService.Outputs.TableAIDefaultClassInfoName
         TableClassInfoName: !GetAtt DatabaseService.Outputs.TableClassInfoName
+        TableDeletedProjectName: !GetAtt DatabaseService.Outputs.TableDeletedProjectName
         ###_____ for daita project table
         TableDaitaProjectsName: !Ref TableDaitaProjectsName
         TableDaitaDataOriginalName: !Ref TableDaitaDataOriginalName
+        ###_____ for config table
+        TableConfigParametersLambdaName: !GetAtt DatabaseService.Outputs.TableConfigParametersLambdaName
         ###_____ for s3 bucket
         S3AnnoBucketName: !Ref S3AnnoBucketName
         S3DaitaBucketName: !Ref S3DaitaBucketName

@@ -11,6 +11,12 @@ class AnnoProjectSumModel():
     FIELD_TYPE = "type"
     FIELD_IS_DELETED = "is_dele"
     FIELD_UPDATED_DATE = "updated_date"
+    FIELD_COUNT = "count"  ### total data in a project
+    FIELD_TOTAL_SIZE = "total_size"
+    FIELD_THUM_KEY = "thu_key"
+    FIELD_THUM_FILENAME = "thu_name"
+    FIELD_NUM_EXIST_DATA = "num_exist_data"
+
 
     VALUE_TYPE_ORIGINAL = "ORIGINAL"
     
@@ -74,6 +80,37 @@ class AnnoProjectSumModel():
             return {'count': 0}
         return None
 
+    def get_current_number_data_in_prj(self, project_id, type_data = VALUE_TYPE_ORIGINAL):
+        response = self.table.get_item(
+            Key={
+                self.FIELD_PROJECT_ID: project_id,
+                self.FIELD_TYPE: type_data,
+            }
+        )
+
+        if 'Item' in response:
+            count = response['Item'].get(self.FIELD_COUNT, 0)
+        else:
+            count = 0
+
+        return count
+
+    def get_item_prj_sum_info(self, project_id, type_data = VALUE_TYPE_ORIGINAL, ls_fields_projection = []):
+        if len(ls_fields_projection)==0:
+            ls_fields_projection = [self.FIELD_COUNT, self.FIELD_TOTAL_SIZE, self.FIELD_THUM_KEY, self.FIELD_THUM_FILENAME]
+
+        response = self.table.get_item(
+            Key={
+                self.FIELD_PROJECT_ID: project_id,
+                self.FIELD_TYPE: type_data,
+            },
+            ProjectionExpression= ",".join(ls_fields_projection)
+        )
+        item = response.get('Item', None)
+        
+        return item
+
+
     def query_data_project_id(self, project_id):
         response = self.table.query(
                 KeyConditionExpression=Key(self.FIELD_PROJECT_ID).eq(project_id),
@@ -99,3 +136,32 @@ class AnnoProjectSumModel():
         )
 
         return response
+
+    def update_upload_new_data(self, project_id, total_size, count, num_final, 
+                                thum_s3_key, thum_filename,  type_data = VALUE_TYPE_ORIGINAL):
+        exp_att_name = {
+            '#SI': self.FIELD_TOTAL_SIZE,
+            '#COU': self.FIELD_COUNT,
+            '#NE': self.FIELD_NUM_EXIST_DATA,
+            '#TK': self.FIELD_THUM_KEY,
+            '#TN': self.FIELD_THUM_FILENAME
+        }
+        exp_att_value = {
+            ':si': total_size,
+            ':cou': count,
+            ':ne': num_final,
+            ':tk': thum_s3_key,
+            ':tn': thum_filename
+        }
+
+        response = self.table.update_item(
+                    Key={
+                        self.FIELD_PROJECT_ID: project_id,
+                        self.FIELD_TYPE: type_data,
+                    },
+                    ExpressionAttributeNames = exp_att_name,
+                    ExpressionAttributeValues = exp_att_value,
+                    UpdateExpression = 'SET #NE = :ne, #TK = :tk, #TN = :tn ADD #SI :si, #COU :cou',
+                )
+
+        return

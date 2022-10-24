@@ -34,6 +34,27 @@ Resources:
       BillingMode: PAY_PER_REQUEST
       StreamSpecification:
         StreamViewType: NEW_IMAGE
+
+  DeletedProjectDB:
+    Type:  AWS::DynamoDB::Table
+    Properties:
+      TableName: !Sub "${StagePara}-${ApplicationPara}-deleted-project"
+      AttributeDefinitions:
+        -
+          AttributeName: identity_id
+          AttributeType: S
+        -
+          AttributeName: project_name
+          AttributeType: S
+      KeySchema:
+        -
+          AttributeName: identity_id
+          KeyType: HASH
+        -
+          AttributeName: project_name
+          KeyType: RANGE
+      BillingMode: PAY_PER_REQUEST
+
   ProjectSummaryDB:
     Type:  AWS::DynamoDB::Table
     Properties:
@@ -164,3 +185,10 @@ Outputs:
 
   TableAIDefaultClassInfoName:
     Value: const-ai-class-info
+
+  ### contain the config value of some paramters in lambda
+  TableConfigParametersLambdaName:
+    Value: config-parameters-lambda
+
+  TableDeletedProjectName:
+    Value: !Ref DeletedProjectDB

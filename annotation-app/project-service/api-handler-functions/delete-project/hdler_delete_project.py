@@ -22,6 +22,7 @@ class DeleteProjectAnnotation(LambdaBaseClass):
         self.anno_project_model = AnnoProjectModel(self.env.TABLE_ANNO_PROJECT)
         self.model_data = AnnoDataModel(self.env.TABLE_ANNO_DATA_ORI)
         self.model_anno_prj_sum = AnnoProjectSumModel(self.env.TABLE_ANNO_PROJECT_SUMMARY)
+        self.model_anno_deleted_prj = AnnoProjectModel(self.env.TABLE_ANNO_DELETED_PRJ)
 
     @LambdaBaseClass.parse_body
     def parser(self, body):
@@ -35,7 +36,8 @@ class DeleteProjectAnnotation(LambdaBaseClass):
         
         identity_id = self.get_identity(self.id_token, self.env.USER_POOL_ID, self.env.IDENTITY_POOL_ID)
 
-        self.anno_project_model.update_deleted_status(identity_id, self.project_name)
+        item_delete = self.anno_project_model.delete_project(identity_id, self.project_name)
+        self.model_anno_deleted_prj.put_item_w_condition(item_delete)
         self.model_data.delete_project(self.project_id)
         self.model_anno_prj_sum.update_deleted_status(self.project_id, AnnoProjectSumModel.VALUE_TYPE_ORIGINAL)
 

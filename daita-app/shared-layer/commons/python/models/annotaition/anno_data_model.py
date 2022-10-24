@@ -2,7 +2,7 @@ import boto3
 from boto3.dynamodb.conditions import Key, Attr
 from config import *
 from typing import List
-from utils import convert_current_date_to_iso8601
+from utils import convert_current_date_to_iso8601, create_unique_id
 from models.base_model import BaseModel
 
 class AnnoDataModel(BaseModel):
@@ -168,3 +168,52 @@ class AnnoDataModel(BaseModel):
                         )
 
         return
+
+    def get_item_from_list(self, project_id, ls_filename: List[str]):
+        # create the batch request from input data
+        ls_batch_request = []
+        for filename in ls_filename:
+            request = {
+                self.FIELD_PROJECT_ID: project_id,  # partition key
+                self.FIELD_FILENAME:  filename
+            }
+            ls_batch_request.append(request)
+
+        batch_keys = {
+            self.table.name: {
+                'Keys': ls_batch_request,
+                'ProjectionExpression': f'{self.FIELD_FILENAME}, {self.FIELD_SIZE}'
+            }
+        }
+
+        response = boto3.resource('dynamodb').batch_get_item(RequestItems=batch_keys)["Responses"]
+
+        ls_data_res = response.get(self.table.name, [])
+
+        return ls_data_res
+
+    def put_item_from_ls_object(self, project_id, ls_object_info):
+        # create the batch request from input data and summary the information
+        ls_batch_request = []
+        for object in ls_object_info:
+            request = {
+                self.FIELD_PROJECT_ID: project_id,  # partition key
+                self.FIELD_S3_KEY: object['s3_key'],          # sort_key
+                self.FIELD_FILENAME:  object['filename'],
+                self.FIELD_FILE_ID: create_unique_id(),
+                self.FIELD_HASH: object.get('hash', ''),   # we use function get it mean that this field is optional in body
+                self.FIELD_SIZE: object['size'],  # size must be in Byte unit
+                self.FIELD_IS_ORIGINAL: True,
+                self.FIELD_CREATED_TIME: convert_current_date_to_iso8601()
+            }
+            ls_batch_request.append(request)
+
+        # update data to DB
+        # we use batch_write, it means that if key are existed in tables => overwrite
+        with self.table.batch_writer() as batch:
+            for item in ls_batch_request:
+                batch.put_item(Item=item)
+
+        return 
+
+

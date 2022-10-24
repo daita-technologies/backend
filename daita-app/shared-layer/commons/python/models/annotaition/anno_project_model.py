@@ -213,27 +213,24 @@ class AnnoProjectModel():
 
         return
 
-    def put_item_w_condition(self, item, condition):
-        self.table.put_item(
-                    Item = item,
-                    ConditionExpression = condition
-                )
+    def put_item_w_condition(self, item, condition = None):
+        if condition is None:
+            self.table.put_item(
+                        Item = item
+                    )
+        else:
+            self.table.put_item(
+                        Item = item,
+                        ConditionExpression = condition
+                    )
         return
         
-    def update_deleted_status(self, identity_id, project_name):
-        response = self.table.update_item(
+    def delete_project(self, identity_id, project_name):
+        response = self.table.delete_item(
             Key={
                 self.FIELD_IDENTITY_ID: identity_id,
                 self.FIELD_PROJECT_NAME: project_name,
             },
-            ExpressionAttributeNames={
-                '#IS_DE': self.FIELD_IS_DELETED,
-                '#UP_DATE': self.FIELD_UPDATE_DATE
-            },
-            ExpressionAttributeValues={
-                ':is_de': True,  
-                ':da': convert_current_date_to_iso8601(), 
-            },
-            UpdateExpression='SET #UP_DATE = :da, #IS_DE = :is_de'
+            ReturnValues='ALL_OLD'
         )
-        return 
+        return response.get("Attributes", None)

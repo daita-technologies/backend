@@ -13,12 +13,15 @@ class LambdaEnv():
         self.TABLE_ANNO_CATEGORY_INFO = os.environ.get("TABLE_ANNO_CATEGORY_INFO", "")
         self.TABLE_ANNO_CLASS_INFO = os.environ.get("TABLE_ANNO_CLASS_INFO", "")
         self.TABLE_ANNO_AI_DEFAULT_CLASS = os.environ.get("TABLE_ANNO_AI_DEFAULT_CLASS", "")
+        self.TABLE_ANNO_DELETED_PRJ = os.environ.get("TABLE_ANNO_DELETED_PRJ", "")
 
         self.S3_ANNO_BUCKET_NAME = os.environ.get("S3_ANNO_BUCKET_NAME", "")
         self.S3_DAITA_BUCKET_NAME = os.environ.get("S3_DAITA_BUCKET_NAME", "")
 
         self.TABLE_DAITA_DATA_ORIGINAL = os.environ.get("TABLE_DAITA_DATA_ORIGINAL", "")
         self.TABLE_DAITA_PROJECT = os.environ.get("TABLE_DAITA_PROJECT", "")
+
+        self.TABLE_CONFIG_PARA_LAMBDA = os.environ.get("TABLE_CONFIG_PARA_LAMBDA", "")
 
         self.SM_CLONE_PROJECT_ARN = os.environ.get("SM_CLONE_PROJECT_ARN", "") 
 

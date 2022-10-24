@@ -30,6 +30,11 @@ Parameters:
     Type: String
   FuncDeleteProject:
     Type: String
+  
+  FunctionUploadCheckArn:
+    Type: String
+  FunctionUploadUpdateArn:
+    Type: String
 
 Resources:
   #================ ROLES =====================================================

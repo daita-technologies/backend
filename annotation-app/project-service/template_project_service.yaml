@@ -36,7 +36,11 @@ Parameters:
     Type: String
   TableClassInfoName:
     Type: String
+  TableDeletedProjectName:
+    Type: String
   
+  TableConfigParametersLambdaName:
+    Type: String
 
   TableDaitaProjectsName:
     Type: String
@@ -73,9 +77,12 @@ Globals:
         TABLE_ANNO_CATEGORY_INFO: !Ref TableCategoryInfoName
         TABLE_ANNO_AI_DEFAULT_CLASS: !Ref TableAIDefaultClassInfoName
         TABLE_ANNO_CLASS_INFO: !Ref TableClassInfoName
+        TABLE_ANNO_DELETED_PRJ: !Ref TableDeletedProjectName
 
         TABLE_DAITA_PROJECT: !Ref TableDaitaProjectsName
         TABLE_DAITA_DATA_ORIGINAL: !Ref TableDaitaDataOriginalName
+
+        TABLE_CONFIG_PARA_LAMBDA: !Ref TableConfigParametersLambdaName
         
         COGNITO_USER_POOL: !Ref CognitoUserPoolRef
         IDENTITY_POOL: !Ref CognitoIdentityPoolIdRef
@@ -119,6 +126,31 @@ Resources:
       Handler: hdler_list_project.lambda_handler
       Role: !Ref LambdaRoleArn
       MemorySize: 256
+
+  FunctionUploadCheck:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: api-handler-functions/upload-check
+      Handler: hdler_upload_check.lambda_handler
+      Role: !Ref LambdaRoleArn
+      MemorySize: 256
+
+  FunctionUploadUpdate:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: api-handler-functions/upload-update
+      Handler: hdler_upload_update.lambda_handler
+      Role: !Ref LambdaRoleArn
+      MemorySize: 256
+
+  FuncDeleteProject:
+    Type: AWS::Serverless::Function 
+    Properties:
+      Handler: hdler_delete_project.lambda_handler
+      CodeUri: api-handler-functions/delete-project
+      Role: !Ref LambdaRoleArn
+      MemorySize: 256
+  
           
   #================ LAMBDA STEP FUNCTIONS ==========================================
   FuncMoveS3Data:
@@ -146,13 +178,7 @@ Resources:
       Role: !Ref LambdaRoleArn
       MemorySize: 256
   
-  FuncDeleteProject:
-    Type: AWS::Serverless::Function 
-    Properties:
-      Handler: hdler_delete_project.lambda_handler
-      CodeUri: api-handler-functions/delete-project
-      Role: !Ref LambdaRoleArn
-      MemorySize: 256
+
   #================ PROCESSOR STATE MACHINE ===================================
   CloneProjectSMLogGroup:
     Type: AWS::Logs::LogGroup
@@ -229,4 +255,9 @@ Outputs:
     Value: !GetAtt FunctionListProject.Arn
   FuncDeleteProject:
     Value: !GetAtt  FuncDeleteProject.Arn
+
+  FunctionUploadCheckArn:
+    Value: !GetAtt FunctionUploadCheck.Arn
+  FunctionUploadUpdateArn:
+    Value: !GetAtt FunctionUploadUpdate.Arn
   
