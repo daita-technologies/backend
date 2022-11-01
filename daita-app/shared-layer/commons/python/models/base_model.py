@@ -7,6 +7,9 @@ class BaseModel():
     def __init__(self) -> None:
         pass
 
+    def convert_decimal_ls_item(self, ls_item):
+        return [self.convert_decimal_indb_item(item) for item in ls_item]
+
     def convert_decimal_indb_item(self, item):
         if item:
             for key, value in item.items():

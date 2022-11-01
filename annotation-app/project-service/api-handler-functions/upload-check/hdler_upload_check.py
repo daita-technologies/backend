@@ -12,6 +12,7 @@ from error_messages import *
 
 from models.annotaition.anno_project_sum_model import AnnoProjectSumModel
 from models.annotaition.anno_data_model import AnnoDataModel
+from response import *
 
 
 class ProjectUploadUpdateClass(LambdaBaseClass):
@@ -57,6 +58,6 @@ class ProjectUploadUpdateClass(LambdaBaseClass):
             "message": None
         })
 
-
+@error_response
 def lambda_handler(event, context):
     return ProjectUploadUpdateClass().handle(event=event,  context=context)

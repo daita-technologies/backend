@@ -190,7 +190,7 @@ class AnnoDataModel(BaseModel):
 
         ls_data_res = response.get(self.table.name, [])
 
-        return ls_data_res
+        return self.convert_decimal_ls_item(ls_data_res)
 
     def put_item_from_ls_object(self, project_id, ls_object_info):
         # create the batch request from input data and summary the information

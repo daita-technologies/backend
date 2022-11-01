@@ -89,7 +89,7 @@ class AnnoProjectSumModel():
         )
 
         if 'Item' in response:
-            count = response['Item'].get(self.FIELD_COUNT, 0)
+            count = int(response['Item'].get(self.FIELD_COUNT, 0))
         else:
             count = 0
 
@@ -97,15 +97,22 @@ class AnnoProjectSumModel():
 
     def get_item_prj_sum_info(self, project_id, type_data = VALUE_TYPE_ORIGINAL, ls_fields_projection = []):
         if len(ls_fields_projection)==0:
-            ls_fields_projection = [self.FIELD_COUNT, self.FIELD_TOTAL_SIZE, self.FIELD_THUM_KEY, self.FIELD_THUM_FILENAME]
-
-        response = self.table.get_item(
-            Key={
-                self.FIELD_PROJECT_ID: project_id,
-                self.FIELD_TYPE: type_data,
-            },
-            ProjectionExpression= ",".join(ls_fields_projection)
-        )
+            response = self.table.get_item(
+                Key={
+                    self.FIELD_PROJECT_ID: project_id,
+                    self.FIELD_TYPE: type_data,
+                }
+                # ProjectionExpression= ",".join(ls_fields_projection)
+            )
+            # ls_fields_projection = [self.FIELD_COUNT, self.FIELD_TOTAL_SIZE, self.FIELD_THUM_KEY, self.FIELD_THUM_FILENAME]
+        else:
+            response = self.table.get_item(
+                Key={
+                    self.FIELD_PROJECT_ID: project_id,
+                    self.FIELD_TYPE: type_data,
+                },
+                ProjectionExpression= ",".join(ls_fields_projection)
+            )
         item = response.get('Item', None)
         
         return item

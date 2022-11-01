@@ -8,6 +8,7 @@ import os
 from boto3.dynamodb.conditions import Key, Attr
 from utils import convert_response, aws_get_identity_id, dydb_get_project_full
 from error_messages import *
+from response import *
 
 from models.annotaition.anno_project_model import AnnoProjectModel
 from models.annotaition.anno_project_sum_model import AnnoProjectSumModel
@@ -58,7 +59,9 @@ class GetProjectInfoClass(LambdaBaseClass):
                                 "ls_class": self.model_class_info.query_all_class_of_category(project_info[AnnoProjectModel.FIELD_CATEGORY_DEFAULT])
                             }
         else:
-            ls_categorys = []
+            ls_categorys = {}
+
+        print("ls_category", ls_categorys)
         return convert_response({'data': {
                                         "identity_id": identity_id,
                                         "project_name": self.project_name,
@@ -73,6 +76,6 @@ class GetProjectInfoClass(LambdaBaseClass):
                                 "success": True,
                                 "message": None })
 
-
+@error_response
 def lambda_handler(event, context):
     return GetProjectInfoClass().handle(event=event,  context=context)
