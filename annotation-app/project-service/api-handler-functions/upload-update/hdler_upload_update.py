@@ -8,6 +8,7 @@ import os
 from boto3.dynamodb.conditions import Key, Attr
 from utils import convert_response, aws_get_identity_id, dydb_get_project_full, convert_current_date_to_iso8601
 from error_messages import *
+from response import *
 
 from models.annotaition.anno_project_sum_model import AnnoProjectSumModel
 from models.annotaition.anno_data_model import AnnoDataModel
@@ -76,6 +77,6 @@ class ProjectUploadUpdateClass(LambdaBaseClass):
                                  "success": True,
                                  "message": None})
 
-
+@error_response
 def lambda_handler(event, context):
     return ProjectUploadUpdateClass().handle(event=event,  context=context)

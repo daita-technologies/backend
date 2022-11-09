@@ -107,6 +107,20 @@ paths:
         type: "aws_proxy"
         payloadFormatVersion: "2.0"
 
+  /annotation/project/check_ai_segm_progress:
+    post:
+      responses:
+        default:
+          description: "Check current progress of ai segmentation"
+      x-amazon-apigateway-integration:
+        credentials:
+          Fn::GetAtt: [ApiGatewayCallLambdaRole, Arn]
+        uri:
+          Fn::Sub: arn:${AWS::Partition}:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${FunctionCheckAISegmentationProgressArn}/invocations
+        httpMethod: "POST"
+        type: "aws_proxy"
+        payloadFormatVersion: "2.0"
+
   /annotation/category/add_class:
     post:
       responses:

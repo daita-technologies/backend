@@ -192,7 +192,7 @@ Resources:
   ESMappingDBOriginal:
     Type: AWS::Lambda::EventSourceMapping
     Properties:
-      BatchSize: 30
+      BatchSize: 20
       Enabled: True
       EventSourceArn: !Ref TableAnnoDataOriginalNameStream
       FunctionName: !Ref StreamDataOriginalAnnotationFunction

@@ -36,6 +36,9 @@ Parameters:
   FunctionUploadUpdateArn:
     Type: String
 
+  FunctionCheckAISegmentationProgressArn:
+    Type: String
+
 Resources:
   #================ ROLES =====================================================
   #-- use this role for apigateway access lambda

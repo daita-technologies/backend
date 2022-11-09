@@ -41,7 +41,7 @@ Parameters:
 
   MaxSize:
     Type: Number
-    Default: '6'
+    Default: '4'
 
   ExecuteArn:
     Type: String

@@ -150,6 +150,14 @@ Resources:
       CodeUri: api-handler-functions/delete-project
       Role: !Ref LambdaRoleArn
       MemorySize: 256
+
+  FunctionCheckAISegmentationProgress:
+    Type: AWS::Serverless::Function 
+    Properties:
+      Handler: hdler_check_si_segm_progress.lambda_handler
+      CodeUri: api-handler-functions/check-ai-segmentation
+      Role: !Ref LambdaRoleArn
+      MemorySize: 256
   
           
   #================ LAMBDA STEP FUNCTIONS ==========================================
@@ -260,4 +268,7 @@ Outputs:
     Value: !GetAtt FunctionUploadCheck.Arn
   FunctionUploadUpdateArn:
     Value: !GetAtt FunctionUploadUpdate.Arn
+
+  FunctionCheckAISegmentationProgressArn:
+    Value: !GetAtt FunctionCheckAISegmentationProgress.Arn
   

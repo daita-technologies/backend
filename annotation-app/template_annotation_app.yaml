@@ -133,6 +133,7 @@ Resources:
         FuncDeleteProject: !GetAtt ProjectService.Outputs.FuncDeleteProject
         FunctionUploadCheckArn: !GetAtt ProjectService.Outputs.FunctionUploadCheckArn
         FunctionUploadUpdateArn: !GetAtt ProjectService.Outputs.FunctionUploadUpdateArn
+        FunctionCheckAISegmentationProgressArn: !GetAtt ProjectService.Outputs.FunctionCheckAISegmentationProgressArn
   DatabaseService:
     Type: AWS::Serverless::Application
     Properties:

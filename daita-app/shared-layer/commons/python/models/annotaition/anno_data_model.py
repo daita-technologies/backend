@@ -10,8 +10,8 @@ class AnnoDataModel(BaseModel):
     FIELD_PROJECT_ID        = "project_id"
     FIELD_FILENAME          = "filename"  
     FIELD_FILE_ID           = "file_id"  
-    FIELD_CREATED_TIME       = "created_time"
-    FIELD_UPDATED_TIME       = "updated_time"
+    FIELD_CREATED_TIME      = "created_time"
+    FIELD_UPDATED_TIME      = "updated_time"
     FIELD_GEN_ID            = "gen_id"
     FIELD_HASH              = "hash"    
     FIELD_IS_ORIGINAL       = "is_ori"
@@ -86,11 +86,14 @@ class AnnoDataModel(BaseModel):
         
         return ls_s3_key
 
-    def get_all_data_in_project(self, project_id):
+    def get_all_data_in_project(self, project_id, ls_fields_projection = []):
+        if len(ls_fields_projection) == 0:
+            ls_fields_projection = [self.FIELD_FILENAME, self.FIELD_S3_KEY, 
+                                    self.FIELD_SIZE]
 
         response = self.table.query (
                 KeyConditionExpression=Key(self.FIELD_PROJECT_ID).eq(project_id),
-                ProjectionExpression=f"{self.FIELD_FILENAME}, {self.FIELD_S3_KEY}, {self.FIELD_SIZE}",
+                ProjectionExpression=",".join(ls_fields_projection),
         )
         ls_items = response.get("Items", [])
 
@@ -98,7 +101,7 @@ class AnnoDataModel(BaseModel):
             next_token = response['LastEvaluatedKey']
             response = self.table.query (
                 KeyConditionExpression=Key(self.FIELD_PROJECT_ID).eq(project_id),
-                ProjectionExpression=f"{self.FIELD_FILENAME}, {self.FIELD_S3_KEY}, {self.FIELD_SIZE}",
+                ProjectionExpression=",".join(ls_fields_projection),
                 ExclusiveStartKey=next_token
             )
 
@@ -215,5 +218,21 @@ class AnnoDataModel(BaseModel):
                 batch.put_item(Item=item)
 
         return 
+
+    def query_progress_ai_segm(self, project_id):
+        """
+        Check all data of a project, count total and the number of data that exist ai_segmentation
+        """
+        ls_fields_projection = [self.FIELD_FILENAME, self.FIELD_S3_SEGME_LABEL]
+
+        ls_items = self.get_all_data_in_project(project_id, ls_fields_projection)
+        ls_ai_finished = []
+
+        for item in ls_items:
+            if item.get(self.FIELD_S3_SEGME_LABEL) is not None:
+                if len(item[self.FIELD_S3_SEGME_LABEL])>1:
+                    ls_ai_finished.append(item)
+
+        return len(ls_items), len(ls_ai_finished)
 
 
