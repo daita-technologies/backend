@@ -19,6 +19,7 @@ DAITA_S3_BUCKET=client-data-test
 ANNO_S3_BUCKET=client-annotation-bucket
 DAITA_APPLICATION=daita
 ANNO_APPLICATION=anno
+INFRA_APPLICATION=infra
 
 CERTIFICATE_USERPOLL_DOMAIN=arn:aws:acm:us-east-1:737589818430:certificate/997bd837-32c3-466d-927b-2e1d4dee7bf0
 

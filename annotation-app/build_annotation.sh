@@ -17,7 +17,15 @@ parameters_override="Stage=${ANNOTATION_STAGE} Application=${ANNO_APPLICATION}
                     CognitoIdentityPoolIdRef=${CognitoIdentityPoolIdRef}
                     TableDaitaProjectsName=${TableDaitaProjectsName}
                     TableDaitaDataOriginalName=${TableDaitaDataOriginalName} 
-                    S3DaitaBucketName=${DAITA_S3_BUCKET}"
+                    S3DaitaBucketName=${DAITA_S3_BUCKET}
+                    PublicSubnetOne=${PublicSubnetOne}
+                    PublicSubnetTwo=${PublicSubnetTwo}
+                    ContainerSecurityGroup=${ContainerSecurityGroup}
+                    VPC=${VPC}
+                    VPCEndpointSQSDnsEntries=${VPCEndpointSQSDnsEntries}
+                    EFSFileSystemId=${EFSFileSystemId}
+                    EFSAccessPoint=${EFSAccessPoint}
+                    EFSAccessPointArn=${EFSAccessPointArn}"
 
 sam build --template-file template_annotation_app.yaml
 sam deploy --template-file template_annotation_app.yaml --no-confirm-changeset --disable-rollback \
@@ -49,7 +57,19 @@ while read line; do
         value=${BASH_REMATCH[0]}
         value=${value##*( )}
         value=${value%%*( )}
-        dict_output[$key]=$value
+        
+        first_line=$value
+        is_first_line_value=true
+    else
+        if [[ "$line" =~ .*"-------".* ]]; then
+            echo "skip line"
+        else
+            if [ "$is_first_line_value" = true ]; then
+                final_line=$first_line$line                
+                dict_output[$key]=$final_line
+                is_first_line_value=false
+            fi
+        fi
     fi
 done < $filename
 

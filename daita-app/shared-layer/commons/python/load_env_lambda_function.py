@@ -23,5 +23,9 @@ class LambdaEnv():
 
         self.TABLE_CONFIG_PARA_LAMBDA = os.environ.get("TABLE_CONFIG_PARA_LAMBDA", "")
 
+        self.TABLE_GENERATE_TASK = os.environ.get("TABLE_GENERATE_TASK", "")
+
         self.SM_CLONE_PROJECT_ARN = os.environ.get("SM_CLONE_PROJECT_ARN", "") 
+
+        self.FUNC_DAITA_UPLOAD_UPDATE = os.environ.get("FUNC_DAITA_UPLOAD_UPDATE", "")
 

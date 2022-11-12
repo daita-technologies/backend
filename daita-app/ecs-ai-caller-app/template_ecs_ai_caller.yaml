@@ -1,0 +1,68 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: >
+  SAM Template for Nested application resources
+
+## The general rule seems to be to use !Sub for in line substitutions and !ref for stand alone text
+Parameters:
+ 
+  StagePara:
+    Type: String
+  ApplicationPara:
+    Type: String
+  
+  ImageAIPreprocessingUrl:
+    Type: String
+    Default: 737589818430.dkr.ecr.us-east-2.amazonaws.com/ai-services-repo:preprocessing
+  ImageAIAugmentationUrl:
+    Type: String
+    Default: 737589818430.dkr.ecr.us-east-2.amazonaws.com/ai-services-repo:augmentation
+  
+
+
+  ContainerPath:
+    Type: String
+    Default: /app/data
+
+  PublicSubnetOne:
+    Type: String
+  PublicSubnetTwo:
+    Type: String    
+  ContainerSecurityGroup:
+    Type: String
+  VPC:
+    Type: String
+
+Resources:
+
+
+  #================ APPLICATIONS  =============================================
+  RoleApplication:
+    Type: AWS::Serverless::Application
+    Properties:
+      Location: ./role.yaml 
+
+  ECSServiceApplication:
+    Type: AWS::Serverless::Application
+    Properties:
+      Location: ./ecs_segementation.yaml
+      Parameters:
+        StagePara: !Ref StagePara
+        ApplicationPara: !Ref ApplicationPara
+        EC2Role: !GetAtt RoleApplication.Outputs.EC2Role
+        ### Network parameters
+        PublicSubnetOne: !Ref PublicSubnetOne
+        PublicSubnetTwo: !Ref PublicSubnetTwo
+        ContainerSecurityGroup: !Ref ContainerSecurityGroup
+        
+        ExecuteArn: !GetAtt RoleApplication.Outputs.ECSTask
+        TaskRole: !GetAtt RoleApplication.Outputs.ECSRole
+        PreprocessingImageUrl: !Ref ImageAIPreprocessingUrl
+        AugmentationImageUrl: !Ref ImageAIAugmentationUrl
+        ContainerPath: !Ref ContainerPath
+
+Outputs:
+  TaskAIPreprocessingDefinition:
+    Value: !GetAtt ECSServiceApplication.Outputs.TaskAIPreprocessingDefinition
+  TaskAIAugmentationDefinition:
+    Value: !GetAtt ECSServiceApplication.Outputs.TaskAIAugmentationDefinition

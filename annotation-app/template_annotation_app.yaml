@@ -38,6 +38,26 @@ Parameters:
     Type: String
   TableDaitaDataOriginalName:
     Type: String
+
+  ### parameter from infra
+  PublicSubnetOne:
+    Type: String
+  PublicSubnetTwo:
+    Type: String    
+  ContainerSecurityGroup:
+    Type: String
+  VPC:
+    Type: String
+  VPCEndpointSQSDnsEntries:
+    Type: String
+
+  ### paras for infra storage
+  EFSFileSystemId:
+    Type: String
+  EFSAccessPoint:
+    Type: String
+  EFSAccessPointArn:
+    Type: String
   
   
 Resources:
@@ -134,6 +154,7 @@ Resources:
         FunctionUploadCheckArn: !GetAtt ProjectService.Outputs.FunctionUploadCheckArn
         FunctionUploadUpdateArn: !GetAtt ProjectService.Outputs.FunctionUploadUpdateArn
         FunctionCheckAISegmentationProgressArn: !GetAtt ProjectService.Outputs.FunctionCheckAISegmentationProgressArn
+  
   DatabaseService:
     Type: AWS::Serverless::Application
     Properties:
@@ -211,6 +232,16 @@ Resources:
         CommonCodeLayerRef: !Ref CommonCodeLayerRef
         LambdaRoleArn: !GetAtt GeneralLambdaExecutionRole.Arn
         TableAnnoDataOriginalName: !GetAtt  DatabaseService.Outputs.TableAnnoDataOriginalName
+        ### for infra network related VPC
+        PublicSubnetOne: !Ref PublicSubnetOne
+        PublicSubnetTwo: !Ref PublicSubnetTwo
+        ContainerSecurityGroup: !Ref ContainerSecurityGroup
+        VPC: !Ref VPC
+        VPCEndpointSQSDnsEntries: !Ref VPCEndpointSQSDnsEntries
+        ### for infra storage
+        EFSFileSystemId: !Ref EFSFileSystemId
+        EFSAccessPoint: !Ref EFSAccessPoint
+        EFSAccessPointArn: !Ref EFSAccessPointArn
 
 Outputs:
   ApiAnnoAppUrl:

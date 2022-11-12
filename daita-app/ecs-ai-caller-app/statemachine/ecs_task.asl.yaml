@@ -1,0 +1,48 @@
+StartAt: DownloadS3toEFSFunction
+States:
+  
+  DownloadS3toEFSFunction:
+    Type: Task
+    Resource: 'arn:aws:states:::lambda:invoke'
+    InputPath: $
+    Parameters:
+      FunctionName: '${DownloadS3toEFSFunction}'
+      Payload.$: $
+    Next: RunECSTask
+
+  RunECSTask:
+    Type: Task
+    Resource: arn:aws:states:::ecs:runTask.sync
+    Parameters:
+      Cluster: ${AITaskECSClusterArn}
+      TaskDefinition: ${AITaskDefinitionArn}
+      NetworkConfiguration:
+        AwsvpcConfiguration:
+          Subnets: !Join [ ${Subnets} ]
+          SecurityGroups: !Join [ ${SecurityGroupIds} ]
+          # AssignPublicIp: ENABLED
+      Overrides:
+        ContainerOverrides:
+          - Name.$ : "$.Payload.Name"
+            Command.$: "$.Payload.Command"
+    Retry:
+      - ErrorEquals:
+          - RetriableCallerServiceError
+      - ErrorEquals:
+          - States.ALL
+        IntervalSeconds: 3
+        MaxAttempts: 5
+        BackoffRate: 1
+    Next: UploadImage
+
+  UploadImage:
+    Type: Task
+    Resource: 'arn:aws:states:::lambda:invoke'
+    InputPath: $
+    Parameters:
+      FunctionName: '${UploadImage}'
+      Payload:
+        input_folder.$ : $$.Execution.Input.input_folder
+        records.$: $$.Execution.Input.records
+    End: true   
+TimeoutSeconds: 6000

@@ -4,9 +4,11 @@ from config import *
 from response import *
 from utils import *
 from identity_check import *
-calculateReferencesImagesApi = f'{URL}/reference_image/calculate'
-statusReferencesImagesApi = f'{URL}/reference_image/status'
-infoReferencecesImagesAPi = f'{URL}/reference_image/info'
+
+URL_REF = "https://twh9igmy81.execute-api.us-east-2.amazonaws.com/dev"
+calculateReferencesImagesApi = f'{URL_REF}/reference_image/calculate'
+statusReferencesImagesApi = f'{URL_REF}/reference_image/status'
+infoReferencecesImagesAPi = f'{URL_REF}/reference_image/info'
 
 
 @error_response

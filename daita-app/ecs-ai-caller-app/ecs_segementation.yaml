@@ -5,9 +5,6 @@ Parameters:
     Type: String
     Default: ami-09cb4bc2dcc083845
 
-  ContainerSecurityGroup:
-    Type: String
-
   InstanceType:
     Type: String
     Default: c4.xlarge
@@ -20,8 +17,9 @@ Parameters:
 
   PublicSubnetOne:
     Type: String
-  
   PublicSubnetTwo:
+    Type: String
+  ContainerSecurityGroup:
     Type: String
 
   ### currently, set directly in template
@@ -32,7 +30,6 @@ Parameters:
 
   StagePara:
     Type: String
-
   ApplicationPara:
     Type: String
 
@@ -41,20 +38,17 @@ Parameters:
 
   MaxSize:
     Type: Number
-    Default: '4'
+    Default: '6'
 
   ExecuteArn:
     Type: String
   
-  ImageUrl:
+  PreprocessingImageUrl:
+    Type: String
+  AugmentationImageUrl:
     Type: String
   
   TaskRole:
-    Type: String
-
-  EFSAccessPoint:
-    Type: String
-  EFSFileSystemId:
     Type: String
 
   ContainerPath:
@@ -65,13 +59,13 @@ Resources:
   ECSCluster:
     Type: AWS::ECS::Cluster
     Properties:
-      ClusterName: !Sub "${StagePara}-${ApplicationPara}-ECS-Segmentation-Cluster"
+      ClusterName: !Sub "${StagePara}-${ApplicationPara}-ECS-AICaller-Cluster"
 
-  ECSAutoScalingGroup:
+  ECSAICallerAutoScalingGroup:
     Type: AWS::AutoScaling::AutoScalingGroup
     DependsOn: ECSCluster
     Properties:
-      AutoScalingGroupName: !Sub  "${StagePara}-${ApplicationPara}-Segementation-ECS"
+      AutoScalingGroupName: !Sub  "${StagePara}-${ApplicationPara}-AICaller-ECS"
       # HealthCheckGracePeriod: 60
       # HealthCheckType: EC2
       VPCZoneIdentifier:
@@ -101,15 +95,15 @@ Resources:
           #!/bin/bash -xe
           echo ECS_CLUSTER=${ECSCluster} >> /etc/ecs/ecs.config
           yum install -y aws-cfn-bootstrap
-          /opt/aws/bin/cfn-signal -e $? --stack ${AWS::StackName} --resource ECSAutoScalingGroup --region ${AWS::Region}
+          /opt/aws/bin/cfn-signal -e $? --stack ${AWS::StackName} --resource ECSAICallerAutoScalingGroup --region ${AWS::Region}
   
   ECSTaskLogGroup:
     Type: AWS::Logs::LogGroup
     Properties:
-      LogGroupName: !Sub "/aws/vendedlogs/states/${StagePara}-MyECSTaskLogGroup-${AWS::StackName}"
+      LogGroupName: !Sub "/aws/vendedlogs/states/${StagePara}-MyECSAICallerTaskLogGroup-${AWS::StackName}"
       RetentionInDays: 7
 
-  TaskAISegmenationDefinition:
+  TaskAIPreprocessingDefinition:
     Type: AWS::ECS::TaskDefinition
     Properties:
       ExecutionRoleArn: !Ref ExecuteArn
@@ -117,8 +111,8 @@ Resources:
       NetworkMode: awsvpc
       ContainerDefinitions:
         -
-          Name: !Sub "${StagePara}-${ApplicationPara}-ecs-segmentations"
-          Image: !Ref ImageUrl
+          Name: !Sub "${StagePara}-${ApplicationPara}-ecs-preprocessing"
+          Image: !Ref PreprocessingImageUrl
           Cpu: 4092
           Memory: 4092
           LogConfiguration:
@@ -128,18 +122,50 @@ Resources:
               awslogs-region: !Ref 'AWS::Region'
               awslogs-create-group: true
               awslogs-stream-prefix: !Ref 'ApplicationPara'
-          MountPoints:
-            -
-              SourceVolume:  "my-vol"
-              ContainerPath:  !Ref ContainerPath
-      Volumes:
+          # MountPoints:
+          #   -
+          #     SourceVolume:  "my-vol"
+          #     ContainerPath:  !Ref ContainerPath
+      # Volumes:
+      #   -
+      #     EFSVolumeConfiguration:
+      #       AuthorizationConfig:
+      #         AccessPointId: !Ref EFSAccessPoint
+      #       FilesystemId: !Ref EFSFileSystemId
+      #       TransitEncryption: ENABLED  # enable this so maybe we don't need to config a access point https://docs.aws.amazon.com/pt_br/AWSCloudFormation/latest/UserGuide/aws-properties-ecs-taskdefinition-authorizationconfig.html
+      #     Name: "my-vol"
+  
+  TaskAIAugmentationDefinition:
+    Type: AWS::ECS::TaskDefinition
+    Properties:
+      ExecutionRoleArn: !Ref ExecuteArn
+      TaskRoleArn: !Ref TaskRole
+      NetworkMode: awsvpc
+      ContainerDefinitions:
         -
-          EFSVolumeConfiguration:
-            AuthorizationConfig:
-              AccessPointId: !Ref EFSAccessPoint
-            FilesystemId: !Ref EFSFileSystemId
-            TransitEncryption: ENABLED  # enable this so maybe we don't need to config a access point https://docs.aws.amazon.com/pt_br/AWSCloudFormation/latest/UserGuide/aws-properties-ecs-taskdefinition-authorizationconfig.html
-          Name: "my-vol"
+          Name: !Sub "${StagePara}-${ApplicationPara}-ecs-augmentation"
+          Image: !Ref AugmentationImageUrl
+          Cpu: 4092
+          Memory: 4092
+          LogConfiguration:
+            LogDriver: 'awslogs'
+            Options:
+              awslogs-group: !Ref ECSTaskLogGroup
+              awslogs-region: !Ref 'AWS::Region'
+              awslogs-create-group: true
+              awslogs-stream-prefix: !Ref 'ApplicationPara'
+      #     MountPoints:
+      #       -
+      #         SourceVolume:  "my-vol"
+      #         ContainerPath:  !Ref ContainerPath
+      # Volumes:
+      #   -
+      #     EFSVolumeConfiguration:
+      #       AuthorizationConfig:
+      #         AccessPointId: !Ref EFSAccessPoint
+      #       FilesystemId: !Ref EFSFileSystemId
+      #       TransitEncryption: ENABLED  # enable this so maybe we don't need to config a access point https://docs.aws.amazon.com/pt_br/AWSCloudFormation/latest/UserGuide/aws-properties-ecs-taskdefinition-authorizationconfig.html
+      #     Name: "my-vol"
 
   ###________ CAPACITY CONFIG FOR CLUSTER ______________
   ###### doc: https://docs.aws.amazon.com/autoscaling/application/userguide/application-auto-scaling-target-tracking.html
@@ -147,9 +173,9 @@ Resources:
     Type: AWS::ECS::CapacityProvider
     DependsOn: ECSCluster
     Properties:
-      Name: !Sub "${StagePara}-${ApplicationPara}-capacity-provider-segmentation"
+      Name: !Sub "${StagePara}-${ApplicationPara}-capacity-provider-ai-caller"
       AutoScalingGroupProvider:
-        AutoScalingGroupArn: !Ref ECSAutoScalingGroup
+        AutoScalingGroupArn: !Ref ECSAICallerAutoScalingGroup
         ManagedScaling:
           # InstanceWarmupPeriod: 300
           MaximumScalingStepSize: 2
@@ -170,8 +196,10 @@ Resources:
 
 Outputs:
 
-  TaskAISegmenationDefinition:
-    Value: !Ref TaskAISegmenationDefinition
+  TaskAIPreprocessingDefinition:
+    Value: !Ref TaskAIPreprocessingDefinition
+  TaskAIAugmentationDefinition:
+    Value: !Ref TaskAIAugmentationDefinition
   
   ECSCluster:
     Value: !Ref ECSCluster

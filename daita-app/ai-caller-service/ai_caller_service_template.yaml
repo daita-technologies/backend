@@ -23,6 +23,7 @@ Globals:
         ROOTEFS: !Ref ROOTEFS
         EFSPATH: !Ref EFSStorageAI
         MODE: !Ref Mode
+        IS_USE_NEW_FLOW: True
     Layers:
         - !Ref CommonCodeLayerName
 
@@ -39,6 +40,7 @@ Parameters:
     Type: String
   ApplicationPara:
     Type: String
+
   EFSFileSystemId:
     Type: String
     Default: fs-0199771f2dfe97ace
@@ -47,6 +49,7 @@ Parameters:
     Default: /mnt/generation-task
   ROOTEFS:
     Type: String
+
   SubnetIDsPara:
     Type: CommaDelimitedList
   SecurityGroupIdsPara:
@@ -56,10 +59,6 @@ Parameters:
   TableGenerateTaskName:
     Type: String
   TableProjectSumName:
-    Type: String
-  LambdaRoleARN:
-    Type: String
-  LambdaRoleARN:
     Type: String
   LambdaRoleARN:
     Type: String
@@ -74,6 +73,13 @@ Parameters:
   Mode:
     Type: String
 
+  TaskAIPreprocessingDefinition:
+    Type: String
+  TaskAIAugmentationDefinition:
+    Type: String
+
+  FuncProjectUploadUpdate:
+    Type: String
 
 Resources:
 
@@ -331,17 +337,11 @@ Resources:
       CodeUri: functions/handlers/generate_step/CompleteRequestAI
       Environment:
         Variables:
-          TABLE_GENERATE_TASK: !Ref TableGenerateTaskName
           TABLE_DATA_AUGMENT: !Ref TableDataAugmentName
           TABLE_DATA_ORIGINAL: !Ref TableDataOriginalName
           TABLE_DATA_PREPROCESS: !Ref TableDataPreprocessName
           TABLE_PROJECT_SUMMARY: !Ref TableProjectSumName
-      # Events:
-      #   SQSQueueEvent:
-      #     Type: SQS
-      #     Properties:
-      #       BatchSize: 10
-      #       Queue: !GetAtt UpdateDatabaseRequestAI.Arn
+          FUNC_DAITA_UPLOAD_UPDATE: !Ref FuncProjectUploadUpdate
       Policies:
         - Statement:
           -
@@ -1395,6 +1395,8 @@ Resources:
         HandleCompleteRequestAI: !GetAtt HandleCompleteRequestAI.Arn
         HandlerUploadBatchToS3: !GetAtt HandlerUploadBatchToS3.Arn
         UpdateStatusTask: !GetAtt UpdateStatusTask.Arn
+        TaskAIPreprocessingDefinition: !Ref TaskAIPreprocessingDefinition
+        TaskAIAugmentationDefinition: !Ref TaskAIAugmentationDefinition
       Policies:
         - LambdaInvokePolicy:
             FunctionName: !Ref HandleGenerateStep

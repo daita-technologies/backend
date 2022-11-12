@@ -7,6 +7,9 @@
 OUTPUT_BUILD_DAITA=$2
 OUTPUT_FE_CONFIG=$3
 
+### load output of daita-app 
+. "$OUTPUT_BUILD_DAITA"
+
 
 cd daita-app
 
@@ -17,11 +20,16 @@ parameters_override="Mode=${MODE} Stage=${DAITA_STAGE} Application=${DAITA_APPLI
                     EFSFileSystemId=${EFS_ID} 
                     MaxConcurrencyTasks=${MAX_CONCURRENCY_TASK} 
                     ROOTEFS=${ROOT_EFS} 
-                    DomainUserPool=${DOMAIN_USER_POOL}
-                    VPCid=${VPC_ID}
-                    LogoutUrl=${LOG_OUT_URL}
-                    CertificateUserpoolDomain=${CERTIFICATE_USERPOLL_DOMAIN}
-                    S3AnnoBucket=${ANNO_S3_BUCKET}"
+                    DomainUserPool=${DOMAIN_USER_POOL} 
+                    VPCid=${VPC_ID} 
+                    LogoutUrl=${LOG_OUT_URL} 
+                    CertificateUserpoolDomain=${CERTIFICATE_USERPOLL_DOMAIN} 
+                    S3AnnoBucket=${ANNO_S3_BUCKET} 
+                    PublicSubnetOne=${PublicSubnetOne} 
+                    PublicSubnetTwo=${PublicSubnetTwo} 
+                    ContainerSecurityGroup=${ContainerSecurityGroup} 
+                    VPC=${VPC} 
+                    VPCEndpointSQSDnsEntries=${VPCEndpointSQSDnsEntries}"
 
 sam build
 sam deploy --no-confirm-changeset --disable-rollback \
@@ -54,7 +62,19 @@ while read line; do
         value=${BASH_REMATCH[0]}
         value=${value##*( )}
         value=${value%%*( )}
-        dict_output[$key]=$value
+        
+        first_line=$value
+        is_first_line_value=true
+    else
+        if [[ "$line" =~ .*"-------".* ]]; then
+            echo "skip line"
+        else
+            if [ "$is_first_line_value" = true ]; then
+                final_line=$first_line$line                
+                dict_output[$key]=$final_line
+                is_first_line_value=false
+            fi
+        fi
     fi
 done < $filename
 
@@ -104,7 +124,7 @@ docker push $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/$IMAGE_REPO_NAME1:
 
 
 ###======= Store output to file ==========
-echo "CognitoUserPoolRef=$CognitoUserPoolRef" > $OUTPUT_BUILD_DAITA
+echo "CognitoUserPoolRef=$CognitoUserPoolRef" >> $OUTPUT_BUILD_DAITA
 echo "CognitoIdentityPoolIdRef=$CognitoIdentityPoolIdRef" >> $OUTPUT_BUILD_DAITA
 echo "CommonCodeLayerRef=$CommonCodeLayerRef" >> $OUTPUT_BUILD_DAITA
 echo "TableDaitaProjectsName=$TableDaitaProjectsName" >> $OUTPUT_BUILD_DAITA

@@ -31,16 +31,15 @@ Parameters:
 
   SecurityGroup:
     Type: String
-
   PublicSubnetOne:
     Type: String
-
   PublicSubnetTwo:
     Type: String
-
-  EFSAccessPoint:
+  VPCEndpointSQSDnsEntries:
     Type: String
 
+  EFSAccessPointArn:
+    Type: String
   EFSAccessPointRootPath:
     Type: String
     Default: /mnt/data
@@ -59,11 +58,11 @@ Parameters:
   ContainerMount:
     Type: String
 
-  VpcEndointSQS:
-    Type: String
+
 
   TableAnnoDataOriginalName:
     Type: String
+    
 Globals:
   Function:
     Timeout: 800   
@@ -79,7 +78,7 @@ Globals:
         LOGGING: !Ref minimumLogLevel
         CONTAINER_NAME: !Ref ContainerName
         CONTAINER_MOUNT: !Ref ContainerMount
-        SQS_VPC_ENDPOINT: !Ref VpcEndointSQS
+        SQS_VPC_ENDPOINT: !Ref VPCEndpointSQSDnsEntries
 
 
 Resources:
@@ -161,7 +160,7 @@ Resources:
           - !Ref PublicSubnetOne
           - !Ref PublicSubnetTwo
       FileSystemConfigs:
-        - Arn: !Ref EFSAccessPoint
+        - Arn: !Ref EFSAccessPointArn
           LocalMountPath: !Ref EFSAccessPointRootPath
       Environment:
         Variables:
@@ -181,7 +180,7 @@ Resources:
           - !Ref PublicSubnetOne
           - !Ref PublicSubnetTwo
       FileSystemConfigs:
-        - Arn: !Ref EFSAccessPoint
+        - Arn: !Ref EFSAccessPointArn
           LocalMountPath: !Ref EFSAccessPointRootPath
       Environment:
         Variables:

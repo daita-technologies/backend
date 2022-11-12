@@ -39,8 +39,11 @@ echo "### config for daita_env: $DAITA_STAGE   annotation_env: $ANNOTATION_STAGE
 echo "REACT_APP_ENV=development" >> $output_fe_config
 
 
-### build daita app and annotation app
+### build infrastructure that use for another application
+echo ==============Building:  INFRA ==========================
+bash ./infrastructure-def-app/build_infra_app.sh "$configfile" "$output_data" "$output_fe_config"
 
+### build daita app and annotation ap
 if [[ $IS_BUILD_DAITA == "y" ]] || [[ $IS_BUILD_DAITA == "Y" ]]
 then
     echo ==============Building:  DAITA ==========================

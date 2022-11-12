@@ -16,11 +16,14 @@ class LambdaBaseClass(object):
 
     @classmethod
     def parse_body(cls, func):
-        def parser(object, event):
-            if type(event['body']) is str:
-                body = json.loads(event['body'])
+        def parser(object, event, is_event_as_body = False):
+            if is_event_as_body:
+                body = event
             else:
-                body = event['body']
+                if type(event['body']) is str:
+                    body = json.loads(event['body'])
+                else:
+                    body = event['body']
                 
             object.logger.info("Body: {}".format(body))
             try:

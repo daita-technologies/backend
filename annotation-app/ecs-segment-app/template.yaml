@@ -31,6 +31,27 @@ Parameters:
 
   TableAnnoDataOriginalName:
     Type: String
+
+  ### For ecs network
+  PublicSubnetOne:
+    Type: String
+  PublicSubnetTwo:
+    Type: String    
+  ContainerSecurityGroup:
+    Type: String
+  VPC:
+    Type: String
+  VPCEndpointSQSDnsEntries:
+    Type: String
+
+  ### For infra storeage
+  EFSFileSystemId:
+    Type: String
+  EFSAccessPoint:
+    Type: String
+  EFSAccessPointArn:
+    Type: String
+
 Resources:
 
 
@@ -40,25 +61,26 @@ Resources:
     Properties:
       Location: ./role.yaml 
 
-  NetworkLayerApplication:
-    Type: AWS::Serverless::Application
-    Properties:
-      Location: ./network.yaml
-      Parameters:
-        StagePara: !Ref StagePara
-        ApplicationPara: !Ref ApplicationPara
+  # NetworkLayerApplication:
+  #   Type: AWS::Serverless::Application
+  #   Properties:
+  #     Location: ./network.yaml
+  #     Parameters:
+  #       StagePara: !Ref StagePara
+  #       ApplicationPara: !Ref ApplicationPara
 
-  StorageLayerApplication:
-    Type: AWS::Serverless::Application
-    Properties:
-      Location: ./storage.yaml
-      Parameters:
-        VPC: !GetAtt NetworkLayerApplication.Outputs.VPC
-        PublicSubnetOne: !GetAtt NetworkLayerApplication.Outputs.PublicSubnetOne
-        PublicSubnetTwo: !GetAtt NetworkLayerApplication.Outputs.PublicSubnetTwo
-        SecurityGroup: !GetAtt NetworkLayerApplication.Outputs.ContainerSecurityGroup
-        StagePara: !Ref StagePara
-        ApplicationPara: !Ref ApplicationPara
+  # StorageLayerApplication:
+  #   Type: AWS::Serverless::Application
+  #   Properties:
+  #     Location: ./storage.yaml
+  #     Parameters:
+  #       VPC: !Ref VPC
+  #       PublicSubnetOne: !Ref PublicSubnetOne
+  #       PublicSubnetTwo: !Ref PublicSubnetTwo
+  #       SecurityGroup: !Ref ContainerSecurityGroup
+
+  #       StagePara: !Ref StagePara
+  #       ApplicationPara: !Ref ApplicationPara
 
   ECSServiceApplication:
     Type: AWS::Serverless::Application
@@ -68,15 +90,18 @@ Resources:
         StagePara: !Ref StagePara
         ApplicationPara: !Ref ApplicationPara
         EC2Role: !GetAtt RoleApplication.Outputs.EC2Role
-        PublicSubnetOne: !GetAtt NetworkLayerApplication.Outputs.PublicSubnetOne
-        PublicSubnetTwo: !GetAtt NetworkLayerApplication.Outputs.PublicSubnetTwo
-        ContainerSecurityGroup: !GetAtt NetworkLayerApplication.Outputs.ContainerSecurityGroup
         ExecuteArn: !GetAtt RoleApplication.Outputs.ECSTask
         TaskRole: !GetAtt RoleApplication.Outputs.ECSRole
         ImageUrl: !Ref ImageSegmentUrl
-        EFSAccessPoint: !GetAtt StorageLayerApplication.Outputs.AccessPoint
-        EFSFileSystemId: !GetAtt StorageLayerApplication.Outputs.EFSFileSystem
         ContainerPath: !Ref ContainerPath
+        ### storage infra
+        EFSAccessPoint: !Ref EFSAccessPoint
+        EFSFileSystemId: !Ref EFSFileSystemId
+        ### for ecs network infra
+        PublicSubnetOne: !Ref PublicSubnetOne
+        PublicSubnetTwo: !Ref PublicSubnetTwo
+        ContainerSecurityGroup: !Ref ContainerSecurityGroup
+        
   ECSControllerApplication:
     Type: AWS::Serverless::Application
     Properties:
@@ -87,13 +112,17 @@ Resources:
         LambdaRoleArn:  !Ref LambdaRoleArn
         CommonCodeLayerRef: !Ref CommonCodeLayerRef
         TableAnnoDataOriginalNameStream: !Ref TableAnnoDataOriginalNameStream
+        TableAnnoDataOriginalName: !Ref TableAnnoDataOriginalName
         AITaskDefinitionArn: !GetAtt ECSServiceApplication.Outputs.TaskAISegmenationDefinition
         AITaskECSClusterArn: !GetAtt ECSServiceApplication.Outputs.ECSCluster
-        SecurityGroup: !GetAtt  NetworkLayerApplication.Outputs.ContainerSecurityGroup
-        PublicSubnetOne: !GetAtt NetworkLayerApplication.Outputs.PublicSubnetOne
-        PublicSubnetTwo: !GetAtt NetworkLayerApplication.Outputs.PublicSubnetTwo
-        EFSAccessPoint: !GetAtt StorageLayerApplication.Outputs.AccessPointARN
+        ### For network infra
+        SecurityGroup: !Ref ContainerSecurityGroup
+        PublicSubnetOne: !Ref PublicSubnetOne
+        PublicSubnetTwo: !Ref PublicSubnetTwo
+        VPCEndpointSQSDnsEntries: !Ref VPCEndpointSQSDnsEntries
+
         ContainerName: !GetAtt ECSServiceApplication.Outputs.ContainerName
         ContainerMount: !Ref ContainerPath
-        VpcEndointSQS: !GetAtt NetworkLayerApplication.Outputs.VPCSQSEndpointDnsEntries
-        TableAnnoDataOriginalName: !Ref TableAnnoDataOriginalName
+        
+        EFSAccessPointArn: !Ref EFSAccessPointArn
+        

@@ -1,0 +1,13 @@
+version = 0.1
+
+[dev.deploy.parameters]
+confirm_changeset = true
+capabilities = "CAPABILITY_IAM CAPABILITY_AUTO_EXPAND CAPABILITY_NAMED_IAM"
+disable_rollback = true
+image_repositories = []
+
+[dev1.deploy.parameters]
+confirm_changeset = true
+capabilities = "CAPABILITY_IAM CAPABILITY_AUTO_EXPAND CAPABILITY_NAMED_IAM"
+disable_rollback = true
+image_repositories = []

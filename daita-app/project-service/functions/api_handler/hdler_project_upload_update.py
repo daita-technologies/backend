@@ -86,7 +86,12 @@ class ProjectUploadUpdateCls(LambdaBaseClass):
             self.ls_batch_request.append(request)
 
     def handle(self, event, context):
-        self.parser(json.loads(event['body']))
+        if type(event['body']) is str:
+            body = json.loads(event['body'])
+        else:
+            body = event['body']
+        self.parser(body)
+
         # check number images in original must smaller than a limitation
         try:
             db_resource = boto3.resource("dynamodb")
@@ -126,18 +131,18 @@ class ProjectUploadUpdateCls(LambdaBaseClass):
         # we use batch_write, it means that if key are existed in tables => overwrite
         db_client = boto3.client('dynamodb')
         db_resource = boto3.resource('dynamodb')
-        type = None
+        type_ = None
         try:
             if self.is_ori:
                 table = os.environ["T_DATA_ORI"]
-                type = os.environ["T_DATA_ORI"]
+                type_ = os.environ["T_DATA_ORI"]
             else:
                 if self.type_method == 'PREPROCESS':
                     table = os.environ["T_DATA_PREPROCESS"]
-                    type = os.environ["T_DATA_PREPROCESS"]
+                    type_ = os.environ["T_DATA_PREPROCESS"]
                 elif self.type_method == 'AUGMENT':
                     table = os.environ["T_DATA_AUGMENT"]
-                    type =  os.environ["T_DATA_AUGMENT"]
+                    type_ =  os.environ["T_DATA_AUGMENT"]
                 else:
                     raise (Exception('Missing type_method parameters!'))
 

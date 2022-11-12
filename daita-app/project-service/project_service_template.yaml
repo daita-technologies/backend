@@ -20,12 +20,19 @@ Parameters:
     Type: String
   LambdaRole:
     Type: String
+
   TableDataOriginalName:
     Type: String 
+  TableDataPreprocess:
+    Type: String
+  TableDataAugment:
+    Type: String 
+
   TableProjectSumName:
     Type: String
   TableProjectsName:
     Type: String
+
   CognitoUserPool:
     Type: String
   CognitoUserPoolClient:
@@ -52,6 +59,8 @@ Globals:
         COGNITO_CLIENT_ID: !Ref CognitoUserPoolClient
         IDENTITY_POOL: !Ref CognitoIdentityPoolId
         THUMBNAIL_EVENT_BUS: !Ref ThumbnailEventBus
+        T_DATA_PREPROCESS: !Ref TableDataPreprocess
+        T_DATA_AUGMENT: !Ref TableDataAugment
 Resources:
 
   #================ LAMBDA FUNCTIONS ==========================================

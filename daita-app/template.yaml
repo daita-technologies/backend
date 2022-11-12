@@ -51,6 +51,17 @@ Parameters:
     Type: String
     Default: https://dev.daita.tech
 
+  ### parameter from infra
+  PublicSubnetOne:
+    Type: String
+  PublicSubnetTwo:
+    Type: String    
+  ContainerSecurityGroup:
+    Type: String
+  VPC:
+    Type: String
+
+
   CertificateUserpoolDomain:
     Type: String
     
@@ -202,6 +213,9 @@ Resources:
         EFSFileSystemId: !Ref EFSFileSystemId
         ROOTEFS: !Ref ROOTEFS
         Mode: !Ref Mode
+        TaskAIPreprocessingDefinition: !GetAtt ECSAICallerApp.Outputs.TaskAIPreprocessingDefinition
+        TaskAIAugmentationDefinition: !GetAtt ECSAICallerApp.Outputs.TaskAIAugmentationDefinition
+        FuncProjectUploadUpdate: !GetAtt ProjectService.Outputs.FuncProjectUploadUpdate
 
   DataFlowService:
     Type: AWS::Serverless::Application
@@ -244,9 +258,11 @@ Resources:
         CommonCodeLayerName: !Ref CommonCodeLayer
         ApplicationPara: !Ref Application
         LambdaRole: !GetAtt GeneralLambdaExecutionRole.Arn
-        TableDataOriginalName: !GetAtt DatabaseService.Outputs.TableDataOriginalName
         TableProjectSumName: !GetAtt DatabaseService.Outputs.TableProjectSumName
         TableProjectsName: !GetAtt DatabaseService.Outputs.TableProjectsName
+        TableDataOriginalName: !GetAtt DatabaseService.Outputs.TableDataOriginalName
+        TableDataPreprocess: !GetAtt DatabaseService.Outputs.TableDataPreprocessName
+        TableDataAugment: !GetAtt DatabaseService.Outputs.TableDataAugmentName
         CognitoUserPoolClient: !GetAtt CognitoClient.Outputs.UserPoolClientId
         CognitoUserPool: !GetAtt CognitoUserPool.Outputs.UserPool
         CognitoIdentityPoolId: !GetAtt IdentityPool.Outputs.IdentityPool
@@ -388,14 +404,20 @@ Resources:
         MaxWidthResolutionImage: !Ref MaxWidthResolutionImage
         MaxHeightResolutionImage: !Ref MaxHeightResolutionImage
         Mode: !Ref Mode
-  # InvokeServiceApp:
-  #   Type: AWS::Serverless::Application
-  #   Properties:
-  #     Location: ./template_invoke.yaml
-  #     Parameters:
-  #       StagePara: !Ref Stage
-  #       AITaskECSClusterArn: !GetAtt ECSServiceApp.Outputs.AITaskECSClusterArn
-  #       AITaskDefinitionArn: !GetAtt ECSServiceApp.Outputs.AITaskDefinitionArn
+
+  ECSAICallerApp:
+    Type: AWS::Serverless::Application
+    Properties:
+      Location: ecs-ai-caller-app/template_ecs_ai_caller.yaml
+      Parameters:
+        StagePara: !Ref Stage
+        ApplicationPara: !Ref Application
+        ### params infra network
+        PublicSubnetOne: !Ref PublicSubnetOne
+        PublicSubnetTwo: !Ref PublicSubnetTwo
+        ContainerSecurityGroup: !Ref ContainerSecurityGroup
+        VPC: !Ref VPC
+
 Outputs:
   DecompressEcrRepositoryName:
     Value: !Ref DecompressEcrRepository
