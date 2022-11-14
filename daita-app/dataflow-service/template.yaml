@@ -14,7 +14,7 @@ Parameters:
     Default: vpc-53239e38
 
   SecurityGroupIds:   ### could not pass string over the nested app, so use string here
-    Type: String      
+    Type: String
   SubnetIds:
     Type: String
 
@@ -30,6 +30,9 @@ Parameters:
   CompressDownloadEFSAccessPointRootPath:
     Type: String
     Default: /compress-download-app
+  CompressAnnoResultsEFSAccessPointRootPath:
+    Type: String
+    Default: /compress-anno-results-app
   S3BucketName:
     Type: String
   TableDataFlowTaskName:
@@ -40,6 +43,8 @@ Parameters:
     Type: String
   CompressDownloadEcrRepositoryName:
     Type: String
+  CompressAnnoResultsEcrRepositoryName:
+    Type: String
   SESIdentityName:
     Type: String
     Default: 'noreply@daita.tech'
@@ -47,13 +52,14 @@ Parameters:
     Type: String
   Mode:
     Type: String
-  TableDataOriginalName: 
+  TableDataOriginalName:
     Type: String
   TableDataAugmentName:
     Type: String
   TableDataPreprocessName:
     Type: String
-  
+  TableAnnoDataOriginalName:
+    Type: String
   FuncProjectUploadUpdate:
     Type: String
 
@@ -172,7 +178,7 @@ Resources:
         TableDataAugmentName: !Ref TableDataAugmentName
         TableDataPreprocessName: !Ref TableDataPreprocessName
         FuncProjectUploadUpdate: !Ref FuncProjectUploadUpdate
-        
+
   CompressDownloadApp:
     Type: AWS::Serverless::Application
     Properties:
@@ -197,6 +203,31 @@ Resources:
         TableDataOriginalName: !Ref TableDataOriginalName
         TableDataAugmentName: !Ref TableDataAugmentName
         TableDataPreprocessName: !Ref TableDataPreprocessName
+
+  CompressAnnoResultsApp:
+    Type: AWS::Serverless::Application
+    Properties:
+      Location: compress-anno-results-app/template.yaml
+      Parameters:
+        StagePara: !Ref StagePara
+        ApplicationPara: !Ref ApplicationPara
+        SecurityGroupIds: !Ref SecurityGroupIds
+        SubnetIds: !Ref SubnetIds
+        EFSMountPath: !Ref EFSMountPath
+        EFSAccessPointRootPath: !Ref EFSAccessPointRootPath
+        S3BucketName: !Ref S3BucketName
+        TableDataFlowTaskName: !Ref TableDataFlowTaskName
+        TableAnnoDataOriginalName: !Ref TableAnnoDataOriginalName
+        CompressAnnoResultsEcrRepositoryName: !Ref CompressAnnoResultsEcrRepositoryName
+        VPCEndpointForS3: !Ref VPCEndpointForS3
+        VPCEndpointForDynamoDB: !Ref VPCEndpointForDynamoDB
+        SESIdentityName: noreply@daita.tech
+        CommonCodeLayerName: !Ref CommonCodeLayerName
+        EFSFileSystemId: !Ref EFSFileSystemId
+        Mode: !Ref Mode
+        # TableDataOriginalName: !Ref TableDataOriginalName
+        # TableDataAugmentName: !Ref TableDataAugmentName
+        # TableDataPreprocessName: !Ref TableDataPreprocessName
 
 Outputs:
   DecompressFileStateMachineArn:

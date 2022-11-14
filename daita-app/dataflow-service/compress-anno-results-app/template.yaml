@@ -1,0 +1,319 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Transform: AWS::Serverless-2016-10-31
+Description: >
+  compress-app
+
+Parameters:
+  StagePara:
+    Type: String
+  ApplicationPara:
+    Type: String
+  SecurityGroupIds:
+    Type: CommaDelimitedList
+  SubnetIds:
+    Type: CommaDelimitedList
+  EFSFileSystemId:
+    Type:  String
+    Default: fs-0199771f2dfe97ace
+  EFSMountPath:
+    Type: String
+    Default: /mnt/efs
+  S3BucketName:
+    Type: String
+  TableDataFlowTask:
+    Type: String
+  TableAnnoDataOriginal:
+    Type: String
+  # TableDataOriginalName:
+  #   Type: String
+  # TableDataAugmentName:
+  #   Type: String
+  # TableDataPreprocessName:
+    # Type: String
+  VPCEndpointForS3:
+    Type: String
+  VPCEndpointForDynamoDB:
+    Type: String
+  EFSAccessPointRootPath:
+    Type: String
+    Default: /compress-anno-results-app
+  CompressAnnoResultsEcrRepositoryName:
+    Type: String
+  SESIdentityName:
+    Type: String
+    Default: 'noreply@daita.tech'
+  CommonCodeLayerName:
+    Type: String
+  Mode:
+    Type: String
+  # CompressedByLambdaMaxinumNrOfFiles:
+  #   Type: Number
+  #   Default: 100
+
+
+Globals:
+  Function:
+    Timeout: 10
+    Handler: app.lambda_handler
+    Runtime: python3.8
+    Architectures:
+      - x86_64
+    Layers:
+      - !Ref CommonCodeLayerName
+    Environment:
+      Variables:
+        MODE: !Ref Mode
+
+Resources:
+  #================ ROLES =====================================================
+
+  #======================= NETWORKING ==========================================
+
+  EFSAccessPoint:
+    Type: AWS::EFS::AccessPoint
+    Properties:
+      FileSystemId: !Ref EFSFileSystemId
+      PosixUser:
+        Gid: "1000"
+        Uid: "1000"
+      RootDirectory:
+        CreationInfo:
+          OwnerGid: "1000"
+          OwnerUid: "1000"
+          Permissions: "777"
+        Path: !Ref EFSAccessPointRootPath
+
+#================ LOGS FOR STEP FUNCTIONS ===================================
+
+  StateMachineLogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: !Sub "/aws/vendedlogs/states/${StagePara}-CompressAnnoResultsSMLogGroup-${AWS::StackName}"
+      RetentionInDays: 7
+
+  ECSTaskLogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: !Sub "/aws/vendedlogs/states/${StagePara}-CompressAnnoResultECSTaskLogGroup-${AWS::StackName}"
+      RetentionInDays: 7
+
+  StateMachine:
+    Type: AWS::Serverless::StateMachine # More info about State Machine Resource: https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/sam-resource-statemachine.html
+    Properties:
+      Type: STANDARD
+      Name: !Sub "${StagePara}-${ApplicationPara}-CompressAnnoResultsSM"
+      DefinitionUri: statemachine/compress_download.asl.yml
+      DefinitionSubstitutions:
+        TaskCluster: !GetAtt TaskCluster.Arn
+        Task: !Ref Task
+        SubnetIds: !Join [',', !Ref SubnetIds]
+        SendCompletedMailFunction: !GetAtt SendCompletedMailFunction.Arn
+        DivideDownloadKeysFunction: !GetAtt DivideDownloadKeysFunction.Arn
+        DownloadFilesFunction: !GetAtt DownloadFilesFunction.Arn
+        TableDataFlowTask: !Ref TableDataFlowTask
+        CompressFunction: !GetAtt CompressFunction.Arn
+        # CompressedByLambdaMaxinumNrOfFiles: !Ref CompressedByLambdaMaxinumNrOfFiles
+      Logging:
+        Level: ALL
+        IncludeExecutionData: true
+        Destinations:
+        - CloudWatchLogsLogGroup:
+            LogGroupArn: !GetAtt StateMachineLogGroup.Arn
+      Tracing:
+        Enabled: true
+      Policies: # Find out more about SAM policy templates: https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/serverless-policy-templates.html
+        - LambdaInvokePolicy:
+            FunctionName: !Ref SendCompletedMailFunction
+        - LambdaInvokePolicy:
+            FunctionName: !Ref DivideDownloadKeysFunction
+        - LambdaInvokePolicy:
+            FunctionName: !Ref DownloadFilesFunction
+        - LambdaInvokePolicy:
+            FunctionName: !Ref CompressFunction
+        - DynamoDBCrudPolicy:
+            TableName: !Ref TableDataFlowTask
+        - Statement:
+          - # Allow step to start ecs task
+            Effect: Allow
+            Action:
+              - ecs:RunTask
+              - ecs:StopTask
+              - ecs:DescribeTasks
+            Resource:
+              - "*"
+          -
+            Effect: Allow
+            Action:
+              - events:PutTargets
+              - events:PutRule
+              - events:DescribeRule
+            Resource:
+              - !Sub arn:${AWS::Partition}:events:${AWS::Region}:${AWS::AccountId}:rule/StepFunctionsGetEventsForECSTaskRule
+          -
+            Effect: Allow
+            Action:
+              - iam:PassRole
+            Resource:
+              - "*"
+          - # Allow access log groups
+            Sid: CloudWatchLogsPolicy
+            Effect: Allow
+            Action:
+              - "logs:CreateLogDelivery"
+              - "logs:GetLogDelivery"
+              - "logs:UpdateLogDelivery"
+              - "logs:DeleteLogDelivery"
+              - "logs:ListLogDeliveries"
+              - "logs:PutResourcePolicy"
+              - "logs:DescribeResourcePolicies"
+              - "logs:DescribeLogGroup"
+              - "logs:DescribeLogGroups"
+            Resource: "*"
+
+  # Lambda functions
+  DivideDownloadKeysFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: functions/divide_download_keys
+      Policies:
+        - AmazonDynamoDBFullAccess
+        - Statement:
+          - Sid: ALLOWCRUDDynamoDB
+            Effect: Allow
+            Action:
+            - "dynamodb:GetItem"
+            - "dynamodb:DeleteItem"
+            - "dynamodb:PutItem"
+            - "dynamodb:Scan"
+            - "dynamodb:Query"
+            - "dynamodb:UpdateItem"
+            - "dynamodb:BatchWriteItem"
+            - "dynamodb:BatchGetItem"
+            - "dynamodb:DescribeTable"
+            - "dynamodb:ConditionCheckItem"
+            - "s3:*"
+            Resource: "*"
+      Environment:
+        Variables:
+          TableAnnoDataOriginal: !Ref TableAnnoDataOriginal
+          CHUNK_SIZE: 8
+
+  DownloadFilesFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: functions/download_files
+      Timeout: 120
+      VpcConfig:
+        SecurityGroupIds: !Split [',', !Join [',', !Ref SecurityGroupIds]]
+        SubnetIds: !Split [',', !Join [',', !Ref SubnetIds]]
+      FileSystemConfigs:
+        - Arn: !GetAtt EFSAccessPoint.Arn
+          LocalMountPath: !Ref EFSMountPath
+      Policies:
+        - S3ReadPolicy:
+            BucketName: !Ref S3BucketName
+      Environment:
+        Variables:
+          S3_BUCKET: !Ref S3BucketName
+          EFSMountPath: !Ref EFSMountPath
+
+  CompressFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: functions/compress
+      Timeout: 600
+      VpcConfig:
+        SecurityGroupIds: !Split [',', !Join [',', !Ref SecurityGroupIds]]
+        SubnetIds: !Split [',', !Join [',', !Ref SubnetIds]]
+      FileSystemConfigs:
+        - Arn: !GetAtt EFSAccessPoint.Arn
+          LocalMountPath: !Ref EFSMountPath
+      Policies:
+        - AmazonDynamoDBFullAccess
+        - Statement:
+          - Sid: ALLOWCRUDDynamoDB
+            Effect: Allow
+            Action:
+            - "dynamodb:GetItem"
+            - "dynamodb:DeleteItem"
+            - "dynamodb:PutItem"
+            - "dynamodb:Scan"
+            - "dynamodb:Query"
+            - "dynamodb:UpdateItem"
+            - "dynamodb:BatchWriteItem"
+            - "dynamodb:BatchGetItem"
+            - "dynamodb:DescribeTable"
+            - "dynamodb:ConditionCheckItem"
+            - "s3:*"
+            Resource: "*"
+      Environment:
+        Variables:
+          EFSMountPath: !Ref EFSMountPath
+          TableDataFlowTask: !Ref TableDataFlowTask
+          TableMethodsName: !Ref TableMethodsName
+          S3BucketName: !Ref S3BucketName
+
+  SendCompletedMailFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: functions/send_completed_email
+      Policies:
+        - SESCrudPolicy:
+            IdentityName: !Ref SESIdentityName
+
+
+  # ECS resources
+  TaskCluster:
+    Type: AWS::ECS::Cluster
+    Properties:
+      CapacityProviders:
+        - FARGATE
+
+  Task:
+    Type: AWS::ECS::TaskDefinition
+    Properties:
+      RequiresCompatibilities:
+        - "FARGATE"
+      ExecutionRoleArn: !Sub "arn:aws:iam::${AWS::AccountId}:role/ecsTaskExecutionRole" #TODO:create this in template
+      TaskRoleArn: !Sub "arn:aws:iam::${AWS::AccountId}:role/DecompressTaskRole" #TODO:create this in template
+      Cpu: 256
+      Memory: 512
+      NetworkMode: awsvpc
+      ContainerDefinitions:
+        -
+          Name: "compress-download"
+          Image: !Sub "${AWS::AccountId}.dkr.ecr.${AWS::Region}.amazonaws.com/${CompressAnnoResultsEcrRepositoryName}:latest"
+          Cpu: 256
+          Memory: 512
+          Environment:
+            - Name: TableDataFlowTask
+              Value: !Ref TableDataFlowTask
+            - Name: TableMethodsName
+              Value: !Ref TableMethodsName
+            - Name: S3BucketName
+              Value: !Ref S3BucketName
+            - Name: EFSMountPath
+              Value: !Ref EFSMountPath
+          LogConfiguration:
+            LogDriver: awslogs
+            Options:
+              awslogs-region: !Sub "${AWS::Region}"
+              awslogs-group: !Ref ECSTaskLogGroup
+              awslogs-stream-prefix: compress-anno-results
+          MountPoints:
+            -
+              SourceVolume: "my-vol"
+              ContainerPath: !Ref EFSMountPath
+      Volumes:
+        -
+          EFSVolumeConfiguration:
+            AuthorizationConfig:
+              AccessPointId: !Ref EFSAccessPoint
+            FilesystemId: !Ref EFSFileSystemId
+            TransitEncryption: ENABLED # enable this so maybe we don't need to config a access point https://docs.aws.amazon.com/pt_br/AWSCloudFormation/latest/UserGuide/aws-properties-ecs-taskdefinition-authorizationconfig.html
+          Name: "my-vol"
+
+Outputs:
+  CompressAnnoResultsStateMachineArn:
+    Description: "Arn of StateMachineArn"
+    Value: !GetAtt StateMachine.Arn

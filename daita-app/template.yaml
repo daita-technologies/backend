@@ -55,7 +55,7 @@ Parameters:
   PublicSubnetOne:
     Type: String
   PublicSubnetTwo:
-    Type: String    
+    Type: String
   ContainerSecurityGroup:
     Type: String
   VPC:
@@ -64,7 +64,7 @@ Parameters:
 
   CertificateUserpoolDomain:
     Type: String
-    
+
 Resources:
   #=============== SYSTEM PARAMETER CONFIGURATON ==============================
   LimitPreprocessTimes:
@@ -108,6 +108,11 @@ Resources:
     Type: AWS::ECR::Repository
     Properties:
       RepositoryName: !Sub "${Stage}-${Application}-dataflow-compress-download"
+
+  CompressAnnoResultsEcrRepository:
+    Type: AWS::ECR::Repository
+    Properties:
+      RepositoryName: !Sub "${Stage}-${Application}-dataflow-compress-anno-results"
 
 
   #================ ROLES =====================================================
@@ -226,8 +231,10 @@ Resources:
         ApplicationPara: !Ref Application
         S3BucketName: !Ref S3BucketName
         TableDataFlowTaskName: !GetAtt DatabaseService.Outputs.TableDataFlowTaskName
+        # TableAnnoDataOriginalName: !GetAtt DatabaseService.Outputs.TableAnnoDataOriginalName # Not Found
         DecompressEcrRepositoryName: !Ref DecompressEcrRepository
         CompressDownloadEcrRepositoryName: !Ref CompressDownloadEcrRepository
+        CompressAnnoResultsEcrRepositoryName: !Ref CompressAnnoResultsEcrRepository
         TableMethodsName: !GetAtt DatabaseService.Outputs.TableMethodsName
         CommonCodeLayerName: !Ref CommonCodeLayer
         VpcId: !Ref VPCid
@@ -305,7 +312,7 @@ Resources:
         StagePara: !Ref Stage
         ApplicationPara: !Ref Application
         AnnoBucket: !Ref S3AnnoBucket
-        
+
   CoreService:
     Type: AWS::Serverless::Application
     Properties:
@@ -423,10 +430,12 @@ Outputs:
     Value: !Ref DecompressEcrRepository
   CompressDownloadEcrRepositoryName:
     Value: !Ref CompressDownloadEcrRepository
+  CompressAnnoResultsEcrRepositoryName:
+    Value: !Ref CompressAnnoResultsEcrRepository
 
   CognitoUserPoolRef:
     Value: !GetAtt CognitoUserPool.Outputs.UserPool
-  CognitoIdentityPoolIdRef: 
+  CognitoIdentityPoolIdRef:
     Value: !GetAtt IdentityPool.Outputs.IdentityPool
 
   CommonCodeLayerRef:
@@ -443,4 +452,3 @@ Outputs:
     Value: !GetAtt CognitoUserPool.Outputs.AuthApiURL
   CognitoAppIntegrateID:
     Value: !GetAtt CognitoClient.Outputs.UserPoolClientId
-  

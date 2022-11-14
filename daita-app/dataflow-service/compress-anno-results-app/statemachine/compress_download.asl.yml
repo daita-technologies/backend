@@ -1,0 +1,145 @@
+# StartAt: StartECSTask
+StartAt: DivideDownloadKeysFunction
+States:
+  DivideDownloadKeysFunction:
+    Type: Task
+    Resource: arn:aws:states:::lambda:invoke
+    # Inputs: down_type, project_name, project_id, task_id, identity_id
+    Parameters:
+      FunctionName: ${DivideDownloadKeysFunction}
+      Payload.$: $
+    ResultSelector:
+      file_chunks.$: $.Payload.file_chunks
+      workdir.$: $.Payload.workdir
+      bucket.$: $.Payload.bucket
+      s3_key_path.$: $.Payload.s3_key_path
+      nrof_files.$: $.Payload.nrof_files
+    ResultPath: $.taskresult
+    Catch:
+      - ErrorEquals:
+        - States.ALL
+        Next: SetTaskStatusError
+        ResultPath: null
+    Next: DownloadFilesMapping
+
+  DownloadFilesMapping:
+    Type: Map
+    ItemsPath: $.taskresult.file_chunks
+    Parameters:
+      file_chunk.$: $$.Map.Item.Value
+      workdir.$: $.taskresult.workdir
+      bucket.$: $.taskresult.bucket
+      s3_key_path.$: $.taskresult.s3_key_path
+    MaxConcurrency: 30
+    Iterator:
+      StartAt: DownloadFilesFunction
+      States:
+        DownloadFilesFunction:
+          Type: Task
+          Resource: arn:aws:states:::lambda:invoke
+          Parameters:
+            FunctionName: "${DownloadFilesFunction}"
+            Payload.$: $
+          End: True
+    ResultPath: null
+    Catch:
+      - ErrorEquals:
+        - States.ALL
+        Next: SetTaskStatusError
+        ResultPath: null
+    Next: CompressProcessChoice
+
+  CompressProcessChoice:
+    Type: Choice
+    Choices:
+      - Variable: $.taskresult.nrof_files
+        NumericLessThanEquals: 100
+        Next: CompressFunction
+      - Variable: $.taskresult.nrof_files
+        NumericGreaterThan: 100
+        Next: StartECSTask
+
+  CompressFunction:
+    Type: Task
+    Resource: arn:aws:states:::lambda:invoke
+    Parameters:
+      FunctionName: ${CompressFunction}
+      Payload.$: $
+    ResultPath: null
+    Catch:
+      - ErrorEquals:
+        - States.ALL
+        Next: SetTaskStatusError
+        ResultPath: null
+    Next: SendCompletedMailFunction
+
+  StartECSTask:
+    Type: Task
+    Resource: arn:aws:states:::ecs:runTask.sync
+    Parameters:
+      Cluster: ${TaskCluster}
+      LaunchType: FARGATE
+      NetworkConfiguration:
+        AwsvpcConfiguration:
+          AssignPublicIp: ENABLED # Needed when pulling public Docker image
+          Subnets: !Join [ ${SubnetIds} ]
+      Overrides:
+        ContainerOverrides:
+          -
+            Name: compress-download
+            Environment:
+              - Name: TASK_ID
+                Value.$: $.task_id
+              - Name: IDENTITY_ID
+                Value.$: $.identity_id
+              # - Name: DOWN_TYPE
+              #   Value.$: $.down_type
+              - Name: PROJECT_NAME
+                Value.$: $.project_name
+              - Name: PROJECT_ID
+                Value.$: $.project_id
+              - Name: WORKDIR
+                Value.$: $.taskresult.workdir
+      TaskDefinition: ${Task}
+    ResultPath: null # Forward previous step input as this step output
+    Catch:
+      - ErrorEquals:
+        - States.ALL
+        Next: SetTaskStatusError
+        ResultPath: null
+    Next: SendCompletedMailFunction
+
+  SendCompletedMailFunction:
+    Type: Task
+    Resource: arn:aws:states:::lambda:invoke
+    InputPath: $
+    Parameters:
+      FunctionName: "${SendCompletedMailFunction}"
+      Payload.$: $
+    Next: Complete
+
+  SetTaskStatusError:
+    Type: Task
+    Resource: 'arn:aws:states:::dynamodb:updateItem'
+    InputPath: $
+    Parameters:
+      TableName: "${TableDataFlowTaskName}"
+      Key:
+        identity_id:
+          S.$: $.identity_id
+        task_id:
+          S.$: $.task_id
+      UpdateExpression: 'SET #st = :st'
+      ExpressionAttributeNames:
+        '#st': status
+      ExpressionAttributeValues:
+        ':st':
+          S: ERROR
+    ResultPath: $.DynamoDB
+    Next: Complete
+
+  Complete:
+    Type: Pass
+    # Comment: Used for result aggregation
+    End: true
+TimeoutSeconds: 1800
