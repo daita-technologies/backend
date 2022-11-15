@@ -17,7 +17,7 @@ from boto3.dynamodb.conditions import Key, Attr
 from botocore.exceptions import ClientError
 
 
-sf = boto3.client('stepfunction')
+
 
 class GenerateImageClass(LambdaBaseClass):
 
@@ -227,6 +227,7 @@ class GenerateImageClass(LambdaBaseClass):
 
         ### MUST FIX HERE, debug to run AI caller on ECS flow
         if self.project_name == "test123":
+            sf = boto3.client('stepfunctions')
             ### invoke stepfunction 
             response = sf.start_execution(
                                 stateMachineArn = self.env.AI_CALLER_ECS_SM_ARN,
