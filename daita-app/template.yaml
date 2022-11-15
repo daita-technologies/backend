@@ -438,6 +438,8 @@ Outputs:
     Value: !GetAtt DatabaseService.Outputs.TableProjectsName
   TableDaitaDataOriginalName:
     Value: !GetAtt DatabaseService.Outputs.TableDataOriginalName
+  TableUserName:
+    Value: !GetAtt DatabaseService.Outputs.TableUser
 
   ApiDaitaAppUrl:
     Value: !GetAtt CoreService.Outputs.CallerServiceHttpApiUrl

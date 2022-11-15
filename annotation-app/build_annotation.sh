@@ -16,7 +16,8 @@ parameters_override="Stage=${ANNOTATION_STAGE} Application=${ANNO_APPLICATION}
                     CommonCodeLayerRef=${CommonCodeLayerRef} CognitoUserPoolRef=${CognitoUserPoolRef} 
                     CognitoIdentityPoolIdRef=${CognitoIdentityPoolIdRef}
                     TableDaitaProjectsName=${TableDaitaProjectsName}
-                    TableDaitaDataOriginalName=${TableDaitaDataOriginalName} 
+                    TableDaitaDataOriginalName=${TableDaitaDataOriginalName}
+                    TableUserName=${TableUserName} 
                     S3DaitaBucketName=${DAITA_S3_BUCKET}
                     PublicSubnetOne=${PublicSubnetOne}
                     PublicSubnetTwo=${PublicSubnetTwo}
