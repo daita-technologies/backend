@@ -109,7 +109,6 @@ States:
   GetResult:
     Type: Task
     Resource: 'arn:aws:states:::lambda:invoke'
-    Next: DownloadComplete
     OutputPath: $
     Parameters:
       FunctionName: '${HandleGetResultDownloadTask}'
@@ -121,8 +120,5 @@ States:
         IntervalSeconds: 3
         MaxAttempts: 7
         BackoffRate: 2
-  DownloadComplete:
-    Type: Pass
-    Comment: Used for result aggregation
     End: true
-TimeoutSeconds: 1800
+TimeoutSeconds: 10800

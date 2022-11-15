@@ -23,7 +23,9 @@ Globals:
         ROOTEFS: !Ref ROOTEFS
         EFSPATH: !Ref EFSStorageAI
         MODE: !Ref Mode
-        IS_USE_NEW_FLOW: True
+        TableProjectsName: !Ref TableProjectsName
+        TableDataOriginalName: !Ref TableDataOriginalName
+        TableDataPreprocessName: !Ref TableDataPreprocessName
     Layers:
         - !Ref CommonCodeLayerName
 
@@ -1457,8 +1459,6 @@ Resources:
         - CloudWatchLogsLogGroup:
             LogGroupArn: !GetAtt CallerServiceStateMachineLogGroup.Arn
 
-
-
   UploadStateMachine:
     Type: AWS::Serverless::StateMachine
     Properties:
@@ -1507,6 +1507,69 @@ Resources:
             LogGroupArn: !GetAtt CallerServiceStateMachineLogGroup.Arn
       DefinitionSubstitutions:
         PreprocessGenerateTask: !GetAtt PreprocessGenerateTask.Arn
+
+  ###### AI_caller_ecs_state_machine
+  AICallerECSSM:
+    Type: AWS::Serverless::StateMachine
+    Properties:
+      Type: STANDARD
+      Name: !Sub "${StagePara}-${ApplicationPara}-AICallerECSSM"
+      Policies:
+        - LambdaInvokePolicy:
+            FunctionName: !Ref PreprocessGenerateTask
+        - Statement:
+          - Sid: CloudWatchLogsPolicy
+            Effect: Allow
+            Action:
+            - "logs:CreateLogDelivery"
+            - "logs:GetLogDelivery"
+            - "logs:UpdateLogDelivery"
+            - "logs:DeleteLogDelivery"
+            - "logs:ListLogDeliveries"
+            - "logs:PutResourcePolicy"
+            - "logs:DescribeResourcePolicies"
+            - "logs:DescribeLogGroup"
+            - "logs:DescribeLogGroups"
+            Resource: "*"
+          - Sid: ALLOWCRUDDynamoDB
+            Effect: Allow
+            Action:
+            - "dynamodb:GetItem"
+            - "dynamodb:DeleteItem"
+            - "dynamodb:PutItem"
+            - "dynamodb:Scan"
+            - "dynamodb:Query"
+            - "dynamodb:UpdateItem"
+            - "dynamodb:BatchWriteItem"
+            - "dynamodb:BatchGetItem"
+            - "dynamodb:DescribeTable"
+            - "dynamodb:ConditionCheckItem"
+            - "lambda:InvokeFunction"
+            Resource: "*"
+      Tracing:
+        Enabled: true
+      DefinitionUri: statemachine/ai_caller_ecs/sm_ai_caller_ecs.asl.yaml
+      Logging:
+        Level: ALL
+        IncludeExecutionData: true
+        Destinations:
+        - CloudWatchLogsLogGroup:
+            LogGroupArn: !GetAtt CallerServiceStateMachineLogGroup.Arn
+      DefinitionSubstitutions:
+        FuncPreprocessInputRequestArn: !GetAtt FuncPreprocessInputRequest.Arn
+  ### Functions of AI_caller_ecs_state_machine
+  FuncPreprocessInputRequest:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: statemachine/ai_caller_ecs/functions/preprocess_input_request
+      Handler: hdler_preprocess_input_request.lambda_handler
+      Policies:
+      - Statement:
+        - Sid: ALLOWCRUDDynamoDB
+          Effect: Allow
+          Action:
+          - "dynamodb:*"
+          Resource: "*"
 Outputs:
   # ServerlessRestApi is an implicit API created out of Events key under Serverless::Function
   # Find out more about other implicit resources you can reference within SAM
@@ -1531,6 +1594,8 @@ Outputs:
     Value: !Ref ProcessAITaskEventBus
   TaskQueueName:
     Value: !GetAtt TaskQueue.QueueName
+  AICallerECSSMArn:
+    Value: !GetAtt AICallerECSSM.Arn
   # LayerARN:
   #   Description: "ARN of common code layer"
   #   Value: !GetAtt CommonCodeLayer.Arn
