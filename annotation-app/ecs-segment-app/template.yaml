@@ -51,7 +51,15 @@ Parameters:
     Type: String
   EFSAccessPointArn:
     Type: String
+  
+  CognitoIdentityPoolIdRef:
+    Type: String
+  CognitoUserPoolRef:
+    Type: String
 
+  TableUser:
+    Type: String
+  
 Resources:
 
 
@@ -125,4 +133,8 @@ Resources:
         ContainerMount: !Ref ContainerPath
         
         EFSAccessPointArn: !Ref EFSAccessPointArn
-        
+        TableAnnoProject: !Ref TableAnnoProject
+        CognitoUserPoolRef: !Ref CognitoUserPoolRef
+        CognitoIdentityPoolIdRef: !Ref CognitoIdentityPoolIdRef
+
+        TableUser: !Ref TableUser

@@ -2,14 +2,32 @@ import boto3
 import re
 import os
 import json
+import co
 
 from response import *
 
 from lambda_base_class import LambdaBaseClass
+from models.annotaition.anno_data_model import AnnoDataModel
 
 table = boto3.client('dynamodb')
 s3 = boto3.client('s3')
 
+def claimsToken(jwt_token, field):
+    """
+    Validate JWT claims & retrieve user identifier
+    """
+    token = jwt_token.replace("Bearer ", "")
+    print(token)
+    try:
+        verified_claims = cognitojwt.decode(
+            token, os.environ['REGION'], os.environ['USERPOOL']
+        )
+    except Exception as e:
+        print(e)
+        verified_claims = {}
+        return None
+
+    return verified_claims.get(field)
 def update_s3_gen(project_id, filename, s3_key_gen):
     response = table.update_item(
                 TableName=os.environ["TABLE"],
@@ -46,6 +64,15 @@ def upload_segmentation_s3(data,s3_key):
                     Key= key
                 )
     return filename
+
+def get_mail()
+
+def check_finish(project_id):
+    model_data = AnnoDataModel(os.environ["TABLE"])
+    total, finish = model_data.query_progress_ai_segm(project_id)
+
+    if total == finish and total != 0:
+
 
 @error_response
 def lambda_handler(event, context):

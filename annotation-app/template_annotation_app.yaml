@@ -59,7 +59,9 @@ Parameters:
   EFSAccessPointArn:
     Type: String
   
-  
+  TableUser:
+    Type: String
+
 Resources:
 
   #================ ROLES =====================================================
@@ -242,6 +244,10 @@ Resources:
         EFSFileSystemId: !Ref EFSFileSystemId
         EFSAccessPoint: !Ref EFSAccessPoint
         EFSAccessPointArn: !Ref EFSAccessPointArn
+        TableAnnoProject: !GetAtt DatabaseService.Outputs.TableAnnoProjectsName
+        CognitoUserPoolRef: !Ref CognitoUserPoolRef
+        CognitoIdentityPoolIdRef: !Ref CognitoIdentityPoolIdRef
+        TableUser: !Ref TableUser
 
 Outputs:
   ApiAnnoAppUrl:

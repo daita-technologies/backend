@@ -444,3 +444,5 @@ Outputs:
   CognitoAppIntegrateID:
     Value: !GetAtt CognitoClient.Outputs.UserPoolClientId
   
+  TableUser:
+    Value: !GetAtt DatabaseService.Outputs.TableUser
