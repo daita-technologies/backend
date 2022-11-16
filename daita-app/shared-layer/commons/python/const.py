@@ -5,6 +5,8 @@ import os
 db_resource = boto3.resource('dynamodb')
 table = db_resource.Table("consts")
 
+MAX_NUM_IMGAGES_CLONE_FROM_PREBUILD_DATASET = 800
+
 MAX_NUM_PRJ_PER_USER = 5
 MAX_TIMES_AUGMENT_IMAGES = 'limit_times_augment'
 MAX_TIMES_PREPROCESS_IMAGES = 'limit_times_prepro'

@@ -46,6 +46,9 @@ class CreatePrebuildDatasetClass(LambdaBaseClass):
         ### check number max
         if self.number_random <= 0 or self.number_random >= prebuild_dataset[PrebuildDatasetModel.FIELD_TOTAL_IMAGES]:
             self.number_random = prebuild_dataset[PrebuildDatasetModel.FIELD_TOTAL_IMAGES]
+        if self.number_random > const.MAX_NUM_IMGAGES_CLONE_FROM_PREBUILD_DATASET:
+            raise (Exception(
+                    f'The number of images in original of project is over the limitation {const.MAX_NUM_IMGAGES_CLONE_FROM_PREBUILD_DATASET}!'))
 
         ### udpate the link to s3
         self.s3_key = prebuild_dataset[PrebuildDatasetModel.FIELD_S3_KEY]
