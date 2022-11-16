@@ -2,8 +2,6 @@ import boto3
 import re
 import os
 import json
-import co
-
 from response import *
 
 from lambda_base_class import LambdaBaseClass
