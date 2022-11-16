@@ -22,6 +22,9 @@ Parameters:
   
   TableAnnoDataOriginalNameStream:
     Type: String
+  
+  TableUserName:
+    Type: String
 
   CommonCodeLayerRef:
     Type: String
@@ -62,7 +65,15 @@ Parameters:
 
   TableAnnoDataOriginalName:
     Type: String
-    
+  
+  TableAnnoProject:
+    Type: String
+  
+  CognitoIdentityPoolIdRef:
+    Type: String
+  CognitoUserPoolRef:
+    Type: String
+
 Globals:
   Function:
     Timeout: 800   
@@ -76,9 +87,12 @@ Globals:
         STAGE: !Ref StagePara
         MODE: !Ref Mode
         LOGGING: !Ref minimumLogLevel
+        USERPOOL: !Ref CognitoUserPoolRef
+        IDENTIYPOOL: !Ref CognitoIdentityPoolIdRef
         CONTAINER_NAME: !Ref ContainerName
         CONTAINER_MOUNT: !Ref ContainerMount
         SQS_VPC_ENDPOINT: !Ref VPCEndpointSQSDnsEntries
+        REGION: !Ref 'AWS::Region'
 
 
 Resources:
@@ -165,7 +179,9 @@ Resources:
       Environment:
         Variables:
           EFSPATH: !Ref EFSAccessPointRootPath
-          TABLE: !Ref TableAnnoDataOriginalName
+          TABLE_ANNOTATION_ORIGIN: !Ref TableAnnoDataOriginalName
+          TABLE_ANNOTATION_PROJECT: !Ref TableAnnoProject
+          TABLE_USER: !Ref TableUserName
 
   DownloadS3toEFSFunction:
     Type: AWS::Serverless::Function
