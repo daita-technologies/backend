@@ -209,6 +209,7 @@ Resources:
         TableDataPreprocessName: !GetAtt DatabaseService.Outputs.TableDataPreprocessName
         TableProjectSumName: !GetAtt DatabaseService.Outputs.TableProjectSumName
         TableProjectsName: !GetAtt DatabaseService.Outputs.TableProjectsName
+        TableLsEc2Name: !GetAtt DatabaseService.Outputs.TableLsEc2Name
         MaxConcurrencyTasks: !Ref MaxConcurrencyTasks
         EFSFileSystemId: !Ref EFSFileSystemId
         ROOTEFS: !Ref ROOTEFS

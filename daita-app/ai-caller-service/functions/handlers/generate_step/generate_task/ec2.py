@@ -5,9 +5,9 @@ ec2_resource = boto3.resource('ec2', region_name=REGION)
 clientEc2 = boto3.client('ec2',region_name=REGION)
 
 class EC2Model(object):
-    def __init__(self):
+    def __init__(self, table_ls_ec2_name = "ec2"):
         self.db_client = boto3.client('dynamodb')
-        self.TBL = 'ec2'
+        self.TBL = table_ls_ec2_name
 
     def scanTable(self,TableName,**kwargs):
         paginator = self.db_client.get_paginator("scan")

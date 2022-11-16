@@ -18,7 +18,7 @@ from s3_utils import *
 task_model = TaskModel(os.environ["TABLE_GENERATE_TASK"], None)
 generate_task_model = GenerateTaskModel(os.environ["TABLE_GENERATE_TASK"])
 
-ec2Model = EC2Model()
+ec2Model = EC2Model(os.environ["TABLE_LS_EC2"])
 s3 = boto3.client('s3')
 
 

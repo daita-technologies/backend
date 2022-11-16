@@ -83,6 +83,10 @@ Parameters:
   FuncProjectUploadUpdate:
     Type: String
 
+  ### for const table group
+  TableLsEc2Name:
+    Type: String
+
 Resources:
 
   LambdaExecutionRole:
@@ -409,6 +413,7 @@ Resources:
           QUEUE_EC2_NAME_1: !GetAtt SqsEc2Work1.QueueName
           QUEUE_EC2_NAME_2: !GetAtt SqsEc2Work2.QueueName
           SF_CALL_SERVICE: !GetAtt CallerServiceStateMachine.Arn
+          TABLE_LS_EC2: !Ref TableLsEc2Name
       Events:
         ScheduledEvent:
           Type: Schedule
@@ -1021,6 +1026,7 @@ Resources:
         Variables:
           QUEUE_EC2_NAME_1: !GetAtt SqsEc2Work1.QueueName
           QUEUE_EC2_NAME_2: !GetAtt SqsEc2Work2.QueueName
+          TABLE_LS_EC2: !Ref TableLsEc2Name
       Policies:
       - SQSSendMessagePolicy:
           QueueName: !GetAtt SqsEc2Work1.QueueName

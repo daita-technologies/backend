@@ -544,6 +544,8 @@ Outputs:
   ### For const DB, we will create by code
   TableConstPrebuildDatasetName:
     Value: const-prebuild_dataset  ##!Ref TableConstPrebuildDataset
+  TableLsEc2Name:
+    Value: ec2
     
   TableTask:
     Value: !Ref TableTask
