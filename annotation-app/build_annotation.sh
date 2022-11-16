@@ -16,7 +16,8 @@ parameters_override="Stage=${ANNOTATION_STAGE} Application=${ANNO_APPLICATION}
                     CommonCodeLayerRef=${CommonCodeLayerRef} CognitoUserPoolRef=${CognitoUserPoolRef} 
                     CognitoIdentityPoolIdRef=${CognitoIdentityPoolIdRef}
                     TableDaitaProjectsName=${TableDaitaProjectsName}
-                    TableDaitaDataOriginalName=${TableDaitaDataOriginalName} 
+                    TableDaitaDataOriginalName=${TableDaitaDataOriginalName}
+                    TableUserName=${TableUserName} 
                     S3DaitaBucketName=${DAITA_S3_BUCKET}
                     PublicSubnetOne=${PublicSubnetOne}
                     PublicSubnetTwo=${PublicSubnetTwo}
@@ -25,7 +26,7 @@ parameters_override="Stage=${ANNOTATION_STAGE} Application=${ANNO_APPLICATION}
                     VPCEndpointSQSDnsEntries=${VPCEndpointSQSDnsEntries}
                     EFSFileSystemId=${EFSFileSystemId}
                     EFSAccessPoint=${EFSAccessPoint}
-                    EFSAccessPointArn=${EFSAccessPointArn}TableUser=${TableUser}"
+                    EFSAccessPointArn=${EFSAccessPointArn}"
 
 sam build --template-file template_annotation_app.yaml
 sam deploy --template-file template_annotation_app.yaml --no-confirm-changeset --disable-rollback \

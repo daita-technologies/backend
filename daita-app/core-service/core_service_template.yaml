@@ -57,6 +57,10 @@ Parameters:
     Type: String
   ProcessAITaskEventBusArn:
     Type: String
+
+  AICallerECSSMArn:
+    Type: String
+
   TableProjectSumName:
     Type: String
   DataOrigin:
@@ -490,6 +494,7 @@ Resources:
       Environment:
         Variables:
           EVENT_BUS_NAME: !Ref ProcessAITaskEventBusName
+          AI_CALLER_ECS_SM_ARN: !Ref AICallerECSSMArn
           LIMIT_PROCESSING_TIMES: !Ref LimitPreprocessTimesName
           LIMIT_AUGMENT_TIMES: !Ref LimitAugmentTimesName
           TABLE_PROJECT_SUMMARY: !Ref TableProjectSumName

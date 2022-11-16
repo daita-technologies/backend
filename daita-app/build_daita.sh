@@ -85,6 +85,7 @@ CognitoIdentityPoolIdRef=${dict_output["CognitoIdentityPoolIdRef"]}
 CommonCodeLayerRef=${dict_output["CommonCodeLayerRef"]}
 TableDaitaProjectsName=${dict_output["TableDaitaProjectsName"]}
 TableDaitaDataOriginalName=${dict_output["TableDaitaDataOriginalName"]}
+TableUserName=${dict_output["TableUserName"]}
 ### export for FE config
 ApiDaitaAppUrl=${dict_output["ApiDaitaAppUrl"]}
 ApiAuthDaitaUrl=${dict_output["ApiAuthDaitaUrl"]}
@@ -129,6 +130,7 @@ echo "CognitoIdentityPoolIdRef=$CognitoIdentityPoolIdRef" >> $OUTPUT_BUILD_DAITA
 echo "CommonCodeLayerRef=$CommonCodeLayerRef" >> $OUTPUT_BUILD_DAITA
 echo "TableDaitaProjectsName=$TableDaitaProjectsName" >> $OUTPUT_BUILD_DAITA
 echo "TableDaitaDataOriginalName=$TableDaitaDataOriginalName" >> $OUTPUT_BUILD_DAITA
+echo "TableUserName=$TableUserName" >> $OUTPUT_BUILD_DAITA
 
 
 

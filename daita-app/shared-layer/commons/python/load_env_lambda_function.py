@@ -29,3 +29,6 @@ class LambdaEnv():
 
         self.FUNC_DAITA_UPLOAD_UPDATE = os.environ.get("FUNC_DAITA_UPLOAD_UPDATE", "")
 
+        self.IS_USE_ECS_AI_CALLER_FLOW = os.environ.get("IS_USE_ECS_AI_CALLER_FLOW", False)
+        self.AI_CALLER_ECS_SM_ARN = os.environ.get("AI_CALLER_ECS_SM_ARN", "")
+

@@ -23,7 +23,7 @@ Parameters:
   TableAnnoDataOriginalNameStream:
     Type: String
   
-  TableUser:
+  TableUserName:
     Type: String
 
   CommonCodeLayerRef:
@@ -179,9 +179,9 @@ Resources:
       Environment:
         Variables:
           EFSPATH: !Ref EFSAccessPointRootPath
-          TABLE: !Ref TableAnnoDataOriginalName
-          TABLE_PROJECT: !Ref TableAnnoProject
-          TABLE_USER: !Ref TableUser
+          TABLE_ANNOTATION_ORIGIN: !Ref TableAnnoDataOriginalName
+          TABLE_ANNOTATION_PROJECT: !Ref TableAnnoProject
+          TABLE_USER: !Ref TableUserName
 
   DownloadS3toEFSFunction:
     Type: AWS::Serverless::Function

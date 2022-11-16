@@ -38,6 +38,8 @@ Parameters:
     Type: String
   TableDaitaDataOriginalName:
     Type: String
+  TableUserName:
+    Type: String
 
   ### parameter from infra
   PublicSubnetOne:
@@ -57,9 +59,6 @@ Parameters:
   EFSAccessPoint:
     Type: String
   EFSAccessPointArn:
-    Type: String
-  
-  TableUser:
     Type: String
 
 Resources:
@@ -247,7 +246,7 @@ Resources:
         TableAnnoProject: !GetAtt DatabaseService.Outputs.TableAnnoProjectsName
         CognitoUserPoolRef: !Ref CognitoUserPoolRef
         CognitoIdentityPoolIdRef: !Ref CognitoIdentityPoolIdRef
-        TableUser: !Ref TableUser
+        TableUserName: !Ref TableUserName
 
 Outputs:
   ApiAnnoAppUrl:

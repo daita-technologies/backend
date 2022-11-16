@@ -49,6 +49,7 @@ def lambda_handler(event, context):
     })
     responseInvokeLambda = invokeLambda(info)
     print(responseInvokeLambda)
+    responseInvokeLambda['data']['id_token'] = info['id_token']
     return generate_response(
         message="Create decompress task successfully!",
         data=responseInvokeLambda,

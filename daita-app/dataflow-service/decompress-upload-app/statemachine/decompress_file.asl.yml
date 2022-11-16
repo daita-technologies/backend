@@ -9,7 +9,7 @@ States:
       NetworkConfiguration:
         AwsvpcConfiguration:
           AssignPublicIp: ENABLED # Needed when pulling public Docker image
-          Subnets: !Join [ ${SubnetIds} ] 
+          Subnets: !Join [ ${SubnetIds} ]
       Overrides:
         ContainerOverrides:
           -
@@ -25,6 +25,11 @@ States:
                 Value.$: $.identity_id
       TaskDefinition: ${DecompressTask}
     ResultPath: null # Forward previous step input as this step output
+    Catch:
+      - ErrorEquals:
+        - States.ALL
+        Next: CatchErrorTaskDynamoDB
+        ResultPath: null
     Next: DivideDecompressChunksFunction
 
   DivideDecompressChunksFunction:

@@ -335,6 +335,8 @@ Resources:
         ParaIndexTaskProjectIDTaskID: !GetAtt DatabaseService.Outputs.IndexTaskProjectIDTaskIDName
         ProcessAITaskEventBusArn: !GetAtt  AICallerService.Outputs.ProcessAITaskEventBusArn
         ProcessAITaskEventBusName: !GetAtt  AICallerService.Outputs.ProcessAITaskEventBusName
+        ### for ECS AI Caller
+        AICallerECSSMArn: !GetAtt AICallerService.Outputs.AICallerECSSMArn
         ### for project table
         TableConstPrebuildDatasetName: !GetAtt DatabaseService.Outputs.TableConstPrebuildDatasetName
         ### for reference image para
@@ -436,6 +438,8 @@ Outputs:
     Value: !GetAtt DatabaseService.Outputs.TableProjectsName
   TableDaitaDataOriginalName:
     Value: !GetAtt DatabaseService.Outputs.TableDataOriginalName
+  TableUserName:
+    Value: !GetAtt DatabaseService.Outputs.TableUser
 
   ApiDaitaAppUrl:
     Value: !GetAtt CoreService.Outputs.CallerServiceHttpApiUrl

@@ -57,7 +57,7 @@ Parameters:
   CognitoUserPoolRef:
     Type: String
 
-  TableUser:
+  TableUserName:
     Type: String
   
 Resources:
@@ -137,4 +137,4 @@ Resources:
         CognitoUserPoolRef: !Ref CognitoUserPoolRef
         CognitoIdentityPoolIdRef: !Ref CognitoIdentityPoolIdRef
 
-        TableUser: !Ref TableUser
+        TableUserName: !Ref TableUserName

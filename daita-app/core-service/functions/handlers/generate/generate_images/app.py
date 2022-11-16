@@ -17,6 +17,8 @@ from boto3.dynamodb.conditions import Key, Attr
 from botocore.exceptions import ClientError
 
 
+
+
 class GenerateImageClass(LambdaBaseClass):
 
     def __init__(self) -> None:   
@@ -204,29 +206,42 @@ class GenerateImageClass(LambdaBaseClass):
         ### create taskID and update to DB
         task_id = self._create_task(identity_id, self.project_id, type_method)
 
-        ### push event to eventbridge
+        ### update parameters for next step
         detail_pass_para = {
-            KEY_NAME_IDENTITY_ID: identity_id,
-            KEY_NAME_PROJECT_ID: self.project_id,
-            KEY_NAME_PROJECT_NAME: self.project_name,
-            KEY_NAME_LS_METHOD_ID: self.ls_methods_id,
-            KEY_NAME_DATA_TYPE: self.data_type,
-            KEY_NAME_DATA_NUMBER: self.data_number,
-            KEY_NAME_S3_PREFIX: s3_prefix,
-            KEY_NAME_TIMES_AUGMENT: times_augment,
-            KEY_NAME_TIMES_PREPROCESS: times_preprocess,
-            KEY_NAME_TASK_ID: task_id,
-            KEY_NAME_ID_TOKEN: self.id_token,
-            KEY_NAME_PROCESS_TYPE: type_method,
-            KEY_NAME_REFERENCE_IMAGES: self.reference_images,
-            KEY_NAME_IS_RESOLUTION: self.is_normalize_resolution,
-            KEY_NAME_AUG_PARAMS: self.aug_parameters
-        }
-        event_id = self._put_event_bus(detail_pass_para)
+                KEY_NAME_IDENTITY_ID: identity_id,
+                KEY_NAME_PROJECT_ID: self.project_id,
+                KEY_NAME_PROJECT_NAME: self.project_name,
+                KEY_NAME_LS_METHOD_ID: self.ls_methods_id,
+                KEY_NAME_DATA_TYPE: self.data_type,
+                KEY_NAME_DATA_NUMBER: self.data_number,
+                KEY_NAME_S3_PREFIX: s3_prefix,
+                KEY_NAME_TIMES_AUGMENT: times_augment,
+                KEY_NAME_TIMES_PREPROCESS: times_preprocess,
+                KEY_NAME_TASK_ID: task_id,
+                KEY_NAME_ID_TOKEN: self.id_token,
+                KEY_NAME_PROCESS_TYPE: type_method,
+                KEY_NAME_REFERENCE_IMAGES: self.reference_images,
+                KEY_NAME_IS_RESOLUTION: self.is_normalize_resolution,
+                KEY_NAME_AUG_PARAMS: self.aug_parameters
+            }
+
+        ### MUST FIX HERE, debug to run AI caller on ECS flow
+        if self.project_name == "test123":
+            sf = boto3.client('stepfunctions')
+            ### invoke stepfunction 
+            response = sf.start_execution(
+                                stateMachineArn = self.env.AI_CALLER_ECS_SM_ARN,
+                                input = json.dumps(detail_pass_para)
+                            )     
+            print("response when invoke exceution AI caller ECS: \n", response)               
+        else:
+            ### push event to eventbridge
+            event_id = self._put_event_bus(detail_pass_para)
+
         message = "OK"
         status_code = HTTPStatus.OK
-        sqsClient = boto3.client('sqs',REGION)
 
+        sqsClient = boto3.client('sqs',REGION)
         def getQueue(queue_name_env):
             try:
                 response = sqsClient.get_queue_url(QueueName=queue_name_env)
