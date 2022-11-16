@@ -6,7 +6,7 @@ from response import *
 
 from lambda_base_class import LambdaBaseClass
 from models.annotaition.anno_data_model import AnnoDataModel
-from models.annotaition.anno_data_model import AnnoProjectModel
+from models.annotaition.anno_project_model import AnnoProjectModel
 table = boto3.client('dynamodb')
 s3 = boto3.client('s3')
 model_data = AnnoDataModel(os.environ['TABLE_ANNOTATION_ORIGIN'])
@@ -15,7 +15,7 @@ client = boto3.client('cognito-idp')
 
 def update_s3_gen(project_id, filename, s3_key_gen):
     response = table.update_item(
-                TableName=os.environ["TABLE"],
+                TableName=os.environ["TABLE_ANNOTATION_ORIGIN"],
                 Key={
                     'project_id': {
                         'S': project_id
@@ -49,7 +49,8 @@ def upload_segmentation_s3(data,s3_key):
                     Key= key
                 )
     return filename
-def send_mail(mail,project_name):
+
+def send_mail(mail, project_name):
     client = boto3.client("ses")
     message_email = """
     <p>Dear User,</p>
@@ -70,6 +71,7 @@ def send_mail(mail,project_name):
     """.format(
         project_name
     )
+    print("send email to: ", mail)
     response = client.send_email(
         Destination={
             "ToAddresses": [mail],
@@ -94,7 +96,7 @@ def send_mail(mail,project_name):
     )
 
 def get_mail_User(identity_id):
-    resq = client.scan(TableName=os.environ['TABLE_USER'],
+    resq = table.scan(TableName=os.environ['TABLE_USER'],
     FilterExpression='#id = :id',
     ExpressionAttributeNames=
                     {
@@ -105,9 +107,12 @@ def get_mail_User(identity_id):
     })
 
     userInfo =  resq['Items']
+
+    print("User info: ", userInfo)
     if len(userInfo) > 0:
-        ID_User = userInfo['ID']['S']
+        ID_User = userInfo[0]['ID']['S']
         response = client.list_users(UserPoolId=os.environ['USERPOOL'],AttributesToGet = ['email'],Filter=f'sub=\"{ID_User}\"')
+        print("response list cognito user: \n", response)
         if len(response['Users']) > 0:
             user_cognito = response['Users'][0]
             mail = user_cognito['Attributes'][0]['Value']
@@ -127,7 +132,7 @@ def check_finish(project_id):
         project_name = projectResponse['project_name']
         mail = get_mail_User(identity_id)
         if mail != None:
-            send_email(mail,project_name)
+            send_mail(mail,project_name)
 
 
 @error_response

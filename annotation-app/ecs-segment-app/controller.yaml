@@ -66,7 +66,7 @@ Parameters:
   TableAnnoDataOriginalName:
     Type: String
   
-  TableAnnoProject:
+  TableAnnoProjectsName:
     Type: String
   
   CognitoIdentityPoolIdRef:
@@ -180,7 +180,7 @@ Resources:
         Variables:
           EFSPATH: !Ref EFSAccessPointRootPath
           TABLE_ANNOTATION_ORIGIN: !Ref TableAnnoDataOriginalName
-          TABLE_ANNOTATION_PROJECT: !Ref TableAnnoProject
+          TABLE_ANNOTATION_PROJECT: !Ref TableAnnoProjectsName
           TABLE_USER: !Ref TableUserName
 
   DownloadS3toEFSFunction:

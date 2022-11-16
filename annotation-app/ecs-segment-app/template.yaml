@@ -31,6 +31,8 @@ Parameters:
 
   TableAnnoDataOriginalName:
     Type: String
+  TableAnnoProjectsName:
+    Type: String
 
   ### For ecs network
   PublicSubnetOne:
@@ -133,7 +135,7 @@ Resources:
         ContainerMount: !Ref ContainerPath
         
         EFSAccessPointArn: !Ref EFSAccessPointArn
-        TableAnnoProject: !Ref TableAnnoProject
+        TableAnnoProjectsName: !Ref TableAnnoProjectsName
         CognitoUserPoolRef: !Ref CognitoUserPoolRef
         CognitoIdentityPoolIdRef: !Ref CognitoIdentityPoolIdRef
 
