@@ -5,7 +5,21 @@ echo $SCRIPT_DIR
 
 ###===== read from config file
 echo ==1==. Read the configure file
-configfile=$SCRIPT_DIR/main_config.cnf
+if [[ $1 == "dev" ]]
+then
+    configfile=$SCRIPT_DIR/main_config_dev.cnf
+else
+    if [[ $1 == "prod" ]]
+    then
+        configfile=$SCRIPT_DIR/main_config_prod.cnf
+    else
+    echo "Please choose the env is dev/prod"
+        exit
+    fi
+fi
+
+echo $configfile
+
 
 keys=( $(grep -oP '\w+(?==)' "$configfile") )
 . "$configfile"
