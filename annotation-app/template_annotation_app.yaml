@@ -117,6 +117,16 @@ Resources:
                 Action:
                   - dynamodb:*
                 Resource: "*"
+        - PolicyName: 'CognitoPermission'
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              -
+                Effect: Allow
+                Action:
+                  - cognito-identity:*
+                  - cognito-idp:*
+                Resource: '*'
         - PolicyName: "OtherServicePermission"
           PolicyDocument:
             Version: '2012-10-17'
@@ -132,6 +142,7 @@ Resources:
                   - s3:*
                   - ec2:*
                   - sqs:*
+                  - ses:*
                 Resource: "*"
 
   #================ APPLICATIONS  =============================================

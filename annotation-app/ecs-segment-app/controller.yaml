@@ -126,7 +126,14 @@ Resources:
               - "iam:PassRole"
               - "s3:*"
               - "lambda:InvokeFunction"
+              - "ses:*"
             Resource: "*"
+          - Sid: CognioPermission
+            Effect: Allow
+            Action:
+              - cognito-identity:*
+              - cognito-idp:*
+            Resource: '*'
           - Sid: IAMPassRoleForCloudWatchEvents
             Effect: Allow
             Action:
