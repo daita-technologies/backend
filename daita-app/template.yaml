@@ -61,8 +61,11 @@ Parameters:
   VPC:
     Type: String
 
-
   CertificateUserpoolDomain:
+    Type: String
+
+  ### for token key
+  TokenOauth2BotSlackFeedBack:
     Type: String
     
 Resources:
@@ -374,6 +377,8 @@ Resources:
         ##### for project function
         FuncProjectUploadUpdateArn: !GetAtt ProjectService.Outputs.FuncProjectUploadUpdateArn
         AuthEndpoint: !GetAtt CognitoUserPool.Outputs.AuthHttpAPI
+        ### For token
+        TokenOauth2BotSlackFeedBack: !Ref TokenOauth2BotSlackFeedBack
 
   HealthCheckService:
     Type: AWS::Serverless::Application

@@ -169,6 +169,10 @@ Parameters:
     Type: String
   AuthEndpoint:
     Type: String
+
+  TokenOauth2BotSlackFeedBack:
+    Type: String
+  
 Resources:
   ThumbnailServiceEventBusRole:
     Type: "AWS::IAM::Role"
@@ -783,6 +787,7 @@ Resources:
       Environment:
         Variables:
           TABLE_FEEBACK: !Ref TableFeedback
+          TOKEN_OAUTH2BOT_SLACK_FEEDBACK: !Ref TokenOauth2BotSlackFeedBack
               
 ##########################Project Service################################################
 

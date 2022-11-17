@@ -29,7 +29,8 @@ parameters_override="Mode=${MODE} Stage=${DAITA_STAGE} Application=${DAITA_APPLI
                     PublicSubnetTwo=${PublicSubnetTwo} 
                     ContainerSecurityGroup=${ContainerSecurityGroup} 
                     VPC=${VPC} 
-                    VPCEndpointSQSDnsEntries=${VPCEndpointSQSDnsEntries}"
+                    VPCEndpointSQSDnsEntries=${VPCEndpointSQSDnsEntries}
+                    TokenOauth2BotSlackFeedBack=${OAUTH2BOT_SLACK_FEED_BACK}"
 
 sam build
 sam deploy --no-confirm-changeset --disable-rollback \

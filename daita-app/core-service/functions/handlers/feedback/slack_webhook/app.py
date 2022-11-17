@@ -22,7 +22,7 @@ USERPOOLID = os.environ['COGNITO_USER_POOL']
 CLIENTPOOLID = os.environ['COGNITO_CLIENT_ID']
 IDENTITY_POOL = os.environ['IDENTITY_POOL']
 REGION = os.environ['REGION']
-OAUTH2BOT = 'xoxb-2966360820768-3760970933602-MoApe9duMpoO5KAa6HaCUzzY' # not dev env 
+OAUTH2BOT = os.environ["TOKEN_OAUTH2BOT_SLACK_FEEDBACK"]
 RESPONSE_HEADER = {
     "Access-Control-Allow-Creentials": "true",
     "Access-Control-Allow-Methods": "GET, HEAD, OPTIONS, POST, PUT",
