@@ -53,6 +53,9 @@ Parameters:
   EFSAccessPointArn:
     Type: String
 
+  ImageAISegmentationUrl:
+    Type: String
+
 Resources:
 
   #================ ROLES =====================================================
@@ -243,6 +246,8 @@ Resources:
         CognitoIdentityPoolIdRef: !Ref CognitoIdentityPoolIdRef
         TableUserName: !Ref TableUserName
         SendEmailIdentityIDFunction: !Ref SendEmailIdentityIDFunction
+        ### for ecs
+        ImageAISegmentationUrl: !Ref ImageAISegmentationUrl
 
 Outputs:
   ApiAnnoAppUrl:

@@ -9,7 +9,7 @@ Parameters:
   StagePara:
     Type: String
   
-  ImageSegmentUrl:
+  ImageAISegmentationUrl:
     Type: String
     Default: 737589818430.dkr.ecr.us-east-2.amazonaws.com/ai-services-repo:segformer
   
@@ -105,7 +105,7 @@ Resources:
         EC2Role: !GetAtt RoleApplication.Outputs.EC2Role
         ExecuteArn: !GetAtt RoleApplication.Outputs.ECSTask
         TaskRole: !GetAtt RoleApplication.Outputs.ECSRole
-        ImageUrl: !Ref ImageSegmentUrl
+        ImageUrl: !Ref ImageAISegmentationUrl
         ContainerPath: !Ref ContainerPath
         ### storage infra
         EFSAccessPoint: !Ref EFSAccessPoint
