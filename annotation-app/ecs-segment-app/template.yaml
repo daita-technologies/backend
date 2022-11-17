@@ -61,6 +61,9 @@ Parameters:
 
   TableUserName:
     Type: String
+
+  SendEmailIdentityIDFunction:
+    Type: String
   
 Resources:
 
@@ -140,3 +143,5 @@ Resources:
         CognitoIdentityPoolIdRef: !Ref CognitoIdentityPoolIdRef
 
         TableUserName: !Ref TableUserName
+
+        SendEmailIdentityIDFunction: !Ref SendEmailIdentityIDFunction

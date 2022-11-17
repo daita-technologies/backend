@@ -26,7 +26,8 @@ parameters_override="Stage=${ANNOTATION_STAGE} Application=${ANNO_APPLICATION}
                     VPCEndpointSQSDnsEntries=${VPCEndpointSQSDnsEntries}
                     EFSFileSystemId=${EFSFileSystemId}
                     EFSAccessPoint=${EFSAccessPoint}
-                    EFSAccessPointArn=${EFSAccessPointArn}"
+                    EFSAccessPointArn=${EFSAccessPointArn}
+                    SendEmailIdentityIDFunction=${SendEmailIdentityIDFunction}"
 
 sam build --template-file template_annotation_app.yaml
 sam deploy --template-file template_annotation_app.yaml --no-confirm-changeset --disable-rollback \

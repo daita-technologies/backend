@@ -65,13 +65,15 @@ Parameters:
 
   TableAnnoDataOriginalName:
     Type: String
-  
   TableAnnoProjectsName:
     Type: String
   
   CognitoIdentityPoolIdRef:
     Type: String
   CognitoUserPoolRef:
+    Type: String
+
+  SendEmailIdentityIDFunction:
     Type: String
 
 Globals:
@@ -126,6 +128,9 @@ Resources:
               - "iam:PassRole"
               - "s3:*"
               - "lambda:InvokeFunction"
+              - "ses:*"
+              - cognito-identity:*
+              - cognito-idp:*
             Resource: "*"
           - Sid: IAMPassRoleForCloudWatchEvents
             Effect: Allow
@@ -182,6 +187,7 @@ Resources:
           TABLE_ANNOTATION_ORIGIN: !Ref TableAnnoDataOriginalName
           TABLE_ANNOTATION_PROJECT: !Ref TableAnnoProjectsName
           TABLE_USER: !Ref TableUserName
+          FUNC_SEND_EMAIL_IDENTITY_NAME: !Ref SendEmailIdentityIDFunction
 
   DownloadS3toEFSFunction:
     Type: AWS::Serverless::Function

@@ -41,6 +41,9 @@ Parameters:
   TableUserName:
     Type: String
 
+  SendEmailIdentityIDFunction:
+    Type: String
+
   ### parameter from infra
   PublicSubnetOne:
     Type: String
@@ -132,6 +135,9 @@ Resources:
                   - s3:*
                   - ec2:*
                   - sqs:*
+                  - "ses:*"
+                  - cognito-identity:*
+                  - cognito-idp:*
                 Resource: "*"
 
   #================ APPLICATIONS  =============================================
@@ -247,6 +253,7 @@ Resources:
         CognitoUserPoolRef: !Ref CognitoUserPoolRef
         CognitoIdentityPoolIdRef: !Ref CognitoIdentityPoolIdRef
         TableUserName: !Ref TableUserName
+        SendEmailIdentityIDFunction: !Ref SendEmailIdentityIDFunction
 
 Outputs:
   ApiAnnoAppUrl:

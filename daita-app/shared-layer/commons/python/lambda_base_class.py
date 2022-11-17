@@ -4,6 +4,8 @@ from identity_check import *
 import json
 from load_env_lambda_function import LambdaEnv
 
+
+
 class LambdaBaseClass(object):
     
     def __init__(self) -> None:
@@ -48,3 +50,13 @@ class LambdaBaseClass(object):
                                  USER_POOL_ID=user_pool_id, IDENTITY_POOL_ID=identity_pool_id)
         self.logger.info(f"identity: {identity}")
         return identity
+
+    def invoke_lambda_func(self, function_name, body_info, type_request="RequestResponse"):
+        lambdaInvokeClient = boto3.client('lambda')
+        lambdaInvokeReq = lambdaInvokeClient.invoke(
+            FunctionName=function_name,
+            Payload=json.dumps({'body': body_info}),
+            InvocationType=type_request,
+        )
+
+        return lambdaInvokeReq['Payload'].read()

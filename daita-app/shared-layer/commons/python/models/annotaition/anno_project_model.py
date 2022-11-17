@@ -237,4 +237,4 @@ class AnnoProjectModel():
 
     def find_project_by_project_ID(self,project_id):
         response = self.table.scan(FilterExpression=Attr("project_id").eq(project_id))
-        return response['Items'][0]
+        return response['Items']

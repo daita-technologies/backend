@@ -50,8 +50,7 @@ def upload_segmentation_s3(data,s3_key):
                 )
     return filename
 
-def send_mail(mail, project_name):
-    client = boto3.client("ses")
+def send_mail(identity_id, project_name):
     message_email = """
     <p>Dear User,</p>
     <p>Your AI detection task is completed. Please log into DAITA Platform and go to <a href='https://app.daita.tech/annotation/project/{}'>Annotation</a> to access your results.</p>
@@ -71,74 +70,51 @@ def send_mail(mail, project_name):
     """.format(
         project_name
     )
-    print("send email to: ", mail)
-    response = client.send_email(
-        Destination={
-            "ToAddresses": [mail],
-        },
-        Message={
-            "Body": {
-                "Html": {
-                    "Charset": "UTF-8",
-                    "Data": message_email,
-                },
-                "Text": {
-                    "Charset": "UTF-8",
-                    "Data": message_email_text,
-                },
-            },
-            "Subject": {
-                "Charset": "UTF-8",
-                "Data": "Your AI detection results are ready",
-            },
-        },
-        Source="DAITA Team <hello@daita.tech>",
+
+    print("send email to identityid: ", identity_id)
+
+    response = invoke_lambda_func(os.environ["FUNC_SEND_EMAIL_IDENTITY_NAME"],
+                                    {
+                                        "identity_id": identity_id,
+                                        "message_email": message_email,
+                                        "message_email_text": message_email_text
+                                    })
+    
+    return
+
+def invoke_lambda_func(function_name, body_info, type_request="RequestResponse"):
+    lambdaInvokeClient = boto3.client('lambda')
+    print("invoke function name: ", function_name)
+    lambdaInvokeReq = lambdaInvokeClient.invoke(
+        FunctionName=function_name,
+        Payload=json.dumps({'body': body_info}),
+        InvocationType=type_request,
     )
 
-def get_mail_User(identity_id):
-    resq = table.scan(TableName=os.environ['TABLE_USER'],
-    FilterExpression='#id = :id',
-    ExpressionAttributeNames=
-                    {
-                        '#id':'identity_id'
-                    } ,
-    ExpressionAttributeValues={
-        ':id':{'S':identity_id}
-    })
-
-    userInfo =  resq['Items']
-
-    print("User info: ", userInfo)
-    if len(userInfo) > 0:
-        ID_User = userInfo[0]['ID']['S']
-        response = client.list_users(UserPoolId=os.environ['USERPOOL'],AttributesToGet = ['email'],Filter=f'sub=\"{ID_User}\"')
-        print("response list cognito user: \n", response)
-        if len(response['Users']) > 0:
-            user_cognito = response['Users'][0]
-            mail = user_cognito['Attributes'][0]['Value']
-            return mail
-    return None
-
-
-
+    return lambdaInvokeReq['Payload'].read()
 
 def check_finish(project_id):
     total, finish = model_data.query_progress_ai_segm(project_id)
 
     if total == finish and total != 0:
         # get identity id 
-        projectResponse = model_project.find_project_by_project_ID(project_id)
-        identity_id = projectResponse['identity_id']
-        project_name = projectResponse['project_name']
-        mail = get_mail_User(identity_id)
-        if mail != None:
-            send_mail(mail,project_name)
+        ls_projectResponse = model_project.find_project_by_project_ID(project_id)
+        if len(ls_projectResponse)>0:
+            projectResponse = ls_projectResponse[0]
+            identity_id = projectResponse['identity_id']
+            project_name = projectResponse['project_name']
+            
+            # send_mail(identity_id, project_name)
+    
+    return
 
 
 @error_response
 def lambda_handler(event, context):
     output_folder = os.path.join(event['input_folder'],'output')
     output_folder = os.path.join(os.environ['EFSPATH'],output_folder)
+
+    print(event['records'])
     
     for index , it in enumerate(event['records']):
         with open(os.path.join(output_folder,str(index)+'.json'),'r') as f:

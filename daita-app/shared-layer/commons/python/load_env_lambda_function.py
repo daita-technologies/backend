@@ -5,6 +5,7 @@ class LambdaEnv():
 
         self.USER_POOL_ID = os.environ.get('COGNITO_USER_POOL', "")
         self.IDENTITY_POOL_ID = os.environ.get('IDENTITY_POOL', "")
+        self.COGNITO_CLIENT_ID = os.environ.get("COGNITO_CLIENT_ID", "")
 
         self.TABLE_ANNO_PROJECT = os.environ.get("TABLE_ANNO_PROJECT", "")
         self.TABLE_ANNO_DATA_ORI = os.environ.get("TABLE_ANNO_DATA_ORI", "")
@@ -20,10 +21,13 @@ class LambdaEnv():
 
         self.TABLE_DAITA_DATA_ORIGINAL = os.environ.get("TABLE_DAITA_DATA_ORIGINAL", "")
         self.TABLE_DAITA_PROJECT = os.environ.get("TABLE_DAITA_PROJECT", "")
+        self.TABLE_GENERATE_TASK = os.environ.get("TABLE_GENERATE_TASK", "")
+
+        self.TABLE_USER = os.environ.get("TABLE_USER", "")
 
         self.TABLE_CONFIG_PARA_LAMBDA = os.environ.get("TABLE_CONFIG_PARA_LAMBDA", "")
 
-        self.TABLE_GENERATE_TASK = os.environ.get("TABLE_GENERATE_TASK", "")
+        
 
         self.SM_CLONE_PROJECT_ARN = os.environ.get("SM_CLONE_PROJECT_ARN", "") 
 

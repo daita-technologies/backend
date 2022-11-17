@@ -451,3 +451,6 @@ Outputs:
   
   TableUser:
     Value: !GetAtt DatabaseService.Outputs.TableUser
+
+  SendEmailIdentityIDFunction:
+    Value: !GetAtt CoreService.Outputs.SendEmailIdentityIDFunction

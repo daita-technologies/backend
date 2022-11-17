@@ -347,6 +347,7 @@ Resources:
                 Effect: Allow
                 Action:
                   - lambda:InvokeFunction
+                  - lambda:*
                 Resource: "*"
 #============================Event Source Mapping========================================
   EventSourceMappingDatabaseOriginal:
@@ -864,9 +865,21 @@ Resources:
           T_DATA_ORI: !Ref TableDataOriginalName
           T_DATA_PREPROCESS: !Ref TableDataPreprocessName
           T_DATA_AUGMENT: !Ref TableDataAugmentName
+
+  #### for email related functions
+  SendEmailIdentityIDFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: functions/handlers/send-mail/send-email-identity-id
+      Handler: hdler_send_email_to_identityid.lambda_handler
+      Role: !GetAtt LambdaExecutionRole.Arn
+
 Outputs:
   CallerServiceHttpApiUrl:
     Description: "Url of the Caller service API"
     Value: !Sub "https://${DaitaHttpApi}.execute-api.${AWS::Region}.amazonaws.com/${StagePara}"
   LambdaRoleArn:
     Value: !GetAtt LambdaExecutionRole.Arn
+
+  SendEmailIdentityIDFunction:
+    Value: !Ref SendEmailIdentityIDFunction

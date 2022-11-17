@@ -178,6 +178,7 @@ Resources:
             Resource: "*"
       ServiceName: !Sub com.amazonaws.${AWS::Region}.ecr.dkr
       VpcId: !Ref VPC
+
   EC2Endpoint:
     Type: AWS::EC2::VPCEndpoint
     Properties:
@@ -190,6 +191,20 @@ Resources:
             Principal: "*"
             Resource: "*"
       ServiceName: !Sub com.amazonaws.${AWS::Region}.ec2
+      VpcId: !Ref VPC
+
+  LambdaEndpoint:
+    Type: AWS::EC2::VPCEndpoint
+    Properties:
+      VpcEndpointType: Interface
+      PolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Action: "*"
+            Principal: "*"
+            Resource: "*"
+      ServiceName: !Sub com.amazonaws.${AWS::Region}.lambda
       VpcId: !Ref VPC
 
 
