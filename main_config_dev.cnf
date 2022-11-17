@@ -24,8 +24,13 @@ INFRA_APPLICATION=infra
 CERTIFICATE_USERPOLL_DOMAIN=arn:aws:acm:us-east-1:737589818430:certificate/997bd837-32c3-466d-927b-2e1d4dee7bf0
 OAUTH2BOT_SLACK_FEED_BACK=xoxb-2966360820768-3760970933602-MoApe9duMpoO5KAa6HaCUzzY
 
+
 MODE=dev
 
+GOOGLE_CLIENT_ID=639730110991-9t82efunb20f6m4stek56f6ut9t0kjfu.apps.googleusercontent.com
+GOOGLE_CLIENT_SECRET=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
+GITHUB_CLIENT_ID=0cec5cf3d1f070b36b63
+GITHUB_CLIENT_SECRET=5929cb027e02330533a587a8e9f5d2e0fd40e48e
 
 ###__________________________________
 ###__________________________________
@@ -42,6 +47,6 @@ CAPABILITIES="CAPABILITY_IAM CAPABILITY_AUTO_EXPAND CAPABILITY_NAMED_IAM"
 MAX_CONCURRENCY_TASK=2
 
 DOMAIN_USER_POOL=authdev.daita.tech
-LOG_OUT_URL=http://localhost:3000,https://dev.daita.tech
+DOMAIN_DAITA=https://dev.daita.tech
 
 ####-------------------------------------------------------------

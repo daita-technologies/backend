@@ -43,13 +43,8 @@ Parameters:
 
   DomainUserPool:
     Type: String
-    Default: authdev.daita.tech
-  LogoutUrl:
-    Type: String
-    Default: https://app.daita.tech
   DomainDaita:
     Type: String
-    Default: https://dev.daita.tech
 
   ### parameter from infra
   PublicSubnetOne:
@@ -66,6 +61,14 @@ Parameters:
 
   ### for token key
   TokenOauth2BotSlackFeedBack:
+    Type: String
+  GoogleClientID:
+    Type: String
+  GoogleClientSecret:
+    Type: String
+  GithubClientID:
+    Type: String
+  GithubClientSecret:
     Type: String
     
 Resources:
@@ -281,16 +284,22 @@ Resources:
         Mode: !Ref Mode
         CommonCodeLayerName: !Ref CommonCodeLayer
         CertificateUserpoolDomain: !Ref CertificateUserpoolDomain
+        DomainUserPool: !Ref DomainUserPool
 
   CognitoClient:
     Type: AWS::Serverless::Application
     Properties:
       Location: auth-service/CognitoClient/template.yaml
       Parameters:
-        DomainUserPool: !Ref DomainDaita
+        DomainDaita: !Ref DomainDaita
         CognitoUserPool: !GetAtt CognitoUserPool.Outputs.UserPool
         StagePara: !Ref Stage
         AuthHttpAPI: !GetAtt CognitoUserPool.Outputs.AuthHttpAPI
+        GoogleClientID: !Ref GoogleClientID
+        GoogleClientSecret: !Ref GoogleClientSecret
+        GithubClientID: !Ref GithubClientID
+        GithubClientSecret: !Ref GithubClientSecret
+        
   IdentityPool:
     Type: AWS::Serverless::Application
     Properties:

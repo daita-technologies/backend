@@ -1,12 +1,24 @@
 Parameters:
-  DomainUserPool:
+  DomainDaita:
     Type: String
   CognitoUserPool:
     Type: String
+
   StagePara:
     Type: String
   AuthHttpAPI:
     Type: String
+
+  GoogleClientID:
+    Type: String
+  GoogleClientSecret:
+    Type: String
+  GithubClientID:
+    Type: String
+  GithubClientSecret:
+    Type: String
+
+
 Resources:
   GoogleCognitoUserPoolIdentityProvider:
     Type: AWS::Cognito::UserPoolIdentityProvider
@@ -20,8 +32,8 @@ Resources:
         given_name: given_name
         picture: picture
       ProviderDetails:
-        client_id: 639730110991-9t82efunb20f6m4stek56f6ut9t0kjfu.apps.googleusercontent.com
-        client_secret: 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
+        client_id: !Ref GoogleClientID
+        client_secret: !Ref GoogleClientSecret
         authorize_scopes: profile email openid 
       ProviderType: Google
       UserPoolId:
@@ -32,8 +44,8 @@ Resources:
       UserPoolId: !Ref CognitoUserPool
       ProviderName: github
       ProviderDetails:
-        client_id: 0cec5cf3d1f070b36b63 
-        client_secret: 5929cb027e02330533a587a8e9f5d2e0fd40e48e
+        client_id: !Ref GithubClientID
+        client_secret: !Ref GithubClientSecret
         attributes_request_method: GET
         oidc_issuer: !Sub "https://${AuthHttpAPI}.execute-api.${AWS::Region}.amazonaws.com/${StagePara}"
         authorize_scopes: "openid read:user user:email"
@@ -60,7 +72,7 @@ Resources:
         - !Sub https://${AuthHttpAPI}.execute-api.${AWS::Region}.amazonaws.com/${StagePara}/auth/login_social
       LogoutURLs:
         - http://localhost:3000
-        - !Ref  DomainUserPool
+        - !Ref  DomainDaita
       AllowedOAuthFlows:
         - code
         - implicit

@@ -17,6 +17,8 @@ Parameters:
   
   CertificateUserpoolDomain:
     Type: String
+  DomainUserPool:
+    Type: String
 
 Globals:
   Function:
@@ -163,7 +165,7 @@ Resources:
   # CognitoUserPoolDomain:
   #   Type: AWS::Cognito::UserPoolDomain
   #   Properties:
-  #     Domain: !Sub "auth${StagePara}.daita.tech"
+  #     Domain: !Ref DomainUserPool
   #     UserPoolId: !Ref CognitoUserPool
   #     CustomDomainConfig:
   #       CertificateArn: !Ref CertificateUserpoolDomain

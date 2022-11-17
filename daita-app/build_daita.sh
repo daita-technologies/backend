@@ -20,9 +20,7 @@ parameters_override="Mode=${MODE} Stage=${DAITA_STAGE} Application=${DAITA_APPLI
                     EFSFileSystemId=${EFS_ID} 
                     MaxConcurrencyTasks=${MAX_CONCURRENCY_TASK} 
                     ROOTEFS=${ROOT_EFS} 
-                    DomainUserPool=${DOMAIN_USER_POOL} 
                     VPCid=${VPC_ID} 
-                    LogoutUrl=${LOG_OUT_URL} 
                     CertificateUserpoolDomain=${CERTIFICATE_USERPOLL_DOMAIN} 
                     S3AnnoBucket=${ANNO_S3_BUCKET} 
                     PublicSubnetOne=${PublicSubnetOne} 
@@ -30,7 +28,13 @@ parameters_override="Mode=${MODE} Stage=${DAITA_STAGE} Application=${DAITA_APPLI
                     ContainerSecurityGroup=${ContainerSecurityGroup} 
                     VPC=${VPC} 
                     VPCEndpointSQSDnsEntries=${VPCEndpointSQSDnsEntries}
-                    TokenOauth2BotSlackFeedBack=${OAUTH2BOT_SLACK_FEED_BACK}"
+                    TokenOauth2BotSlackFeedBack=${OAUTH2BOT_SLACK_FEED_BACK}
+                    DomainUserPool=${DOMAIN_USER_POOL} 
+                    DomainDaita=${DOMAIN_DAITA}
+                    GoogleClientID=${GOOGLE_CLIENT_ID}
+                    GoogleClientSecret=${GOOGLE_CLIENT_SECRET}
+                    GithubClientID=${GITHUB_CLIENT_ID}
+                    GithubClientSecret=${GITHUB_CLIENT_SECRET}"
 
 sam build
 sam deploy --no-confirm-changeset --disable-rollback \
