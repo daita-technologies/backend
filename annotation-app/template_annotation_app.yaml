@@ -7,28 +7,17 @@ Description: >
 Parameters:
   Stage:
     Type: String
-    Default: dev
   Application:
     Type: String
-    Default: anno
 
   S3AnnoBucketName:
     Type: String
-    Default: client-annotation-bucket
-  EFSFileSystemId:
-    Type:  String
-    Default: fs-0199771f2dfe97ace
-
-  ### references from daita
   S3DaitaBucketName:
     Type: String
 
   CommonCodeLayerRef:
     Type: String
-    Default: arn:aws:lambda:us-east-2:737589818430:layer:dev-CommonCodeLayer:38
-  LsPrivateSubnetIDs:
-    Type: String
-    Default: 'subnet-0c813a62097b52004,subnet-0ea9f572789e618e8'
+
   CognitoUserPoolRef:
     Type: String
   CognitoIdentityPoolIdRef:

@@ -10,36 +10,28 @@ Parameters:
     Default: staging
   Stage:
     Type: String
-    Default: dev
   Application:
     Type: String
-    Default: daita
 
   SecurityGroupIds:
     Type: String
-    Default: 'sg-0315a5ecee0dc69fe,sg-0b3b2fcc4dc7686ad,sg-af50cbde,sg-07c27f59bc172f180,sg-0796222bd5149736f'
   SubnetIDs:
     Type:  String
-    Default: subnet-31ff5b5a
 
   S3BucketName:
     Type: String
-    Default: daita-client-data
   S3AnnoBucket:
     Type: String
 
   VPCid:
     Type: String
-    Default: vpc-53239e38
   EFSFileSystemId:
     Type:  String
-    Default: fs-0199771f2dfe97ace
   MaxConcurrencyTasks:
     Type: String
     Default: 3
   ROOTEFS:
     Type: String
-    Default: /efs
 
   DomainUserPool:
     Type: String
@@ -344,7 +336,6 @@ Resources:
         ParaTableDataFlowTaskName: !GetAtt DatabaseService.Outputs.TableDataFlowTaskName
         ParaDecompressFileStateMachineArn: !GetAtt DataFlowService.Outputs.DecompressFileStateMachineArn
         ParaCompressDownloadStateMachineArn: !GetAtt DataFlowService.Outputs.CompressDownloadStateMachineArn
-        ParaTableDownloadTaskName: !GetAtt DatabaseService.Outputs.TableDownloadTaskName
         ParaIndexTaskProjectIDTaskID: !GetAtt DatabaseService.Outputs.IndexTaskProjectIDTaskIDName
         ProcessAITaskEventBusArn: !GetAtt  AICallerService.Outputs.ProcessAITaskEventBusArn
         ProcessAITaskEventBusName: !GetAtt  AICallerService.Outputs.ProcessAITaskEventBusName

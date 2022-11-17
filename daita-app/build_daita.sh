@@ -37,7 +37,7 @@ parameters_override="Mode=${MODE} Stage=${DAITA_STAGE} Application=${DAITA_APPLI
                     GithubClientSecret=${GITHUB_CLIENT_SECRET}"
 
 sam build
-sam deploy --no-confirm-changeset --disable-rollback \
+sam deploy --no-confirm-changeset --disable-rollback --resolve-s3 \
         --resolve-image-repos --config-env $DAITA_STAGE \
         --stack-name "$DAITA_STAGE-${DAITA_APPLICATION}-app" \
         --s3-prefix "$DAITA_STAGE-${DAITA_APPLICATION}-app" \

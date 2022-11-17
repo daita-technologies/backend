@@ -501,9 +501,7 @@ Outputs:
   TableProjectSumName:
     Description: "Name of table projects"
     Value: !Ref ProjectSummaryDB
-  TableMethodsName:
-    Description: "Name of table methods"
-    Value: methods
+  
   TableHealthCheckTasksName:
     Description: "Name of table health check tasks"
     Value: !Ref HealthCheckTaskDB
@@ -528,10 +526,11 @@ Outputs:
   TableDataFlowTaskName:
     Description: "Content task of download and upload service"
     Value: !Ref DataFlowTaskTable
-  TableDownloadTaskName:
-    Value: down_tasks
+
   IndexTaskProjectIDTaskIDName:
     Value: !Ref IndexTaskProjectIDTaskIDName
+
+  
   TableGenerateDaitaUploadToken:
     Value: !Ref TableGenerateDaitaUploadToken
   TableConfirmCodeAuth:
@@ -543,9 +542,12 @@ Outputs:
 
   ### For const DB, we will create by code
   TableConstPrebuildDatasetName:
-    Value: const-prebuild_dataset  ##!Ref TableConstPrebuildDataset
+    Value: !Ref TableConstPrebuildDataset
   TableLsEc2Name:
     Value: ec2
+  TableMethodsName:
+    Description: "Name of table methods"
+    Value: methods
     
   TableTask:
     Value: !Ref TableTask
