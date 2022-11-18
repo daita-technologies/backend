@@ -16,6 +16,7 @@ Globals:
       - x86_64
     Environment:
       Variables:
+        CHANNELWEBHOOK: !Ref ChannelWebhook
         AUTH_ENDPOINT: !Ref AuthEndpoint
         STAGE: !Ref StagePara
         TABLE_NAME: global-table
@@ -172,7 +173,8 @@ Parameters:
 
   TokenOauth2BotSlackFeedBack:
     Type: String
-  
+  ChannelWebhook:
+    Type: String
 Resources:
   ThumbnailServiceEventBusRole:
     Type: "AWS::IAM::Role"
@@ -871,7 +873,7 @@ Resources:
           T_DATA_PREPROCESS: !Ref TableDataPreprocessName
           T_DATA_AUGMENT: !Ref TableDataAugmentName
 
-  #### for email related functions
+  # #### for email related functions
   SendEmailIdentityIDFunction:
     Type: AWS::Serverless::Function
     Properties:

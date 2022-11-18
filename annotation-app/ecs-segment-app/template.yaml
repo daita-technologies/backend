@@ -144,4 +144,4 @@ Resources:
 
         TableUserName: !Ref TableUserName
 
-        SendEmailIdentityIDFunction: !Ref SendEmailIdentityIDFunction
+        # SendEmailIdentityIDFunction: !Ref SendEmailIdentityIDFunction

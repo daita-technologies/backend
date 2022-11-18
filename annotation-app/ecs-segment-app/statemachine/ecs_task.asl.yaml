@@ -44,5 +44,14 @@ States:
       Payload:
         input_folder.$ : $$.Execution.Input.input_folder
         records.$: $$.Execution.Input.records
-    End: true   
+    Next: SendEmailSegmentationComplete
+
+  SendEmailSegmentationComplete:
+    Type: Task
+    Resource: 'arn:aws:states:::lambda:invoke'
+    InputPath: $
+    Parameters:
+      FunctionName: '${SendEmailSegmentationComplete}'
+      Payload.$: $
+    End: true
 TimeoutSeconds: 6000

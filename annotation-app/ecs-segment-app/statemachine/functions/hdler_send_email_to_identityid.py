@@ -24,16 +24,15 @@ class SendEmailIdentityIDClass(LambdaBaseClass):
     @LambdaBaseClass.parse_body
     def parser(self, body):
         self.logger.debug(f"body in main_parser: {body}")
-
-        self.identity_id = body["identity_id"]
-        self.message_email = body["message_email"]
-        self.message_email_text = body["message_email_text"]
+        # self.identity_id = body["identity_id"]
+        # self.message_email = body["message_email"]
+        # self.message_email_text = body["message_email_text"]
 
     def _check_input_value(self): 
         return     
 
     def get_mail_User(self, identity_id):
-        resq = table.scan(TableName=self.env.TABLE_USER,
+        resq = table.scan(TableName=os.environ['TABLE_USER'],
         FilterExpression='#id = :id',
         ExpressionAttributeNames=
                         {
@@ -48,7 +47,7 @@ class SendEmailIdentityIDClass(LambdaBaseClass):
         print("User info: ", userInfo)
         if len(userInfo) > 0:
             ID_User = userInfo[0]['ID']['S']
-            response = cognito_client.list_users(UserPoolId = self.env.USER_POOL_ID,
+            response = cognito_client.list_users(UserPoolId = os.environ['USERPOOL'],
                                                      AttributesToGet = ['email'],
                                                      Filter=f'sub=\"{ID_User}\"'
                                                 )
@@ -90,11 +89,10 @@ class SendEmailIdentityIDClass(LambdaBaseClass):
 
     def handle(self, event, context):
         print(event)
-        ### parse body
-        self.parser(event)
-
-        email = self.get_mail_User(self.identity_id)
-        self.send_mail(email, self.message_email, self.message_email_text)
+        data = event['Payload']['data'] 
+        for it in data:
+            email = self.get_mail_User(it['identity_id'])
+            self.send_mail(email, it['message_email'], it['message_email_text'])
 
         return 
 
