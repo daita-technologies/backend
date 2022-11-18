@@ -3,7 +3,7 @@ import os
 class EventUser:
     def __init__(self):
            self.db_client = boto3.resource('dynamodb',region_name=os.environ['REGION'])
-           self.TBL = os.environ['TBL_EVENTUSER']
+           self.TBL = os.environ['TABLE_EVENTUSER']
     def create_item(self,info):
         self.db_client.Table(self.TBL).put_item(Item={
             'event_ID':info['event_ID'],

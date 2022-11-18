@@ -38,6 +38,7 @@ Globals:
         TABLE_PROJECT: !Ref TableProjectsName
         TABLE_TASK: !Ref TableTask
         TABLE_PROJECT_SUMMARY: !Ref TableProjectSumName
+        TABLE_EVENTUSER: !Ref TableEventUser
         MODE: !Ref Mode
         IS_ENABLE_KMS: "False"
     Layers:
@@ -726,6 +727,12 @@ Resources:
         Variables:
           CAPTCHA_SITE_KEY_GOOGLE: !Ref CaptchaSiteKeyGoogle
           CAPTCHA_SECRET_KEY_GOOGLE: !Ref CaptchaSecretKeyGoogle
+
+  LogoutFunction:
+    Type:  AWS::Serverless::Function
+    Properties:
+      CodeUri: functions/handlers/auth_service/logout
+      Role: !GetAtt LambdaExecutionRole.Arn
 
   RegisterFunction:
     Type:  AWS::Serverless::Function
