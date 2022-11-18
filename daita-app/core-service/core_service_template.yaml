@@ -805,6 +805,12 @@ Resources:
     Properties:
       CodeUri: functions/handlers/auth_service/template_mail
       Role: !GetAtt LambdaExecutionRole.Arn
+
+  ReferenceEmailFunction:
+    Type:  AWS::Serverless::Function
+    Properties:
+      CodeUri: functions/handlers/send-mail/reference-email
+      Role:  !GetAtt LambdaExecutionRole.Arn
 #########################################################################################
   SlackWebhookFeedbackFunction:
     Type: AWS::Serverless::Function

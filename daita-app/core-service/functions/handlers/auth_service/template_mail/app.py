@@ -6,7 +6,7 @@ from http import HTTPStatus
 import os
 import boto3
 import cognitojwt
-from error import *
+from error_messages import *
 from response import *
 from config import *
 cog_provider_client = boto3.client('cognito-idp')
@@ -40,7 +40,7 @@ def claimsToken(jwt_token, field):
     print(token)
     try:
         verified_claims = cognitojwt.decode(
-            token, REGION, USERPOOLID
+            token, os.environ['REGION'], USERPOOLID
         )
     except Exception as e:
         print(e)
@@ -51,9 +51,8 @@ def claimsToken(jwt_token, field):
 
 @error_response
 def lambda_handler(event, context):
-    headers = event['headers']['Authorization']
+    headers = event['headers']['authorization']
     authorization_header = headers
-    # authorization_header = {k.lower(): v for k, v in headers.items() if k.lower() == 'authorization'}
     if not len(authorization_header):
         raise Exception(MessageMissingAuthorizationHeader)
     username = claimsToken(authorization_header, 'username')
