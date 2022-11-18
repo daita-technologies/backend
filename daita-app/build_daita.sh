@@ -34,7 +34,10 @@ parameters_override="Mode=${MODE} Stage=${DAITA_STAGE} Application=${DAITA_APPLI
                     GoogleClientID=${GOOGLE_CLIENT_ID}
                     GoogleClientSecret=${GOOGLE_CLIENT_SECRET}
                     GithubClientID=${GITHUB_CLIENT_ID}
-                    GithubClientSecret=${GITHUB_CLIENT_SECRET}"
+                    GithubClientSecret=${GITHUB_CLIENT_SECRET}
+                    OauthEndpoint=${OAUTH_ENPOINT}
+                    CaptchaSiteKeyGoogle=${CAPTCHA_SITE_KEY_GOOGLE}
+                    CaptchaSecretKeyGoogle=${CAPTCHA_SECRET_KEY_GOOGLE}"
 
 sam build
 sam deploy --no-confirm-changeset --disable-rollback --resolve-s3 \

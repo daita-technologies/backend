@@ -29,7 +29,10 @@ STAGE = os.environ['STAGE']
 cog_provider_client = boto3.client('cognito-idp')
 cog_identity_client = boto3.client('cognito-identity')
 # endpoint = 'https://devdaitaloginsocial.auth.us-east-2.amazoncognito.com/oauth2/token'
-endpoint = OAUTHENPOINT
+
+endpoint = os.environ['OAUTH_ENPOINT']
+
+
 TableUser = os.environ['TABLE_USER']
 
 

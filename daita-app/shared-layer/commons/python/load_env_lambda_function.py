@@ -7,6 +7,10 @@ class LambdaEnv():
         self.IDENTITY_POOL_ID = os.environ.get('IDENTITY_POOL', "")
         self.COGNITO_CLIENT_ID = os.environ.get("COGNITO_CLIENT_ID", "")
 
+        self.CAPTCHA_SITE_KEY_GOOGLE = os.environ.get("CAPTCHA_SITE_KEY_GOOGLE", "")
+        self.CAPTCHA_SECRET_KEY_GOOGLE = os.environ.get("CAPTCHA_SECRET_KEY_GOOGLE", "")
+
+
         self.TABLE_ANNO_PROJECT = os.environ.get("TABLE_ANNO_PROJECT", "")
         self.TABLE_ANNO_DATA_ORI = os.environ.get("TABLE_ANNO_DATA_ORI", "")
         self.TABLE_ANNO_PROJECT_SUMMARY = os.environ.get("TABLE_ANNO_PROJECT_SUMMARY", "")

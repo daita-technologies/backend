@@ -176,6 +176,13 @@ Parameters:
     Type: String
   ChannelWebhook:
     Type: String
+  OauthEndpoint:
+    Type: String
+  CaptchaSiteKeyGoogle:
+    Type: String
+  CaptchaSecretKeyGoogle:
+    Type: String
+    
 Resources:
   ThumbnailServiceEventBusRole:
     Type: "AWS::IAM::Role"
@@ -716,6 +723,11 @@ Resources:
     Properties:
       CodeUri: functions/handlers/auth_service/login
       Role: !GetAtt LambdaExecutionRole.Arn
+      Environment:
+        Variables:
+          CAPTCHA_SITE_KEY_GOOGLE: !Ref CaptchaSiteKeyGoogle
+          CAPTCHA_SECRET_KEY_GOOGLE: !Ref CaptchaSecretKeyGoogle
+
   LogoutFunction:
     Type:  AWS::Serverless::Function
     Properties:
@@ -730,6 +742,8 @@ Resources:
       Environment:
         Variables:
           INVOKE_MAIL_LAMBDA: !Ref MailServiceFunction
+          CAPTCHA_SITE_KEY_GOOGLE: !Ref CaptchaSiteKeyGoogle
+          CAPTCHA_SECRET_KEY_GOOGLE: !Ref CaptchaSecretKeyGoogle
 
   LoginRefreshTokenFunction:
     Type:  AWS::Serverless::Function
@@ -748,6 +762,10 @@ Resources:
     Properties:
       CodeUri: functions/handlers/auth_service/confirm_code_forgot_password
       Role: !GetAtt LambdaExecutionRole.Arn
+      Environment:
+        Variables:
+          CAPTCHA_SITE_KEY_GOOGLE: !Ref CaptchaSiteKeyGoogle
+          CAPTCHA_SECRET_KEY_GOOGLE: !Ref CaptchaSecretKeyGoogle
 
   CredentialLoginFunction:
     Type: AWS::Serverless::Function
@@ -757,6 +775,7 @@ Resources:
       Environment:
         Variables:
           TBL_EVENTUSER: !Ref TableEventUser
+          OAUTH_ENPOINT: !Ref OauthEndpoint
 
   ResendCodeAuthConfirmCodeFunction:
     Type: AWS::Serverless::Function
