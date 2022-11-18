@@ -12,7 +12,6 @@ disable_rollback = true
 image_repositories = ["HealthCheckService/CalculateHealthCheckFunction=737589818430.dkr.ecr.us-east-2.amazonaws.com/devdaitabeappb6b54d79/healthcheckservicecalculatehealthcheckfunction6d6be9a4repo", "ReferenceImageService/CalculateReferenceImageFunction=737589818430.dkr.ecr.us-east-2.amazonaws.com/devdaitabeappb6b54d79/referenceimageservicecalculatereferenceimagefunctione6710baarepo"]
 
 [dev.deploy.parameters]
-s3_bucket = "aws-sam-cli-managed-default-samclisourcebucket-eu58g5l8is1s"
 confirm_changeset = true
 capabilities = "CAPABILITY_IAM CAPABILITY_AUTO_EXPAND CAPABILITY_NAMED_IAM"
 disable_rollback = true
