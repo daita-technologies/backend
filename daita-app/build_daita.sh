@@ -37,7 +37,7 @@ parameters_override="Mode=${MODE} Stage=${DAITA_STAGE} Application=${DAITA_APPLI
                     GithubClientSecret=${GITHUB_CLIENT_SECRET}"
 
 sam build
-sam deploy --no-confirm-changeset --disable-rollback \
+sam deploy --no-confirm-changeset --disable-rollback --resolve-s3 \
         --resolve-image-repos --config-env $DAITA_STAGE \
         --stack-name "$DAITA_STAGE-${DAITA_APPLICATION}-app" \
         --s3-prefix "$DAITA_STAGE-${DAITA_APPLICATION}-app" \
@@ -154,6 +154,7 @@ echo "REACT_APP_TASK_API_URL=$ApiDaitaAppUrl" >> $OUTPUT_FE_CONFIG
 echo "REACT_APP_CREATE_PROJECT_SAMPLE=$ApiDaitaAppUrl" >> $OUTPUT_FE_CONFIG
 
 echo "REACT_APP_S3_BUCKET_NAME=$DAITA_S3_BUCKET" >> $OUTPUT_FE_CONFIG
+echo "REACT_APP_S3_BUCKET_ANNOTATION_NAME=$ANNO_S3_BUCKET" >> $OUTPUT_FE_CONFIG
 echo "REACT_APP_S3_REGION=$AWS_REGION" >> $OUTPUT_FE_CONFIG
 
 echo "REACT_APP_RECAPTCHA_SITE_KEY=6LcqEGMeAAAAAAEDnBue7fwR4pmvNO7JKWkHtAjl" >> $OUTPUT_FE_CONFIG

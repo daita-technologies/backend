@@ -49,4 +49,6 @@ MAX_CONCURRENCY_TASK=2
 DOMAIN_USER_POOL=authdev.daita.tech
 DOMAIN_DAITA=https://dev.daita.tech
 
+IMAGE_AI_SEGMENTATION_URL=737589818430.dkr.ecr.us-east-2.amazonaws.com/ai-services-repo:segformer
+
 ####-------------------------------------------------------------

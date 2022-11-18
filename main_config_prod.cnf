@@ -1,46 +1,57 @@
 AWS_REGION=us-east-2
-AWS_ACCOUNT_ID="737589818430"
+AWS_ACCOUNT_ID="366577564432"
 
 OUTPUT_BUILD_DAITA_NAME=output_daita.txt
 OUTPUT_FOR_FE=output_fe_config.txt
 
-###--------------- parameter value ---------------
-###____ do not change this config when you change the env_______
-
-SUB_NET_IDS=subnet-019da2a6738756f88,subnet-0642064673fd68d2e
-SECURITY_GROUP_IDS=sg-0c9a0ca7844d7b128,sg-00d8b4ca79ee1e42f,sg-007caf776eee9bd32,sg-04b9c865721337372,sg-0b411b5391db8d7a3
-VPC_ID=vpc-057803c925fd8138a
-
-
-EFS_ID=fs-01115862a24b75423
-ROOT_EFS=/efs
-
-DAITA_S3_BUCKET=client-data-test
-ANNO_S3_BUCKET=client-annotation-bucket
 DAITA_APPLICATION=daita
 ANNO_APPLICATION=anno
 INFRA_APPLICATION=infra
 
-CERTIFICATE_USERPOLL_DOMAIN=arn:aws:acm:us-east-1:737589818430:certificate/997bd837-32c3-466d-927b-2e1d4dee7bf0
+###--------------- parameter value ---------------
+###____ do not change this config when you change the env_______
 
-MODE=dev
+SUB_NET_IDS=subnet-31ff5b5a
+SECURITY_GROUP_IDS=sg-0315a5ecee0dc69fe,sg-0b3b2fcc4dc7686ad,sg-af50cbde,sg-07c27f59bc172f180,sg-0796222bd5149736f
+VPC_ID=vpc-53239e38
+
+
+EFS_ID=fs-0199771f2dfe97ace
+ROOT_EFS=/efs
+
+DAITA_S3_BUCKET=daita-client-data
+ANNO_S3_BUCKET=annotation-client-data
+
+
+CERTIFICATE_USERPOLL_DOMAIN=arn:aws:acm:us-east-1:366577564432:certificate/269684d4-7c34-472a-a9fc-b41ed7612591
+
+MODE=prod
+
+OAUTH2BOT_SLACK_FEED_BACK=xoxb-1117947584070-4388501155699-kEtvbOiFTEVEqVEUEREYj0IY
+
+GOOGLE_CLIENT_ID=639730110991-p66c4enhi3sbd6o41uq4o2ct4l1it8k6.apps.googleusercontent.com
+GOOGLE_CLIENT_SECRET=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
+GITHUB_CLIENT_ID=107117788aa64f363ee5
+GITHUB_CLIENT_SECRET=c054671d4091df5d5e327b630b50e40d0db1de6d
 
 
 ###__________________________________
 ###__________________________________
 
-###-------config for dev env--------------------------------------
+###-------config for prod env--------------------------------------
 ###---------------------------------------------------------------
 IS_BUILD_DAITA=yes
 IS_BUILD_ANNOTATION=yes
 
-DAITA_STAGE=dev
-ANNOTATION_STAGE=dev
+DAITA_STAGE=prod
+ANNOTATION_STAGE=prod
 CAPABILITIES="CAPABILITY_IAM CAPABILITY_AUTO_EXPAND CAPABILITY_NAMED_IAM"
 
 MAX_CONCURRENCY_TASK=2
 
-DOMAIN_USER_POOL=authdev.daita.tech
-LOG_OUT_URL=http://localhost:3000,https://dev.daita.tech
+DOMAIN_USER_POOL=auth.daita.tech
+DOMAIN_DAITA=https://app.daita.tech
+
+IMAGE_AI_SEGMENTATION_URL=366577564432.dkr.ecr.us-east-2.amazonaws.com/ai-services-repo:segformer
 
 ####-------------------------------------------------------------

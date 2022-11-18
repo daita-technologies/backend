@@ -12,7 +12,7 @@ OUTPUT_FE_CONFIG=$3
 cd annotation-app
 
 parameters_override="Stage=${ANNOTATION_STAGE} Application=${ANNO_APPLICATION} 
-                    S3AnnoBucketName=${ANNO_S3_BUCKET} EFSFileSystemId=${EFS_ID}
+                    S3AnnoBucketName=${ANNO_S3_BUCKET}
                     CommonCodeLayerRef=${CommonCodeLayerRef} CognitoUserPoolRef=${CognitoUserPoolRef} 
                     CognitoIdentityPoolIdRef=${CognitoIdentityPoolIdRef}
                     TableDaitaProjectsName=${TableDaitaProjectsName}
@@ -27,7 +27,8 @@ parameters_override="Stage=${ANNOTATION_STAGE} Application=${ANNO_APPLICATION}
                     EFSFileSystemId=${EFSFileSystemId}
                     EFSAccessPoint=${EFSAccessPoint}
                     EFSAccessPointArn=${EFSAccessPointArn}
-                    SendEmailIdentityIDFunction=${SendEmailIdentityIDFunction}"
+                    SendEmailIdentityIDFunction=${SendEmailIdentityIDFunction}
+                    ImageAISegmentationUrl=${IMAGE_AI_SEGMENTATION_URL}"
 
 sam build --template-file template_annotation_app.yaml
 sam deploy --template-file template_annotation_app.yaml --no-confirm-changeset --disable-rollback \

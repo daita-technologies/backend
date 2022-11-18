@@ -25,6 +25,8 @@ Globals:
         TABLE_GENERATE_TASK: !Ref TableGenerateTaskName
         TABLE_METHODS_NAME: !Ref TableMethodsName
         TABLE_HEALTHCHECK_TASK: !Ref TableHealthCheckTasksName
+        TABLE_DATA_FLOW_TASK: !Ref ParaTableDataFlowTaskName
+        TABLE_REFERENCE_IMAGE_TASK: !Ref TableReferenceImageTasksName
         TABLE_HEALTHCHECK_INFO: !Ref TableHealthCheckInfoName
         INDEX_TASK_PROJECTID_TASKID: !Ref ParaIndexTaskProjectIDTaskID
         TABLE_CONFIRM_CODE: !Ref TableConfirmCodeAuth
@@ -75,8 +77,6 @@ Parameters:
   TableProjectsName:
     Type: String
   TableMethodsName:
-    Type: String
-  ParaTableDownloadTaskName:
     Type: String
   TableProjectSumName:
     Type: String

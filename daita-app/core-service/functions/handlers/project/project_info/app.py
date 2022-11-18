@@ -126,13 +126,11 @@ class ProjectInfoCls(LambdaBaseClass):
             ls_tasks = get_running_task(
                 os.environ['TABLE_TASK'], db_resource, ls_tasks, identity_id, res_projectid)
             ls_tasks = get_running_task(
-                "down_tasks", db_resource, ls_tasks, identity_id, res_projectid)
+                os.environ["TABLE_HEALTHCHECK_TASK"], db_resource, ls_tasks, identity_id, res_projectid, "HEALTHCHECK")
             ls_tasks = get_running_task(
-                "dev-healthcheck-tasks", db_resource, ls_tasks, identity_id, res_projectid, "HEALTHCHECK")
+                os.environ["TABLE_DATA_FLOW_TASK"], db_resource, ls_tasks, identity_id, res_projectid)
             ls_tasks = get_running_task(
-                "dev-dataflow-task", db_resource, ls_tasks, identity_id, res_projectid)
-            ls_tasks = get_running_task(
-                "dev-reference-image-tasks", db_resource, ls_tasks, identity_id, res_projectid)
+                os.environ["TABLE_REFERENCE_IMAGE_TASK"], db_resource, ls_tasks, identity_id, res_projectid)
 
             return convert_response({'data': {
                 "identity_id": identity_id,
