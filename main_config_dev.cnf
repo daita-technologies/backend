@@ -37,6 +37,8 @@ OAUTH_ENPOINT=https://authdev.daita.tech/oauth2/token
 CAPTCHA_SITE_KEY_GOOGLE=6LfR4ioiAAAAAH7RrdcoRQLiNbKFpFMNH2nqG8fv
 CAPTCHA_SECRET_KEY_GOOGLE=6LfR4ioiAAAAAPR6AwPkkg3xAENhqK83hr1caBk7
 
+MAX_SIZE_EC2_AUTOSCALING_ECS=2
+
 ###__________________________________
 ###__________________________________
 

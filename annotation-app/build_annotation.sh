@@ -28,7 +28,8 @@ parameters_override="Stage=${ANNOTATION_STAGE} Application=${ANNO_APPLICATION}
                     EFSAccessPoint=${EFSAccessPoint}
                     EFSAccessPointArn=${EFSAccessPointArn}
                     SendEmailIdentityIDFunction=${SendEmailIdentityIDFunction}
-                    ImageAISegmentationUrl=${IMAGE_AI_SEGMENTATION_URL}"
+                    ImageAISegmentationUrl=${IMAGE_AI_SEGMENTATION_URL}
+                    MaxSizeEc2AutoScallEcs=${MAX_SIZE_EC2_AUTOSCALING_ECS}"
 
 sam build --template-file template_annotation_app.yaml
 sam deploy --template-file template_annotation_app.yaml --no-confirm-changeset --disable-rollback \

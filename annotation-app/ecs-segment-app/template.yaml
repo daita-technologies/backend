@@ -11,7 +11,8 @@ Parameters:
   
   ImageAISegmentationUrl:
     Type: String
-    Default: 737589818430.dkr.ecr.us-east-2.amazonaws.com/ai-services-repo:segformer
+  MaxSizeEc2AutoScallEcs:
+    Type: String
   
   ApplicationPara:
     Type: String
@@ -128,6 +129,7 @@ Resources:
         TableAnnoDataOriginalName: !Ref TableAnnoDataOriginalName
         AITaskDefinitionArn: !GetAtt ECSServiceApplication.Outputs.TaskAISegmenationDefinition
         AITaskECSClusterArn: !GetAtt ECSServiceApplication.Outputs.ECSCluster
+        MaxSizeEc2AutoScallEcs: !Ref MaxSizeEc2AutoScallEcs
         ### For network infra
         SecurityGroup: !Ref ContainerSecurityGroup
         PublicSubnetOne: !Ref PublicSubnetOne

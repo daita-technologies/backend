@@ -39,9 +39,8 @@ Parameters:
   EC2Role:
     Type: String
 
-  MaxSize:
+  MaxSizeEc2AutoScallEcs:
     Type: Number
-    Default: '2'
 
   ExecuteArn:
     Type: String
@@ -80,7 +79,7 @@ Resources:
       LaunchConfigurationName: !Ref 'ContainerInstances'
       NewInstancesProtectedFromScaleIn: false #if true this block scale in termination completely
       MinSize: '0'
-      MaxSize: !Ref 'MaxSize'
+      MaxSize: !Ref 'MaxSizeEc2AutoScallEcs'
       DesiredCapacity: 0
 
   EC2InstanceProfile:
