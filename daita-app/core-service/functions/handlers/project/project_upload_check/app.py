@@ -6,10 +6,10 @@ import hmac
 import base64
 import os
 from utils import convert_response, aws_get_identity_id
+import const
 
 
 MAX_NUMBER_ITEM_QUERY = 1000
-MAX_NUM_IMAGES_IN_ORIGINAL = 1000
 USERPOOLID = os.environ['COGNITO_USER_POOL']
 CLIENTPOOLID = os.environ['COGNITO_CLIENT_ID']
 IDENTITY_POOL = os.environ['IDENTITY_POOL']
@@ -91,9 +91,9 @@ class ProjectUploadCheckCls(LambdaBaseClass):
                 current_num_data = response['Item'].get('count', 0)
             else:
                 current_num_data = 0
-            if len(self.ls_batch_request)-len(ls_data)+current_num_data > MAX_NUM_IMAGES_IN_ORIGINAL:
+            if len(self.ls_batch_request)-len(ls_data)+current_num_data > const.MAX_NUM_IMAGES_IN_ORIGINAL:
                 raise (Exception(
-                    f'The number of images in original of project is over the limitation {MAX_NUM_IMAGES_IN_ORIGINAL}!'))
+                    f'The number of images should not exceed {const.MAX_NUM_IMAGES_IN_ORIGINAL}!'))
 
         except Exception as e:
             print('Error: ', repr(e))

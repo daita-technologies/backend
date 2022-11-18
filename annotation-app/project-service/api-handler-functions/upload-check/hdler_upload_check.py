@@ -13,6 +13,7 @@ from error_messages import *
 from models.annotaition.anno_project_sum_model import AnnoProjectSumModel
 from models.annotaition.anno_data_model import AnnoDataModel
 from response import *
+import const
 
 
 class ProjectUploadUpdateClass(LambdaBaseClass):
@@ -45,11 +46,10 @@ class ProjectUploadUpdateClass(LambdaBaseClass):
         ls_data = self.model_data.get_item_from_list(self.project_id, self.ls_filename)
         
         # check available image is over the limitation
-        MAX_NUM_IMAGES_IN_ORIGINAL = 1000
         current_num_data = self.model_project_sum.get_current_number_data_in_prj(self.project_id)
-        if len(self.ls_filename)-len(ls_data)+current_num_data > MAX_NUM_IMAGES_IN_ORIGINAL:
+        if len(self.ls_filename)-len(ls_data)+current_num_data > const.MAX_NUM_IMAGES_IN_ORIGINAL:
             raise (Exception(
-                f'The number of images in original of project is over the limitation {MAX_NUM_IMAGES_IN_ORIGINAL}!'))
+                f'The number of images should not exceed {const.MAX_NUM_IMAGES_IN_ORIGINAL}!'))
 
         return convert_response({
             'data': ls_data,
