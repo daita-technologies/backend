@@ -73,9 +73,6 @@ Parameters:
   CognitoUserPoolRef:
     Type: String
 
-  # SendEmailIdentityIDFunction:
-  #   Type: String
-
 Globals:
   Function:
     Timeout: 800   

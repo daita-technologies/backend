@@ -115,6 +115,7 @@ Resources:
         PublicSubnetOne: !Ref PublicSubnetOne
         PublicSubnetTwo: !Ref PublicSubnetTwo
         ContainerSecurityGroup: !Ref ContainerSecurityGroup
+        MaxSizeEc2AutoScallEcs: !Ref MaxSizeEc2AutoScallEcs
         
   ECSControllerApplication:
     Type: AWS::Serverless::Application
@@ -129,7 +130,6 @@ Resources:
         TableAnnoDataOriginalName: !Ref TableAnnoDataOriginalName
         AITaskDefinitionArn: !GetAtt ECSServiceApplication.Outputs.TaskAISegmenationDefinition
         AITaskECSClusterArn: !GetAtt ECSServiceApplication.Outputs.ECSCluster
-        MaxSizeEc2AutoScallEcs: !Ref MaxSizeEc2AutoScallEcs
         ### For network infra
         SecurityGroup: !Ref ContainerSecurityGroup
         PublicSubnetOne: !Ref PublicSubnetOne
