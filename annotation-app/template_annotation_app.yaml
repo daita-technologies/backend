@@ -55,6 +55,8 @@ Parameters:
 
   ImageAISegmentationUrl:
     Type: String
+  MaxSizeEc2AutoScallEcs:
+    Type: String
 
 Resources:
 
