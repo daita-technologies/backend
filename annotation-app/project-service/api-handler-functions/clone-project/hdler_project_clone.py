@@ -50,8 +50,8 @@ class ProjectCloneClass(LambdaBaseClass):
             # check length of projectname and project info
             if len(self.anno_project_name) > const.MAX_LENGTH_PROJECT_NAME_INFO:
                 raise Exception(const.MES_LENGTH_OF_PROJECT_NAME)
-            # if len(self.project_info) > const.MAX_LENGTH_PROJECT_NAME_INFO:
-            #     raise Exception(const.MES_LENGTH_OF_PROJECT_INFO)
+            if len(self.project_info) > const.MAX_LENGTH_PROJECT_DESCRIPTION:
+                raise Exception(const.MES_LENGTH_OF_PROJECT_INFO)
         except Exception as e:
             print('Error: ', repr(e))
             raise Exception(repr(e))

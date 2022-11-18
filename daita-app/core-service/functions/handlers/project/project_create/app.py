@@ -42,7 +42,7 @@ class CreateProject(LambdaBaseClass):
             # check length of projectname and project info
             if len(self.project_name) > const.MAX_LENGTH_PROJECT_NAME_INFO:
                 raise Exception(const.MES_LENGTH_OF_PROJECT_NAME)
-            if len(self.project_info) > const.MAX_LENGTH_PROJECT_NAME_INFO:
+            if len(self.project_info) > const.MAX_LENGTH_PROJECT_DESCRIPTION:
                 raise Exception(const.MES_LENGTH_OF_PROJECT_INFO)
 
             num_prj=get_num_prj(identity_id)

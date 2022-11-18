@@ -61,7 +61,7 @@ MessageErrorInvalidExtension = "Invalid extension of file attachment!"
 MESS_ERR_INVALID_PREBUILD_DATASET_NAME = "The prebuild dataset {} is not valid now."
 
 MES_LENGTH_OF_PROJECT_NAME = 'Length of project name must smaller than {}.'
-MES_LENGTH_OF_PROJECT_INFO = 'Length of project description must smaller than {}.'
+# MES_LENGTH_OF_PROJECT_INFO = 'Length of project description must smaller than {}.'
 MES_REACH_LIMIT_NUM_PRJ = 'You have reached the threshold of {} custom projects per user.'
 MES_DUPLICATE_PROJECT_NAME = "{} already exists. Please choose another name."
 MES_REACH_LIMIT_AUGMENT = "You have reached the threshold of {} augmentation runs per project."

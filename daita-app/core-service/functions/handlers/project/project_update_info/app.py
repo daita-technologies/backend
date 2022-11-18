@@ -33,7 +33,7 @@ class ProjectUpdateCls(LambdaBaseClass):
         # check length of projectname and project info
         if len(self.new_prj_name) > const.MAX_LENGTH_PROJECT_NAME_INFO:
             raise Exception(const.MES_LENGTH_OF_PROJECT_NAME)
-        if len(self.new_description) > const.MAX_LENGTH_PROJECT_NAME_INFO:
+        if len(self.new_description) > const.MAX_LENGTH_PROJECT_DESCRIPTION:
             raise Exception(const.MES_LENGTH_OF_PROJECT_INFO)
 
     def handle(self, event, context):

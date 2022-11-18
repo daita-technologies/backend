@@ -15,9 +15,10 @@ SAMPLE_PROJECT_NAME = 'Driving Dataset Sample'  # 'prj_sample' #
 SAMPLE_PROJECT_DESCRIPTION = 'An open-source autonomous driving dataset sample to kick-start.'
 
 MAX_LENGTH_PROJECT_NAME_INFO = 75
+MAX_LENGTH_PROJECT_DESCRIPTION = 300
 
 MES_LENGTH_OF_PROJECT_NAME = f'Length of project name must smaller than {MAX_LENGTH_PROJECT_NAME_INFO}.'
-MES_LENGTH_OF_PROJECT_INFO = f'Length of project description must smaller than {MAX_LENGTH_PROJECT_NAME_INFO}.'
+MES_LENGTH_OF_PROJECT_INFO = f'Length of project description must smaller than {MAX_LENGTH_PROJECT_DESCRIPTION}.'
 MES_REACH_LIMIT_NUM_PRJ = f'You have reached the threshold of {MAX_NUM_PRJ_PER_USER} custom projects per user.'
 MES_DUPLICATE_PROJECT_NAME = "{} already exists. Please choose another name."
 MES_REACH_LIMIT_AUGMENT = "You have reached the threshold of {} augmentation runs per project."

@@ -23,7 +23,7 @@ DAITA_S3_BUCKET=daita-client-data
 ANNO_S3_BUCKET=annotation-client-data
 
 
-CERTIFICATE_USERPOLL_DOMAIN=arn:aws:acm:us-east-1:366577564432:certificate/269684d4-7c34-472a-a9fc-b41ed7612591
+CERTIFICATE_USERPOLL_DOMAIN=arn:aws:acm:us-east-1:366577564432:certificate/8c1361ca-e287-4171-91ba-472b28b9c69a
 
 MODE=prod
 
