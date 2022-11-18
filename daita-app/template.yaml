@@ -65,6 +65,12 @@ Parameters:
   ChannelWebhook:
     Type: String
     Default: user-feedback
+  OauthEndpoint:
+    Type: String
+  CaptchaSiteKeyGoogle:
+    Type: String
+  CaptchaSecretKeyGoogle:
+    Type: String
     
 Resources:
   #=============== SYSTEM PARAMETER CONFIGURATON ==============================
@@ -383,6 +389,9 @@ Resources:
         ### For token
         TokenOauth2BotSlackFeedBack: !Ref TokenOauth2BotSlackFeedBack
         ChannelWebhook: !Ref ChannelWebhook
+        OauthEndpoint: !Ref OauthEndpoint
+        CaptchaSiteKeyGoogle: !Ref CaptchaSiteKeyGoogle
+        CaptchaSecretKeyGoogle: !Ref CaptchaSecretKeyGoogle
 
   HealthCheckService:
     Type: AWS::Serverless::Application

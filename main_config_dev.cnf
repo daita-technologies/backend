@@ -32,6 +32,11 @@ GOOGLE_CLIENT_SECRET=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
 GITHUB_CLIENT_ID=0cec5cf3d1f070b36b63
 GITHUB_CLIENT_SECRET=5929cb027e02330533a587a8e9f5d2e0fd40e48e
 
+OAUTH_ENPOINT=https://authdev.daita.tech/oauth2/token
+
+CAPTCHA_SITE_KEY_GOOGLE=6LfR4ioiAAAAAH7RrdcoRQLiNbKFpFMNH2nqG8fv
+CAPTCHA_SECRET_KEY_GOOGLE=6LfR4ioiAAAAAPR6AwPkkg3xAENhqK83hr1caBk7
+
 ###__________________________________
 ###__________________________________
 

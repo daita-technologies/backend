@@ -54,7 +54,7 @@ class ForgotPasswordClass(LambdaBaseClass):
         self.parser(event)
 
         try:
-            verify_captcha(self.captcha)
+            verify_captcha(self.captcha, self.env.CAPTCHA_SITE_KEY_GOOGLE, self.env.CAPTCHA_SECRET_KEY_GOOGLE)
         except Exception as exc:
             raise Exception(MessageCaptchaFailed) from exc
 
