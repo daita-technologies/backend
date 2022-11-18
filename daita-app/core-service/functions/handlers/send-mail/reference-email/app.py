@@ -1,16 +1,12 @@
 import json
 import boto3
-import hashlib
-import hmac
-import base64
 import os
-import uuid
 from botocore.exceptions import ClientError
 
 from utils import convert_response
 from config import *
 
-USERPOOLID = os.environ['COGNITO_CLIENT_ID']
+USERPOOLID = os.environ['COGNITO_USER_POOL']
 
 
 def get_email(user):

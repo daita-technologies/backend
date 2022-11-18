@@ -139,7 +139,7 @@ paths:
         type: "aws_proxy"
         payloadFormatVersion: "2.0"
   /auth/template-invite-mail:
-    post:
+    get:
       responses:
         default:
           description: "Auth service transport"
@@ -148,6 +148,19 @@ paths:
           Fn::GetAtt: [ApiGatewayCallLambdaRole, Arn]
         uri:
           Fn::Sub: arn:${AWS::Partition}:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${TemplateMailInviteFriendFunction.Arn}/invocations
+        httpMethod: "POST"
+        type: "aws_proxy"
+        payloadFormatVersion: "2.0"
+  /send-mail/reference-email:
+    post:
+      responses:
+        default:
+          description: "Auth service transport"
+      x-amazon-apigateway-integration:
+        credentials:
+          Fn::GetAtt: [ApiGatewayCallLambdaRole, Arn]
+        uri:
+          Fn::Sub: arn:${AWS::Partition}:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${ReferenceEmailFunction.Arn}/invocations
         httpMethod: "POST"
         type: "aws_proxy"
         payloadFormatVersion: "2.0"
