@@ -47,6 +47,19 @@ paths:
         httpMethod: "POST"
         type: "aws_proxy"
         payloadFormatVersion: "2.0"
+  /auth/user_logout:
+    post:
+      responses:
+        default:
+          description: "log out"
+      x-amazon-apigateway-integration:
+        credentials:
+          Fn::GetAtt: [ApiGatewayCallLambdaRole, Arn]
+        uri:
+          Fn::Sub: arn:${AWS::Partition}:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${LogoutFunction.Arn}/invocations
+        httpMethod: "POST"
+        type: "aws_proxy"
+        payloadFormatVersion: "2.0"
   /auth/user_login:
     post:
       responses:
