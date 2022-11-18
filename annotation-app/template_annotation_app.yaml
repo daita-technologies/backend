@@ -248,6 +248,7 @@ Resources:
         SendEmailIdentityIDFunction: !Ref SendEmailIdentityIDFunction
         ### for ecs
         ImageAISegmentationUrl: !Ref ImageAISegmentationUrl
+        MaxSizeEc2AutoScallEcs: !Ref MaxSizeEc2AutoScallEcs
 
 Outputs:
   ApiAnnoAppUrl:
