@@ -73,14 +73,18 @@ def send_mail(identity_id, project_name):
 
     print("send email to identityid: ", identity_id)
 
-    response = invoke_lambda_func(os.environ["FUNC_SEND_EMAIL_IDENTITY_NAME"],
-                                    {
-                                        "identity_id": identity_id,
-                                        "message_email": message_email,
-                                        "message_email_text": message_email_text
-                                    })
+    # response = invoke_lambda_func(os.environ["FUNC_SEND_EMAIL_IDENTITY_NAME"],
+    #                                 {
+    #                                     "identity_id": identity_id,
+    #                                     "message_email": message_email,
+    #                                     "message_email_text": message_email_text
+    #                                 })
     
-    return
+    return  {
+                "identity_id": identity_id,
+                "message_email": message_email,
+                "message_email_text": message_email_text
+    }
 
 def invoke_lambda_func(function_name, body_info, type_request="RequestResponse"):
     lambdaInvokeClient = boto3.client('lambda')
@@ -102,11 +106,9 @@ def check_finish(project_id):
         if len(ls_projectResponse)>0:
             projectResponse = ls_projectResponse[0]
             identity_id = projectResponse['identity_id']
-            project_name = projectResponse['project_name']
-            
-            # send_mail(identity_id, project_name)
-    
-    return
+            project_name = projectResponse['project_name']     
+            return send_mail(identity_id, project_name)
+    return None 
 
 
 @error_response
@@ -115,10 +117,12 @@ def lambda_handler(event, context):
     output_folder = os.path.join(os.environ['EFSPATH'],output_folder)
 
     print(event['records'])
-    
+    result = {'data':[]}
     for index , it in enumerate(event['records']):
         with open(os.path.join(output_folder,str(index)+'.json'),'r') as f:
             s3_key = upload_segmentation_s3(f.read(),s3_key=it['s3_key'])
             update_s3_gen(it['project_id'], it['filename'],s3_key)
-            check_finish(it['project_id'])
-    return {}
+            response = check_finish(it['project_id'])
+            if response  != None:
+                result['data'].append(response)
+    return result

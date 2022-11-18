@@ -27,6 +27,7 @@ RESPONSE_HEADER = {
     "Access-Control-Allow-Creentials": "true",
     "Access-Control-Allow-Methods": "GET, HEAD, OPTIONS, POST, PUT",
 }
+CHANNELWEBHOOK = '#'+ str(os.environ['CHANNELWEBHOOK'])
 ############################################################################################################
 s3 = boto3.client('s3')
 
@@ -101,7 +102,8 @@ def claimsToken(jwt_token, field):
 
 @error_response
 def lambda_handler(event, context):
-    headers = event['headers']['Authorization']
+    print(event)
+    headers = event['headers']['authorization']
     authorization_header = headers
     token = authorization_header.replace('Bearer ', '')
     feedbackDB = Feedback()
@@ -164,7 +166,7 @@ def lambda_handler(event, context):
         print(e)
         raise Exception(e)
     print(f'Debug Feedback{message}')
-    # postMessageWithFiles(message, fileList, CHANNELWEBHOOK)
+    postMessageWithFiles(message, fileList, CHANNELWEBHOOK)
     dir.cleanup()
     return generate_response(
         message=MessageSendFeedbackSuccessfully,

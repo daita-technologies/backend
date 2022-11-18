@@ -62,6 +62,9 @@ Parameters:
     Type: String
   GithubClientSecret:
     Type: String
+  ChannelWebhook:
+    Type: String
+    Default: user-feedback
     
 Resources:
   #=============== SYSTEM PARAMETER CONFIGURATON ==============================
@@ -379,6 +382,7 @@ Resources:
         AuthEndpoint: !GetAtt CognitoUserPool.Outputs.AuthHttpAPI
         ### For token
         TokenOauth2BotSlackFeedBack: !Ref TokenOauth2BotSlackFeedBack
+        ChannelWebhook: !Ref ChannelWebhook
 
   HealthCheckService:
     Type: AWS::Serverless::Application
