@@ -60,8 +60,8 @@ class ProjectUpdateCls(LambdaBaseClass):
             )
             if res_project.get('Item', None):
                 current_info = res_project['Item']
-                if len(new_description) == 0:
-                    new_description = current_info['project_info']
+                if len(self.new_description) == 0:
+                    self.new_description = current_info['project_info']
 
                 if len(self.new_prj_name) > 0:
                     # check new name exist or not
@@ -78,7 +78,7 @@ class ProjectUpdateCls(LambdaBaseClass):
                             const.MES_PROJECT_ALREADY_EXIST.format(self.new_prj_name))
                     else:
                         # add new project
-                        current_info['project_info'] = new_description
+                        current_info['project_info'] = self.new_description
                         current_info['project_name'] = self.new_prj_name
                         table.put_item(
                             Item=current_info
@@ -100,7 +100,7 @@ class ProjectUpdateCls(LambdaBaseClass):
                             'project_name': self.project_name,
                         },
                         ExpressionAttributeValues={
-                            ':de': new_description
+                            ':de': self.new_description
                         },
                         UpdateExpression='SET project_info = :de'
                     )
@@ -123,7 +123,7 @@ class ProjectUpdateCls(LambdaBaseClass):
                     "is_sample": current_info['is_sample'],
                     "gen_status": current_info['gen_status'],
                     "project_name": current_info['project_name'],
-                    "description": new_description
+                    "description": self.new_description
                 },
                 "error": False,
                 "success": True,
