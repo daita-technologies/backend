@@ -224,6 +224,10 @@ Resources:
         TaskAIPreprocessingDefinition: !GetAtt ECSAICallerApp.Outputs.TaskAIPreprocessingDefinition
         TaskAIAugmentationDefinition: !GetAtt ECSAICallerApp.Outputs.TaskAIAugmentationDefinition
         FuncProjectUploadUpdate: !GetAtt ProjectService.Outputs.FuncProjectUploadUpdate
+        ReferenceImageStateMachineArn: !GetAtt ReferenceImageService.Outputs.ReferenceImageStateMachineArn
+        RICalculateFunction: !GetAtt ReferenceImageService.Outputs.RICalculateFunction
+        RIStatusFunction: !GetAtt ReferenceImageService.Outputs.RIStatusFunction
+        RIInfoFunction: !GetAtt ReferenceImageService.Outputs.RIInfoFunction
 
   DataFlowService:
     Type: AWS::Serverless::Application
@@ -356,6 +360,9 @@ Resources:
         TableReferenceImageTasksName: !GetAtt DatabaseService.Outputs.TableReferenceImageTasksName
         TableReferenceImageInfoName: !GetAtt DatabaseService.Outputs.TableReferenceImageInfoName
         ReferenceImageEventBusName: !GetAtt ReferenceImageService.Outputs.ReferenceImageEventBusName
+        RICalculateFunctionArn: !GetAtt ReferenceImageService.Outputs.RICalculateFunctionArn
+        RIStatusFunctionArn: !GetAtt ReferenceImageService.Outputs.RIStatusFunctionArn
+        RIInfoFunctionArn: !GetAtt ReferenceImageService.Outputs.RIInfoFunctionArn
         ####### Data Preprocess Table
         TableDataPreprocessName: !GetAtt DatabaseService.Outputs.TableDataPreprocessName
         MaxConcurrencyTasks: !Ref MaxConcurrencyTasks
@@ -408,6 +415,7 @@ Resources:
         CommonCodeLayerName: !Ref CommonCodeLayer
         ApplicationPara: !Ref Application
         Mode: !Ref Mode
+
   ReferenceImageService:
     Type: AWS::Serverless::Application
     Properties:
@@ -424,6 +432,9 @@ Resources:
         BatchsizeCalculateReferenceImage: !Ref BatchsizeCalculateReferenceImage
         MaxWidthResolutionImage: !Ref MaxWidthResolutionImage
         MaxHeightResolutionImage: !Ref MaxHeightResolutionImage
+        CognitoUserPoolClient: !GetAtt CognitoClient.Outputs.UserPoolClientId
+        CognitoUserPool: !GetAtt CognitoUserPool.Outputs.UserPool
+        CognitoIdentityPoolId: !GetAtt IdentityPool.Outputs.IdentityPool
         Mode: !Ref Mode
 
   ECSAICallerApp:

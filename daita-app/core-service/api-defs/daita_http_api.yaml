@@ -581,7 +581,7 @@ paths:
         credentials:
           Fn::GetAtt: [ApiGatewayCallLambdaRole, Arn]
         uri:
-          Fn::Sub: arn:${AWS::Partition}:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${RICalculateFunction.Arn}/invocations
+          Fn::Sub: arn:${AWS::Partition}:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${RICalculateFunctionArn}/invocations
         httpMethod: "POST"
         type: "aws_proxy"
         payloadFormatVersion: "2.0"
@@ -595,7 +595,7 @@ paths:
         credentials:
           Fn::GetAtt: [ApiGatewayCallLambdaRole, Arn]
         uri:
-          Fn::Sub: arn:${AWS::Partition}:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${RIStatusFunction.Arn}/invocations
+          Fn::Sub: arn:${AWS::Partition}:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${RIStatusFunctionArn}/invocations
         httpMethod: "POST"
         type: "aws_proxy"
         payloadFormatVersion: "2.0"
@@ -609,7 +609,7 @@ paths:
         credentials:
           Fn::GetAtt: [ApiGatewayCallLambdaRole, Arn]
         uri:
-          Fn::Sub: arn:${AWS::Partition}:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${RIInfoFunction.Arn}/invocations
+          Fn::Sub: arn:${AWS::Partition}:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${RIInfoFunctionArn}/invocations
         httpMethod: "POST"
         type: "aws_proxy"
         payloadFormatVersion: "2.0"

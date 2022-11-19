@@ -60,7 +60,7 @@ class ReferenceImageClass(LambdaBaseClass):
         self.parser(event)
 
         ### check identity
-        identity_id = self.get_identity(self.id_token)  
+        identity_id = self.get_identity(self.id_token, self.env.USER_POOL_ID, self.env.IDENTITY_POOL_ID)  
 
         ### create taskID and update to DB
         task_id, process_type = self._create_task(identity_id, self.project_id, self.project_name, self.ls_method_id, self.ls_method_client_choose)

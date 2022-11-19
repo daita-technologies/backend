@@ -59,4 +59,4 @@ class LambdaBaseClass(object):
             InvocationType=type_request,
         )
 
-        return lambdaInvokeReq['Payload'].read()
+        return json.loads(lambdaInvokeReq['Payload'].read().decode("utf-8"))

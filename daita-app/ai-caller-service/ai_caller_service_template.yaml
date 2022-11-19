@@ -82,6 +82,14 @@ Parameters:
 
   FuncProjectUploadUpdate:
     Type: String
+  ReferenceImageStateMachineArn:
+    Type: String
+  RICalculateFunction:
+    Type: String
+  RIStatusFunction:
+    Type: String
+  RIInfoFunction:
+    Type: String
 
   ### for const table group
   TableLsEc2Name:
@@ -246,6 +254,12 @@ Resources:
     Type: AWS::Serverless::Function
     Properties:
       CodeUri: functions/handlers/download_task/get_reference_images
+      Environment:
+        Variables:
+          REFERENCE_IMAGE_SM_ARN: !Ref ReferenceImageStateMachineArn
+          FUNC_RI_CALCULATION: !Ref RICalculateFunction
+          FUNC_RI_STATUS: !Ref RIStatusFunction
+          FUNC_RI_INFO: !Ref RIInfoFunction
       Policies:
       - Statement:
         - Effect: Allow
@@ -297,6 +311,7 @@ Resources:
             - s3:GetObject
             - s3:PutObject
             - s3:PutObjectAcl
+            - states:*
           Resource: "*"
   StopTaskStop:
     Type:  AWS::Serverless::Function

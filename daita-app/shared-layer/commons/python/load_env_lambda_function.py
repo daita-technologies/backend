@@ -40,3 +40,7 @@ class LambdaEnv():
         self.IS_USE_ECS_AI_CALLER_FLOW = os.environ.get("IS_USE_ECS_AI_CALLER_FLOW", False)
         self.AI_CALLER_ECS_SM_ARN = os.environ.get("AI_CALLER_ECS_SM_ARN", "")
 
+        self.FUNC_RI_CALCULATION = os.environ.get("FUNC_RI_CALCULATION", "")
+        self.FUNC_RI_STATUS = os.environ.get("FUNC_RI_STATUS", "")
+        self.FUNC_RI_INFO = os.environ.get("FUNC_RI_INFO", "")
+
