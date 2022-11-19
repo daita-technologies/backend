@@ -21,7 +21,7 @@ RESPONSE_HEADER = {
 def invokeUploadUpdateFunc(info):
     lambdaInvokeClient = boto3.client('lambda')
     lambdaInvokeReq = lambdaInvokeClient.invoke(
-        FunctionName='staging-project-upload-update',
+        FunctionName=os.environ['LAMBDA_UPLOAD_UPDATE'],
         Payload=json.dumps({'body': info}),
         InvocationType="RequestResponse",
     )
@@ -30,7 +30,7 @@ def invokeUploadUpdateFunc(info):
 def invokeUploadCheck(info):
     lambdaInvokeClient = boto3.client('lambda')
     lambdaInvokeReq = lambdaInvokeClient.invoke(
-        FunctionName='staging-project-upload-check',
+        FunctionName=os.environ['LAMBDA_UPLOAD_CHECK'],
         Payload=json.dumps({'body': info}),
         InvocationType="RequestResponse",
     )
@@ -83,7 +83,7 @@ def lambda_handler(event, context):
             error=True)
 
     countSumAllPrj = int(prjSumAllResp['count'])
-    if countSumAllPrj + len(filenames) >= 1000:
+    if countSumAllPrj + len(filenames) >= 5000:
         return generate_response(
             message="Limited",
             data={},
