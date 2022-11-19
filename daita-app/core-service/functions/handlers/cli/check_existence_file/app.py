@@ -13,7 +13,7 @@ generate_daita_upload_token_model = GenerateDaitaUploadTokenModel(
 def invokeUploadUpdateFunc(info):
     lambdaInvokeClient = boto3.client('lambda')
     lambdaInvokeReq = lambdaInvokeClient.invoke(
-        FunctionName='staging-project-upload-check',
+        FunctionName=os.environ['LAMBDA_UPDATE_CHECK'],
         Payload=json.dumps({'body': info}),
         InvocationType="RequestResponse",
     )

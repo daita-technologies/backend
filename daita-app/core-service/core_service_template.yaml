@@ -475,6 +475,7 @@ Resources:
       Environment:
         Variables:
           T_GEN_DAITA_UPLOAD_TOKEN: !Ref TableGenerateDaitaUploadToken
+          LAMBDA_UPDATE_CHECK: !Ref ProjectUpdateCheckFunction
   CreatePresignUrlFunction:
     Type: AWS::Serverless::Function
     Properties:
@@ -501,6 +502,8 @@ Resources:
         Variables:
           T_GEN_DAITA_UPLOAD_TOKEN: !Ref TableGenerateDaitaUploadToken
           TABLE_PROJECT_SUMMARY: !Ref TableProjectSumName
+          LAMBDA_UPLOAD_UPDATE: !Ref FuncProjectUploadUpdateArn
+          LAMBDA_UPLOAD_CHECK: !Ref ProjectUpdateCheckFunction
   GenertateTokenUploadProjectFunction:
     Type: AWS::Serverless::Function
     Properties:

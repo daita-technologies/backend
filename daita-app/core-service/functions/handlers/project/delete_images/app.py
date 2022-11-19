@@ -33,26 +33,27 @@ def delete_reference_images(db_resource,identity_id,project_id,deletedfilename):
     )
     with table_project.batch_writer() as batch:
         for each in queryResponse['Items']:
-            reference_images = each['reference_images']
-            new_reference_image = {}
-            for k , v in reference_images.items():
-                if not deletedfilename in v :
-                    new_reference_image[k] = v
-            
-            resp = table_project.update_item(
-                                    Key={
-                                        'project_name': each['project_name'],
-                                        'identity_id': identity_id ,
-                                    },
-                                    ExpressionAttributeNames= {
-                                        '#r': 'reference_images',
-                                    },
-                                    ExpressionAttributeValues = {
-                                        ':r':  new_reference_image
-                                    },
-                                    UpdateExpression = 'SET #r = :r' 
-                                )
-            print(resp)
+            if 'reference_images' in each:
+                reference_images = each['reference_images']
+                new_reference_image = {}
+                for k , v in reference_images.items():
+                    if not deletedfilename in v :
+                        new_reference_image[k] = v
+                
+                resp = table_project.update_item(
+                                        Key={
+                                            'project_name': each['project_name'],
+                                            'identity_id': identity_id ,
+                                        },
+                                        ExpressionAttributeNames= {
+                                            '#r': 'reference_images',
+                                        },
+                                        ExpressionAttributeValues = {
+                                            ':r':  new_reference_image
+                                        },
+                                        UpdateExpression = 'SET #r = :r' 
+                                    )
+                print(resp)
             
     
 def lambda_handler(event, context):
@@ -116,11 +117,12 @@ def lambda_handler(event, context):
                     'project_id': project_id,
                     'filename': request['filename']
                 })
+                print(f'log debug delete {item}')
                 try:
                     delete_reference_images(db_resource=db_resource,identity_id=identity_id,project_id=project_id,deletedfilename=request['filename'])
                 except Exception as e:
                     print(e)
-                if ('healthcheck_id' in item['Item']) and (not item['Item']['healthcheck_id'] is None or  isinstance(item['Item']['healthcheck_id'],str)):
+                if 'Item' in item and ('healthcheck_id' in item['Item']) and (not item['Item']['healthcheck_id'] is None or  isinstance(item['Item']['healthcheck_id'],str)):
                     delete_image_healthycheck_info(db_resource=db_resource,project_id=project_id,healthcheck_id=item['Item']['healthcheck_id'])
                 
                 table.delete_item(Key={
