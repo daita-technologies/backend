@@ -91,31 +91,43 @@ def lambda_handler(event, context):
             error=True)
 
     folder = os.path.join(identity_id, project_id)
-
-    for it in filenames:
-        basename = os.path.basename(it)
-        data[basename] = generate_presigned_url(
-            object_keyname=os.path.join(folder, basename))
     ls_filename = []
     for objectS3 in ls_object_info:
         objectS3['s3_key'] = os.path.join(
             bucket, os.path.join(folder, objectS3['filename']))
         ls_filename.append(objectS3['filename'])
-    invokeUploadUpdateFunc(json.dumps({
-        "id_token": id_token,
-        "project_id": project_id,
-        "project_name": project_name,
-        "ls_object_info":  ls_object_info
-    }))
-    invokeUploadCheck(json.dumps(
-        {
+    try :
+        invokeUploadUpdateFunc(json.dumps({
             "id_token": id_token,
-            "ls_filename": ls_filename,
-            "project_id": project_id
-        }
-    ))
+            "project_id": project_id,
+            "project_name": project_name,
+            "ls_object_info":  ls_object_info
+        }))
+    except Exception as e :
+        return generate_response(
+        message="Failed Invoke Upload Update: {}".format(e),
+        data=data,
+        headers=RESPONSE_HEADER,
+        error=True
+    )
+    try:
+        invokeUploadCheck(json.dumps(
+            {
+                "id_token": id_token,
+                "ls_filename": ls_filename,
+                "project_id": project_id
+            }
+        ))
+    except Exception as e :
+        return generate_response(
+        message="Failed Invoke Upload Check: {}".format(e),
+        data=data,
+        headers=RESPONSE_HEADER,
+        error=True
+    )
     return generate_response(
         message="Generate presign Url S3 successfully",
         data=data,
-        headers=RESPONSE_HEADER
+        headers=RESPONSE_HEADER,
+        error=False
     )

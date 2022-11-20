@@ -40,18 +40,17 @@ def lambda_handler(event, context):
             data={},
             headers=RESPONSE_HEADER,
             error=True)
-    info = json.dumps({
+    innvokeBodyLambda = json.dumps({
         'id_token': info['id_token'],
         'project_id': info['project_id'],
         'project_name': info['project_name'],
         'type_method': "ORIGINAL",
         'file_url': s3
     })
-    responseInvokeLambda = invokeLambda(info)
-    print(responseInvokeLambda)
+    responseInvokeLambda = invokeLambda(innvokeBodyLambda)
     responseInvokeLambda['data']['id_token'] = info['id_token']
     return generate_response(
         message="Create decompress task successfully!",
         data=responseInvokeLambda,
         headers=RESPONSE_HEADER,
-        error=True)
+        error=False)
