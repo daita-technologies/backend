@@ -10,7 +10,9 @@ from utils import *
 from models.generate_daita_upload_token import GenerateDaitaUploadTokenModel
 generate_daita_upload_token_model = GenerateDaitaUploadTokenModel(
     os.environ['T_GEN_DAITA_UPLOAD_TOKEN'])
-
+USERPOOLID = os.environ['COGNITO_USER_POOL']
+CLIENTPOOLID = os.environ['COGNITO_CLIENT_ID']
+IDENTITY_POOL = os.environ['IDENTITY_POOL']
 
 def lambda_handler(event, context):
 
@@ -28,7 +30,7 @@ def lambda_handler(event, context):
             error=True)
 
     try:
-        identity_id = aws_get_identity_id(id_token)
+        identity_id =  aws_get_identity_id(id_token, USERPOOLID, IDENTITY_POOL)
     except Exception as e:
         print(e)
         return generate_response(
