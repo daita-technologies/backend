@@ -8,12 +8,12 @@ Parameters:
     Type: String
   ApplicationPara:
     Type: String
+
   SecurityGroupIds:
-    Type: String
-    Default: 'sg-af50cbde'
-  SubnetId:
-    Type: String
-    Default: subnet-31ff5b5a
+    Type: CommaDelimitedList
+  SubnetIds:
+    Type: CommaDelimitedList
+
   EFSFileSystemId:
     Type:  String
     Default: fs-0199771f2dfe97ace
@@ -26,15 +26,12 @@ Parameters:
     Type: String
   TableMethodsName:
     Type: String
-  TableDataOriginal:
+  TableDataOriginalName:
     Type: String
-    Default: data_original
-  TableDataAugment:
+  TableDataAugmentName:
     Type: String
-    Default: data_augment
-  TableDataPreprocess:
+  TableDataPreprocessName:
     Type: String
-    Default: data_preprocess
   VPCEndpointForS3:
     Type: String
   VPCEndpointForDynamoDB:
@@ -48,6 +45,8 @@ Parameters:
     Type: String
     Default: 'noreply@daita.tech'
   CommonCodeLayerName:
+    Type: String
+  Mode:
     Type: String
   # CompressedByLambdaMaxinumNrOfFiles:
   #   Type: Number
@@ -63,7 +62,9 @@ Globals:
       - x86_64
     Layers:
       - !Ref CommonCodeLayerName
-
+    Environment:
+      Variables:
+        MODE: !Ref Mode
 
 Resources:
   #================ ROLES =====================================================
@@ -107,7 +108,7 @@ Resources:
       DefinitionSubstitutions:
         CompressDownloadTaskCluster: !GetAtt CompressDownloadTaskCluster.Arn
         CompressDownloadTask: !Ref CompressDownloadTask
-        SubnetId: !Ref SubnetId
+        SubnetIds: !Join [',', !Ref SubnetIds]
         SendCompletedMailFunction: !GetAtt SendCompletedMailFunction.Arn
         DivideDownloadKeysFunction: !GetAtt DivideDownloadKeysFunction.Arn
         DownloadFilesFunction: !GetAtt DownloadFilesFunction.Arn
@@ -196,9 +197,9 @@ Resources:
             Resource: "*"
       Environment:
         Variables:
-          TableDataOriginal: !Ref TableDataOriginal
-          TableDataAugment: !Ref TableDataAugment
-          TableDataPreprocess: !Ref TableDataPreprocess
+          TableDataOriginal: !Ref TableDataOriginalName
+          TableDataAugment: !Ref TableDataAugmentName
+          TableDataPreprocess: !Ref TableDataPreprocessName
           CHUNK_SIZE: 8
 
   DownloadFilesFunction:
@@ -207,10 +208,8 @@ Resources:
       CodeUri: functions/download_files
       Timeout: 120
       VpcConfig:
-        SecurityGroupIds:
-          - !Ref SecurityGroupIds
-        SubnetIds:
-          - !Ref SubnetId
+        SecurityGroupIds: !Split [',', !Join [',', !Ref SecurityGroupIds]] 
+        SubnetIds: !Split [',', !Join [',', !Ref SubnetIds]] 
       FileSystemConfigs:
         - Arn: !GetAtt EFSAccessPoint.Arn
           LocalMountPath: !Ref EFSMountPath
@@ -228,10 +227,8 @@ Resources:
       CodeUri: functions/compress
       Timeout: 600
       VpcConfig:
-        SecurityGroupIds:
-          - !Ref SecurityGroupIds
-        SubnetIds:
-          - !Ref SubnetId
+        SecurityGroupIds: !Split [',', !Join [',', !Ref SecurityGroupIds]] 
+        SubnetIds: !Split [',', !Join [',', !Ref SubnetIds]] 
       FileSystemConfigs:
         - Arn: !GetAtt EFSAccessPoint.Arn
           LocalMountPath: !Ref EFSMountPath
@@ -281,15 +278,15 @@ Resources:
     Properties:
       RequiresCompatibilities:
         - "FARGATE"
-      ExecutionRoleArn: arn:aws:iam::366577564432:role/ecsTaskExecutionRole #TODO:create this in template
-      TaskRoleArn: arn:aws:iam::366577564432:role/DecompressTaskRole #TODO:create this in template
+      ExecutionRoleArn: !Sub "arn:aws:iam::${AWS::AccountId}:role/ecsTaskExecutionRole" #TODO:create this in template
+      TaskRoleArn: !Sub "arn:aws:iam::${AWS::AccountId}:role/DecompressTaskRole" #TODO:create this in template
       Cpu: 256
       Memory: 512
       NetworkMode: awsvpc
       ContainerDefinitions:
         -
           Name: "compress-download"
-          Image: !Sub "366577564432.dkr.ecr.${AWS::Region}.amazonaws.com/${CompressDownloadEcrRepositoryName}:latest"
+          Image: !Sub "${AWS::AccountId}.dkr.ecr.${AWS::Region}.amazonaws.com/${CompressDownloadEcrRepositoryName}:latest"
           Cpu: 256
           Memory: 512
           Environment:

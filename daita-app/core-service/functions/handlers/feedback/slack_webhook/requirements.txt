@@ -1,0 +1,4 @@
+cognitojwt
+slack-sdk
+requests
+pytz

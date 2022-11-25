@@ -1,0 +1,274 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: >
+  daita-reference-image-service
+
+  Sample SAM Template for daita-reference-image-service
+
+
+Parameters:
+  minimumLogLevel:
+    Type: String
+    Default: DEBUG
+  Mode:
+    Type: String
+    Default: dev
+
+  StagePara:
+    Type: String
+  ApplicationPara:
+    Type: String
+
+  CommonCodeLayerRef:
+    Type: String
+  LambdaRoleArn:
+    Type: String
+
+  TableAnnoDataOriginalName:
+    Type: String 
+  TableAnnoProjectSumName:
+    Type: String
+  TableAnnoProjectsName:
+    Type: String
+  TableCategoryInfoName:
+    Type: String
+  TableAIDefaultClassInfoName:
+    Type: String
+  TableClassInfoName:
+    Type: String
+  TableDeletedProjectName:
+    Type: String
+  
+  TableConfigParametersLambdaName:
+    Type: String
+
+  TableDaitaProjectsName:
+    Type: String
+  TableDaitaDataOriginalName:
+    Type: String
+
+  CognitoUserPoolRef:
+    Type: String
+  CognitoIdentityPoolIdRef:
+    Type: String
+
+  S3AnnoBucketName:
+    Type: String
+  S3DaitaBucketName:
+    Type: String
+
+Globals:
+  Function:
+    Timeout: 800   
+    Runtime: python3.8
+    Architectures:
+      - x86_64 
+    Layers:
+      - !Ref CommonCodeLayerRef
+    Environment:
+      Variables:
+        STAGE: !Ref StagePara        
+        LOGGING: !Ref minimumLogLevel  
+        MODE: !Ref Mode
+
+        TABLE_ANNO_PROJECT_SUMMARY: !Ref TableAnnoProjectSumName
+        TABLE_ANNO_PROJECT: !Ref TableAnnoProjectsName
+        TABLE_ANNO_DATA_ORI: !Ref TableAnnoDataOriginalName
+        TABLE_ANNO_CATEGORY_INFO: !Ref TableCategoryInfoName
+        TABLE_ANNO_AI_DEFAULT_CLASS: !Ref TableAIDefaultClassInfoName
+        TABLE_ANNO_CLASS_INFO: !Ref TableClassInfoName
+        TABLE_ANNO_DELETED_PRJ: !Ref TableDeletedProjectName
+
+        TABLE_DAITA_PROJECT: !Ref TableDaitaProjectsName
+        TABLE_DAITA_DATA_ORIGINAL: !Ref TableDaitaDataOriginalName
+
+        TABLE_CONFIG_PARA_LAMBDA: !Ref TableConfigParametersLambdaName
+        
+        COGNITO_USER_POOL: !Ref CognitoUserPoolRef
+        IDENTITY_POOL: !Ref CognitoIdentityPoolIdRef
+
+        S3_ANNO_BUCKET_NAME: !Ref S3AnnoBucketName
+        S3_DAITA_BUCKET_NAME: !Ref S3DaitaBucketName
+
+Resources:
+  #================ LAMBDA API FUNCTIONS ==========================================
+  ProjectCloneFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: api-handler-functions/clone-project
+      Handler: hdler_project_clone.lambda_handler
+      Role: !Ref LambdaRoleArn
+      MemorySize: 256
+      Environment:
+        Variables:
+          SM_CLONE_PROJECT_ARN: !GetAtt CloneProjectSM.Arn
+  
+  FunctionGetProjectInfo:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: api-handler-functions/get-project-info
+      Handler: hdler_get_project_info.lambda_handler
+      Role: !Ref LambdaRoleArn
+      MemorySize: 256
+
+  FunctionProjectListData:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: api-handler-functions/list-data
+      Handler: hdler_list_data.lambda_handler
+      Role: !Ref LambdaRoleArn
+      MemorySize: 256
+  
+  FunctionListProject:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: api-handler-functions/list-project
+      Handler: hdler_list_project.lambda_handler
+      Role: !Ref LambdaRoleArn
+      MemorySize: 256
+
+  FunctionUploadCheck:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: api-handler-functions/upload-check
+      Handler: hdler_upload_check.lambda_handler
+      Role: !Ref LambdaRoleArn
+      MemorySize: 256
+
+  FunctionUploadUpdate:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: api-handler-functions/upload-update
+      Handler: hdler_upload_update.lambda_handler
+      Role: !Ref LambdaRoleArn
+      MemorySize: 256
+
+  FuncDeleteProject:
+    Type: AWS::Serverless::Function 
+    Properties:
+      Handler: hdler_delete_project.lambda_handler
+      CodeUri: api-handler-functions/delete-project
+      Role: !Ref LambdaRoleArn
+      MemorySize: 256
+
+  FunctionCheckAISegmentationProgress:
+    Type: AWS::Serverless::Function 
+    Properties:
+      Handler: hdler_check_si_segm_progress.lambda_handler
+      CodeUri: api-handler-functions/check-ai-segmentation
+      Role: !Ref LambdaRoleArn
+      MemorySize: 256
+  
+          
+  #================ LAMBDA STEP FUNCTIONS ==========================================
+  FuncMoveS3Data:
+    Type: AWS::Serverless::Function 
+    Properties:
+      Timeout: 900
+      Handler: hdler_move_s3_data.lambda_handler
+      CodeUri: statemachine/clone_project_data/functions
+      Role: !Ref LambdaRoleArn
+      MemorySize: 256
+
+  FuncUpdateInputData:
+    Type: AWS::Serverless::Function 
+    Properties:
+      Handler: hdler_update_input_data.lambda_handler
+      CodeUri: statemachine/clone_project_data/functions
+      Role: !Ref LambdaRoleArn
+      MemorySize: 256
+
+  FuncUpdateSumaryDatabase:
+    Type: AWS::Serverless::Function 
+    Properties:
+      Handler: hdler_update_sumary_db.lambda_handler
+      CodeUri: statemachine/clone_project_data/functions
+      Role: !Ref LambdaRoleArn
+      MemorySize: 256
+  
+
+  #================ PROCESSOR STATE MACHINE ===================================
+  CloneProjectSMLogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties: 
+      LogGroupName: !Sub "/aws/vendedlogs/states/${StagePara}-${ApplicationPara}-CloneProject"
+      RetentionInDays: 7
+
+  CloneProjectSM:
+    Type: AWS::Serverless::StateMachine
+    Properties:
+      Type: STANDARD
+      Name: !Sub "${StagePara}-${ApplicationPara}-CloneProjectSM"
+      Policies:
+        - LambdaInvokePolicy:
+            FunctionName: !Ref FuncMoveS3Data
+        - LambdaInvokePolicy:
+            FunctionName: !Ref FuncUpdateInputData
+        - LambdaInvokePolicy:
+            FunctionName: !Ref FuncUpdateSumaryDatabase
+        - Statement: 
+          - Sid: CloudWatchLogsPolicy
+            Effect: Allow
+            Action:
+            - "logs:CreateLogDelivery"
+            - "logs:GetLogDelivery"
+            - "logs:UpdateLogDelivery"
+            - "logs:DeleteLogDelivery"
+            - "logs:ListLogDeliveries"
+            - "logs:PutResourcePolicy"
+            - "logs:DescribeResourcePolicies"
+            - "logs:DescribeLogGroup"
+            - "logs:DescribeLogGroups"
+            Resource: "*"
+          - Sid: CloudWatchEventsFullAccess
+            Effect: Allow
+            Action:
+            - "events:*"
+            Resource: "*"
+          - Sid: IAMPassRoleForCloudWatchEvents
+            Effect: Allow
+            Action:
+            - "iam:PassRole"
+            Resource: "arn:aws:iam::*:role/AWS_Events_Invoke_Targets"
+      Tracing:
+        Enabled: true
+      DefinitionUri: ./statemachine/clone_project_data/sm_clone_project.asl.yaml
+      Logging:
+        Level: ALL
+        IncludeExecutionData: true
+        Destinations:
+        - CloudWatchLogsLogGroup:
+            LogGroupArn: !GetAtt CloneProjectSMLogGroup.Arn
+      DefinitionSubstitutions:
+        Arn_FuncMoveS3Data: !GetAtt FuncMoveS3Data.Arn
+        Arn_FuncUpdateInputData: !GetAtt FuncUpdateInputData.Arn
+        Arn_FuncUpdateSumaryDatabase: !GetAtt FuncUpdateSumaryDatabase.Arn
+  
+
+Outputs:
+  # ServerlessRestApi is an implicit API created out of Events key under Serverless::Function
+  # Find out more about other implicit resources you can reference within SAM
+  # https://github.com/awslabs/serverless-application-model/blob/master/docs/internals/generated_resources.rst#api 
+  ProjectCloneFunctionArn:
+    Description: "ProjectCloneFunctionArn"
+    Value: !GetAtt ProjectCloneFunction.Arn
+  
+  FunctionGetProjectInfoArn:
+    Value: !GetAtt FunctionGetProjectInfo.Arn
+
+  FunctionProjectListDataArn:
+    Value: !GetAtt FunctionProjectListData.Arn
+
+  FunctionListProjectArn:
+    Value: !GetAtt FunctionListProject.Arn
+  FuncDeleteProject:
+    Value: !GetAtt  FuncDeleteProject.Arn
+
+  FunctionUploadCheckArn:
+    Value: !GetAtt FunctionUploadCheck.Arn
+  FunctionUploadUpdateArn:
+    Value: !GetAtt FunctionUploadUpdate.Arn
+
+  FunctionCheckAISegmentationProgressArn:
+    Value: !GetAtt FunctionCheckAISegmentationProgress.Arn
+  

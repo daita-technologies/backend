@@ -19,7 +19,8 @@ def deploy_lambda_auth(general_info, lambda_service):
                                                                         ],
                                                                        {
                                                                            'USER_POOL_ID': general_info['USER_POOL_ID'],
-                                                                           'IDENTITY_POOL_ID': general_info['IDENTITY_POOL_ID']
+                                                                           'IDENTITY_POOL_ID': general_info['IDENTITY_POOL_ID'],
+                                                                           'MODE': general_info['MODE']
                                                                        },
                                                                        'logout.lambda_handler',
                                                                        'staging: logout')
@@ -38,7 +39,8 @@ def deploy_lambda_auth(general_info, lambda_service):
                                                                        {
                                                                            'USER_POOL_ID': general_info['USER_POOL_ID'],
                                                                            'IDENTITY_POOL_ID': general_info['IDENTITY_POOL_ID'],
-                                                                           'IS_ENABLE_KMS': general_info['IS_ENABLE_KMS']
+                                                                           'IS_ENABLE_KMS': general_info['IS_ENABLE_KMS'],
+                                                                           'MODE': general_info['MODE']
 
                                                                        },
                                                                        'login.lambda_handler',
@@ -56,7 +58,8 @@ def deploy_lambda_auth(general_info, lambda_service):
                                                                         ],
                                                                        {
                                                                            'USER_POOL_ID': general_info['USER_POOL_ID'],
-                                                                           'IDENTITY_POOL_ID': general_info['IDENTITY_POOL_ID']
+                                                                           'IDENTITY_POOL_ID': general_info['IDENTITY_POOL_ID'],
+                                                                           'MODE': general_info['MODE']
                                                                        },
                                                                        'register.lambda_handler',
                                                                        'staging: register')
@@ -76,7 +79,8 @@ def deploy_lambda_auth(general_info, lambda_service):
                                                                        {
                                                                            'USER_POOL_ID': general_info['USER_POOL_ID'],
                                                                            'IDENTITY_POOL_ID': general_info['IDENTITY_POOL_ID'],
-                                                                           'IS_ENABLE_KMS': general_info['IS_ENABLE_KMS']
+                                                                           'IS_ENABLE_KMS': general_info['IS_ENABLE_KMS'],
+                                                                           'MODE': general_info['MODE']
                                                                        },
                                                                        'login_social.lambda_handler',
                                                                        'staging: login_social')
@@ -95,7 +99,8 @@ def deploy_lambda_auth(general_info, lambda_service):
                                                                        {
                                                                            'USER_POOL_ID': general_info['USER_POOL_ID'],
                                                                            'IDENTITY_POOL_ID': general_info['IDENTITY_POOL_ID'],
-                                                                           'IS_ENABLE_KMS': general_info['IS_ENABLE_KMS']
+                                                                           'IS_ENABLE_KMS': general_info['IS_ENABLE_KMS'],
+                                                                           'MODE': general_info['MODE']
                                                                        },
                                                                        'credential_login.lambda_handler',
                                                                        'staging: credential_login')
@@ -111,7 +116,8 @@ def deploy_lambda_auth(general_info, lambda_service):
                                                                         ],
                                                                        {
                                                                            'USER_POOL_ID': general_info['USER_POOL_ID'],
-                                                                           'IDENTITY_POOL_ID': general_info['IDENTITY_POOL_ID']
+                                                                           'IDENTITY_POOL_ID': general_info['IDENTITY_POOL_ID'],
+                                                                           'MODE': general_info['MODE']
                                                                        },
                                                                        'template_mail.lambda_handler',
                                                                        'staging: template_mail')
@@ -126,7 +132,8 @@ def deploy_lambda_auth(general_info, lambda_service):
                                                                         ],
                                                                        {
                                                                            'USER_POOL_ID': general_info['USER_POOL_ID'],
-                                                                           'IDENTITY_POOL_ID': general_info['IDENTITY_POOL_ID']
+                                                                           'IDENTITY_POOL_ID': general_info['IDENTITY_POOL_ID'],
+                                                                           'MODE': general_info['MODE']
                                                                        },
                                                                        'resend_confirmcode.lambda_handler',
                                                                        'staging: template_mail')
@@ -141,7 +148,8 @@ def deploy_lambda_auth(general_info, lambda_service):
                                                                         ],
                                                                        {
                                                                            'USER_POOL_ID': general_info['USER_POOL_ID'],
-                                                                           'IDENTITY_POOL_ID': general_info['IDENTITY_POOL_ID']
+                                                                           'IDENTITY_POOL_ID': general_info['IDENTITY_POOL_ID'],
+                                                                           'MODE': general_info['MODE']
                                                                        },
                                                                        'auth_confirm.lambda_handler',
                                                                        'staging: auth_confirm')
@@ -160,7 +168,8 @@ def deploy_lambda_auth(general_info, lambda_service):
                                                                        ],
                                                                        {
                                                                            'USER_POOL_ID': general_info['USER_POOL_ID'],
-                                                                           'IDENTITY_POOL_ID': general_info['IDENTITY_POOL_ID']
+                                                                           'IDENTITY_POOL_ID': general_info['IDENTITY_POOL_ID'],
+                                                                           'MODE': general_info['MODE']
                                                                        },
                                                                        'forgot_password.lambda_handler',
                                                                        'staging: forgot password')
@@ -179,7 +188,8 @@ def deploy_lambda_auth(general_info, lambda_service):
                                                                        ],
                                                                        {
                                                                            'USER_POOL_ID': general_info['USER_POOL_ID'],
-                                                                           'IDENTITY_POOL_ID': general_info['IDENTITY_POOL_ID']
+                                                                           'IDENTITY_POOL_ID': general_info['IDENTITY_POOL_ID'],
+                                                                           'MODE': general_info['MODE']
                                                                        },
                                                                        'confirm_code_forgot_password.lambda_handler',
                                                                        'staging: confirm code after request forgot password')
@@ -198,7 +208,8 @@ def deploy_lambda_auth(general_info, lambda_service):
                                                                        ],
                                                                        {
                                                                            'USER_POOL_ID': general_info['USER_POOL_ID'],
-                                                                           'IDENTITY_POOL_ID': general_info['IDENTITY_POOL_ID']
+                                                                           'IDENTITY_POOL_ID': general_info['IDENTITY_POOL_ID'],
+                                                                           'MODE': general_info['MODE']
                                                                        },
                                                                        'login_refresh_token.lambda_handler',
                                                                        'staging: Get refresh Token')
@@ -215,7 +226,9 @@ def deploy_lambda_auth(general_info, lambda_service):
                                                                            PROJECT_DIR.joinpath(
                                                                                "packages"),
                                                                        ],
-                                                                       env_vari={},
+                                                                       env_vari={
+                                                                           'MODE': general_info['MODE']
+                                                                       },
                                                                        handler='github_openid_token_wrapper.lambda_handler',
                                                                        description='staging: Wrapper for Github token api to comply with Cognito OpenID')
     add_lambda_info_to_list(ls_lambda_val, lambda_uri,
@@ -231,7 +244,9 @@ def deploy_lambda_auth(general_info, lambda_service):
                                                                            PROJECT_DIR.joinpath(
                                                                                "packages"),
                                                                        ],
-                                                                       env_vari={},
+                                                                       env_vari={
+                                                                           'MODE': general_info['MODE']
+                                                                       },
                                                                        handler='github_openid_userinfo_wrapper.lambda_handler',
                                                                        description='staging: Wrapper for Github userinfo api to comply with Cognito OpenID')
     add_lambda_info_to_list(ls_lambda_val, lambda_uri,

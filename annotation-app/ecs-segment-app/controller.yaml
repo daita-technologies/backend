@@ -1,0 +1,226 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: >
+  daita-caller-service-app
+  Sample SAM Template for daita-caller-service-app
+## The general rule seems to be to use !Sub for in line substitutions and !ref for stand alone text
+Parameters:
+
+  StagePara:
+    Type: String
+    Default: test
+
+  ApplicationPara:
+    Type: String
+    Default: ecstask
+
+  AITaskECSClusterArn:
+    Type: String
+
+  AITaskDefinitionArn:
+    Type: String
+  
+  TableAnnoDataOriginalNameStream:
+    Type: String
+  
+  TableUserName:
+    Type: String
+
+  CommonCodeLayerRef:
+    Type: String
+
+  LambdaRoleArn:
+    Type: String
+
+  SecurityGroup:
+    Type: String
+  PublicSubnetOne:
+    Type: String
+  PublicSubnetTwo:
+    Type: String
+  VPCEndpointSQSDnsEntries:
+    Type: String
+
+  EFSAccessPointArn:
+    Type: String
+  EFSAccessPointRootPath:
+    Type: String
+    Default: /mnt/data
+  
+  Mode:
+    Type: String
+    Default: dev
+ 
+  minimumLogLevel:
+    Type: String
+    Default: DEBUG
+
+  ContainerName:
+    Type: String
+
+  ContainerMount:
+    Type: String
+
+
+
+  TableAnnoDataOriginalName:
+    Type: String
+  TableAnnoProjectsName:
+    Type: String
+  
+  CognitoIdentityPoolIdRef:
+    Type: String
+  CognitoUserPoolRef:
+    Type: String
+
+Globals:
+  Function:
+    Timeout: 800   
+    Runtime: python3.8
+    Architectures:
+      - x86_64
+    Layers:
+      - !Ref CommonCodeLayerRef
+    Environment:
+      Variables:
+        STAGE: !Ref StagePara
+        MODE: !Ref Mode
+        LOGGING: !Ref minimumLogLevel
+        USERPOOL: !Ref CognitoUserPoolRef
+        IDENTIYPOOL: !Ref CognitoIdentityPoolIdRef
+        CONTAINER_NAME: !Ref ContainerName
+        CONTAINER_MOUNT: !Ref ContainerMount
+        SQS_VPC_ENDPOINT: !Ref VPCEndpointSQSDnsEntries
+        REGION: !Ref 'AWS::Region'
+
+
+Resources:
+##############################################################
+  LogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties: 
+      LogGroupName: !Sub "/aws/vendedlogs/states/${StagePara}-${ApplicationPara}-ecs-segmentation-logs"
+      RetentionInDays: 7
+
+  HandleECSTaskStatemachine:
+    Type: AWS::Serverless::StateMachine
+    Properties:
+      Type: STANDARD
+      Name: !Sub "${StagePara}-${ApplicationPara}-Run-ECS-task-Segment"
+      Policies:
+        - LambdaInvokePolicy:
+            FunctionName: !Ref DownloadS3toEFSFunction
+            FunctionName: !Ref UploadImage
+            FunctionName: !Ref SendEmailSegmentationComplete
+        - Statement: 
+          - Sid: CloudWatchLogsPolicy
+            Effect: Allow
+            Action:
+            - "logs:*"
+            Resource: "*"
+          - Sid: CloudWatchEventsFullAccess
+            Effect: Allow
+            Action:
+              - "events:*"
+              - "ecs:*"
+              - "iam:PassRole"
+              - "s3:*"
+              - "lambda:InvokeFunction"
+              - "ses:*"
+              - cognito-identity:*
+              - cognito-idp:*
+            Resource: "*"
+          - Sid: IAMPassRoleForCloudWatchEvents
+            Effect: Allow
+            Action:
+              - "iam:PassRole"
+            Resource: "arn:aws:iam::*:role/AWS_Events_Invoke_Targets"
+      Tracing:
+        Enabled: true
+      DefinitionUri: ./statemachine/ecs_task.asl.yaml
+      Logging:
+        Level: ALL
+        IncludeExecutionData: true
+        Destinations:
+        - CloudWatchLogsLogGroup:
+            LogGroupArn: !GetAtt LogGroup.Arn
+      DefinitionSubstitutions:
+        AITaskECSClusterArn: !Ref AITaskECSClusterArn
+        AITaskDefinitionArn: !Ref AITaskDefinitionArn
+        SecurityGroupIds:  !Join [",", [!Ref SecurityGroup]]  
+        Subnets:  !Join [ ",", [!Ref PublicSubnetOne, !Ref PublicSubnetTwo ] ]
+        DownloadS3toEFSFunction: !Ref DownloadS3toEFSFunction
+        UploadImage: !Ref UploadImage
+        SendEmailSegmentationComplete: !Ref SendEmailSegmentationComplete
+
+#################Lambda function###############################
+  StreamDataOriginalAnnotationFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: api-handler-functions
+      Handler: hdler_stream_data_annotation.lambda_handler
+      Role: !Ref LambdaRoleArn
+      MemorySize: 256
+      Environment:
+        Variables:
+          ECS_TASK_ARN: !GetAtt HandleECSTaskStatemachine.Arn          
+  SendEmailSegmentationComplete:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri:  statemachine/functions
+      Handler: hdler_send_email_to_identityid.lambda_handler
+      Role: !Ref LambdaRoleArn
+      Environment:
+        Variables:
+          TABLE_USER: !Ref TableUserName
+
+  UploadImage:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: statemachine/functions
+      Handler: hdler_updoad_image.lambda_handler    
+      Role: !Ref LambdaRoleArn
+      VpcConfig:
+        SecurityGroupIds:
+          - !Ref SecurityGroup
+        SubnetIds:
+          - !Ref PublicSubnetOne
+          - !Ref PublicSubnetTwo
+      FileSystemConfigs:
+        - Arn: !Ref EFSAccessPointArn
+          LocalMountPath: !Ref EFSAccessPointRootPath
+      Environment:
+        Variables:
+          EFSPATH: !Ref EFSAccessPointRootPath
+          TABLE_ANNOTATION_ORIGIN: !Ref TableAnnoDataOriginalName
+          TABLE_ANNOTATION_PROJECT: !Ref TableAnnoProjectsName
+          # FUNC_SEND_EMAIL_IDENTITY_NAME: !Ref SendEmailIdentityIDFunction
+
+  DownloadS3toEFSFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: statemachine/functions
+      Handler: hdler_download_image_to_efs.lambda_handler
+      Role: !Ref LambdaRoleArn
+      VpcConfig:
+        SecurityGroupIds:
+          - !Ref SecurityGroup
+        SubnetIds:
+          - !Ref PublicSubnetOne
+          - !Ref PublicSubnetTwo
+      FileSystemConfigs:
+        - Arn: !Ref EFSAccessPointArn
+          LocalMountPath: !Ref EFSAccessPointRootPath
+      Environment:
+        Variables:
+          EFSPATH: !Ref EFSAccessPointRootPath
+##################### Event ##################################
+  ESMappingDBOriginal:
+    Type: AWS::Lambda::EventSourceMapping
+    Properties:
+      BatchSize: 20
+      Enabled: True
+      EventSourceArn: !Ref TableAnnoDataOriginalNameStream
+      FunctionName: !Ref StreamDataOriginalAnnotationFunction
+      StartingPosition: LATEST
+      MaximumBatchingWindowInSeconds: 120

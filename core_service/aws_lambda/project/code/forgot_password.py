@@ -16,20 +16,23 @@ cog_provider_client = boto3.client('cognito-idp')
 cog_identity_client = boto3.client('cognito-identity')
 RESPONSE_HEADER = {
     "Access-Control-Allow-Credentials": "true",
-	"Access-Control-Allow-Methods": "GET, HEAD, OPTIONS, POST, PUT",
+    "Access-Control-Allow-Methods": "GET, HEAD, OPTIONS, POST, PUT",
 }
+
+
 def getMail(user):
     response = cog_provider_client.list_users(
         UserPoolId=USERPOOLID
     )
     # info_user =  list(filter(lambda x : x['Username'] == user,response['Users']))
 
-    for _ , data in enumerate(response['Users']):
+    for _, data in enumerate(response['Users']):
         if data['Username'] == user:
-            for  info in data['Attributes']:
+            for info in data['Attributes']:
                 if info['Name'] == 'email':
                     return info['Value']
     return None
+
 
 @error_response
 def lambda_handler(event, context):
@@ -62,21 +65,19 @@ def lambda_handler(event, context):
             break
     if not is_email_verified:
         return generate_response(
-            message= MessageUserVerifyConfirmCode,
+            message=MessageUserVerifyConfirmCode,
             headers=RESPONSE_HEADER
         )
     mail = getMail(username)
     AddTriggerCustomMail({
-        'region':REGION,
-        'user':username,
-        'mail':mail,
-        'subject':'Your email confirmation code'
+        'region': REGION,
+        'user': username,
+        'mail': mail,
+        'subject': 'Your email confirmation code',
+        'confirm_code_Table': os.environ['TABLE_CONFIRM_CODE']
     })
 
     return generate_response(
         message=MessageForgotPasswordSuccessfully,
         headers=RESPONSE_HEADER
     )
-    
-        
-    

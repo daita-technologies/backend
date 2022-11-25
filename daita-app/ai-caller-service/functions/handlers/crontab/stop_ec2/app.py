@@ -31,9 +31,9 @@ def countTaskInQueue(queue_id):
     return int(num_task_in_queue)
 
 class EC2Model(object):
-    def __init__(self):
+    def __init__(self, table_ls_ec2_name = "ec2"):
         self.db_client = boto3.client('dynamodb')
-        self.TBL = 'ec2'
+        self.TBL = table_ls_ec2_name
     
     def scanTable(self,TableName,**kwargs):
         paginator = self.db_client.get_paginator("scan")
@@ -81,7 +81,7 @@ def lambda_handler(event, context):
     )
     ls_running_exe = response['executions']
 
-    ec2Model = EC2Model()
+    ec2Model = EC2Model(os.environ["TABLE_LS_EC2"])
     ec2free = ec2Model.getFreeEc2()
     
     if len(ls_running_exe) > 0:

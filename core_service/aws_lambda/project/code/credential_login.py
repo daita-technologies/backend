@@ -23,10 +23,11 @@ ACCESS_TOKEN_EXPIRATION = 24 * 60 * 60
 cog_provider_client = boto3.client('cognito-idp')
 cog_identity_client = boto3.client('cognito-identity')
 # endpoint = 'https://devdaitaloginsocial.auth.us-east-2.amazoncognito.com/oauth2/token'
-endpoint = 'https://auth.daita.tech/oauth2/token'
-client_id = '4cpbb5etp3q7grnnrhrc7irjoa'
+endpoint = OAUTHENPOINT
+client_id = CLIENTPOOLID
 def getRedirectURI():
-    return 'https://nzvw2zvu3d.execute-api.us-east-2.amazonaws.com/staging/auth/login_social'
+    return ENDPPOINTREDIRCTLOGINSOCIALOAUTH
+
 #############################################################################################################################################################
 def getMail(user):
     response = cog_provider_client.list_users(
@@ -86,6 +87,7 @@ def Oauth2(code):
     headers = {"Content-Type": "application/x-www-form-urlencoded"}
     data = urlencode(params)
     result = requests.post(endpoint, data=data, headers=headers)
+    print(result.text)
     return result
 ############################################################################################################
 def getDisplayName(username):

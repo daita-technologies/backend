@@ -1,0 +1,199 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: >
+  daita-caller-service-app
+
+  Sample SAM Template for daita-caller-service-app
+Parameters:
+  StagePara:
+    Type: String
+  Mode:
+    Type: String
+  CommonCodeLayerName:
+    Type: String
+  minimumLogLevel:
+    Type: String
+    Default: DEBUG
+  
+  CertificateUserpoolDomain:
+    Type: String
+  DomainUserPool:
+    Type: String
+
+Globals:
+  Function:
+    Timeout: 800
+    Handler: app.lambda_handler
+    Runtime: python3.8
+    Architectures:
+      - x86_64
+    Environment:
+      Variables:
+        STAGE: !Ref StagePara
+        MODE: !Ref Mode
+        COGNITO_USER_POOL: !Ref CognitoUserPool
+        LOGGING: !Ref minimumLogLevel
+    Layers:
+        - !Ref CommonCodeLayerName
+Resources:
+  ApiGatewayCallLambdaRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+        - Effect: "Allow"
+          Principal:
+            Service: "apigateway.amazonaws.com"
+          Action:
+          - "sts:AssumeRole"
+      Policies:
+      - PolicyName: RestApiDirectInvokeLambda
+        PolicyDocument:
+          Version: "2012-10-17"
+          Statement:
+            Action:
+            - "lambda:InvokeFunction"
+            Effect: Allow
+            Resource: "*"  
+  LambdaExecutionRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+        - Effect: "Allow"
+          Principal:
+            Service: "lambda.amazonaws.com"
+          Action:
+          - "sts:AssumeRole"
+      Policies:
+        - PolicyName: 'SQS'
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - 'sqs:*'
+                Resource: '*'
+        - PolicyName: 'SecretsManagerParameterAccess'
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - ssm:GetParam*
+                  - ssm:DescribeParam*
+                Resource:
+                  - arn:aws:ssm:*:*:parameter/*
+        - PolicyName: 'CloudwatchPermission'
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              -
+                Effect: Allow
+                Action:
+                  - 'logs:*'
+                Resource: '*'
+        - PolicyName: 'CognitoPermission'
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              -
+                Effect: Allow
+                Action:
+                  - cognito-identity:*
+                  - cognito-idp:*
+                Resource: '*'
+        - PolicyName: 'DynamoDBPermission'
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              -
+                Effect: Allow
+                Action:
+                  - dynamodb:*
+                Resource: "*"
+        - PolicyName: "OtherServicePermission"
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              -
+                Effect: Allow
+                Action:
+                  - events:PutEvents
+                Resource: "*"
+              - Effect: Allow
+                Action:
+                  - states:StartExecution
+                  - s3:*
+                Resource: "*"
+        - PolicyName: "InvokeFunction"
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              -
+                Effect: Allow
+                Action:
+                  - lambda:InvokeFunction
+                Resource: "*"
+        - PolicyName: "SES"
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              -
+                Effect: Allow
+                Action:
+                  - 'ses:*'
+                Resource: "*"
+
+  AuthSocialHttpAPI:
+    Type: AWS::Serverless::HttpApi
+    Properties:
+      StageName: !Ref StagePara
+      DefinitionBody:
+        Fn::Transform:
+          Name: AWS::Include
+          Parameters:
+            Location: './api-defs/daita_http_api.yaml'
+
+  CognitoUserPool:
+    Type: AWS::Cognito::UserPool
+    Properties:
+      UserPoolName: !Ref AWS::StackName
+
+  # CognitoUserPoolDomain:
+  #   Type: AWS::Cognito::UserPoolDomain
+  #   Properties:
+  #     Domain: !Ref DomainUserPool
+  #     UserPoolId: !Ref CognitoUserPool
+  #     CustomDomainConfig:
+  #       CertificateArn: !Ref CertificateUserpoolDomain
+
+  GithubTokenWrapperFunc:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: functions/github_openid_token_wrapper
+      Role:  !GetAtt LambdaExecutionRole.Arn
+  
+  GithubUserinfoWrapperFunc:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: functions/github_openid_userinfo_wrapper
+      Role:  !GetAtt LambdaExecutionRole.Arn
+
+  LoginSocialFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: functions/login_social
+      Role:  !GetAtt LambdaExecutionRole.Arn
+
+Outputs:
+  UserPool:
+    Value: !Ref CognitoUserPool
+  AuthHttpAPI:
+    Value: !Ref AuthSocialHttpAPI
+  AuthApiURL:
+    Value: !Sub "https://${AuthSocialHttpAPI}.execute-api.${AWS::Region}.amazonaws.com/${StagePara}"
+  ProviderNameUserPool:
+    Value: !GetAtt CognitoUserPool.ProviderName

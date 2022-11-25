@@ -9,8 +9,7 @@ States:
       NetworkConfiguration:
         AwsvpcConfiguration:
           AssignPublicIp: ENABLED # Needed when pulling public Docker image
-          Subnets:
-            - ${SubnetId}
+          Subnets: !Join [ ${SubnetIds} ]
       Overrides:
         ContainerOverrides:
           -
@@ -26,6 +25,11 @@ States:
                 Value.$: $.identity_id
       TaskDefinition: ${DecompressTask}
     ResultPath: null # Forward previous step input as this step output
+    Catch:
+      - ErrorEquals:
+        - States.ALL
+        Next: CatchErrorTaskDynamoDB
+        ResultPath: null
     Next: DivideDecompressChunksFunction
 
   DivideDecompressChunksFunction:
@@ -78,7 +82,7 @@ States:
           Resource: arn:aws:states:::lambda:invoke
           InputPath: $.Payload
           Parameters:
-            FunctionName: "${ProjectUploadUpdateFunction}"
+            FunctionName: "${FuncProjectUploadUpdate}"
             Payload:
               body.$: $.body
           Next: PostUploadFunction

@@ -16,20 +16,38 @@ Globals:
       - x86_64
     Environment:
       Variables:
+        CHANNELWEBHOOK: !Ref ChannelWebhook
+        AUTH_ENDPOINT: !Ref AuthEndpoint
         STAGE: !Ref StagePara
         TABLE_NAME: global-table
         LOGGING: !Ref minimumLogLevel
+        REGION: !Ref AWS::Region
         TABLE_GENERATE_TASK: !Ref TableGenerateTaskName
-        TABLE_PROJECTS_NAME: !Ref TableProjectsName
         TABLE_METHODS_NAME: !Ref TableMethodsName
         TABLE_HEALTHCHECK_TASK: !Ref TableHealthCheckTasksName
+        TABLE_DATA_FLOW_TASK: !Ref ParaTableDataFlowTaskName
+        TABLE_REFERENCE_IMAGE_TASK: !Ref TableReferenceImageTasksName
         TABLE_HEALTHCHECK_INFO: !Ref TableHealthCheckInfoName
         INDEX_TASK_PROJECTID_TASKID: !Ref ParaIndexTaskProjectIDTaskID
+        TABLE_CONFIRM_CODE: !Ref TableConfirmCodeAuth
+        TABLE_USER: !Ref TableUser
+        COGNITO_USER_POOL: !Ref CognitoUserPool
+        COGNITO_CLIENT_ID: !Ref CognitoUserPoolClient
+        IDENTITY_POOL: !Ref CognitoIdentityPoolId
+        BUCKET_NAME: !Ref S3BucketName
+        TABLE_PROJECT: !Ref TableProjectsName
+        TABLE_TASK: !Ref TableTask
+        TABLE_PROJECT_SUMMARY: !Ref TableProjectSumName
+        TABLE_EVENTUSER: !Ref TableEventUser
+        MODE: !Ref Mode
+        IS_ENABLE_KMS: "False"
     Layers:
         - !Ref CommonCodeLayerName
 
 ## The general rule seems to be to use !Sub for in line substitutions and !ref for stand alone text
 Parameters:
+  ApplicationPara:
+    Type: String
   minimumLogLevel:
     Type: String
     Default: DEBUG
@@ -43,15 +61,15 @@ Parameters:
     Type: String
   ProcessAITaskEventBusArn:
     Type: String
-  ProjectSummary:
+
+  AICallerECSSMArn:
     Type: String
-    Default: prj_sum_all
+
+  TableProjectSumName:
+    Type: String
   DataOrigin:
     Type: String
     Default: data_original
-  TableProject:
-    Type: String
-    Default: projects
   TableProjectDel:
     Type: String
     Default: projects_save_delete
@@ -61,9 +79,7 @@ Parameters:
     Type: String
   TableMethodsName:
     Type: String
-  ParaTableDownloadTaskName:
-    Type: String
-  ParaTableProjectSumName:
+  TableProjectSumName:
     Type: String
   TableHealthCheckTasksName:
     Type: String
@@ -77,6 +93,9 @@ Parameters:
     Type: String
   TableReferenceImageInfoName:
     Type: String
+  TableConstPrebuildDatasetName:
+    Type: String
+
   MaxConcurrencyTasks:
     Type: String
   CommonCodeLayerName:
@@ -90,19 +109,28 @@ Parameters:
     Type: String
   HealthCheckEventBusName:
     Type: String
+
   ReferenceImageEventBusName:
+    Type: String
+  RICalculateFunctionArn:
+    Type: String
+  RIStatusFunctionArn:
+    Type: String
+  RIInfoFunctionArn:
     Type: String
 
   ParaDecompressFileStateMachineArn:
     Type: String
   ParaCompressDownloadStateMachineArn:
     Type: String
-  CognitoUserPoolId:
-    Type:  String
-    Default: us-east-2_ZbwpnYN4g
+
   CognitoIdentityPoolId:
     Type:  String
-    Default: us-east-2:fa0b76bc-01fa-4bb8-b7cf-a5000954aafb
+  CognitoUserPool:
+    Type: String
+  CognitoUserPoolClient:
+    Type: String
+
   StopProcessEventBusArn:
     Type: String
   StopProcessEventBusName:
@@ -115,8 +143,117 @@ Parameters:
     Type: String
   TableDataAugmentName:
     Type: String
+  TableGenerateDaitaUploadToken:
+    Type: String
+  S3BucketName:
+    Type: String
+  Mode:
+    Type: String
 
+
+
+  TableUser:
+    Type: String
+  CreateProjectPrebuildSMArn:
+    Type: String
+  TableConfirmCodeAuth:
+    Type: String
+  TableTask:
+    Type: String
+
+  FuncProjectUploadUpdateArn:
+    Type: String
+  TableDataPreprocess:
+    Type: String
+  TableDataAugment:
+    Type: String
+  StreamTableDataOriginalName:
+    Type: String
+  StreamTableDataPreprocessName:
+    Type: String
+  StreamTableDataAugmentName:
+    Type: String
+  TableEventUser:
+    Type: String
+  TableFeedback:
+    Type: String
+  AuthEndpoint:
+    Type: String
+
+  TokenOauth2BotSlackFeedBack:
+    Type: String
+  ChannelWebhook:
+    Type: String
+  OauthEndpoint:
+    Type: String
+  CaptchaSiteKeyGoogle:
+    Type: String
+  CaptchaSecretKeyGoogle:
+    Type: String
+    
 Resources:
+  ThumbnailServiceEventBusRole:
+    Type: "AWS::IAM::Role"
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: "Allow"
+            Principal:
+              Service: "events.amazonaws.com"
+            Action:
+              - "sts:AssumeRole"
+      Policies:
+        - PolicyName: DirectlyInvokeStepFunctions
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              Action:
+              - "states:StartExecution"
+              Effect: Allow
+              Resource:
+                - !Ref ThumbnailStateMachine
+
+  TriggerThumbnailFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: functions/handlers/thumbnail/trigger_thumbnail
+      Role: !GetAtt LambdaExecutionRole.Arn
+      Environment:
+        Variables:
+          EVENT_BUS_NAME: !Ref ThumbnailEventBus
+  ResizeImageThumbnailFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: functions/handlers/thumbnail/resize_image
+      MemorySize: 512
+      Role: !GetAtt LambdaExecutionRole.Arn
+
+  DivideBatchImagesThumbnailFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: functions/handlers/thumbnail/divide_batch
+      Role: !GetAtt LambdaExecutionRole.Arn
+  ThumbnailEventBus:
+    Type: AWS::Events::EventBus
+    Properties:
+      Name: !Sub "${StagePara}-${ApplicationPara}-ThumbnailEventBus"
+  ThumbnailServiceEventBusDefaultRule:
+    Type: AWS::Events::Rule
+    Properties:
+      Description: "Default Rule for Any event"
+      State: ENABLED
+      EventBusName: !Ref ThumbnailEventBus
+      EventPattern:
+        source:
+          - "source.events"
+        detail-type:
+          - "lambda.event"
+      Targets:
+        -
+          Arn: !GetAtt ThumbnailStateMachine.Arn
+          Id: "ThumbnailStateMachine"
+          RoleArn: !GetAtt ThumbnailServiceEventBusRole.Arn
   #================ ROLES =====================================================
 
   # use this role for apigateway access lambda
@@ -154,6 +291,14 @@ Resources:
           Action:
           - "sts:AssumeRole"
       Policies:
+        - PolicyName: 'SES'
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - 'ses:*'
+                Resource: '*'
         - PolicyName: 'SQS'
           PolicyDocument:
             Version: '2012-10-17'
@@ -216,7 +361,44 @@ Resources:
                   - states:StartExecution
                   - s3:*
                 Resource: "*"
-
+        - PolicyName: "InvokeFunction"
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              -
+                Effect: Allow
+                Action:
+                  - lambda:InvokeFunction
+                  - lambda:*
+                Resource: "*"
+#============================Event Source Mapping========================================
+  EventSourceMappingDatabaseOriginal:
+    Type: AWS::Lambda::EventSourceMapping
+    Properties:
+      BatchSize: 1000
+      Enabled: True
+      EventSourceArn: !Ref StreamTableDataOriginalName
+      FunctionName: !Ref TriggerThumbnailFunction
+      StartingPosition: LATEST
+      MaximumBatchingWindowInSeconds: 120
+  EventSourceMappingDatabasePreprocess:
+    Type: AWS::Lambda::EventSourceMapping
+    Properties:
+      BatchSize: 1000
+      Enabled: True
+      EventSourceArn: !Ref StreamTableDataPreprocessName
+      FunctionName: !Ref TriggerThumbnailFunction
+      StartingPosition: LATEST
+      MaximumBatchingWindowInSeconds: 120
+  EventSourceMappingDatabaseAugment:
+    Type: AWS::Lambda::EventSourceMapping
+    Properties:
+      BatchSize: 1000
+      Enabled: True
+      EventSourceArn: !Ref StreamTableDataAugmentName
+      FunctionName: !Ref TriggerThumbnailFunction
+      StartingPosition: LATEST
+      MaximumBatchingWindowInSeconds: 120
   #================ CALLER SERVICE HTTP API ===================================
 
   DaitaHttpApi:
@@ -228,10 +410,108 @@ Resources:
           Name: AWS::Include
           Parameters:
             Location: './api-defs/daita_http_api.yaml'
+  #================ LOGS FOR STEP FUNCTIONS ===================================
 
+  ThumbnaiServiceStateMachineLogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: !Sub "/aws/vendedlogs/states/${StagePara}-${ApplicationPara}-Thumbnail"
+      RetentionInDays: 7
+  ThumbnailStateMachine:
+    Type: AWS::Serverless::StateMachine
+    Properties:
+      Type: STANDARD
+      Name: !Sub "${StagePara}-${ApplicationPara}-ThumbnailStatemachine"
+      Policies:
+        - LambdaInvokePolicy:
+            FunctionName: !Ref   ResizeImageThumbnailFunction
+            FunctionName: !Ref DivideBatchImagesThumbnailFunction
+        - Statement:
+          - Sid: ALLOWCRUDDynamoDB
+            Effect: Allow
+            Action:
+            - "dynamodb:*"
+            - "lambda:InvokeFunction"
+            Resource: "*"
+          - Sid: CloudWatchLogsPolicy
+            Effect: Allow
+            Action:
+            - "logs:*"
+            Resource: "*"
+      Tracing:
+        Enabled: true
+      DefinitionUri: statemachine/thumbnail_step_function.asl.yaml
+      Logging:
+        Level: ALL
+        IncludeExecutionData: true
+        Destinations:
+        - CloudWatchLogsLogGroup:
+            LogGroupArn: !GetAtt ThumbnaiServiceStateMachineLogGroup.Arn
+      DefinitionSubstitutions:
+        ResizeImageThumbnailFunction: !GetAtt ResizeImageThumbnailFunction.Arn
+        DivideBatchImagesThumbnailFunction: !GetAtt DivideBatchImagesThumbnailFunction.Arn
 
   #================ LAMBDA FUNCTIONS ==========================================
+  CreatePresignUrlForImageFeedbackFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: functions/handlers/feedback/presignUrl
+      Role: !GetAtt LambdaExecutionRole.Arn
 
+  CreateDecompressFileCLIFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: functions/handlers/cli/create_decompress_task
+      Role: !GetAtt LambdaExecutionRole.Arn
+      Environment:
+        Variables:
+          T_GEN_DAITA_UPLOAD_TOKEN: !Ref TableGenerateDaitaUploadToken
+          DECOMPRESS_LAMBDA_INVOKE: !Ref CreateDecompressTaskFunction
+  CliCheckExistenceFileFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: functions/handlers/cli/check_existence_file
+      Role: !GetAtt LambdaExecutionRole.Arn
+      Environment:
+        Variables:
+          T_GEN_DAITA_UPLOAD_TOKEN: !Ref TableGenerateDaitaUploadToken
+          LAMBDA_UPDATE_CHECK: !Ref ProjectUpdateCheckFunction
+  CreatePresignUrlFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: functions/handlers/cli/create_presignurl_zip
+      Role: !GetAtt LambdaExecutionRole.Arn
+      Environment:
+        Variables:
+          T_GEN_DAITA_UPLOAD_TOKEN: !Ref TableGenerateDaitaUploadToken
+  CheckDaitaTokenFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: functions/handlers/cli/check_daita_token
+      Role: !GetAtt LambdaExecutionRole.Arn
+      Environment:
+        Variables:
+          T_GEN_DAITA_UPLOAD_TOKEN: !Ref TableGenerateDaitaUploadToken
+
+  CliUploadProjectFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: functions/handlers/cli/cli_upload_project
+      Role: !GetAtt LambdaExecutionRole.Arn
+      Environment:
+        Variables:
+          T_GEN_DAITA_UPLOAD_TOKEN: !Ref TableGenerateDaitaUploadToken
+          TABLE_PROJECT_SUMMARY: !Ref TableProjectSumName
+          LAMBDA_UPLOAD_UPDATE: !Ref FuncProjectUploadUpdateArn
+          LAMBDA_UPLOAD_CHECK: !Ref ProjectUpdateCheckFunction
+  GenertateTokenUploadProjectFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: functions/handlers/generate/daita_upload_token
+      Role: !GetAtt LambdaExecutionRole.Arn
+      Environment:
+        Variables:
+          T_GEN_DAITA_UPLOAD_TOKEN: !Ref TableGenerateDaitaUploadToken
   GenerateCheckConditionFunction:
     Type: AWS::Serverless::Function
     Properties:
@@ -240,12 +520,14 @@ Resources:
       Environment:
         Variables:
           EVENT_BUS_NAME: !Ref ProcessAITaskEventBusName
+          AI_CALLER_ECS_SM_ARN: !Ref AICallerECSSMArn
           LIMIT_PROCESSING_TIMES: !Ref LimitPreprocessTimesName
           LIMIT_AUGMENT_TIMES: !Ref LimitAugmentTimesName
-          TABLE_PROJECT_SUM: !Ref ParaTableProjectSumName
+          TABLE_PROJECT_SUMMARY: !Ref TableProjectSumName
           TABLE_PREPROCESS: !Ref TableDataPreprocessName
           MAX_CONCURRENCY_TASK: !Ref MaxConcurrencyTasks
           QUEUE : !Ref TaskQueueName
+
   TaskProgressFunction:
     Type: AWS::Serverless::Function
     Properties:
@@ -283,31 +565,48 @@ Resources:
   DeleteImages:
     Type: AWS::Serverless::Function
     Properties:
-      CodeUri: functions/handlers/delete_images
+      CodeUri: functions/handlers/project/delete_images
       Role: !GetAtt LambdaExecutionRole.Arn
       Environment:
         Variables:
           TABLE_HEALTHCHECK_INFO: !Ref TableHealthCheckInfoName
-          T_PROJECT_SUMMARY: !Ref ProjectSummary
-          T_DATA_ORI: !Ref DataOrigin
-          T_PROJECT: !Ref TableProject
+          TABLE_PROJECT_SUMMARY: !Ref TableProjectSumName
+          T_DATA_ORI: !Ref TableDataOriginalName
 
   DeleteProject:
     Type: AWS::Serverless::Function
     Properties:
-      CodeUri: functions/handlers/delete_project
+      CodeUri: functions/handlers/project/delete_project
       Role: !GetAtt LambdaExecutionRole.Arn
       Environment:
         Variables:
           TABLE_HEALTHCHECK_INFO: !Ref TableHealthCheckInfoName
           TABLE_HEALTHCHECK_TASK: !Ref TableHealthCheckTasksName
-          T_PROJECT_SUMMARY: !Ref ProjectSummary
-          T_DATA_ORI: !Ref DataOrigin
+          TABLE_PROJECT_SUMMARY: !Ref TableProjectSumName
+          T_DATA_ORI: !Ref TableDataOriginalName
           T_TASKS: !Ref TableGenerateTaskName
-          T_PROJECT: !Ref TableProject
           T_PROJECT_DEL: !Ref TableProjectDel
           T_DATA_FLOW: !Ref ParaTableDataFlowTaskName
           T_REFERENCE_IMAGE: !Ref TableReferenceImageTasksName
+
+  ListPrebuildDatasetFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: functions/handlers/project/list_prebuild_dataset
+      Role: !GetAtt LambdaExecutionRole.Arn
+      Environment:
+        Variables:
+          T_CONST_PREBUILD_DATASET: !Ref TableConstPrebuildDatasetName
+
+  FunctionCreateProjectFromPrebuild:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: functions/handlers/project/create_prj_fr_prebuild
+      Role: !GetAtt LambdaExecutionRole.Arn
+      Environment:
+        Variables:
+          T_CONST_PREBUILD_DATASET: !Ref TableConstPrebuildDatasetName
+          SM_CREATE_PRJ_PREBUILD: !Ref CreateProjectPrebuildSMArn
 
   ### for health check functions
   HealthCheckFunction:
@@ -337,35 +636,6 @@ Resources:
       Environment:
         Variables:
           TABLE_HEALTHCHECK_INFO: !Ref TableHealthCheckInfoName
-
-  ### for reference images functions
-  RICalculateFunction:
-    Type: AWS::Serverless::Function
-    Properties:
-      CodeUri: functions/handlers/reference_image/calculate
-      Role: !GetAtt LambdaExecutionRole.Arn
-      Environment:
-        Variables:
-          EVENT_BUS_NAME: !Ref ReferenceImageEventBusName
-          TABLE_REFERENCE_IMAGE_TASK: !Ref TableReferenceImageTasksName
-
-  RIStatusFunction:
-    Type: AWS::Serverless::Function
-    Properties:
-      CodeUri: functions/handlers/reference_image/get_status
-      Role: !GetAtt LambdaExecutionRole.Arn
-      Environment:
-        Variables:
-          TABLE_REFERENCE_IMAGE_TASK: !Ref TableReferenceImageTasksName
-
-  RIInfoFunction:
-    Type: AWS::Serverless::Function
-    Properties:
-      CodeUri: functions/handlers/reference_image/get_info
-      Role: !GetAtt LambdaExecutionRole.Arn
-      Environment:
-        Variables:
-          TABLE_REFERENCE_IMAGE_INFO: !Ref TableReferenceImageInfoName
 
   ### For augment_img_review
   GetAugmentationImageReviewFunction:
@@ -430,10 +700,207 @@ Resources:
           TableGenerateTaskName: !Ref TableGenerateTaskName
           TableReferenceImageName: !Ref TableReferenceImageTasksName
 
+  LoginFunction:
+    Type:  AWS::Serverless::Function
+    Properties:
+      CodeUri: functions/handlers/auth_service/login
+      Role: !GetAtt LambdaExecutionRole.Arn
+      Environment:
+        Variables:
+          CAPTCHA_SITE_KEY_GOOGLE: !Ref CaptchaSiteKeyGoogle
+          CAPTCHA_SECRET_KEY_GOOGLE: !Ref CaptchaSecretKeyGoogle
+
+  LogoutFunction:
+    Type:  AWS::Serverless::Function
+    Properties:
+      CodeUri: functions/handlers/auth_service/logout
+      Role: !GetAtt LambdaExecutionRole.Arn
+
+  RegisterFunction:
+    Type:  AWS::Serverless::Function
+    Properties:
+      CodeUri: functions/handlers/auth_service/sign_up
+      Role: !GetAtt LambdaExecutionRole.Arn
+      Environment:
+        Variables:
+          INVOKE_MAIL_LAMBDA: !Ref MailServiceFunction
+          CAPTCHA_SITE_KEY_GOOGLE: !Ref CaptchaSiteKeyGoogle
+          CAPTCHA_SECRET_KEY_GOOGLE: !Ref CaptchaSecretKeyGoogle
+
+  LoginRefreshTokenFunction:
+    Type:  AWS::Serverless::Function
+    Properties:
+      CodeUri: functions/handlers/auth_service/login_refresh_token
+      Role: !GetAtt LambdaExecutionRole.Arn
+
+  AuthConfirmFunction:
+    Type:  AWS::Serverless::Function
+    Properties:
+      CodeUri: functions/handlers/auth_service/auth_confirm
+      Role: !GetAtt LambdaExecutionRole.Arn
+
+  ConfirmCodeForgotPasswordFunction:
+    Type:  AWS::Serverless::Function
+    Properties:
+      CodeUri: functions/handlers/auth_service/confirm_code_forgot_password
+      Role: !GetAtt LambdaExecutionRole.Arn
+      Environment:
+        Variables:
+          CAPTCHA_SITE_KEY_GOOGLE: !Ref CaptchaSiteKeyGoogle
+          CAPTCHA_SECRET_KEY_GOOGLE: !Ref CaptchaSecretKeyGoogle
+
+  CredentialLoginFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: functions/handlers/auth_service/credential_login
+      Role:  !GetAtt LambdaExecutionRole.Arn
+      Environment:
+        Variables:
+          TBL_EVENTUSER: !Ref TableEventUser
+          OAUTH_ENPOINT: !Ref OauthEndpoint
+
+  ResendCodeAuthConfirmCodeFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: functions/handlers/auth_service/resend_confirmcode
+      Role:  !GetAtt LambdaExecutionRole.Arn
+      Environment:
+        Variables:
+          INVOKE_MAIL_LAMBDA: !Ref MailServiceFunction
+
+  ForgotpasswordFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: functions/handlers/auth_service/forgot_password
+      Role:  !GetAtt LambdaExecutionRole.Arn
+      Environment:
+        Variables:
+          INVOKE_MAIL_LAMBDA: !Ref MailServiceFunction
+
+  MailServiceFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: functions/handlers/auth_service/mail_service
+      Role:  !GetAtt LambdaExecutionRole.Arn
+  TemplateMailInviteFriendFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: functions/handlers/auth_service/template_mail
+      Role: !GetAtt LambdaExecutionRole.Arn
+
+  ReferenceEmailFunction:
+    Type:  AWS::Serverless::Function
+    Properties:
+      CodeUri: functions/handlers/send-mail/reference-email
+      Role:  !GetAtt LambdaExecutionRole.Arn
+#########################################################################################
+  SlackWebhookFeedbackFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: functions/handlers/feedback/slack_webhook
+      Role: !GetAtt LambdaExecutionRole.Arn
+      Environment:
+        Variables:
+          TABLE_FEEBACK: !Ref TableFeedback
+          TOKEN_OAUTH2BOT_SLACK_FEEDBACK: !Ref TokenOauth2BotSlackFeedBack
+              
+##########################Project Service################################################
+
+  ProjectAsyCreateSampleFunction:
+    Type:  AWS::Serverless::Function
+    Properties:
+      CodeUri: functions/handlers/project/project_asy_create_sample
+      Role: !GetAtt LambdaExecutionRole.Arn
+
+  ProjectCreateSampleFunction:
+    Type:  AWS::Serverless::Function
+    Properties:
+      CodeUri: functions/handlers/project/project_create
+      Role: !GetAtt LambdaExecutionRole.Arn
+
+  ProjectDownloadCreateFunction:
+    Type:  AWS::Serverless::Function
+    Properties:
+      CodeUri: functions/handlers/project/project_download_create
+      Role: !GetAtt LambdaExecutionRole.Arn
+
+  ProjectDownloadUpdateFunction:
+    Type:  AWS::Serverless::Function
+    Properties:
+      CodeUri: functions/handlers/project/project_download_update
+      Role: !GetAtt LambdaExecutionRole.Arn
+
+  ProjectInfoFunction:
+    Type:  AWS::Serverless::Function
+    Properties:
+      CodeUri: functions/handlers/project/project_info
+      Role: !GetAtt LambdaExecutionRole.Arn
+
+  ProjectListFunction:
+    Type:  AWS::Serverless::Function
+    Properties:
+      CodeUri: functions/handlers/project/project_list
+      Role: !GetAtt LambdaExecutionRole.Arn
+
+  ProjectListDataFunction:
+    Type:  AWS::Serverless::Function
+    Properties:
+      CodeUri: functions/handlers/project/project_list_data
+      Role: !GetAtt LambdaExecutionRole.Arn
+      Environment:
+        Variables:
+          T_DATA_ORI: !Ref TableDataOriginalName
+          T_DATA_PREPROCESS: !Ref TableDataPreprocessName
+          T_DATA_AUGMENT: !Ref TableDataAugmentName
+
+  ProjectListInfoFunction:
+    Type:  AWS::Serverless::Function
+    Properties:
+      CodeUri: functions/handlers/project/project_list_info
+      Role: !GetAtt LambdaExecutionRole.Arn
+
+  ProjectSampleFunction:
+    Type:  AWS::Serverless::Function
+    Properties:
+      CodeUri: functions/handlers/project/project_sample
+      Role: !GetAtt LambdaExecutionRole.Arn
+
+  ProjectUpdateInfoFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: functions/handlers/project/project_update_info
+      Role: !GetAtt LambdaExecutionRole.Arn
+      Environment:
+        Variables:
+          T_DATA_ORI: !Ref TableDataOriginalName
+          T_DATA_PREPROCESS: !Ref TableDataPreprocessName
+          T_DATA_AUGMENT: !Ref TableDataAugmentName
+  ProjectUpdateCheckFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: functions/handlers/project/project_upload_check
+      Role: !GetAtt LambdaExecutionRole.Arn
+      Environment:
+        Variables:
+          T_DATA_ORI: !Ref TableDataOriginalName
+          T_DATA_PREPROCESS: !Ref TableDataPreprocessName
+          T_DATA_AUGMENT: !Ref TableDataAugmentName
+
+  # #### for email related functions
+  SendEmailIdentityIDFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: functions/handlers/send-mail/send-email-identity-id
+      Handler: hdler_send_email_to_identityid.lambda_handler
+      Role: !GetAtt LambdaExecutionRole.Arn
 
 Outputs:
   CallerServiceHttpApiUrl:
     Description: "Url of the Caller service API"
-    Value: !Sub "https://${DaitaHttpApi}.execute-api.${AWS::Region}.amazonaws.com"
+    Value: !Sub "https://${DaitaHttpApi}.execute-api.${AWS::Region}.amazonaws.com/${StagePara}"
   LambdaRoleArn:
     Value: !GetAtt LambdaExecutionRole.Arn
+
+  SendEmailIdentityIDFunction:
+    Value: !Ref SendEmailIdentityIDFunction
+    

@@ -1,0 +1,49 @@
+StartAt: GetDataTask
+States:
+  GetDataTask:
+    Type: Task
+    Resource: 'arn:aws:states:::lambda:invoke'
+    InputPath: $
+    ResultSelector:
+      body.$: $.Payload.body.data
+    ResultPath: $
+    OutputPath: $
+    Parameters:
+      FunctionName: "${Arn_FuncMoveS3Data}"
+      Payload:
+        body.$: $
+    Next: MoveUpdateDataMap
+    Comment: >-
+      Check the level of parallelism, split requests into chunks and invoke
+      lamndas
+    Retry:
+      - ErrorEquals:
+          - RetriableCallerServiceError
+        IntervalSeconds: 1
+        MaxAttempts: 2
+        BackoffRate: 1    
+
+  MoveUpdateDataMap:
+    Type: Task
+    Resource: 'arn:aws:states:::lambda:invoke'
+    InputPath: $.body
+    ResultPath: $
+    OutputPath: $.Payload
+    Parameters:
+      FunctionName: "${Arn_FuncUpdateInputData}"
+      Payload:
+        body.$: $   
+    Next: TaskUpdateSummaryDB
+
+  TaskUpdateSummaryDB:
+    Type: Task
+    Resource: 'arn:aws:states:::lambda:invoke'
+    InputPath: $.body.data
+    OutputPath: $.Payload.body
+    Parameters:
+      FunctionName: "${Arn_FuncUpdateSumaryDatabase}"
+      Payload:
+        body.$: $
+    End: true 
+
+TimeoutSeconds: 6000

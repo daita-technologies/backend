@@ -1,0 +1,65 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: >
+  SAM Template for Nested application resources
+
+## The general rule seems to be to use !Sub for in line substitutions and !ref for stand alone text
+Parameters:
+ 
+  Stage:
+    Type: String
+  
+  Application:
+    Type: String
+
+Resources:
+
+
+  #================ APPLICATIONS  =============================================
+  NetworkLayerApplication:
+    Type: AWS::Serverless::Application
+    Properties:
+      Location: ./network.yaml
+      Parameters:
+        StagePara: !Ref Stage
+        ApplicationPara: !Ref Application
+
+  StorageLayerApplication:
+    Type: AWS::Serverless::Application
+    Properties:
+      Location: ./storage.yaml
+      Parameters:
+        VPC: !GetAtt NetworkLayerApplication.Outputs.VPC
+        PublicSubnetOne: !GetAtt NetworkLayerApplication.Outputs.PublicSubnetOne
+        PublicSubnetTwo: !GetAtt NetworkLayerApplication.Outputs.PublicSubnetTwo
+        SecurityGroup: !GetAtt NetworkLayerApplication.Outputs.ContainerSecurityGroup
+        StagePara: !Ref Stage
+        ApplicationPara: !Ref Application
+
+Outputs:
+  PublicSubnetOne:
+    Value: !GetAtt NetworkLayerApplication.Outputs.PublicSubnetOne
+  PublicSubnetTwo:
+    Value: !GetAtt NetworkLayerApplication.Outputs.PublicSubnetTwo
+  ContainerSecurityGroup:
+    Value: !GetAtt NetworkLayerApplication.Outputs.ContainerSecurityGroup
+    
+  VPC:
+    Value: !GetAtt NetworkLayerApplication.Outputs.VPC
+
+  VpcEndointSQS:
+    Value: !GetAtt NetworkLayerApplication.Outputs.VpcEndointSQS
+  VPCEndpointS3:
+    Value: !GetAtt NetworkLayerApplication.Outputs.S3VPCEndpoint
+  VPCEndpointSQSDnsEntries:
+    Value: !GetAtt NetworkLayerApplication.Outputs.VPCSQSEndpointDnsEntries
+
+  ### storage output
+  EFSFileSystemId:
+    Value: !GetAtt StorageLayerApplication.Outputs.EFSFileSystemId
+  EFSAccessPoint:
+    Value: !GetAtt StorageLayerApplication.Outputs.EFSAccessPoint
+  EFSAccessPointArn:
+    Value: !GetAtt StorageLayerApplication.Outputs.EFSAccessPointArn
+
+  

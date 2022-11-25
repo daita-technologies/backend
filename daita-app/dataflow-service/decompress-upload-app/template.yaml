@@ -8,12 +8,12 @@ Parameters:
     Type: String
   ApplicationPara:
     Type: String
+
   SecurityGroupIds:
-    Type: String
-    Default: 'sg-af50cbde'
-  SubnetId:
-    Type: String
-    Default: subnet-31ff5b5a
+    Type: CommaDelimitedList
+  SubnetIds:
+    Type: CommaDelimitedList
+
   EFSFileSystemId:
     Type:  String
     Default: fs-0199771f2dfe97ace
@@ -41,17 +41,30 @@ Parameters:
   UploadS3FileChunk:
     Type: String
     Default: 8
+  Mode:
+    Type: String
+  TableDataOriginalName:
+    Type: String
+  TableDataAugmentName:
+    Type: String
+  TableDataPreprocessName:
+    Type: String
 
+  FuncProjectUploadUpdate:
+    Type: String
+    
 Globals:
   Function:
-    Timeout: 10
+    Timeout: 180
     Handler: app.lambda_handler
     Runtime: python3.8
     Architectures:
       - x86_64
     Layers:
       - !Ref CommonCodeLayerName
-
+    Environment:
+      Variables:
+        MODE: !Ref Mode
 
 Resources:
   #================ ROLES =====================================================
@@ -125,12 +138,12 @@ Resources:
       DefinitionSubstitutions:
         DecompressTaskCluster: !GetAtt DecompressTaskCluster.Arn
         DecompressTask: !Ref DecompressTask
-        SubnetId: !Ref SubnetId
+        SubnetIds: !Join [',', !Ref SubnetIds]
         DivideDecompressChunksFunction: !GetAtt DivideDecompressChunksFunction.Arn
         UploadDecompressedFunction: !GetAtt UploadDecompressedFunction.Arn
         FinishDecompressTaskFunction: !GetAtt FinishDecompressTaskFunction.Arn
         DecompressTaskTable: !Ref TableDataFlowTaskName
-        ProjectUploadUpdateFunction: staging-project-upload-update
+        FuncProjectUploadUpdate: !Ref FuncProjectUploadUpdate  #staging-project-upload-update
         PostUploadFunction: !Ref PostUploadFunction
         TableDataFlowTaskName: !Ref TableDataFlowTaskName
       Logging:
@@ -149,7 +162,7 @@ Resources:
         - LambdaInvokePolicy:
             FunctionName: !Ref FinishDecompressTaskFunction
         - LambdaInvokePolicy:
-            FunctionName: staging-project-upload-update
+            FunctionName: !Ref FuncProjectUploadUpdate
         - LambdaInvokePolicy:
             FunctionName: !Ref PostUploadFunction
         - DynamoDBCrudPolicy:
@@ -197,10 +210,8 @@ Resources:
     Properties:
       CodeUri: functions/divide_decompressed_chunks
       VpcConfig:
-        SecurityGroupIds:
-          - !Ref SecurityGroupIds
-        SubnetIds:
-          - !Ref SubnetId
+        SecurityGroupIds: !Split [',', !Join [',', !Ref SecurityGroupIds]] 
+        SubnetIds:  !Split [',', !Join [',', !Ref SubnetIds]]
       FileSystemConfigs:
         - Arn: !GetAtt EFSAccessPoint.Arn
           LocalMountPath: !Ref EFSMountPath
@@ -235,10 +246,8 @@ Resources:
       CodeUri: functions/upload_decompressed
       Timeout: 30
       VpcConfig:
-        SecurityGroupIds:
-          - !Ref SecurityGroupIds
-        SubnetIds:
-          - !Ref SubnetId
+        SecurityGroupIds: !Split [',', !Join [',', !Ref SecurityGroupIds]] 
+        SubnetIds:  !Split [',', !Join [',', !Ref SubnetIds]]
       FileSystemConfigs:
         - Arn: !GetAtt EFSAccessPoint.Arn
           LocalMountPath: !Ref EFSMountPath
@@ -277,10 +286,8 @@ Resources:
               - elasticfilesystem:ClientMount
             Resource: "*"
       VpcConfig:
-        SecurityGroupIds:
-          - !Ref SecurityGroupIds
-        SubnetIds:
-          - !Ref SubnetId
+        SecurityGroupIds: !Split [',', !Join [',', !Ref SecurityGroupIds]] 
+        SubnetIds: !Split [',', !Join [',', !Ref SubnetIds]]
       FileSystemConfigs:
         - Arn: !GetAtt EFSAccessPoint.Arn
           LocalMountPath: !Ref EFSMountPath
@@ -302,15 +309,15 @@ Resources:
     Properties:
       RequiresCompatibilities:
         - "FARGATE"
-      ExecutionRoleArn: arn:aws:iam::366577564432:role/ecsTaskExecutionRole #TODO:create this in template
-      TaskRoleArn: arn:aws:iam::366577564432:role/DecompressTaskRole #TODO:create this in template
+      ExecutionRoleArn: !Sub "arn:aws:iam::${AWS::AccountId}:role/ecsTaskExecutionRole" #TODO:create this in template
+      TaskRoleArn: !Sub "arn:aws:iam::${AWS::AccountId}:role/DecompressTaskRole" #TODO:create this in template
       Cpu: 256
       Memory: 512
       NetworkMode: awsvpc
       ContainerDefinitions:
         -
           Name: "decompress-file"
-          Image: !Sub "366577564432.dkr.ecr.${AWS::Region}.amazonaws.com/${DecompressEcrRepositoryName}:latest"
+          Image: !Sub "${AWS::AccountId}.dkr.ecr.${AWS::Region}.amazonaws.com/${DecompressEcrRepositoryName}:latest"
           Cpu: 256
           Memory: 512
           Environment:

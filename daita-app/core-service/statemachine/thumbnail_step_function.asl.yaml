@@ -1,0 +1,35 @@
+StartAt: DivideBatch
+States:
+  DivideBatch:
+    Type: Task
+    Resource: 'arn:aws:states:::lambda:invoke'
+    InputPath: $
+    OutputPath: $.Payload
+    Parameters:
+      FunctionName: '${DivideBatchImagesThumbnailFunction}'
+      Payload.$: $
+    Next: ResizeImageMap
+  ResizeImageMap:
+    Type: Map
+    MaxConcurrency: 5
+    InputPath: $
+    ItemsPath: $.batches
+    Iterator:
+      StartAt: ResizeImage
+      States:
+        ResizeImage:
+          Type: Task
+          Resource: 'arn:aws:states:::lambda:invoke'  
+          Parameters:
+            FunctionName: '${ResizeImageThumbnailFunction}'
+            Payload.$: $
+          Retry:
+            - ErrorEquals:
+                - Lambda.TooManyRequestsException
+                - Lambda.ServiceException
+              IntervalSeconds: 3
+              MaxAttempts: 7
+              BackoffRate: 2 
+          End: true
+    End: true
+TimeoutSeconds: 1800

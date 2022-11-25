@@ -1,0 +1,200 @@
+openapi: "3.0.1"
+info:
+  title:
+    Fn::Sub: "${StagePara}-${ApplicationPara}-HTTP-API"
+  version: "2021-04-07"
+tags:
+- name: "httpapi:createdBy"
+  x-amazon-apigateway-tag-value: "SAM"
+paths:
+  ###=== for project =====###
+  ### clone a project from daita to annotation
+  /annotation/project/clone_from_daita:
+    post:
+      responses:
+        default:
+          description: "Clone project from daita"
+      x-amazon-apigateway-integration:
+        credentials:
+          Fn::GetAtt: [ApiGatewayCallLambdaRole, Arn]
+        uri:
+          Fn::Sub: arn:${AWS::Partition}:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${ProjectCloneFunctionArn}/invocations
+        httpMethod: "POST"
+        type: "aws_proxy"
+        payloadFormatVersion: "2.0"
+
+  /annotation/project/get_info:
+    post:
+      responses:
+        default:
+          description: "Get information of data"
+      x-amazon-apigateway-integration:
+        credentials:
+          Fn::GetAtt: [ApiGatewayCallLambdaRole, Arn]
+        uri:
+          Fn::Sub: arn:${AWS::Partition}:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${FunctionGetProjectInfoArn}/invocations
+        httpMethod: "POST"
+        type: "aws_proxy"
+        payloadFormatVersion: "2.0"
+
+  /annotation/project/delete_project:
+    post:
+      responses:
+        default:
+          description: "Delete Project"
+      x-amazon-apigateway-integration:
+        credentials:
+          Fn::GetAtt: [ApiGatewayCallLambdaRole, Arn]
+        uri:
+          Fn::Sub: arn:${AWS::Partition}:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${FuncDeleteProject}/invocations
+        httpMethod: "POST"
+        type: "aws_proxy"
+        payloadFormatVersion: "2.0"
+        
+  /annotation/project/list_data:
+    post:
+      responses:
+        default:
+          description: "List all data in project"
+      x-amazon-apigateway-integration:
+        credentials:
+          Fn::GetAtt: [ApiGatewayCallLambdaRole, Arn]
+        uri:
+          Fn::Sub: arn:${AWS::Partition}:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${FunctionProjectListDataArn}/invocations
+        httpMethod: "POST"
+        type: "aws_proxy"
+        payloadFormatVersion: "2.0"
+  
+  /annotation/project/list_project:
+    post:
+      responses:
+        default:
+          description: "List all data in project"
+      x-amazon-apigateway-integration:
+        credentials:
+          Fn::GetAtt: [ApiGatewayCallLambdaRole, Arn]
+        uri:
+          Fn::Sub: arn:${AWS::Partition}:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${FunctionListProjectArn}/invocations
+        httpMethod: "POST"
+        type: "aws_proxy"
+        payloadFormatVersion: "2.0"
+
+  /annotation/project/upload_check:
+    post:
+      responses:
+        default:
+          description: "List all data in project"
+      x-amazon-apigateway-integration:
+        credentials:
+          Fn::GetAtt: [ApiGatewayCallLambdaRole, Arn]
+        uri:
+          Fn::Sub: arn:${AWS::Partition}:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${FunctionUploadCheckArn}/invocations
+        httpMethod: "POST"
+        type: "aws_proxy"
+        payloadFormatVersion: "2.0"
+
+  /annotation/project/upload_update:
+    post:
+      responses:
+        default:
+          description: "List all data in project"
+      x-amazon-apigateway-integration:
+        credentials:
+          Fn::GetAtt: [ApiGatewayCallLambdaRole, Arn]
+        uri:
+          Fn::Sub: arn:${AWS::Partition}:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${FunctionUploadUpdateArn}/invocations
+        httpMethod: "POST"
+        type: "aws_proxy"
+        payloadFormatVersion: "2.0"
+
+  /annotation/project/check_ai_segm_progress:
+    post:
+      responses:
+        default:
+          description: "Check current progress of ai segmentation"
+      x-amazon-apigateway-integration:
+        credentials:
+          Fn::GetAtt: [ApiGatewayCallLambdaRole, Arn]
+        uri:
+          Fn::Sub: arn:${AWS::Partition}:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${FunctionCheckAISegmentationProgressArn}/invocations
+        httpMethod: "POST"
+        type: "aws_proxy"
+        payloadFormatVersion: "2.0"
+
+  /annotation/category/add_class:
+    post:
+      responses:
+        default:
+          description: "add class anme list to category"
+      x-amazon-apigateway-integration:
+        credentials:
+          Fn::GetAtt: [ApiGatewayCallLambdaRole, Arn]
+        uri:
+          Fn::Sub: arn:${AWS::Partition}:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${FunctionAddClassArn}/invocations
+        httpMethod: "POST"
+        type: "aws_proxy"
+        payloadFormatVersion: "2.0"
+  
+  ### create category of label task
+  /annotation/file/create_lable_category:
+    post:
+      responses:
+        default:
+          description: "Create category of label task"
+      x-amazon-apigateway-integration:
+        credentials:
+          Fn::GetAtt: [ApiGatewayCallLambdaRole, Arn]
+        uri:
+          Fn::Sub: arn:${AWS::Partition}:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${FunctionCreateLabelCategoryArn}/invocations
+        httpMethod: "POST"
+        type: "aws_proxy"
+        payloadFormatVersion: "2.0"
+
+  ### get information of file and label
+  /annotation/file/get_file_info_n_label:
+    post:
+      responses:
+        default:
+          description: "Clone project from daita"
+      x-amazon-apigateway-integration:
+        credentials:
+          Fn::GetAtt: [ApiGatewayCallLambdaRole, Arn]
+        uri:
+          Fn::Sub: arn:${AWS::Partition}:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${FunctionGetFileInfoNLabelArn}/invocations
+        httpMethod: "POST"
+        type: "aws_proxy"
+        payloadFormatVersion: "2.0"
+
+  ### create category of label task
+  /annotation/file/save_label:
+    post:
+      responses:
+        default:
+          description: "Save current label of file"
+      x-amazon-apigateway-integration:
+        credentials:
+          Fn::GetAtt: [ApiGatewayCallLambdaRole, Arn]
+        uri:
+          Fn::Sub: arn:${AWS::Partition}:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${FunctionSaveLabelArn}/invocations
+        httpMethod: "POST"
+        type: "aws_proxy"
+        payloadFormatVersion: "2.0"
+
+x-amazon-apigateway-cors:
+  allowMethods:
+  - "GET"
+  - "OPTIONS"
+  - "POST"
+  allowHeaders:
+  - "authorization"
+  - "content-type"
+  - "x-amz-date"
+  - "x-amzm-header"
+  - "x-api-key"
+  - "x-apigateway-header"
+  - "*"
+  allowOrigins:
+  - "*"
+  maxAge: 60
+  allowCredentials: false
+x-amazon-apigateway-importexport-version: "1.0"

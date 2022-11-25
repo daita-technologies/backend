@@ -1,0 +1,208 @@
+AWSTemplateFormatVersion: '2010-09-09'
+
+Parameters:
+  ECSAMI:
+    Type: String
+    Default: ami-09cb4bc2dcc083845
+
+  InstanceType:
+    Type: String
+    Default: c4.xlarge
+    AllowedValues: [t2.micro, t2.small, t2.medium, t2.large, m3.medium, m3.large,
+      m3.xlarge, m3.2xlarge, m4.large, m4.xlarge, m4.2xlarge, m4.4xlarge, m4.10xlarge,
+      c4.large, c4.xlarge, c4.2xlarge, c4.4xlarge, c4.8xlarge, c3.large, c3.xlarge,
+      c3.2xlarge, c3.4xlarge, c3.8xlarge, r3.large, r3.xlarge, r3.2xlarge, r3.4xlarge,
+      r3.8xlarge, i2.xlarge, i2.2xlarge, i2.4xlarge, i2.8xlarge]
+    ConstraintDescription: Please choose a valid instance type.
+
+  PublicSubnetOne:
+    Type: String
+  PublicSubnetTwo:
+    Type: String
+  ContainerSecurityGroup:
+    Type: String
+
+  ### currently, set directly in template
+  # DesiredCapacity:
+  #   Type: Number
+  #   Default: '1'
+  #   Description: Number of EC2 instances to launch in your ECS cluster.
+
+  StagePara:
+    Type: String
+  ApplicationPara:
+    Type: String
+
+  EC2Role:
+    Type: String
+
+  MaxSize:
+    Type: Number
+    Default: '6'
+
+  ExecuteArn:
+    Type: String
+  
+  PreprocessingImageUrl:
+    Type: String
+  AugmentationImageUrl:
+    Type: String
+  
+  TaskRole:
+    Type: String
+
+  ContainerPath:
+    Type: String
+        
+Resources:
+
+  ECSCluster:
+    Type: AWS::ECS::Cluster
+    Properties:
+      ClusterName: !Sub "${StagePara}-${ApplicationPara}-ECS-AICaller-Cluster"
+
+  ECSAICallerAutoScalingGroup:
+    Type: AWS::AutoScaling::AutoScalingGroup
+    DependsOn: ECSCluster
+    Properties:
+      AutoScalingGroupName: !Sub  "${StagePara}-${ApplicationPara}-AICaller-ECS"
+      # HealthCheckGracePeriod: 60
+      # HealthCheckType: EC2
+      VPCZoneIdentifier:
+        - !Ref PublicSubnetOne
+        - !Ref PublicSubnetTwo
+      LaunchConfigurationName: !Ref 'ContainerInstances'
+      NewInstancesProtectedFromScaleIn: false #if true this block scale in termination completely
+      MinSize: '0'
+      MaxSize: !Ref 'MaxSize'
+      DesiredCapacity: 0
+
+  EC2InstanceProfile:
+    Type: AWS::IAM::InstanceProfile
+    Properties:
+      Path: /
+      Roles: [!Ref 'EC2Role']  
+  
+  ContainerInstances:
+    Type: AWS::AutoScaling::LaunchConfiguration
+    Properties:
+      ImageId: !Ref ECSAMI
+      SecurityGroups: [!Ref ContainerSecurityGroup]
+      InstanceType: !Ref InstanceType
+      IamInstanceProfile: !Ref 'EC2InstanceProfile'
+      UserData:
+        Fn::Base64: !Sub |
+          #!/bin/bash -xe
+          echo ECS_CLUSTER=${ECSCluster} >> /etc/ecs/ecs.config
+          yum install -y aws-cfn-bootstrap
+          /opt/aws/bin/cfn-signal -e $? --stack ${AWS::StackName} --resource ECSAICallerAutoScalingGroup --region ${AWS::Region}
+  
+  ECSTaskLogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: !Sub "/aws/vendedlogs/states/${StagePara}-MyECSAICallerTaskLogGroup-${AWS::StackName}"
+      RetentionInDays: 7
+
+  TaskAIPreprocessingDefinition:
+    Type: AWS::ECS::TaskDefinition
+    Properties:
+      ExecutionRoleArn: !Ref ExecuteArn
+      TaskRoleArn: !Ref TaskRole
+      NetworkMode: awsvpc
+      ContainerDefinitions:
+        -
+          Name: !Sub "${StagePara}-${ApplicationPara}-ecs-preprocessing"
+          Image: !Ref PreprocessingImageUrl
+          Cpu: 4092
+          Memory: 4092
+          LogConfiguration:
+            LogDriver: 'awslogs'
+            Options:
+              awslogs-group: !Ref ECSTaskLogGroup
+              awslogs-region: !Ref 'AWS::Region'
+              awslogs-create-group: true
+              awslogs-stream-prefix: !Ref 'ApplicationPara'
+          # MountPoints:
+          #   -
+          #     SourceVolume:  "my-vol"
+          #     ContainerPath:  !Ref ContainerPath
+      # Volumes:
+      #   -
+      #     EFSVolumeConfiguration:
+      #       AuthorizationConfig:
+      #         AccessPointId: !Ref EFSAccessPoint
+      #       FilesystemId: !Ref EFSFileSystemId
+      #       TransitEncryption: ENABLED  # enable this so maybe we don't need to config a access point https://docs.aws.amazon.com/pt_br/AWSCloudFormation/latest/UserGuide/aws-properties-ecs-taskdefinition-authorizationconfig.html
+      #     Name: "my-vol"
+  
+  TaskAIAugmentationDefinition:
+    Type: AWS::ECS::TaskDefinition
+    Properties:
+      ExecutionRoleArn: !Ref ExecuteArn
+      TaskRoleArn: !Ref TaskRole
+      NetworkMode: awsvpc
+      ContainerDefinitions:
+        -
+          Name: !Sub "${StagePara}-${ApplicationPara}-ecs-augmentation"
+          Image: !Ref AugmentationImageUrl
+          Cpu: 4092
+          Memory: 4092
+          LogConfiguration:
+            LogDriver: 'awslogs'
+            Options:
+              awslogs-group: !Ref ECSTaskLogGroup
+              awslogs-region: !Ref 'AWS::Region'
+              awslogs-create-group: true
+              awslogs-stream-prefix: !Ref 'ApplicationPara'
+      #     MountPoints:
+      #       -
+      #         SourceVolume:  "my-vol"
+      #         ContainerPath:  !Ref ContainerPath
+      # Volumes:
+      #   -
+      #     EFSVolumeConfiguration:
+      #       AuthorizationConfig:
+      #         AccessPointId: !Ref EFSAccessPoint
+      #       FilesystemId: !Ref EFSFileSystemId
+      #       TransitEncryption: ENABLED  # enable this so maybe we don't need to config a access point https://docs.aws.amazon.com/pt_br/AWSCloudFormation/latest/UserGuide/aws-properties-ecs-taskdefinition-authorizationconfig.html
+      #     Name: "my-vol"
+
+  ###________ CAPACITY CONFIG FOR CLUSTER ______________
+  ###### doc: https://docs.aws.amazon.com/autoscaling/application/userguide/application-auto-scaling-target-tracking.html
+  CapacityProvider:
+    Type: AWS::ECS::CapacityProvider
+    DependsOn: ECSCluster
+    Properties:
+      Name: !Sub "${StagePara}-${ApplicationPara}-capacity-provider-ai-caller"
+      AutoScalingGroupProvider:
+        AutoScalingGroupArn: !Ref ECSAICallerAutoScalingGroup
+        ManagedScaling:
+          # InstanceWarmupPeriod: 300
+          MaximumScalingStepSize: 2
+          MinimumScalingStepSize: 1
+          Status: ENABLED
+          TargetCapacity: 100
+        # ManagedTerminationProtection: ENABLED
+
+  ClusterCapacityProviderAssociation:
+    Type: AWS::ECS::ClusterCapacityProviderAssociations
+    Properties:
+      Cluster: !Ref ECSCluster
+      CapacityProviders:
+        - !Ref CapacityProvider
+      DefaultCapacityProviderStrategy:
+        - CapacityProvider: !Ref CapacityProvider
+          Weight: 1
+
+Outputs:
+
+  TaskAIPreprocessingDefinition:
+    Value: !Ref TaskAIPreprocessingDefinition
+  TaskAIAugmentationDefinition:
+    Value: !Ref TaskAIAugmentationDefinition
+  
+  ECSCluster:
+    Value: !Ref ECSCluster
+
+  ContainerName:
+    Value: !Sub "${StagePara}-${ApplicationPara}-ecs-segmentations"

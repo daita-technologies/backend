@@ -1,0 +1,104 @@
+Parameters:
+  DomainDaita:
+    Type: String
+  CognitoUserPool:
+    Type: String
+
+  StagePara:
+    Type: String
+  AuthHttpAPI:
+    Type: String
+
+  GoogleClientID:
+    Type: String
+  GoogleClientSecret:
+    Type: String
+  GithubClientID:
+    Type: String
+  GithubClientSecret:
+    Type: String
+
+
+Resources:
+  GoogleCognitoUserPoolIdentityProvider:
+    Type: AWS::Cognito::UserPoolIdentityProvider
+    Properties:
+      ProviderName: "Google"
+      AttributeMapping:
+        email: "email"
+        username: sub
+        middle_name: middle_name
+        family_name: family_name
+        given_name: given_name
+        picture: picture
+      ProviderDetails:
+        client_id: !Ref GoogleClientID
+        client_secret: !Ref GoogleClientSecret
+        authorize_scopes: profile email openid 
+      ProviderType: Google
+      UserPoolId:
+        Ref : CognitoUserPool
+  GithubCognitoUserPoolIdentityProvider:
+    Type: AWS::Cognito::UserPoolIdentityProvider
+    Properties:
+      UserPoolId: !Ref CognitoUserPool
+      ProviderName: github
+      ProviderDetails:
+        client_id: !Ref GithubClientID
+        client_secret: !Ref GithubClientSecret
+        attributes_request_method: GET
+        oidc_issuer: !Sub "https://${AuthHttpAPI}.execute-api.${AWS::Region}.amazonaws.com/${StagePara}"
+        authorize_scopes: "openid read:user user:email"
+        jwks_uri: !Sub "https://${AuthHttpAPI}.execute-api.${AWS::Region}.amazonaws.com/${StagePara}/auth/github-openid-token-wrapper"
+        token_url: !Sub "https://${AuthHttpAPI}.execute-api.${AWS::Region}.amazonaws.com/${StagePara}/auth/github-openid-token-wrapper"
+        attributes_url: !Sub "https://${AuthHttpAPI}.execute-api.${AWS::Region}.amazonaws.com/${StagePara}/auth/github-openid-userinfo-wrapper"
+        authorize_url: https://github.com/login/oauth/authorize
+      ProviderType: "OIDC"
+      AttributeMapping:
+        email: "email"
+        username: sub
+        name: "email"
+  CognitoUserPoolClient:
+    Type: AWS::Cognito::UserPoolClient
+    DependsOn:
+      - GoogleCognitoUserPoolIdentityProvider
+      - GithubCognitoUserPoolIdentityProvider
+    Properties:
+      UserPoolId: !Ref CognitoUserPool
+      ClientName: user-pool-client
+      GenerateSecret: false
+      AllowedOAuthFlowsUserPoolClient: true
+      CallbackURLs: 
+        - !Sub https://${AuthHttpAPI}.execute-api.${AWS::Region}.amazonaws.com/${StagePara}/auth/login_social
+      LogoutURLs:
+        - http://localhost:3000
+        - !Ref  DomainDaita
+      AllowedOAuthFlows:
+        - code
+        - implicit
+      AllowedOAuthScopes:
+        - phone
+        - email
+        - openid
+        - profile
+        - aws.cognito.signin.user.admin
+      SupportedIdentityProviders:
+        - COGNITO
+        - github
+        - Google
+      AccessTokenValidity: 2
+      RefreshTokenValidity: 24
+      IdTokenValidity: 2
+      TokenValidityUnits: 
+          AccessToken: hours
+          IdToken: hours
+          RefreshToken: hours
+      AllowedOAuthFlowsUserPoolClient: true
+      ExplicitAuthFlows: 
+        - ALLOW_REFRESH_TOKEN_AUTH
+        - ALLOW_USER_PASSWORD_AUTH       
+        - ALLOW_USER_SRP_AUTH
+      PreventUserExistenceErrors: ENABLED
+Outputs:
+  UserPoolClientId:
+    Value: !Ref CognitoUserPoolClient

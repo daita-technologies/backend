@@ -1,0 +1,182 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: >
+  daita-reference-image-service
+
+  Sample SAM Template for daita-reference-image-service
+
+
+Parameters:
+  minimumLogLevel:
+    Type: String
+    Default: DEBUG
+  StagePara:
+    Type: String
+  CommonCodeLayerName:
+    Type: String
+  Mode:
+    Type: String
+  ApplicationPara:
+    Type: String
+  LambdaRole:
+    Type: String
+
+  TableDataOriginalName:
+    Type: String 
+  TableDataPreprocess:
+    Type: String
+  TableDataAugment:
+    Type: String 
+
+  TableProjectSumName:
+    Type: String
+  TableProjectsName:
+    Type: String
+
+  CognitoUserPool:
+    Type: String
+  CognitoUserPoolClient:
+    Type: String
+  CognitoIdentityPoolId:
+    Type: String
+  ThumbnailEventBus:
+    Type: String
+Globals:
+  Function:
+    Timeout: 800   
+    Runtime: python3.8
+    Architectures:
+      - x86_64 
+    Environment:
+      Variables:
+        STAGE: !Ref StagePara        
+        LOGGING: !Ref minimumLogLevel  
+        MODE: !Ref Mode
+        TABLE_PROJECT_SUMMARY: !Ref TableProjectSumName
+        TABLE_PROJECT: !Ref TableProjectsName
+        T_DATA_ORI: !Ref TableDataOriginalName
+        COGNITO_USER_POOL: !Ref CognitoUserPool
+        COGNITO_CLIENT_ID: !Ref CognitoUserPoolClient
+        IDENTITY_POOL: !Ref CognitoIdentityPoolId
+        THUMBNAIL_EVENT_BUS: !Ref ThumbnailEventBus
+        T_DATA_PREPROCESS: !Ref TableDataPreprocess
+        T_DATA_AUGMENT: !Ref TableDataAugment
+Resources:
+
+  #================ LAMBDA FUNCTIONS ==========================================
+
+  ProjectUploadUpdateFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: functions/api_handler
+      Handler: hdler_project_upload_update.lambda_handler
+      Role: !Ref LambdaRole
+      MemorySize: 256
+      Layers:
+        - !Ref CommonCodeLayerName
+
+  FuncMoveS3Data:
+    Type: AWS::Serverless::Function 
+    Properties:
+      Timeout: 900
+      Handler: hdler_move_s3_data.lambda_handler
+      CodeUri: functions
+      Role: !Ref LambdaRole
+      MemorySize: 256
+      Layers:
+        - !Ref CommonCodeLayerName
+
+  FuncUpdateInputData:
+    Type: AWS::Serverless::Function 
+    Properties:
+      Handler: hdler_update_input_data.lambda_handler
+      CodeUri: functions
+      Role: !Ref LambdaRole
+      MemorySize: 256
+      Layers:
+        - !Ref CommonCodeLayerName
+
+  FuncUpdateSumaryDatabase:
+    Type: AWS::Serverless::Function 
+    Properties:
+      Handler: hdler_update_sumary_db.lambda_handler
+      CodeUri: functions
+      Role: !Ref LambdaRole
+      MemorySize: 256
+      Layers:
+        - !Ref CommonCodeLayerName
+  
+  #================ LOGS FOR STEP FUNCTIONS ===================================
+
+  CreateProjectPrebuildSMLogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties: 
+      LogGroupName: !Sub "/aws/vendedlogs/states/${StagePara}-${ApplicationPara}-CreateProjectPrebuild"
+      RetentionInDays: 7
+
+
+  #================ PROCESSOR STATE MACHINE ===================================
+
+  CreateProjectPrebuildSM:
+    Type: AWS::Serverless::StateMachine
+    Properties:
+      # Type: EXPRESS
+      Type: STANDARD
+      Name: !Sub "${StagePara}-${ApplicationPara}-CreateProjectPrebuildSM"
+      Policies:
+        - LambdaInvokePolicy:
+            FunctionName: !Ref FuncMoveS3Data
+        - LambdaInvokePolicy:
+            FunctionName: !Ref FuncUpdateInputData
+        - LambdaInvokePolicy:
+            FunctionName: !Ref FuncUpdateSumaryDatabase
+        - Statement: 
+          - Sid: CloudWatchLogsPolicy
+            Effect: Allow
+            Action:
+            - "logs:CreateLogDelivery"
+            - "logs:GetLogDelivery"
+            - "logs:UpdateLogDelivery"
+            - "logs:DeleteLogDelivery"
+            - "logs:ListLogDeliveries"
+            - "logs:PutResourcePolicy"
+            - "logs:DescribeResourcePolicies"
+            - "logs:DescribeLogGroup"
+            - "logs:DescribeLogGroups"
+            Resource: "*"
+          - Sid: CloudWatchEventsFullAccess
+            Effect: Allow
+            Action:
+            - "events:*"
+            Resource: "*"
+          - Sid: IAMPassRoleForCloudWatchEvents
+            Effect: Allow
+            Action:
+            - "iam:PassRole"
+            Resource: "arn:aws:iam::*:role/AWS_Events_Invoke_Targets"
+      Tracing:
+        Enabled: true
+      DefinitionUri: ./statemachine/sm_create_project_fr_prebuild.asl.yaml
+      Logging:
+        Level: ALL
+        IncludeExecutionData: true
+        Destinations:
+        - CloudWatchLogsLogGroup:
+            LogGroupArn: !GetAtt CreateProjectPrebuildSMLogGroup.Arn
+      DefinitionSubstitutions:
+        Arn_FuncMoveS3Data: !GetAtt FuncMoveS3Data.Arn
+        Arn_FuncUpdateInputData: !GetAtt FuncUpdateInputData.Arn
+        Arn_FuncUpdateSumaryDatabase: !GetAtt FuncUpdateSumaryDatabase.Arn
+
+Outputs:
+  # ServerlessRestApi is an implicit API created out of Events key under Serverless::Function
+  # Find out more about other implicit resources you can reference within SAM
+  # https://github.com/awslabs/serverless-application-model/blob/master/docs/internals/generated_resources.rst#api 
+  CreateProjectPrebuildSMArn:
+    Description: "ARN of SM"
+    Value: !GetAtt CreateProjectPrebuildSM.Arn
+  FuncProjectUploadUpdate:
+    Value: !Ref ProjectUploadUpdateFunction
+  FuncProjectUploadUpdateArn:
+    Value: !GetAtt ProjectUploadUpdateFunction.Arn
+  

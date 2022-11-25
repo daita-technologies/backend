@@ -1,0 +1,257 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: >
+  SAM Template for Annotation application
+
+## The general rule seems to be to use !Sub for in line substitutions and !ref for stand alone text
+Parameters:
+  Stage:
+    Type: String
+  Application:
+    Type: String
+
+  S3AnnoBucketName:
+    Type: String
+  S3DaitaBucketName:
+    Type: String
+
+  CommonCodeLayerRef:
+    Type: String
+
+  CognitoUserPoolRef:
+    Type: String
+  CognitoIdentityPoolIdRef:
+    Type: String
+
+  TableDaitaProjectsName:
+    Type: String
+  TableDaitaDataOriginalName:
+    Type: String
+  TableUserName:
+    Type: String
+
+  SendEmailIdentityIDFunction:
+    Type: String
+
+  ### parameter from infra
+  PublicSubnetOne:
+    Type: String
+  PublicSubnetTwo:
+    Type: String    
+  ContainerSecurityGroup:
+    Type: String
+  VPC:
+    Type: String
+  VPCEndpointSQSDnsEntries:
+    Type: String
+
+  ### paras for infra storage
+  EFSFileSystemId:
+    Type: String
+  EFSAccessPoint:
+    Type: String
+  EFSAccessPointArn:
+    Type: String
+
+  ImageAISegmentationUrl:
+    Type: String
+  MaxSizeEc2AutoScallEcs:
+    Type: String
+
+Resources:
+
+  #================ ROLES =====================================================
+  # lambda role
+  GeneralLambdaExecutionRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+        - Effect: "Allow"
+          Principal:
+            Service: "lambda.amazonaws.com"
+          Action:
+          - "sts:AssumeRole"
+      Policies:
+        - PolicyName: 'SecretsManagerParameterAccess'
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - ssm:GetParam*
+                  - ssm:DescribeParam*
+                Resource:
+                  - arn:aws:ssm:*:*:parameter/*
+        - PolicyName: 'CloudwatchPermission'
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              -
+                Effect: Allow
+                Action:
+                  - 'logs:CreateLogGroup'
+                  - 'logs:CreateLogStream'
+                  - 'logs:PutLogEvents'
+                Resource: '*'
+        - PolicyName: 'CognitoPermission'
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              -
+                Effect: Allow
+                Action:
+                  - cognito-identity:*
+                  - cognito-idp:*
+                Resource: '*'
+        - PolicyName: 'DynamoDBPermission'
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              -
+                Effect: Allow
+                Action:
+                  - dynamodb:*
+                Resource: "*"
+        - PolicyName: "OtherServicePermission"
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              -
+                Effect: Allow
+                Action:
+                  - events:PutEvents
+                  - s3:Get*
+                  - ecr:*
+                  - elasticfilesystem:*
+                  - states:*
+                  - s3:*
+                  - ec2:*
+                  - sqs:*
+                  - "ses:*"
+                  - cognito-identity:*
+                  - cognito-idp:*
+                Resource: "*"
+
+  #================ APPLICATIONS  =============================================
+  APIService:
+    Type: AWS::Serverless::Application
+    Properties:
+      Location: api-service/template_api_service.yaml
+      Parameters:
+        StagePara: !Ref Stage
+        ApplicationPara: !Ref Application
+        ### function arn
+        FunctionGetFileInfoNLabelArn: !GetAtt AnnotationService.Outputs.FunctionGetFileInfoNLabelArn
+        FunctionCreateLabelCategoryArn: !GetAtt AnnotationService.Outputs.FunctionCreateLabelCategoryArn
+        FunctionSaveLabelArn: !GetAtt AnnotationService.Outputs.FunctionSaveLabelArn
+        FunctionAddClassArn: !GetAtt AnnotationService.Outputs.FunctionAddClassArn
+        FunctionGetProjectInfoArn: !GetAtt ProjectService.Outputs.FunctionGetProjectInfoArn
+        FunctionProjectListDataArn: !GetAtt ProjectService.Outputs.FunctionProjectListDataArn
+        ProjectCloneFunctionArn: !GetAtt ProjectService.Outputs.ProjectCloneFunctionArn
+        FunctionListProjectArn: !GetAtt ProjectService.Outputs.FunctionListProjectArn
+        FuncDeleteProject: !GetAtt ProjectService.Outputs.FuncDeleteProject
+        FunctionUploadCheckArn: !GetAtt ProjectService.Outputs.FunctionUploadCheckArn
+        FunctionUploadUpdateArn: !GetAtt ProjectService.Outputs.FunctionUploadUpdateArn
+        FunctionCheckAISegmentationProgressArn: !GetAtt ProjectService.Outputs.FunctionCheckAISegmentationProgressArn
+  
+  DatabaseService:
+    Type: AWS::Serverless::Application
+    Properties:
+      Location: db-service/db_template.yaml
+      Parameters:
+        StagePara: !Ref Stage
+        ApplicationPara: !Ref Application
+
+  ProjectService:
+    Type: AWS::Serverless::Application
+    Properties:
+      Location: project-service/template_project_service.yaml
+      Parameters:
+        StagePara: !Ref Stage
+        ApplicationPara: !Ref Application
+        ###_____ for common layer and role
+        CommonCodeLayerRef: !Ref CommonCodeLayerRef
+        LambdaRoleArn: !GetAtt GeneralLambdaExecutionRole.Arn
+        ###_____ for authorize
+        CognitoUserPoolRef: !Ref CognitoUserPoolRef
+        CognitoIdentityPoolIdRef: !Ref CognitoIdentityPoolIdRef
+        ###_____ for annotation project table
+        TableAnnoDataOriginalName: !GetAtt DatabaseService.Outputs.TableAnnoDataOriginalName
+        TableAnnoProjectSumName: !GetAtt DatabaseService.Outputs.TableAnnoProjectSumName
+        TableAnnoProjectsName: !GetAtt DatabaseService.Outputs.TableAnnoProjectsName
+        TableCategoryInfoName: !GetAtt DatabaseService.Outputs.TableCategoryInfoName
+        TableAIDefaultClassInfoName: !GetAtt DatabaseService.Outputs.TableAIDefaultClassInfoName
+        TableClassInfoName: !GetAtt DatabaseService.Outputs.TableClassInfoName
+        TableDeletedProjectName: !GetAtt DatabaseService.Outputs.TableDeletedProjectName
+        ###_____ for daita project table
+        TableDaitaProjectsName: !Ref TableDaitaProjectsName
+        TableDaitaDataOriginalName: !Ref TableDaitaDataOriginalName
+        ###_____ for config table
+        TableConfigParametersLambdaName: !GetAtt DatabaseService.Outputs.TableConfigParametersLambdaName
+        ###_____ for s3 bucket
+        S3AnnoBucketName: !Ref S3AnnoBucketName
+        S3DaitaBucketName: !Ref S3DaitaBucketName
+
+  AnnotationService:
+    Type: AWS::Serverless::Application
+    Properties:
+      Location: annotation-service/template_annotaion_service.yaml
+      Parameters:
+        StagePara: !Ref Stage
+        ApplicationPara: !Ref Application
+        ###_____ for common layer and role
+        CommonCodeLayerRef: !Ref CommonCodeLayerRef
+        LambdaRoleArn: !GetAtt GeneralLambdaExecutionRole.Arn
+        ###_____ for authorize
+        CognitoUserPoolRef: !Ref CognitoUserPoolRef
+        CognitoIdentityPoolIdRef: !Ref CognitoIdentityPoolIdRef
+        ###_____ for annotation project table
+        TableAnnoDataOriginalName: !GetAtt DatabaseService.Outputs.TableAnnoDataOriginalName
+        TableAnnoProjectSumName: !GetAtt DatabaseService.Outputs.TableAnnoProjectSumName
+        TableAnnoProjectsName: !GetAtt DatabaseService.Outputs.TableAnnoProjectsName
+        TableLabelInfoName: !GetAtt DatabaseService.Outputs.TableLabelInfoName
+        TableCategoryInfoName: !GetAtt DatabaseService.Outputs.TableCategoryInfoName
+        TableClassInfoName: !GetAtt DatabaseService.Outputs.TableClassInfoName
+        TableAIDefaultClassInfoName: !GetAtt DatabaseService.Outputs.TableAIDefaultClassInfoName
+        ###_____ for daita project table
+        TableDaitaProjectsName: !Ref TableDaitaProjectsName
+        TableDaitaDataOriginalName: !Ref TableDaitaDataOriginalName
+        ###_____ for s3 bucket
+        S3AnnoBucketName: !Ref S3AnnoBucketName
+        S3DaitaBucketName: !Ref S3DaitaBucketName
+        
+  ECSSegmentationServiceApp:
+    Type: AWS::Serverless::Application
+    Properties:
+      Location: ecs-segment-app/template.yaml
+      Parameters:
+        StagePara: !Ref Stage
+        ApplicationPara: !Ref Application
+        TableAnnoDataOriginalNameStream: !GetAtt DatabaseService.Outputs.StreamTableAnnoDataOrginal
+        CommonCodeLayerRef: !Ref CommonCodeLayerRef
+        LambdaRoleArn: !GetAtt GeneralLambdaExecutionRole.Arn
+        TableAnnoDataOriginalName: !GetAtt  DatabaseService.Outputs.TableAnnoDataOriginalName
+        ### for infra network related VPC
+        PublicSubnetOne: !Ref PublicSubnetOne
+        PublicSubnetTwo: !Ref PublicSubnetTwo
+        ContainerSecurityGroup: !Ref ContainerSecurityGroup
+        VPC: !Ref VPC
+        VPCEndpointSQSDnsEntries: !Ref VPCEndpointSQSDnsEntries
+        ### for infra storage
+        EFSFileSystemId: !Ref EFSFileSystemId
+        EFSAccessPoint: !Ref EFSAccessPoint
+        EFSAccessPointArn: !Ref EFSAccessPointArn
+        TableAnnoProjectsName: !GetAtt DatabaseService.Outputs.TableAnnoProjectsName
+        CognitoUserPoolRef: !Ref CognitoUserPoolRef
+        CognitoIdentityPoolIdRef: !Ref CognitoIdentityPoolIdRef
+        TableUserName: !Ref TableUserName
+        SendEmailIdentityIDFunction: !Ref SendEmailIdentityIDFunction
+        ### for ecs
+        ImageAISegmentationUrl: !Ref ImageAISegmentationUrl
+        MaxSizeEc2AutoScallEcs: !Ref MaxSizeEc2AutoScallEcs
+
+Outputs:
+  ApiAnnoAppUrl:
+    Value: !GetAtt APIService.Outputs.AnnoHttpApiURL

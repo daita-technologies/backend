@@ -27,7 +27,7 @@ class ProjectItem():
             self.__dict__[key]=value
         print("init success: ", self.__dict__)
 
-    def get_value_w_default(self, name, default_value):
+    def get_value_w_default(self, name, default_value=None):
         if self.__dict__.get(name, None):
             return self.__dict__[name]
         else:
@@ -142,4 +142,11 @@ class ProjectModel():
             UpdateExpression = 'SET #RE_IM = :re_im, #UP_DATE = :da'
         )
 
+        return
+
+    def put_item_w_condition(self, item, condition):
+        self.table.put_item(
+                    Item = item,
+                    ConditionExpression = condition
+                )
         return

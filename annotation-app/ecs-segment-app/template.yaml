@@ -1,0 +1,149 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: >
+  SAM Template for Nested application resources
+
+## The general rule seems to be to use !Sub for in line substitutions and !ref for stand alone text
+Parameters:
+ 
+  StagePara:
+    Type: String
+  
+  ImageAISegmentationUrl:
+    Type: String
+  MaxSizeEc2AutoScallEcs:
+    Type: String
+  
+  ApplicationPara:
+    Type: String
+
+  TableAnnoDataOriginalNameStream:
+    Type: String
+
+  LambdaRoleArn:
+    Type: String
+
+  CommonCodeLayerRef:
+    Type: String
+
+  ContainerPath:
+    Type: String
+    Default: /app/data
+
+  TableAnnoDataOriginalName:
+    Type: String
+  TableAnnoProjectsName:
+    Type: String
+
+  ### For ecs network
+  PublicSubnetOne:
+    Type: String
+  PublicSubnetTwo:
+    Type: String    
+  ContainerSecurityGroup:
+    Type: String
+  VPC:
+    Type: String
+  VPCEndpointSQSDnsEntries:
+    Type: String
+
+  ### For infra storeage
+  EFSFileSystemId:
+    Type: String
+  EFSAccessPoint:
+    Type: String
+  EFSAccessPointArn:
+    Type: String
+  
+  CognitoIdentityPoolIdRef:
+    Type: String
+  CognitoUserPoolRef:
+    Type: String
+
+  TableUserName:
+    Type: String
+
+  SendEmailIdentityIDFunction:
+    Type: String
+  
+Resources:
+
+
+  #================ APPLICATIONS  =============================================
+  RoleApplication:
+    Type: AWS::Serverless::Application
+    Properties:
+      Location: ./role.yaml 
+
+  # NetworkLayerApplication:
+  #   Type: AWS::Serverless::Application
+  #   Properties:
+  #     Location: ./network.yaml
+  #     Parameters:
+  #       StagePara: !Ref StagePara
+  #       ApplicationPara: !Ref ApplicationPara
+
+  # StorageLayerApplication:
+  #   Type: AWS::Serverless::Application
+  #   Properties:
+  #     Location: ./storage.yaml
+  #     Parameters:
+  #       VPC: !Ref VPC
+  #       PublicSubnetOne: !Ref PublicSubnetOne
+  #       PublicSubnetTwo: !Ref PublicSubnetTwo
+  #       SecurityGroup: !Ref ContainerSecurityGroup
+
+  #       StagePara: !Ref StagePara
+  #       ApplicationPara: !Ref ApplicationPara
+
+  ECSServiceApplication:
+    Type: AWS::Serverless::Application
+    Properties:
+      Location: ./ecs_segementation.yaml
+      Parameters:
+        StagePara: !Ref StagePara
+        ApplicationPara: !Ref ApplicationPara
+        EC2Role: !GetAtt RoleApplication.Outputs.EC2Role
+        ExecuteArn: !GetAtt RoleApplication.Outputs.ECSTask
+        TaskRole: !GetAtt RoleApplication.Outputs.ECSRole
+        ImageUrl: !Ref ImageAISegmentationUrl
+        ContainerPath: !Ref ContainerPath
+        ### storage infra
+        EFSAccessPoint: !Ref EFSAccessPoint
+        EFSFileSystemId: !Ref EFSFileSystemId
+        ### for ecs network infra
+        PublicSubnetOne: !Ref PublicSubnetOne
+        PublicSubnetTwo: !Ref PublicSubnetTwo
+        ContainerSecurityGroup: !Ref ContainerSecurityGroup
+        MaxSizeEc2AutoScallEcs: !Ref MaxSizeEc2AutoScallEcs
+        
+  ECSControllerApplication:
+    Type: AWS::Serverless::Application
+    Properties:
+      Location: ./controller.yaml
+      Parameters:
+        StagePara: !Ref StagePara
+        ApplicationPara: !Ref ApplicationPara
+        LambdaRoleArn:  !Ref LambdaRoleArn
+        CommonCodeLayerRef: !Ref CommonCodeLayerRef
+        TableAnnoDataOriginalNameStream: !Ref TableAnnoDataOriginalNameStream
+        TableAnnoDataOriginalName: !Ref TableAnnoDataOriginalName
+        AITaskDefinitionArn: !GetAtt ECSServiceApplication.Outputs.TaskAISegmenationDefinition
+        AITaskECSClusterArn: !GetAtt ECSServiceApplication.Outputs.ECSCluster
+        ### For network infra
+        SecurityGroup: !Ref ContainerSecurityGroup
+        PublicSubnetOne: !Ref PublicSubnetOne
+        PublicSubnetTwo: !Ref PublicSubnetTwo
+        VPCEndpointSQSDnsEntries: !Ref VPCEndpointSQSDnsEntries
+
+        ContainerName: !GetAtt ECSServiceApplication.Outputs.ContainerName
+        ContainerMount: !Ref ContainerPath
+        
+        EFSAccessPointArn: !Ref EFSAccessPointArn
+        TableAnnoProjectsName: !Ref TableAnnoProjectsName
+        CognitoUserPoolRef: !Ref CognitoUserPoolRef
+        CognitoIdentityPoolIdRef: !Ref CognitoIdentityPoolIdRef
+
+        TableUserName: !Ref TableUserName
+
+        # SendEmailIdentityIDFunction: !Ref SendEmailIdentityIDFunction

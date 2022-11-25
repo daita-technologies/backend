@@ -34,7 +34,17 @@ Parameters:
     Type: String
   MaxHeightResolutionImage: 
     Type: String
+  Mode:
+    Type: String
 
+  CognitoIdentityPoolId:
+    Type:  String
+  CognitoUserPool:
+    Type: String
+  CognitoUserPoolClient:
+    Type: String
+
+  
 Globals:
   Function:
     Timeout: 800    
@@ -49,7 +59,10 @@ Globals:
         BATCHSIZE_REF_IMG: !Ref BatchsizeCalculateReferenceImage
         MAX_WIDTH_RESOLUTION_IMG: !Ref MaxWidthResolutionImage
         MAX_HEIGHT_RESOLUTION_IMG: !Ref MaxHeightResolutionImage     
-
+        COGNITO_USER_POOL: !Ref CognitoUserPool
+        COGNITO_CLIENT_ID: !Ref CognitoUserPoolClient
+        IDENTITY_POOL: !Ref CognitoIdentityPoolId
+        MODE: !Ref Mode
 Resources:
   #================ ROLES =====================================================  
 
@@ -98,6 +111,53 @@ Resources:
           Arn: !GetAtt ReferenceImageStateMachine.Arn 
           Id: "ReferenceImageSMTarget"
           RoleArn: !GetAtt ReferenceImageServiceEventBusRole.Arn  
+
+  #================= API HAMDLER LAMBDA FUNCTION =========================
+  RICalculateFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      Runtime: python3.8
+      Handler: app.lambda_handler
+      Architectures:
+        - x86_64
+      CodeUri: functions/api_handler/calculate
+      Role: !Ref LambdaRole
+      Layers:
+        - !Ref CommonCodeLayerName
+      Environment:
+        Variables:
+          EVENT_BUS_NAME: !Ref ReferenceImageEventBus
+          TABLE_REFERENCE_IMAGE_TASK: !Ref TableReferenceImageTasksName
+
+  RIStatusFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      Runtime: python3.8
+      Handler: app.lambda_handler
+      Architectures:
+        - x86_64
+      CodeUri: functions/api_handler/get_status
+      Role: !Ref LambdaRole
+      Layers:
+        - !Ref CommonCodeLayerName
+      Environment:
+        Variables:
+          TABLE_REFERENCE_IMAGE_TASK: !Ref TableReferenceImageTasksName
+
+  RIInfoFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      Runtime: python3.8
+      Handler: app.lambda_handler
+      Architectures:
+        - x86_64
+      CodeUri: functions/api_handler/get_info
+      Role: !Ref LambdaRole
+      Layers:
+        - !Ref CommonCodeLayerName
+      Environment:
+        Variables:
+          TABLE_REFERENCE_IMAGE_INFO: !Ref TableReferenceImageInfoName
 
   #================ LAMBDA FUNCTIONS ==========================================
 
@@ -214,3 +274,18 @@ Outputs:
   ReferenceImageEventBusName:
     Description: "Name of EventBus"
     Value: !Ref ReferenceImageEventBus
+  ReferenceImageStateMachineArn:
+    Value: !GetAtt ReferenceImageStateMachine.Arn
+
+  RICalculateFunction:
+    Value: !Ref RICalculateFunction
+  RICalculateFunctionArn:
+    Value: !GetAtt RICalculateFunction.Arn
+  RIStatusFunction:
+    Value: !Ref RIStatusFunction
+  RIStatusFunctionArn:
+    Value: !GetAtt RIStatusFunction.Arn
+  RIInfoFunction:
+    Value: !Ref RIInfoFunction
+  RIInfoFunctionArn:
+    Value: !GetAtt RIInfoFunction.Arn

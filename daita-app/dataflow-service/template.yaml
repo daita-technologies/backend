@@ -8,15 +8,16 @@ Parameters:
     Type: String
   ApplicationPara:
     Type: String
-  SecurityGroupIds:
-    Type: String
-    Default: 'sg-af50cbde'
+
   VpcId:
     Type: String
     Default: vpc-53239e38
-  SubnetId:
+
+  SecurityGroupIds:   ### could not pass string over the nested app, so use string here
+    Type: String      
+  SubnetIds:
     Type: String
-    Default: subnet-31ff5b5a
+
   EFSFileSystemId:
     Type:  String
     Default: fs-0199771f2dfe97ace
@@ -44,16 +45,28 @@ Parameters:
     Default: 'noreply@daita.tech'
   CommonCodeLayerName:
     Type: String
-
+  Mode:
+    Type: String
+  TableDataOriginalName: 
+    Type: String
+  TableDataAugmentName:
+    Type: String
+  TableDataPreprocessName:
+    Type: String
+  
+  FuncProjectUploadUpdate:
+    Type: String
 
 Globals:
   Function:
-    Timeout: 10
+    Timeout: 180
     Handler: app.lambda_handler
     Runtime: python3.8
     Architectures:
       - x86_64
-
+    Environment:
+      Variables:
+        MODE: !Ref Mode
 
 Resources:
   #================ ROLES =====================================================
@@ -144,7 +157,7 @@ Resources:
         StagePara: !Ref StagePara
         ApplicationPara: !Ref ApplicationPara
         SecurityGroupIds: !Ref SecurityGroupIds
-        SubnetId: !Ref SubnetId
+        SubnetIds: !Ref SubnetIds
         EFSMountPath: !Ref EFSMountPath
         EFSAccessPointRootPath: !Ref EFSAccessPointRootPath
         S3BucketName: !Ref S3BucketName
@@ -153,7 +166,13 @@ Resources:
         VPCEndpointForS3: !Ref VPCEndpointForS3
         VPCEndpointForDynamoDB: !Ref VPCEndpointForDynamoDB
         CommonCodeLayerName: !Ref CommonCodeLayerName
-
+        EFSFileSystemId: !Ref EFSFileSystemId
+        Mode: !Ref Mode
+        TableDataOriginalName: !Ref TableDataOriginalName
+        TableDataAugmentName: !Ref TableDataAugmentName
+        TableDataPreprocessName: !Ref TableDataPreprocessName
+        FuncProjectUploadUpdate: !Ref FuncProjectUploadUpdate
+        
   CompressDownloadApp:
     Type: AWS::Serverless::Application
     Properties:
@@ -162,7 +181,7 @@ Resources:
         StagePara: !Ref StagePara
         ApplicationPara: !Ref ApplicationPara
         SecurityGroupIds: !Ref SecurityGroupIds
-        SubnetId: !Ref SubnetId
+        SubnetIds: !Ref SubnetIds
         EFSMountPath: !Ref EFSMountPath
         EFSAccessPointRootPath: !Ref EFSAccessPointRootPath
         S3BucketName: !Ref S3BucketName
@@ -173,8 +192,11 @@ Resources:
         VPCEndpointForDynamoDB: !Ref VPCEndpointForDynamoDB
         SESIdentityName: noreply@daita.tech
         CommonCodeLayerName: !Ref CommonCodeLayerName
-
-
+        EFSFileSystemId: !Ref EFSFileSystemId
+        Mode: !Ref Mode
+        TableDataOriginalName: !Ref TableDataOriginalName
+        TableDataAugmentName: !Ref TableDataAugmentName
+        TableDataPreprocessName: !Ref TableDataPreprocessName
 
 Outputs:
   DecompressFileStateMachineArn:

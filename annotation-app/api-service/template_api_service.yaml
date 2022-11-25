@@ -1,0 +1,78 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: >
+  daita-caller-service-app
+
+  Sample SAM Template for daita-caller-service-app
+
+## The general rule seems to be to use !Sub for in line substitutions and !ref for stand alone text
+Parameters:
+  ApplicationPara:
+    Type: String
+  StagePara:
+    Type: String
+
+  ProjectCloneFunctionArn:
+    Type: String
+  FunctionGetFileInfoNLabelArn:
+    Type: String
+  FunctionCreateLabelCategoryArn:
+    Type: String
+  FunctionGetProjectInfoArn:
+    Type: String
+  FunctionSaveLabelArn:
+    Type: String
+  FunctionProjectListDataArn:
+    Type: String
+  FunctionListProjectArn:
+    Type: String
+  FunctionAddClassArn:
+    Type: String
+  FuncDeleteProject:
+    Type: String
+  
+  FunctionUploadCheckArn:
+    Type: String
+  FunctionUploadUpdateArn:
+    Type: String
+
+  FunctionCheckAISegmentationProgressArn:
+    Type: String
+
+Resources:
+  #================ ROLES =====================================================
+  #-- use this role for apigateway access lambda
+  ApiGatewayCallLambdaRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+        - Effect: "Allow"
+          Principal:
+            Service: "apigateway.amazonaws.com"
+          Action:
+          - "sts:AssumeRole"
+      Policies:
+      - PolicyName: RestApiDirectInvokeLambda
+        PolicyDocument:
+          Version: "2012-10-17"
+          Statement:
+            Action:
+            - "lambda:InvokeFunction"
+            Effect: Allow
+            Resource: "*"
+  
+  AnnotationHttpApi:
+    Type: AWS::Serverless::HttpApi
+    Properties:
+      StageName: !Ref StagePara
+      DefinitionBody:
+        Fn::Transform:
+          Name: AWS::Include
+          Parameters:
+            Location: './api_route_define.yaml'
+
+Outputs:
+  AnnoHttpApiURL:
+    Value: !Sub "https://${AnnotationHttpApi}.execute-api.${AWS::Region}.amazonaws.com/${StagePara}"
