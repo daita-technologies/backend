@@ -1,4 +1,4 @@
-FROM public.ecr.aws/lambda/python:3.8
+FROM public.ecr.aws/lambda/python:3.10
 
 COPY preprocessing_list.py preprocessing_utils.py preprocessor.py  references.py ./
 
