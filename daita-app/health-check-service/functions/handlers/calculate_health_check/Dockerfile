@@ -1,4 +1,4 @@
-FROM public.ecr.aws/lambda/python:3.8
+FROM public.ecr.aws/lambda/python:3.10
 
 COPY healthcheck_list.py healthcheck_utils.py registry.py ./
 
